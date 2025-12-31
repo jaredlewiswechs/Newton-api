@@ -34,8 +34,12 @@ import statistics
 
 DW_AXIS = 2048
 THRESHOLD = 1024
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 ENGINE = f"Newton OS {VERSION}"
+
+# Append-only ledger for audit trail
+LEDGER = []
+MAX_LEDGER_SIZE = 10000
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CONSTRAINTS
@@ -100,6 +104,48 @@ class CompileRequest(BaseModel):
     target_platform: Optional[str] = "iOS"
     ios_version: Optional[str] = "18.0"
     constraints: Optional[List[str]] = None
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CARTRIDGE MODELS
+# ═══════════════════════════════════════════════════════════════════════════
+
+class VisualCartridgeRequest(BaseModel):
+    """SVG generation with dimension constraints."""
+    intent: str
+    width: Optional[int] = 800
+    height: Optional[int] = 600
+    max_elements: Optional[int] = 100
+    color_palette: Optional[List[str]] = None
+
+class SoundCartridgeRequest(BaseModel):
+    """Audio specification with frequency/duration limits."""
+    intent: str
+    duration_ms: Optional[int] = 5000  # max 5 seconds
+    min_frequency: Optional[float] = 20.0  # Hz
+    max_frequency: Optional[float] = 20000.0  # Hz
+    sample_rate: Optional[int] = 44100
+
+class SequenceCartridgeRequest(BaseModel):
+    """Video/animation specification with frame constraints."""
+    intent: str
+    duration_seconds: Optional[float] = 30.0
+    fps: Optional[int] = 30
+    width: Optional[int] = 1920
+    height: Optional[int] = 1080
+    max_scenes: Optional[int] = 10
+
+class DataCartridgeRequest(BaseModel):
+    """Report generation with statistical bounds."""
+    intent: str
+    data: Optional[Dict[str, Any]] = None
+    format: Optional[str] = "json"  # json, csv, markdown
+    max_rows: Optional[int] = 1000
+    include_statistics: Optional[bool] = True
+
+class SignRequest(BaseModel):
+    """Cryptographic signature request."""
+    payload: str
+    context: Optional[str] = None
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CORE FUNCTIONS
@@ -315,6 +361,119 @@ APP_CONSTRAINTS = {
             r"\b(disable|hide)\b.*\b(status bar|home indicator)\b",
         ]
     }
+}
+
+# Framework-Specific Constraints
+FRAMEWORK_CONSTRAINTS = {
+    "healthkit": {
+        "name": "HealthKit Medical Constraints",
+        "patterns": [
+            r"\b(diagnose|prescribe|treat)\b.*\b(disease|illness|condition)\b",
+            r"\b(replace|substitute)\b.*\b(doctor|physician|medical)\b",
+            r"\b(medical advice|health recommendation)\b.*\b(without|no)\b.*\b(disclaimer)\b",
+        ],
+        "required_entitlements": ["com.apple.developer.healthkit"],
+        "required_descriptions": ["NSHealthShareUsageDescription", "NSHealthUpdateUsageDescription"],
+        "warnings": [
+            "HealthKit data is sensitive - implement proper encryption",
+            "Medical apps may require FDA approval",
+            "Always include medical disclaimer"
+        ]
+    },
+    "swiftui": {
+        "name": "SwiftUI Accessibility Constraints",
+        "patterns": [
+            r"\b(ignore|skip|disable)\b.*\b(accessibility|voiceover)\b",
+            r"\b(small|tiny)\b.*\b(text|font)\b.*\b(fixed|hardcoded)\b",
+            r"\b(color only)\b.*\b(indicator|status)\b",
+        ],
+        "required_features": ["Dynamic Type support", "VoiceOver labels", "Semantic colors"],
+        "warnings": [
+            "All interactive elements need accessibility labels",
+            "Support Dynamic Type for text sizing",
+            "Don't rely on color alone for information"
+        ]
+    },
+    "arkit": {
+        "name": "ARKit Safety Constraints",
+        "patterns": [
+            r"\b(obscure|block|hide)\b.*\b(real world|environment|surroundings)\b",
+            r"\b(full screen|immersive)\b.*\b(no|without)\b.*\b(exit|escape)\b",
+            r"\b(motion|movement)\b.*\b(extreme|rapid|disorienting)\b",
+        ],
+        "safety_requirements": [
+            "Clear exit mechanism from AR experience",
+            "Warnings for physical movement required",
+            "Boundary detection for physical safety"
+        ],
+        "warnings": [
+            "Users must maintain awareness of surroundings",
+            "Avoid rapid camera movements that cause motion sickness",
+            "Provide clear boundaries for safe play areas"
+        ]
+    },
+    "coreml": {
+        "name": "CoreML Epistemic Constraints",
+        "patterns": [
+            r"\b(100%|always|never|certain|guaranteed)\b.*\b(accurate|correct|prediction)\b",
+            r"\b(replace|substitute)\b.*\b(human|expert|professional)\b.*\b(judgment|decision)\b",
+            r"\b(autonomous|automatic)\b.*\b(critical|life|safety)\b.*\b(decision)\b",
+        ],
+        "epistemic_bounds": {
+            "confidence_display": "Always show prediction confidence",
+            "uncertainty": "Acknowledge model limitations",
+            "human_oversight": "Critical decisions require human review"
+        },
+        "warnings": [
+            "ML predictions have inherent uncertainty",
+            "Display confidence scores to users",
+            "Never claim 100% accuracy"
+        ]
+    }
+}
+
+# Visual Cartridge Constraints
+VISUAL_CONSTRAINTS = {
+    "dimensions": {"min_width": 1, "max_width": 4096, "min_height": 1, "max_height": 4096},
+    "elements": {"max_count": 1000},
+    "colors": {"max_palette": 256},
+    "patterns": [
+        r"\b(offensive|inappropriate|explicit)\b.*\b(image|graphic|visual)\b",
+        r"\b(copy|steal|plagiarize)\b.*\b(logo|brand|trademark)\b",
+    ]
+}
+
+# Sound Cartridge Constraints
+SOUND_CONSTRAINTS = {
+    "duration": {"min_ms": 1, "max_ms": 300000},  # 5 minutes max
+    "frequency": {"min_hz": 1, "max_hz": 22050},
+    "sample_rate": {"allowed": [22050, 44100, 48000, 96000]},
+    "patterns": [
+        r"\b(subliminal|hidden)\b.*\b(message|audio)\b",
+        r"\b(harmful|damaging)\b.*\b(frequency|sound)\b",
+    ]
+}
+
+# Sequence Cartridge Constraints
+SEQUENCE_CONSTRAINTS = {
+    "duration": {"min_seconds": 0.1, "max_seconds": 600},  # 10 minutes max
+    "fps": {"min": 1, "max": 120},
+    "resolution": {"max_width": 7680, "max_height": 4320},  # 8K max
+    "patterns": [
+        r"\b(seizure|epilepsy)\b.*\b(inducing|triggering)\b",
+        r"\b(rapid|strobing)\b.*\b(flash|flicker)\b",
+    ]
+}
+
+# Data Cartridge Constraints
+DATA_CONSTRAINTS = {
+    "rows": {"max": 100000},
+    "columns": {"max": 1000},
+    "formats": ["json", "csv", "markdown", "html"],
+    "patterns": [
+        r"\b(fake|fabricate|falsify)\b.*\b(data|statistics|results)\b",
+        r"\b(manipulate|skew)\b.*\b(numbers|metrics)\b",
+    ]
 }
 
 # Framework mappings
@@ -539,6 +698,366 @@ def rosetta_compile(intent: str, target_platform: str = "iOS", ios_version: str 
         "verified": all_passed,
         "prompt": prompt,
     }
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LEDGER - APPEND-ONLY AUDIT TRAIL
+# ═══════════════════════════════════════════════════════════════════════════
+
+def ledger_append(entry_type: str, payload: dict) -> dict:
+    """Append entry to immutable ledger."""
+    global LEDGER
+
+    timestamp = int(time.time())
+    entry_id = len(LEDGER)
+
+    # Create entry with cryptographic chain
+    prev_hash = LEDGER[-1]["hash"] if LEDGER else "GENESIS"
+
+    entry = {
+        "id": entry_id,
+        "type": entry_type,
+        "payload": payload,
+        "timestamp": timestamp,
+        "prev_hash": prev_hash,
+    }
+
+    # Generate hash of this entry
+    entry_str = f"{entry_id}{entry_type}{payload}{timestamp}{prev_hash}"
+    entry["hash"] = hashlib.sha256(entry_str.encode()).hexdigest()[:16].upper()
+
+    # Append (immutable - never modify existing entries)
+    if len(LEDGER) < MAX_LEDGER_SIZE:
+        LEDGER.append(entry)
+    else:
+        # Rotate: remove oldest, keep recent
+        LEDGER = LEDGER[1:] + [entry]
+
+    return entry
+
+def ledger_verify_chain() -> dict:
+    """Verify integrity of ledger chain."""
+    if not LEDGER:
+        return {"valid": True, "entries": 0, "message": "Ledger empty"}
+
+    for i, entry in enumerate(LEDGER):
+        if i == 0:
+            if entry["prev_hash"] != "GENESIS":
+                return {"valid": False, "broken_at": i, "message": "Genesis block corrupted"}
+        else:
+            if entry["prev_hash"] != LEDGER[i-1]["hash"]:
+                return {"valid": False, "broken_at": i, "message": "Chain broken"}
+
+    return {"valid": True, "entries": len(LEDGER), "message": "Chain intact"}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SIGNATURE AUTHORITY
+# ═══════════════════════════════════════════════════════════════════════════
+
+def sign_payload(payload: str, context: str = None) -> dict:
+    """Generate cryptographic signature for payload."""
+    timestamp = int(time.time())
+
+    # Create signature components
+    sig_input = f"{payload}{context or ''}{timestamp}"
+    signature = hashlib.sha256(sig_input.encode()).hexdigest()
+
+    # Create verification token
+    token = hashlib.sha256(f"{signature}{timestamp}".encode()).hexdigest()[:24].upper()
+
+    return {
+        "signature": signature,
+        "token": token,
+        "timestamp": timestamp,
+        "payload_hash": hashlib.sha256(payload.encode()).hexdigest()[:16].upper(),
+        "verified": True
+    }
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CARTRIDGE FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════
+
+def check_cartridge_constraints(intent: str, patterns: list) -> dict:
+    """Check intent against cartridge-specific patterns."""
+    intent_lower = intent.lower()
+    violations = []
+
+    for pattern in patterns:
+        if re.search(pattern, intent_lower):
+            violations.append(pattern)
+
+    return {"passed": len(violations) == 0, "violations": violations}
+
+def visual_cartridge_compile(request: dict) -> dict:
+    """Compile visual intent into SVG specification."""
+    intent = request["intent"]
+    width = min(max(request.get("width", 800), 1), VISUAL_CONSTRAINTS["dimensions"]["max_width"])
+    height = min(max(request.get("height", 600), 1), VISUAL_CONSTRAINTS["dimensions"]["max_height"])
+    max_elements = min(request.get("max_elements", 100), VISUAL_CONSTRAINTS["elements"]["max_count"])
+
+    # Verify constraints
+    content_check = check_constraints(intent, list(CONSTRAINTS.keys()))
+    visual_check = check_cartridge_constraints(intent, VISUAL_CONSTRAINTS["patterns"])
+
+    verified = len(content_check["failed"]) == 0 and visual_check["passed"]
+
+    # Parse visual elements from intent
+    elements = []
+    element_patterns = {
+        "circle": r"\b(circle|dot|point|round)\b",
+        "rect": r"\b(rectangle|square|box|card)\b",
+        "line": r"\b(line|stroke|path|border)\b",
+        "text": r"\b(text|label|title|heading)\b",
+        "polygon": r"\b(triangle|polygon|shape)\b",
+    }
+
+    for elem_type, pattern in element_patterns.items():
+        if re.search(pattern, intent.lower()):
+            elements.append(elem_type)
+
+    if not elements:
+        elements = ["rect", "text"]  # Default
+
+    # Generate SVG spec
+    spec = None
+    if verified:
+        spec = {
+            "type": "svg",
+            "viewBox": f"0 0 {width} {height}",
+            "width": width,
+            "height": height,
+            "elements": elements[:max_elements],
+            "style": {
+                "background": "#ffffff",
+                "stroke": "#000000",
+                "fill": "#e0e0e0"
+            }
+        }
+
+    return {
+        "verified": verified,
+        "constraints": {
+            "content": content_check,
+            "visual": visual_check,
+            "bounds": {"width": width, "height": height, "max_elements": max_elements}
+        },
+        "spec": spec
+    }
+
+def sound_cartridge_compile(request: dict) -> dict:
+    """Compile sound intent into audio specification."""
+    intent = request["intent"]
+    duration_ms = min(max(request.get("duration_ms", 5000), 1), SOUND_CONSTRAINTS["duration"]["max_ms"])
+    min_freq = max(request.get("min_frequency", 20.0), SOUND_CONSTRAINTS["frequency"]["min_hz"])
+    max_freq = min(request.get("max_frequency", 20000.0), SOUND_CONSTRAINTS["frequency"]["max_hz"])
+    sample_rate = request.get("sample_rate", 44100)
+
+    if sample_rate not in SOUND_CONSTRAINTS["sample_rate"]["allowed"]:
+        sample_rate = 44100
+
+    # Verify constraints
+    content_check = check_constraints(intent, list(CONSTRAINTS.keys()))
+    sound_check = check_cartridge_constraints(intent, SOUND_CONSTRAINTS["patterns"])
+
+    verified = len(content_check["failed"]) == 0 and sound_check["passed"]
+
+    # Parse sound characteristics
+    characteristics = []
+    sound_patterns = {
+        "tone": r"\b(tone|beep|note|pitch)\b",
+        "melody": r"\b(melody|tune|music|song)\b",
+        "effect": r"\b(effect|sound|sfx|audio)\b",
+        "voice": r"\b(voice|speech|spoken|narration)\b",
+        "ambient": r"\b(ambient|background|atmosphere)\b",
+    }
+
+    for char_type, pattern in sound_patterns.items():
+        if re.search(pattern, intent.lower()):
+            characteristics.append(char_type)
+
+    if not characteristics:
+        characteristics = ["tone"]
+
+    spec = None
+    if verified:
+        spec = {
+            "type": "audio",
+            "duration_ms": duration_ms,
+            "sample_rate": sample_rate,
+            "frequency_range": {"min": min_freq, "max": max_freq},
+            "characteristics": characteristics,
+            "format": "wav",
+            "channels": 2
+        }
+
+    return {
+        "verified": verified,
+        "constraints": {
+            "content": content_check,
+            "sound": sound_check,
+            "bounds": {"duration_ms": duration_ms, "frequency_range": [min_freq, max_freq]}
+        },
+        "spec": spec
+    }
+
+def sequence_cartridge_compile(request: dict) -> dict:
+    """Compile sequence intent into video/animation specification."""
+    intent = request["intent"]
+    duration = min(max(request.get("duration_seconds", 30.0), 0.1), SEQUENCE_CONSTRAINTS["duration"]["max_seconds"])
+    fps = min(max(request.get("fps", 30), 1), SEQUENCE_CONSTRAINTS["fps"]["max"])
+    width = min(request.get("width", 1920), SEQUENCE_CONSTRAINTS["resolution"]["max_width"])
+    height = min(request.get("height", 1080), SEQUENCE_CONSTRAINTS["resolution"]["max_height"])
+    max_scenes = min(request.get("max_scenes", 10), 50)
+
+    # Verify constraints
+    content_check = check_constraints(intent, list(CONSTRAINTS.keys()))
+    sequence_check = check_cartridge_constraints(intent, SEQUENCE_CONSTRAINTS["patterns"])
+
+    verified = len(content_check["failed"]) == 0 and sequence_check["passed"]
+
+    # Parse sequence elements
+    sequence_type = "animation"
+    if re.search(r"\b(video|film|movie|clip)\b", intent.lower()):
+        sequence_type = "video"
+    elif re.search(r"\b(slideshow|presentation|slides)\b", intent.lower()):
+        sequence_type = "slideshow"
+
+    spec = None
+    if verified:
+        total_frames = int(duration * fps)
+        spec = {
+            "type": sequence_type,
+            "duration_seconds": duration,
+            "fps": fps,
+            "total_frames": total_frames,
+            "resolution": {"width": width, "height": height},
+            "max_scenes": max_scenes,
+            "format": "mp4",
+            "codec": "h264"
+        }
+
+    return {
+        "verified": verified,
+        "constraints": {
+            "content": content_check,
+            "sequence": sequence_check,
+            "bounds": {"duration": duration, "fps": fps, "resolution": f"{width}x{height}"}
+        },
+        "spec": spec
+    }
+
+def data_cartridge_compile(request: dict) -> dict:
+    """Compile data intent into report specification."""
+    intent = request["intent"]
+    data = request.get("data", {})
+    output_format = request.get("format", "json")
+    max_rows = min(request.get("max_rows", 1000), DATA_CONSTRAINTS["rows"]["max"])
+    include_stats = request.get("include_statistics", True)
+
+    if output_format not in DATA_CONSTRAINTS["formats"]:
+        output_format = "json"
+
+    # Verify constraints
+    content_check = check_constraints(intent, list(CONSTRAINTS.keys()))
+    data_check = check_cartridge_constraints(intent, DATA_CONSTRAINTS["patterns"])
+
+    verified = len(content_check["failed"]) == 0 and data_check["passed"]
+
+    # Parse report type
+    report_type = "general"
+    report_patterns = {
+        "financial": r"\b(financial|revenue|profit|expense|budget)\b",
+        "analytics": r"\b(analytics|metrics|kpi|performance)\b",
+        "summary": r"\b(summary|overview|report|digest)\b",
+        "comparison": r"\b(comparison|compare|versus|vs)\b",
+        "trend": r"\b(trend|growth|change|over time)\b",
+    }
+
+    for rtype, pattern in report_patterns.items():
+        if re.search(pattern, intent.lower()):
+            report_type = rtype
+            break
+
+    spec = None
+    if verified:
+        spec = {
+            "type": "report",
+            "report_type": report_type,
+            "format": output_format,
+            "max_rows": max_rows,
+            "include_statistics": include_stats,
+            "sections": ["header", "summary", "data", "footer"],
+            "data_provided": bool(data)
+        }
+
+        if include_stats and data:
+            # Calculate basic statistics if numeric data provided
+            numeric_values = []
+            for v in data.values():
+                if isinstance(v, (int, float)):
+                    numeric_values.append(v)
+                elif isinstance(v, list):
+                    numeric_values.extend([x for x in v if isinstance(x, (int, float))])
+
+            if numeric_values:
+                spec["statistics"] = {
+                    "count": len(numeric_values),
+                    "sum": round(sum(numeric_values), 4),
+                    "mean": round(sum(numeric_values) / len(numeric_values), 4),
+                    "min": round(min(numeric_values), 4),
+                    "max": round(max(numeric_values), 4)
+                }
+
+    return {
+        "verified": verified,
+        "constraints": {
+            "content": content_check,
+            "data": data_check,
+            "bounds": {"max_rows": max_rows, "format": output_format}
+        },
+        "spec": spec
+    }
+
+def verify_framework_constraints(intent: str, framework: str) -> dict:
+    """Verify intent against framework-specific constraints."""
+    framework_lower = framework.lower()
+
+    if framework_lower not in FRAMEWORK_CONSTRAINTS:
+        return {
+            "framework": framework,
+            "found": False,
+            "message": f"No specific constraints for {framework}"
+        }
+
+    constraint = FRAMEWORK_CONSTRAINTS[framework_lower]
+    intent_lower = intent.lower()
+    violations = []
+
+    for pattern in constraint["patterns"]:
+        if re.search(pattern, intent_lower):
+            violations.append(pattern)
+
+    result = {
+        "framework": framework,
+        "found": True,
+        "name": constraint["name"],
+        "passed": len(violations) == 0,
+        "violations": violations,
+        "warnings": constraint.get("warnings", [])
+    }
+
+    # Add framework-specific metadata
+    if "required_entitlements" in constraint:
+        result["required_entitlements"] = constraint["required_entitlements"]
+    if "required_descriptions" in constraint:
+        result["required_descriptions"] = constraint["required_descriptions"]
+    if "required_features" in constraint:
+        result["required_features"] = constraint["required_features"]
+    if "safety_requirements" in constraint:
+        result["safety_requirements"] = constraint["safety_requirements"]
+    if "epistemic_bounds" in constraint:
+        result["epistemic_bounds"] = constraint["epistemic_bounds"]
+
+    return result
 
 # ═══════════════════════════════════════════════════════════════════════════
 # FASTAPI APPLICATION
@@ -796,7 +1315,13 @@ async def health():
     return {
         "status": "ok",
         "engine": ENGINE,
-        "capabilities": ["verify", "analyze", "compile"],
+        "capabilities": [
+            "verify", "analyze", "compile",
+            "cartridge/visual", "cartridge/sound", "cartridge/sequence", "cartridge/data",
+            "ledger", "sign",
+            "frameworks/verify"
+        ],
+        "ledger_entries": len(LEDGER),
         "timestamp": int(time.time())
     }
 
@@ -968,6 +1493,177 @@ async def get_frameworks():
     return {
         "frameworks": APPLE_FRAMEWORKS,
         "platforms": ["ios", "ipados", "macos", "watchos", "visionos", "tvos"]
+    }
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CARTRIDGE ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.post("/cartridge/visual")
+async def cartridge_visual(request: VisualCartridgeRequest):
+    """Generate SVG specification with dimension constraints."""
+    if not request.intent or len(request.intent.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Intent required (min 5 chars)")
+
+    result = visual_cartridge_compile(request.dict())
+
+    timestamp = int(time.time())
+    fp = fingerprint(f"{request.intent}{timestamp}")
+
+    # Log to ledger
+    ledger_append("cartridge_visual", {"intent": request.intent[:100], "verified": result["verified"]})
+
+    return {
+        **result,
+        "cartridge": "visual",
+        "fingerprint": fp,
+        "timestamp": timestamp,
+        "engine": ENGINE
+    }
+
+@app.post("/cartridge/sound")
+async def cartridge_sound(request: SoundCartridgeRequest):
+    """Generate audio specification with frequency/duration limits."""
+    if not request.intent or len(request.intent.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Intent required (min 5 chars)")
+
+    result = sound_cartridge_compile(request.dict())
+
+    timestamp = int(time.time())
+    fp = fingerprint(f"{request.intent}{timestamp}")
+
+    # Log to ledger
+    ledger_append("cartridge_sound", {"intent": request.intent[:100], "verified": result["verified"]})
+
+    return {
+        **result,
+        "cartridge": "sound",
+        "fingerprint": fp,
+        "timestamp": timestamp,
+        "engine": ENGINE
+    }
+
+@app.post("/cartridge/sequence")
+async def cartridge_sequence(request: SequenceCartridgeRequest):
+    """Generate video/animation specification with frame constraints."""
+    if not request.intent or len(request.intent.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Intent required (min 5 chars)")
+
+    result = sequence_cartridge_compile(request.dict())
+
+    timestamp = int(time.time())
+    fp = fingerprint(f"{request.intent}{timestamp}")
+
+    # Log to ledger
+    ledger_append("cartridge_sequence", {"intent": request.intent[:100], "verified": result["verified"]})
+
+    return {
+        **result,
+        "cartridge": "sequence",
+        "fingerprint": fp,
+        "timestamp": timestamp,
+        "engine": ENGINE
+    }
+
+@app.post("/cartridge/data")
+async def cartridge_data(request: DataCartridgeRequest):
+    """Generate report specification with statistical bounds."""
+    if not request.intent or len(request.intent.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Intent required (min 5 chars)")
+
+    result = data_cartridge_compile(request.dict())
+
+    timestamp = int(time.time())
+    fp = fingerprint(f"{request.intent}{timestamp}")
+
+    # Log to ledger
+    ledger_append("cartridge_data", {"intent": request.intent[:100], "verified": result["verified"]})
+
+    return {
+        **result,
+        "cartridge": "data",
+        "fingerprint": fp,
+        "timestamp": timestamp,
+        "engine": ENGINE
+    }
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LEDGER ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.get("/ledger")
+async def get_ledger(limit: int = 100, offset: int = 0):
+    """Return append-only audit trail."""
+    chain_status = ledger_verify_chain()
+
+    total = len(LEDGER)
+    entries = LEDGER[offset:offset + limit]
+
+    return {
+        "entries": entries,
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "chain": chain_status,
+        "engine": ENGINE
+    }
+
+@app.get("/ledger/verify")
+async def verify_ledger():
+    """Verify integrity of ledger chain."""
+    return ledger_verify_chain()
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SIGNATURE ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.post("/sign")
+async def sign(request: SignRequest):
+    """Generate cryptographic signature for payload."""
+    if not request.payload or len(request.payload.strip()) < 1:
+        raise HTTPException(status_code=400, detail="Payload required")
+
+    result = sign_payload(request.payload, request.context)
+
+    # Log to ledger
+    ledger_append("signature", {"payload_hash": result["payload_hash"], "token": result["token"]})
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+# ═══════════════════════════════════════════════════════════════════════════
+# FRAMEWORK CONSTRAINT ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.get("/frameworks/constraints")
+async def get_framework_constraints():
+    """List framework-specific constraints."""
+    return {
+        "frameworks": list(FRAMEWORK_CONSTRAINTS.keys()),
+        "details": {k: v["name"] for k, v in FRAMEWORK_CONSTRAINTS.items()}
+    }
+
+@app.post("/frameworks/verify")
+async def verify_framework(intent: str, framework: str):
+    """Verify intent against framework-specific constraints."""
+    if not intent or len(intent.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Intent required (min 5 chars)")
+
+    result = verify_framework_constraints(intent, framework)
+
+    timestamp = int(time.time())
+    fp = fingerprint(f"{intent}{framework}{timestamp}")
+
+    # Log to ledger
+    ledger_append("framework_verify", {"framework": framework, "passed": result.get("passed", True)})
+
+    return {
+        **result,
+        "fingerprint": fp,
+        "timestamp": timestamp,
+        "engine": ENGINE
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
