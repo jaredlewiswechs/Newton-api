@@ -1,0 +1,18 @@
+# render.yaml
+# Newton API - Render Deployment Configuration
+
+services:
+  - type: web
+    name: newton-kernel
+    runtime: ruby
+    buildCommand: bundle install
+    startCommand: bundle exec ruby newton_api.rb -o 0.0.0.0
+    envVars:
+      - key: PORT
+        value: 4567
+      - key: NEWTON_STORAGE
+        value: /tmp/newton
+      - key: RACK_ENV
+        value: production
+    healthCheckPath: /health
+    autoDeploy: true

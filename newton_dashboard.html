@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton · State Machine Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --void: #050508;
+            --surface-1: #0a0a0f;
+            --surface-2: #10101a;
+            --surface-3: #18182a;
+            --border: #252540;
+            --border-active: #3a3a60;
+            --text: #e8e8f0;
+            --text-secondary: #8888a0;
+            --text-tertiary: #505068;
+            --accent: #00ffaa;
+            --accent-dim: rgba(0, 255, 170, 0.15);
+            --accent-glow: rgba(0, 255, 170, 0.4);
+            --pending: #ffaa00;
+            --pending-dim: rgba(255, 170, 0, 0.15);
+            --verified: #00ffaa;
+            --rejected: #ff4466;
+            --committed: #00aaff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, sans-serif;
+            background: var(--void);
+            color: var(--text);
+        }
+
+        /* Layout */
+        .app {
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            grid-template-rows: 64px 1fr;
+            height: 100vh;
+            gap: 1px;
+            background: var(--border);
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: var(--surface-1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-mark {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent) 0%, #00aa88 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--void);
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-version {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            padding: 4px 8px;
+            background: var(--surface-2);
+            border-radius: 4px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .invariant {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--accent);
+            opacity: 0.7;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--accent-glow); }
+            50% { opacity: 0.6; box-shadow: 0 0 0 8px transparent; }
+        }
+
+        /* Sidebar - Intent Input */
+        .sidebar {
+            background: var(--surface-1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            margin-bottom: 16px;
+        }
+
+        .intent-input {
+            width: 100%;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text);
+            outline: none;
+            resize: none;
+            min-height: 100px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .intent-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .intent-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .commit-btn {
+            margin-top: 12px;
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--void);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .commit-btn:hover {
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+
+        .commit-btn:active {
+            transform: translateY(0);
+        }
+
+        .commit-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Current State */
+        .current-state {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .state-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .state-card.active {
+            border-color: var(--pending);
+            box-shadow: 0 0 30px var(--pending-dim);
+        }
+
+        .state-card.verified {
+            border-color: var(--verified);
+            box-shadow: 0 0 30px var(--accent-dim);
+        }
+
+        .state-intent {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .state-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .metric {
+            background: var(--surface-3);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .metric-value.pending { color: var(--pending); }
+        .metric-value.verified { color: var(--verified); }
+        .metric-value.committed { color: var(--committed); }
+
+        /* Z-Score Visualization */
+        .z-visual {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .z-bar-container {
+            height: 8px;
+            background: var(--surface-3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .z-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--verified) 0%, var(--pending) 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
+
+        .z-markers {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
+        /* Main Canvas */
+        .main {
+            background: var(--surface-1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .main-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+        }
+
+        .main-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Transition Flow */
+        .flow-container {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            overflow-y: auto;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .step-node {
+            width: 120px;
+            height: 120px;
+            border-radius: 16px;
+            background: var(--surface-2);
+            border: 2px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .step-node.active {
+            border-color: var(--pending);
+            box-shadow: 0 0 40px var(--pending-dim);
+        }
+
+        .step-node.complete {
+            border-color: var(--verified);
+            background: var(--accent-dim);
+        }
+
+        .step-node.executing {
+            border-color: var(--committed);
+            animation: executePulse 1s ease-in-out infinite;
+        }
+
+        @keyframes executePulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 170, 255, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(0, 170, 255, 0.5); }
+        }
+
+        .step-icon {
+            font-size: 32px;
+        }
+
+        .step-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .step-connector {
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+            position: relative;
+        }
+
+        .step-connector::after {
+            content: '→';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            font-size: 16px;
+        }
+
+        .step-connector.active {
+            background: linear-gradient(90deg, var(--verified) 0%, var(--pending) 100%);
+        }
+
+        .step-connector.complete {
+            background: var(--verified);
+        }
+
+        /* Large Z Display */
+        .z-display {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .z-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 120px;
+            font-weight: 700;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--pending) 0%, var(--verified) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .z-label {
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+        }
+
+        .z-status {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+
+        .z-status.pending {
+            background: var(--pending-dim);
+            color: var(--pending);
+            border: 1px solid var(--pending);
+        }
+
+        .z-status.verified {
+            background: var(--accent-dim);
+            color: var(--verified);
+            border: 1px solid var(--verified);
+        }
+
+        /* Ledger Panel */
+        .ledger {
+            background: var(--surface-1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ledger-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ledger-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+        }
+
+        .ledger-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+        }
+
+        .ledger-entries {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .ledger-entry {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            animation: entryIn 0.3s ease-out;
+        }
+
+        @keyframes entryIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .entry-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .entry-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .entry-dot.pending { background: var(--pending); }
+        .entry-dot.verified { background: var(--verified); }
+        .entry-dot.committed { background: var(--committed); }
+
+        .entry-status-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .entry-status-text.pending { color: var(--pending); }
+        .entry-status-text.verified { color: var(--verified); }
+        .entry-status-text.committed { color: var(--committed); }
+
+        .entry-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
+        .entry-intent {
+            font-size: 13px;
+            color: var(--text);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .entry-meta {
+            display: flex;
+            gap: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
+        .entry-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .app {
+                grid-template-columns: 280px 1fr;
+            }
+            .ledger {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                grid-template-columns: 1fr;
+                grid-template-rows: 56px auto 1fr;
+            }
+            .sidebar {
+                max-height: 200px;
+            }
+            .z-value {
+                font-size: 72px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-active);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-mark">N</div>
+                    <span class="logo-text">Newton</span>
+                </div>
+                <span class="logo-version">v1.0.0</span>
+            </div>
+            <div class="header-right">
+                <span class="invariant">1 == 1</span>
+                <div class="connection-status">
+                    <div class="status-dot"></div>
+                    <span>State Machine Active</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Register Intent</div>
+                <textarea
+                    class="intent-input"
+                    id="intentInput"
+                    placeholder="Enter intent to commit..."
+                ></textarea>
+                <button class="commit-btn" id="commitBtn">
+                    Commit Intent
+                </button>
+            </div>
+
+            <div class="current-state" id="currentState">
+                <div class="empty-state">
+                    <div class="empty-icon">&#9671;</div>
+                    <div class="empty-text">No active intent.<br>Enter one above to begin.</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="main">
+            <div class="main-header">
+                <span class="main-title">State Transition</span>
+                <div class="main-actions">
+                    <button class="action-btn" id="verifyBtn" disabled>Verify (Lower Z)</button>
+                    <button class="action-btn" id="executeBtn" disabled>Execute Action</button>
+                </div>
+            </div>
+
+            <div class="flow-container">
+                <!-- Z-Score Display -->
+                <div class="z-display" id="zDisplay">
+                    <div class="z-value" id="zValue">&mdash;</div>
+                    <div class="z-label">Z-Score</div>
+                    <div class="z-status pending" id="zStatus" style="display: none;">PENDING</div>
+                </div>
+
+                <!-- Flow Visualization -->
+                <div class="flow-step">
+                    <div class="step-node" id="stepIntent">
+                        <div class="step-icon">&#9671;</div>
+                        <div class="step-label">Intent</div>
+                    </div>
+                    <div class="step-connector" id="connector1"></div>
+                    <div class="step-node" id="stepVerify">
+                        <div class="step-icon">&#9672;</div>
+                        <div class="step-label">Verify</div>
+                    </div>
+                    <div class="step-connector" id="connector2"></div>
+                    <div class="step-node" id="stepExecute">
+                        <div class="step-icon">&#11041;</div>
+                        <div class="step-label">Execute</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Ledger -->
+        <aside class="ledger">
+            <div class="ledger-header">
+                <span class="ledger-title">Audit Ledger</span>
+                <span class="ledger-count" id="ledgerCount">0 entries</span>
+            </div>
+            <div class="ledger-entries" id="ledgerEntries">
+                <div class="empty-state">
+                    <div class="empty-icon">&#128203;</div>
+                    <div class="empty-text">Ledger empty.<br>Commits will appear here.</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // NEWTON DASHBOARD
+        // Real-time visualization of the State Machine
+        // ═══════════════════════════════════════════════════════════════
+
+        // State
+        let currentIntent = null;
+        let ledger = [];
+        let owner = 'dashboard_' + Math.random().toString(36).substr(2, 9);
+
+        // DOM Elements
+        const intentInput = document.getElementById('intentInput');
+        const commitBtn = document.getElementById('commitBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const executeBtn = document.getElementById('executeBtn');
+        const currentStateEl = document.getElementById('currentState');
+        const zValue = document.getElementById('zValue');
+        const zStatus = document.getElementById('zStatus');
+        const ledgerEntries = document.getElementById('ledgerEntries');
+        const ledgerCount = document.getElementById('ledgerCount');
+
+        // Step nodes
+        const stepIntent = document.getElementById('stepIntent');
+        const stepVerify = document.getElementById('stepVerify');
+        const stepExecute = document.getElementById('stepExecute');
+        const connector1 = document.getElementById('connector1');
+        const connector2 = document.getElementById('connector2');
+
+        // Newton Engine (Client-side simulation)
+        const Newton = {
+            process(intent, existingLedger) {
+                if (!intent || intent.length < 4) return null;
+
+                const count = existingLedger.filter(e => e.intent === intent).length + 1;
+                const z = Math.max(0, 10.0 - (count * 3.33)).toFixed(2);
+
+                return {
+                    id: 'N_' + Math.random().toString(36).substr(2, 8).toUpperCase(),
+                    intent: intent,
+                    z: parseFloat(z),
+                    status: z <= 0 ? 'VERIFIED' : 'PENDING',
+                    timestamp: Date.now(),
+                    fingerprint: this.fingerprint(intent)
+                };
+            },
+
+            fingerprint(input) {
+                let hash = 0;
+                for (let i = 0; i < input.length; i++) {
+                    const char = input.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash).toString(16).toUpperCase().padStart(8, '0').substr(0, 8);
+            }
+        };
+
+        // Commit Intent
+        function commitIntent() {
+            const intent = intentInput.value.trim();
+            if (!intent || intent.length < 4) {
+                alert('Intent must be at least 4 characters');
+                return;
+            }
+
+            const result = Newton.process(intent, ledger);
+            if (!result) return;
+
+            // Add to ledger
+            ledger.push(result);
+            currentIntent = result;
+
+            // Update UI
+            updateCurrentState();
+            updateZDisplay();
+            updateFlowVisualization();
+            updateLedger();
+            updateButtons();
+
+            // Clear input
+            intentInput.value = '';
+        }
+
+        // Verify (Lower Z-Score)
+        function verifyIntent() {
+            if (!currentIntent || currentIntent.status === 'VERIFIED') return;
+
+            const result = Newton.process(currentIntent.intent, ledger);
+            if (!result) return;
+
+            ledger.push(result);
+            currentIntent = result;
+
+            updateCurrentState();
+            updateZDisplay();
+            updateFlowVisualization();
+            updateLedger();
+            updateButtons();
+
+            // Check if verified
+            if (currentIntent.status === 'VERIFIED') {
+                celebrateVerification();
+            }
+        }
+
+        // Execute Action
+        function executeAction() {
+            if (!currentIntent || currentIntent.status !== 'VERIFIED') return;
+
+            // Simulate execution
+            stepExecute.classList.add('executing');
+            connector2.classList.add('complete');
+            executeBtn.disabled = true;
+
+            setTimeout(() => {
+                // Create execution record
+                const execRecord = {
+                    id: 'X_' + Math.random().toString(36).substr(2, 8).toUpperCase(),
+                    intent: 'EXEC:' + currentIntent.intent,
+                    z: 0,
+                    status: 'COMMITTED',
+                    timestamp: Date.now(),
+                    fingerprint: Newton.fingerprint(currentIntent.fingerprint + ':exec'),
+                    parent: currentIntent.fingerprint
+                };
+
+                ledger.push(execRecord);
+
+                stepExecute.classList.remove('executing');
+                stepExecute.classList.add('complete');
+
+                updateLedger();
+
+                // Reset for next intent
+                setTimeout(() => {
+                    currentIntent = null;
+                    resetFlow();
+                    updateButtons();
+                }, 2000);
+            }, 1500);
+        }
+
+        // UI Updates
+        function updateCurrentState() {
+            if (!currentIntent) {
+                currentStateEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">&#9671;</div>
+                        <div class="empty-text">No active intent.<br>Enter one above to begin.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const statusClass = currentIntent.status === 'VERIFIED' ? 'verified' : 'active';
+            const zPercent = ((10 - currentIntent.z) / 10) * 100;
+
+            currentStateEl.innerHTML = `
+                <div class="state-card ${statusClass}">
+                    <div class="state-intent">"${currentIntent.intent}"</div>
+                    <div class="state-metrics">
+                        <div class="metric">
+                            <div class="metric-label">Z-Score</div>
+                            <div class="metric-value ${currentIntent.status.toLowerCase()}">${currentIntent.z.toFixed(2)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Status</div>
+                            <div class="metric-value ${currentIntent.status.toLowerCase()}">${currentIntent.status}</div>
+                        </div>
+                    </div>
+                    <div class="z-visual">
+                        <div class="metric-label">Progress to Verification</div>
+                        <div class="z-bar-container">
+                            <div class="z-bar" style="width: ${zPercent}%"></div>
+                        </div>
+                        <div class="z-markers">
+                            <span>10.0</span>
+                            <span>6.67</span>
+                            <span>3.33</span>
+                            <span>0.0 &#10003;</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateZDisplay() {
+            if (!currentIntent) {
+                zValue.textContent = '\u2014';
+                zStatus.style.display = 'none';
+                return;
+            }
+
+            zValue.textContent = currentIntent.z.toFixed(2);
+            zStatus.style.display = 'inline-block';
+            zStatus.textContent = currentIntent.status;
+            zStatus.className = 'z-status ' + currentIntent.status.toLowerCase();
+        }
+
+        function updateFlowVisualization() {
+            // Reset
+            [stepIntent, stepVerify, stepExecute].forEach(el => {
+                el.classList.remove('active', 'complete', 'executing');
+            });
+            [connector1, connector2].forEach(el => {
+                el.classList.remove('active', 'complete');
+            });
+
+            if (!currentIntent) return;
+
+            // Intent registered
+            stepIntent.classList.add('complete');
+            connector1.classList.add('active');
+
+            if (currentIntent.status === 'PENDING') {
+                stepVerify.classList.add('active');
+            } else if (currentIntent.status === 'VERIFIED') {
+                stepVerify.classList.add('complete');
+                connector1.classList.add('complete');
+                connector2.classList.add('active');
+                stepExecute.classList.add('active');
+            }
+        }
+
+        function updateLedger() {
+            if (ledger.length === 0) {
+                ledgerEntries.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128203;</div>
+                        <div class="empty-text">Ledger empty.<br>Commits will appear here.</div>
+                    </div>
+                `;
+                ledgerCount.textContent = '0 entries';
+                return;
+            }
+
+            ledgerCount.textContent = `${ledger.length} entries`;
+
+            // Show latest first
+            const reversed = [...ledger].reverse();
+            ledgerEntries.innerHTML = reversed.map(entry => {
+                const statusClass = entry.status.toLowerCase();
+                const time = new Date(entry.timestamp).toLocaleTimeString();
+
+                return `
+                    <div class="ledger-entry">
+                        <div class="entry-header">
+                            <div class="entry-status">
+                                <div class="entry-dot ${statusClass}"></div>
+                                <span class="entry-status-text ${statusClass}">${entry.status}</span>
+                            </div>
+                            <span class="entry-time">${time}</span>
+                        </div>
+                        <div class="entry-intent">${entry.intent}</div>
+                        <div class="entry-meta">
+                            <span>Z: ${entry.z.toFixed(2)}</span>
+                            <span>FP: ${entry.fingerprint}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateButtons() {
+            verifyBtn.disabled = !currentIntent || currentIntent.status === 'VERIFIED';
+            executeBtn.disabled = !currentIntent || currentIntent.status !== 'VERIFIED';
+        }
+
+        function resetFlow() {
+            updateCurrentState();
+            updateZDisplay();
+            updateFlowVisualization();
+        }
+
+        function celebrateVerification() {
+            // Add celebration animation
+            zValue.style.animation = 'none';
+            zValue.offsetHeight; // Trigger reflow
+            zValue.style.animation = 'celebrate 0.5s ease-out';
+        }
+
+        // Event Listeners
+        commitBtn.addEventListener('click', commitIntent);
+        verifyBtn.addEventListener('click', verifyIntent);
+        executeBtn.addEventListener('click', executeAction);
+
+        intentInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                commitIntent();
+            }
+        });
+
+        // Add celebration animation to style
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes celebrate {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize
+        updateButtons();
+    </script>
+</body>
+</html>
