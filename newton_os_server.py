@@ -2,7 +2,7 @@
 """
 ═══════════════════════════════════════════════════════════════════════════
 NEWTON OS - UNIFIED SERVER
-Ada speaks. Tahoe remembers. THIA sees.
+Ada speaks. Tahoe remembers. THIA sees. Rosetta compiles.
 ═══════════════════════════════════════════════════════════════════════════
 
 Author: Jared Lewis | Ada Computing Company | Houston, Texas
@@ -11,6 +11,7 @@ Author: Jared Lewis | Ada Computing Company | Houston, Texas
 Architecture:
     /verify   → Newton Core (intent verification)
     /analyze  → THIA (anomaly detection)
+    /compile  → Rosetta (intent-to-prompt compiler)
     /health   → Infrastructure status
 
 One API. Multiple capabilities. Single identity.
@@ -33,7 +34,7 @@ import statistics
 
 DW_AXIS = 2048
 THRESHOLD = 1024
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 ENGINE = f"Newton OS {VERSION}"
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -93,6 +94,12 @@ class BatchAnalyzeRequest(BaseModel):
     datasets: Dict[str, List[float]]
     method: Optional[str] = "zscore"
     threshold: Optional[float] = 3.0
+
+class CompileRequest(BaseModel):
+    intent: str
+    target_platform: Optional[str] = "iOS"
+    ios_version: Optional[str] = "18.0"
+    constraints: Optional[List[str]] = None
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CORE FUNCTIONS
@@ -279,6 +286,259 @@ def thia_analyze(values: List[float], method: str = "zscore", threshold: float =
         }
     else:
         return {"error": f"Unknown method: {method}. Use 'zscore', 'iqr', 'mad', or 'all'."}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ROSETTA - COMPILER CARTRIDGE
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Apple Development Constraints
+APP_CONSTRAINTS = {
+    "app_store": {
+        "name": "App Store Guidelines",
+        "patterns": [
+            r"\b(gambling|casino|betting)\b.*\b(real money|cash)\b",
+            r"\b(cryptocurrency|crypto)\b.*\b(mining|trading)\b",
+            r"\b(adult|explicit|nsfw)\b",
+        ]
+    },
+    "privacy": {
+        "name": "Privacy Requirements",
+        "patterns": [
+            r"\b(track|collect)\b.*\b(location|contacts|photos)\b.*\b(without|secret)",
+            r"\b(sell|share)\b.*\b(user data|personal)\b",
+        ]
+    },
+    "hig": {
+        "name": "Human Interface Guidelines",
+        "patterns": [
+            r"\b(custom|non-standard)\b.*\b(back button|navigation)\b",
+            r"\b(disable|hide)\b.*\b(status bar|home indicator)\b",
+        ]
+    }
+}
+
+# Framework mappings
+APPLE_FRAMEWORKS = {
+    "ui": ["SwiftUI", "UIKit"],
+    "data": ["CoreData", "SwiftData", "CloudKit"],
+    "health": ["HealthKit", "HealthKitUI"],
+    "location": ["CoreLocation", "MapKit"],
+    "media": ["AVFoundation", "PhotosUI", "MusicKit"],
+    "ml": ["CoreML", "Vision", "NaturalLanguage"],
+    "ar": ["ARKit", "RealityKit"],
+    "payments": ["StoreKit", "PassKit"],
+    "notifications": ["UserNotifications"],
+    "network": ["Network", "URLSession"],
+    "auth": ["AuthenticationServices", "LocalAuthentication"],
+}
+
+# Component patterns for parsing
+COMPONENT_PATTERNS = {
+    "list": r"\b(list|table|collection|feed|timeline)\b",
+    "form": r"\b(form|input|settings|preferences|profile)\b",
+    "detail": r"\b(detail|view|show|display|page)\b",
+    "navigation": r"\b(tab|menu|sidebar|drawer|navigation)\b",
+    "map": r"\b(map|location|directions|places)\b",
+    "media": r"\b(photo|video|camera|gallery|player)\b",
+    "chart": r"\b(chart|graph|analytics|statistics|dashboard)\b",
+    "auth": r"\b(login|signup|auth|register|account)\b",
+    "chat": r"\b(chat|message|conversation|inbox)\b",
+    "search": r"\b(search|filter|find|browse)\b",
+}
+
+def rosetta_parse(intent: str) -> dict:
+    """Parse natural language intent into structured components."""
+    intent_lower = intent.lower()
+
+    # Detect platform
+    platforms = {
+        "ios": r"\b(iphone|ios|mobile app)\b",
+        "ipados": r"\b(ipad|ipados|tablet)\b",
+        "macos": r"\b(mac|macos|desktop)\b",
+        "watchos": r"\b(watch|watchos|wearable)\b",
+        "visionos": r"\b(vision|visionos|spatial|ar app)\b",
+        "tvos": r"\b(tv|tvos|apple tv)\b",
+    }
+
+    detected_platform = "ios"  # default
+    for platform, pattern in platforms.items():
+        if re.search(pattern, intent_lower):
+            detected_platform = platform
+            break
+
+    # Detect components
+    detected_components = []
+    for component, pattern in COMPONENT_PATTERNS.items():
+        if re.search(pattern, intent_lower):
+            detected_components.append(component)
+
+    # Detect required frameworks
+    framework_keywords = {
+        "health": r"\b(health|fitness|workout|steps|heart rate)\b",
+        "location": r"\b(map|location|gps|directions|nearby)\b",
+        "media": r"\b(photo|video|camera|music|audio)\b",
+        "ml": r"\b(ml|ai|recognize|detect|classify|predict)\b",
+        "ar": r"\b(ar|augmented|3d|spatial)\b",
+        "payments": r"\b(payment|purchase|subscription|in-app)\b",
+        "notifications": r"\b(notification|reminder|alert|push)\b",
+        "auth": r"\b(login|auth|face id|touch id|biometric)\b",
+        "data": r"\b(save|store|sync|cloud|database)\b",
+    }
+
+    detected_frameworks = ["SwiftUI"]  # Always include SwiftUI
+    for category, pattern in framework_keywords.items():
+        if re.search(pattern, intent_lower):
+            detected_frameworks.extend(APPLE_FRAMEWORKS.get(category, []))
+
+    # Remove duplicates while preserving order
+    detected_frameworks = list(dict.fromkeys(detected_frameworks))
+
+    # Extract app type
+    app_types = {
+        "utility": r"\b(utility|tool|calculator|converter|timer)\b",
+        "social": r"\b(social|community|share|friends|followers)\b",
+        "productivity": r"\b(productivity|task|todo|notes|calendar)\b",
+        "media": r"\b(photo|video|music|podcast|streaming)\b",
+        "health": r"\b(health|fitness|wellness|meditation|sleep)\b",
+        "finance": r"\b(finance|budget|expense|investment|banking)\b",
+        "education": r"\b(education|learn|study|course|quiz)\b",
+        "lifestyle": r"\b(lifestyle|recipe|travel|weather|news)\b",
+        "game": r"\b(game|play|puzzle|arcade|trivia)\b",
+    }
+
+    app_type = "utility"  # default
+    for atype, pattern in app_types.items():
+        if re.search(pattern, intent_lower):
+            app_type = atype
+            break
+
+    return {
+        "platform": detected_platform,
+        "app_type": app_type,
+        "components": detected_components if detected_components else ["list", "detail"],
+        "frameworks": detected_frameworks,
+        "tokens": len(intent.split()),
+    }
+
+def rosetta_verify_app_constraints(intent: str) -> dict:
+    """Verify intent against Apple development constraints."""
+    intent_lower = intent.lower()
+    passed = []
+    failed = []
+    warnings = []
+
+    for key, constraint in APP_CONSTRAINTS.items():
+        violation = False
+        for pattern in constraint["patterns"]:
+            if re.search(pattern, intent_lower):
+                violation = True
+                break
+
+        if violation:
+            failed.append(key)
+        else:
+            passed.append(key)
+
+    # Add warnings for complex features
+    if re.search(r"\b(health|healthkit)\b", intent_lower):
+        warnings.append("HealthKit requires special entitlements and privacy descriptions")
+    if re.search(r"\b(location|gps)\b", intent_lower):
+        warnings.append("Location services require NSLocationWhenInUseUsageDescription")
+    if re.search(r"\b(camera|photo)\b", intent_lower):
+        warnings.append("Camera/Photos require NSCameraUsageDescription or NSPhotoLibraryUsageDescription")
+    if re.search(r"\b(notification|push)\b", intent_lower):
+        warnings.append("Push notifications require APNs configuration")
+
+    return {
+        "passed": passed,
+        "failed": failed,
+        "warnings": warnings,
+        "compliant": len(failed) == 0
+    }
+
+def rosetta_generate_prompt(intent: str, parsed: dict, ios_version: str) -> str:
+    """Generate structured AI Studio prompt from parsed intent."""
+
+    # Build component specifications
+    component_specs = []
+    for i, comp in enumerate(parsed["components"], 1):
+        component_specs.append(f"{i}. {comp.title()}View")
+
+    prompt = f"""TARGET: {parsed['platform'].upper()} {ios_version}
+FRAMEWORK: {parsed['frameworks'][0]}
+APP_TYPE: {parsed['app_type']}
+DATE: {time.strftime('%Y-%m-%d')}
+
+REQUIREMENTS:
+{intent}
+
+ARCHITECTURE:
+- Pattern: MVVM
+- State: @Observable (iOS 17+) or ObservableObject
+- Navigation: NavigationStack
+
+FRAMEWORKS_REQUIRED:
+{chr(10).join(f'- {fw}' for fw in parsed['frameworks'])}
+
+SCREENS:
+{chr(10).join(component_specs)}
+
+DESIGN_SYSTEM:
+- Typography: SF Pro (system default)
+- Icons: SF Symbols
+- Colors: Use semantic colors (e.g., .primary, .secondary, .accent)
+- Spacing: Use standard SwiftUI spacing (8pt grid)
+
+CONSTRAINTS:
+- App Store Guidelines: VERIFY
+- Human Interface Guidelines: COMPLY
+- Privacy: DECLARE_ALL_USAGE
+- Accessibility: SUPPORT_VOICEOVER
+
+OUTPUT_FORMAT:
+Generate complete, compilable Swift code with:
+1. Data models
+2. View models
+3. Views (SwiftUI)
+4. Navigation structure
+5. Preview providers
+
+CODE_STYLE:
+- Use Swift 5.9+ syntax
+- Prefer async/await for concurrency
+- Use property wrappers appropriately
+- Include MARK comments for sections"""
+
+    return prompt
+
+def rosetta_compile(intent: str, target_platform: str = "iOS", ios_version: str = "18.0") -> dict:
+    """Full compilation pipeline: parse → verify → generate."""
+
+    # Step 1: Parse intent
+    parsed = rosetta_parse(intent)
+    parsed["platform"] = target_platform.lower()
+
+    # Step 2: Verify against content constraints (reuse existing)
+    content_check = check_constraints(intent, list(CONSTRAINTS.keys()))
+
+    # Step 3: Verify against app development constraints
+    app_check = rosetta_verify_app_constraints(intent)
+
+    # Step 4: Determine if compilation should proceed
+    all_passed = len(content_check["failed"]) == 0 and app_check["compliant"]
+
+    # Step 5: Generate prompt if verified
+    prompt = None
+    if all_passed:
+        prompt = rosetta_generate_prompt(intent, parsed, ios_version)
+
+    return {
+        "parsed": parsed,
+        "content_constraints": content_check,
+        "app_constraints": app_check,
+        "verified": all_passed,
+        "prompt": prompt,
+    }
 
 # ═══════════════════════════════════════════════════════════════════════════
 # FASTAPI APPLICATION
@@ -536,7 +796,7 @@ async def health():
     return {
         "status": "ok",
         "engine": ENGINE,
-        "capabilities": ["verify", "analyze"],
+        "capabilities": ["verify", "analyze", "compile"],
         "timestamp": int(time.time())
     }
 
@@ -663,6 +923,51 @@ async def analyze_batch(request: BatchAnalyzeRequest):
         "datasets_processed": len(request.datasets),
         "timestamp": timestamp,
         "engine": ENGINE
+    }
+
+@app.post("/compile")
+async def compile_intent(request: CompileRequest):
+    """Compile natural language intent into AI Studio prompt."""
+    intent = request.intent.strip()
+    if not intent:
+        raise HTTPException(status_code=400, detail="Intent required")
+
+    if len(intent) < 10:
+        raise HTTPException(status_code=400, detail="Intent too short (min 10 chars)")
+
+    # Run the compiler
+    result = rosetta_compile(
+        intent=intent,
+        target_platform=request.target_platform,
+        ios_version=request.ios_version
+    )
+
+    # Generate fingerprints
+    timestamp = int(time.time())
+    input_fp = fingerprint(intent)
+    output_fp = fingerprint(f"{result['prompt']}{timestamp}") if result["prompt"] else None
+
+    return {
+        "compiled": result["verified"],
+        "intent": intent,
+        "parsed": result["parsed"],
+        "constraints": {
+            "content": result["content_constraints"],
+            "app_development": result["app_constraints"]
+        },
+        "prompt": result["prompt"],
+        "input_fingerprint": input_fp,
+        "output_fingerprint": output_fp,
+        "timestamp": timestamp,
+        "engine": ENGINE
+    }
+
+@app.get("/frameworks")
+async def get_frameworks():
+    """List available Apple frameworks by category."""
+    return {
+        "frameworks": APPLE_FRAMEWORKS,
+        "platforms": ["ios", "ipados", "macos", "watchos", "visionos", "tvos"]
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
