@@ -5,8 +5,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY newton_public.py .
+COPY newton_os_server.py .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "newton_public:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "newton_os_server:app", "--host", "0.0.0.0", "--port", "8000"]
