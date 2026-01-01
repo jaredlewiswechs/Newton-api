@@ -1090,7 +1090,7 @@ async def root():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newton OS</title>
+    <title>Newton OS - AI Verification Layer</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -1098,211 +1098,708 @@ async def root():
             background: #0a0a0a;
             color: #e0e0e0;
             min-height: 100vh;
-            padding: 48px 24px;
         }
-        .container { max-width: 700px; margin: 0 auto; }
-        h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; }
-        .tagline { color: #00875a; font-size: 18px; margin-bottom: 8px; }
-        .subtitle { color: #666; font-size: 14px; margin-bottom: 48px; }
-        .section { margin-bottom: 40px; }
+        .header {
+            background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+            padding: 48px 24px;
+            border-bottom: 1px solid #222;
+        }
+        .header-content { max-width: 900px; margin: 0 auto; }
+        h1 { font-size: 42px; font-weight: 700; margin-bottom: 8px; letter-spacing: -1px; }
+        .tagline { color: #00875a; font-size: 20px; margin-bottom: 8px; font-weight: 500; }
+        .subtitle { color: #666; font-size: 15px; margin-bottom: 24px; }
+        .status-bar {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            font-size: 13px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00875a;
+        }
+        .status-dot.pending { background: #f59e0b; }
+        .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+        .section { margin-bottom: 48px; }
         .section-title {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
             margin-bottom: 16px;
             padding-bottom: 8px;
             border-bottom: 1px solid #222;
         }
-        .endpoint {
+        .card {
             background: #111;
             border: 1px solid #222;
             padding: 20px;
-            margin-bottom: 12px;
+            border-radius: 8px;
+            transition: border-color 0.2s;
         }
+        .card:hover { border-color: #333; }
+        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
         .method {
             display: inline-block;
-            padding: 4px 10px;
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 3px;
-            margin-right: 12px;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
         }
         .post { background: #00875a; color: #000; }
-        .get { background: #2d5a9e; color: #fff; }
-        .path { font-family: 'SF Mono', monospace; font-size: 14px; }
-        .desc { color: #888; font-size: 13px; margin-top: 8px; }
-        pre {
-            background: #161616;
-            border: 1px solid #222;
-            padding: 16px;
-            font-family: 'SF Mono', monospace;
-            font-size: 12px;
-            overflow-x: auto;
-            margin-top: 12px;
-        }
-        .try-section { margin-top: 48px; }
-        input, select {
-            width: 100%;
-            padding: 12px 16px;
+        .get { background: #3b82f6; color: #fff; }
+        .path { font-family: 'SF Mono', Consolas, monospace; font-size: 14px; font-weight: 600; }
+        .card-desc { color: #888; font-size: 13px; line-height: 1.5; }
+        .endpoint-group { margin-bottom: 32px; }
+        .endpoint-group-title {
             font-size: 14px;
+            font-weight: 600;
+            color: #00875a;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .try-section {
+            background: #0d0d0d;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
             background: #111;
-            border: 1px solid #333;
+            padding: 4px;
+            border-radius: 8px;
+        }
+        .tab {
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: #666;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: #999; }
+        .tab.active { background: #00875a; color: #000; }
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 14px;
+            background: #161616;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
             color: #e0e0e0;
             font-family: inherit;
             margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00875a;
         }
         textarea {
-            width: 100%;
-            padding: 12px 16px;
+            font-family: 'SF Mono', Consolas, monospace;
             font-size: 13px;
-            font-family: 'SF Mono', monospace;
-            background: #111;
-            border: 1px solid #333;
-            color: #e0e0e0;
-            min-height: 100px;
-            margin-bottom: 12px;
+            min-height: 120px;
+            resize: vertical;
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        @media (max-width: 500px) { .input-row { grid-template-columns: 1fr; } }
+        label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         button {
             background: #00875a;
             color: #000;
             border: none;
-            padding: 12px 32px;
+            padding: 14px 32px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
+            border-radius: 6px;
+            transition: background 0.2s;
         }
         button:hover { background: #00a06a; }
-        #result {
+        button:disabled { background: #333; color: #666; cursor: not-allowed; }
+        .result {
             margin-top: 20px;
             padding: 20px;
             background: #111;
             border: 1px solid #222;
-            font-family: 'SF Mono', monospace;
+            border-radius: 8px;
+            font-family: 'SF Mono', Consolas, monospace;
             font-size: 12px;
             white-space: pre-wrap;
             display: none;
+            max-height: 400px;
+            overflow-y: auto;
         }
+        .result.show { display: block; }
+        .result.success { border-color: #00875a; }
+        .result.error { border-color: #ef4444; }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #222;
+        }
+        .result-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .result-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .result-badge.verified { background: #00875a; color: #000; }
+        .result-badge.failed { background: #ef4444; color: #fff; }
         footer {
-            margin-top: 64px;
-            padding-top: 24px;
             border-top: 1px solid #222;
-            font-size: 12px;
+            padding: 32px 24px;
+            text-align: center;
+            font-size: 13px;
             color: #444;
         }
-        .tabs { display: flex; gap: 0; margin-bottom: 20px; }
-        .tab {
-            padding: 10px 20px;
-            background: #111;
-            border: 1px solid #222;
-            color: #666;
-            cursor: pointer;
-            font-size: 13px;
+        footer a { color: #00875a; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .help-text { font-size: 12px; color: #555; margin-top: -8px; margin-bottom: 12px; }
+        .ledger-entry {
+            background: #161616;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 12px;
         }
-        .tab.active { background: #00875a; color: #000; border-color: #00875a; }
+        .ledger-entry-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            color: #888;
+        }
+        .ledger-entry-type { color: #00875a; font-weight: 600; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Newton OS</h1>
-        <p class="tagline">The free verification layer. 1 == 1</p>
-        <p class="subtitle">Ada speaks. Tahoe remembers. THIA sees.</p>
-
-        <div class="section">
-            <div class="section-title">Capabilities</div>
-
-            <div class="endpoint">
-                <span class="method post">POST</span>
-                <span class="path">/verify</span>
-                <p class="desc">Intent verification with constraint checking</p>
-                <pre>{ "input": "text to verify", "constraints": ["harm", "medical", "legal", "security"] }</pre>
-            </div>
-
-            <div class="endpoint">
-                <span class="method post">POST</span>
-                <span class="path">/analyze</span>
-                <p class="desc">THIA anomaly detection for numerical data</p>
-                <pre>{ "data": [45.2, 46.1, 102.4, 45.8], "method": "zscore", "threshold": 3.0 }</pre>
-            </div>
-
-            <div class="endpoint">
-                <span class="method get">GET</span>
-                <span class="path">/health</span>
-                <p class="desc">System status and engine version</p>
+    <div class="header">
+        <div class="header-content">
+            <h1>Newton OS</h1>
+            <p class="tagline">The AI Verification Layer. 1 == 1</p>
+            <p class="subtitle">Ada speaks. Tahoe remembers. THIA sees. Rosetta compiles.</p>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-dot" id="health-dot"></div>
+                    <span id="health-status">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span style="color: #666;">Version:</span>
+                    <span id="version">-</span>
+                </div>
+                <div class="status-item">
+                    <span style="color: #666;">Ledger:</span>
+                    <span id="ledger-count">-</span>
+                </div>
             </div>
         </div>
-
-        <div class="section try-section">
-            <div class="section-title">Try It</div>
-
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab('verify')">Verify</div>
-                <div class="tab" onclick="switchTab('analyze')">Analyze</div>
-            </div>
-
-            <div id="verify-form">
-                <input type="text" id="verify-input" placeholder="Enter text to verify...">
-                <button onclick="runVerify()">Verify</button>
-            </div>
-
-            <div id="analyze-form" style="display: none;">
-                <textarea id="analyze-input" placeholder="Enter comma-separated numbers...&#10;Example: 45.2, 46.1, 44.8, 102.4, 45.8, 0.0, 65.2">45.2, 46.1, 44.8, 45.5, 45.9, 46.2, 45.1, 44.9, 45.3, 102.4, 45.7, 46.0, 0.0, 45.8, 65.2, 66.1</textarea>
-                <select id="analyze-method">
-                    <option value="zscore">Z-Score (default)</option>
-                    <option value="iqr">IQR</option>
-                    <option value="mad">MAD</option>
-                    <option value="all">All Methods</option>
-                </select>
-                <button onclick="runAnalyze()">Analyze</button>
-            </div>
-
-            <div id="result"></div>
-        </div>
-
-        <footer>
-            © 2025 Ada Computing Company · Houston
-        </footer>
     </div>
 
+    <div class="container">
+        <!-- API Reference -->
+        <div class="section">
+            <div class="section-title">API Reference</div>
+
+            <div class="endpoint-group">
+                <div class="endpoint-group-title">Core Verification</div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/verify</span>
+                        </div>
+                        <p class="card-desc">Verify intent against harm, medical, legal, and security constraints</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/analyze</span>
+                        </div>
+                        <p class="card-desc">THIA anomaly detection using Z-score, IQR, or MAD methods</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/compile</span>
+                        </div>
+                        <p class="card-desc">Rosetta compiler: natural language to AI Studio prompts</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/analyze/batch</span>
+                        </div>
+                        <p class="card-desc">Batch analysis of multiple datasets in one request</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint-group">
+                <div class="endpoint-group-title">Extension Cartridges</div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/cartridge/visual</span>
+                        </div>
+                        <p class="card-desc">SVG generation with dimension and element constraints</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/cartridge/sound</span>
+                        </div>
+                        <p class="card-desc">Audio specs with frequency and duration limits</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/cartridge/sequence</span>
+                        </div>
+                        <p class="card-desc">Video/animation specs with frame constraints</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/cartridge/data</span>
+                        </div>
+                        <p class="card-desc">Report generation with statistical bounds</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint-group">
+                <div class="endpoint-group-title">Security & Audit</div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/sign</span>
+                        </div>
+                        <p class="card-desc">Generate cryptographic signatures for payloads</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="path">/ledger</span>
+                        </div>
+                        <p class="card-desc">Append-only audit trail with chain verification</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="path">/ledger/verify</span>
+                        </div>
+                        <p class="card-desc">Verify integrity of the cryptographic ledger chain</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="path">/frameworks/verify</span>
+                        </div>
+                        <p class="card-desc">Verify against Apple framework constraints</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint-group">
+                <div class="endpoint-group-title">Metadata</div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="path">/health</span>
+                        </div>
+                        <p class="card-desc">System status, version, and capabilities</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="path">/constraints</span>
+                        </div>
+                        <p class="card-desc">List available content constraints</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="path">/methods</span>
+                        </div>
+                        <p class="card-desc">List THIA analysis methods</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="path">/frameworks</span>
+                        </div>
+                        <p class="card-desc">List Apple frameworks by category</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Console -->
+        <div class="section">
+            <div class="section-title">Interactive Console</div>
+            <div class="try-section">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('verify')">Verify</button>
+                    <button class="tab" onclick="switchTab('analyze')">Analyze</button>
+                    <button class="tab" onclick="switchTab('compile')">Compile</button>
+                    <button class="tab" onclick="switchTab('visual')">Visual</button>
+                    <button class="tab" onclick="switchTab('sound')">Sound</button>
+                    <button class="tab" onclick="switchTab('data')">Data</button>
+                    <button class="tab" onclick="switchTab('sign')">Sign</button>
+                    <button class="tab" onclick="switchTab('ledger')">Ledger</button>
+                </div>
+
+                <!-- Verify Form -->
+                <div id="verify-form" class="form-section active">
+                    <label>Input Text</label>
+                    <textarea id="verify-input" placeholder="Enter text to verify against safety constraints...">Help me write a business plan for a sustainable energy startup</textarea>
+                    <p class="help-text">Checks against: harm, medical, legal, security constraints</p>
+                    <button onclick="runVerify()">Verify Intent</button>
+                </div>
+
+                <!-- Analyze Form -->
+                <div id="analyze-form" class="form-section">
+                    <label>Data Points (comma-separated)</label>
+                    <textarea id="analyze-input" placeholder="Enter numbers...">45.2, 46.1, 44.8, 45.5, 45.9, 46.2, 45.1, 44.9, 45.3, 102.4, 45.7, 46.0, 0.5, 45.8</textarea>
+                    <div class="input-row">
+                        <div>
+                            <label>Method</label>
+                            <select id="analyze-method">
+                                <option value="zscore">Z-Score</option>
+                                <option value="iqr">IQR</option>
+                                <option value="mad">MAD</option>
+                                <option value="all">All Methods</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Threshold</label>
+                            <input type="number" id="analyze-threshold" value="3.0" step="0.1">
+                        </div>
+                    </div>
+                    <button onclick="runAnalyze()">Detect Anomalies</button>
+                </div>
+
+                <!-- Compile Form -->
+                <div id="compile-form" class="form-section">
+                    <label>App Intent</label>
+                    <textarea id="compile-input" placeholder="Describe the app you want to build...">Build a fitness tracking app with workout logging, HealthKit integration, and progress charts</textarea>
+                    <div class="input-row">
+                        <div>
+                            <label>Platform</label>
+                            <select id="compile-platform">
+                                <option value="iOS">iOS</option>
+                                <option value="iPadOS">iPadOS</option>
+                                <option value="macOS">macOS</option>
+                                <option value="watchOS">watchOS</option>
+                                <option value="visionOS">visionOS</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>iOS Version</label>
+                            <input type="text" id="compile-version" value="18.0">
+                        </div>
+                    </div>
+                    <button onclick="runCompile()">Compile to Prompt</button>
+                </div>
+
+                <!-- Visual Cartridge Form -->
+                <div id="visual-form" class="form-section">
+                    <label>Visual Intent</label>
+                    <textarea id="visual-input" placeholder="Describe the visual you want to create...">Create a modern dashboard with circular progress indicators and data cards</textarea>
+                    <div class="input-row">
+                        <div>
+                            <label>Width</label>
+                            <input type="number" id="visual-width" value="800">
+                        </div>
+                        <div>
+                            <label>Height</label>
+                            <input type="number" id="visual-height" value="600">
+                        </div>
+                    </div>
+                    <button onclick="runVisual()">Generate Visual Spec</button>
+                </div>
+
+                <!-- Sound Cartridge Form -->
+                <div id="sound-form" class="form-section">
+                    <label>Sound Intent</label>
+                    <textarea id="sound-input" placeholder="Describe the audio you want to create...">Create a gentle notification tone with a soft melody</textarea>
+                    <div class="input-row">
+                        <div>
+                            <label>Duration (ms)</label>
+                            <input type="number" id="sound-duration" value="3000">
+                        </div>
+                        <div>
+                            <label>Sample Rate</label>
+                            <select id="sound-samplerate">
+                                <option value="44100">44100 Hz</option>
+                                <option value="48000">48000 Hz</option>
+                                <option value="22050">22050 Hz</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="runSound()">Generate Sound Spec</button>
+                </div>
+
+                <!-- Data Cartridge Form -->
+                <div id="data-form" class="form-section">
+                    <label>Report Intent</label>
+                    <textarea id="data-input" placeholder="Describe the report you want to generate...">Generate a quarterly sales summary with trend analysis</textarea>
+                    <div class="input-row">
+                        <div>
+                            <label>Format</label>
+                            <select id="data-format">
+                                <option value="json">JSON</option>
+                                <option value="markdown">Markdown</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Max Rows</label>
+                            <input type="number" id="data-maxrows" value="1000">
+                        </div>
+                    </div>
+                    <button onclick="runData()">Generate Report Spec</button>
+                </div>
+
+                <!-- Sign Form -->
+                <div id="sign-form" class="form-section">
+                    <label>Payload</label>
+                    <textarea id="sign-payload" placeholder="Enter content to sign...">{"transaction": "ABC123", "amount": 150.00, "timestamp": "2025-01-01"}</textarea>
+                    <label>Context (optional)</label>
+                    <input type="text" id="sign-context" placeholder="e.g., contract-2025, invoice-001">
+                    <button onclick="runSign()">Generate Signature</button>
+                </div>
+
+                <!-- Ledger View -->
+                <div id="ledger-form" class="form-section">
+                    <div class="input-row">
+                        <div>
+                            <label>Limit</label>
+                            <input type="number" id="ledger-limit" value="10">
+                        </div>
+                        <div>
+                            <label>Offset</label>
+                            <input type="number" id="ledger-offset" value="0">
+                        </div>
+                    </div>
+                    <button onclick="runLedger()">View Ledger</button>
+                    <button onclick="verifyLedger()" style="margin-top: 8px; background: #3b82f6;">Verify Chain Integrity</button>
+                </div>
+
+                <div id="result" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p style="margin-bottom: 8px;"><strong>Newton OS</strong> by <a href="https://parcri.net">Ada Computing Company</a></p>
+        <p>Houston, Texas · <a href="mailto:Jn.Lewis1@outlook.com">Jn.Lewis1@outlook.com</a></p>
+        <p style="margin-top: 12px; color: #333;">The constraint IS the product. The compiler makes the constraint portable.</p>
+    </footer>
+
     <script>
+        // Initialize health check
+        async function checkHealth() {
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                document.getElementById('health-dot').style.background = '#00875a';
+                document.getElementById('health-status').textContent = data.status === 'ok' ? 'Operational' : 'Degraded';
+                document.getElementById('version').textContent = data.engine;
+                document.getElementById('ledger-count').textContent = data.ledger_entries + ' entries';
+            } catch (e) {
+                document.getElementById('health-dot').style.background = '#ef4444';
+                document.getElementById('health-status').textContent = 'Offline';
+            }
+        }
+        checkHealth();
+
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-            document.getElementById('verify-form').style.display = tab === 'verify' ? 'block' : 'none';
-            document.getElementById('analyze-form').style.display = tab === 'analyze' ? 'block' : 'none';
-            document.getElementById('result').style.display = 'none';
+            document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+            document.getElementById(tab + '-form').classList.add('active');
+            document.getElementById('result').classList.remove('show');
+        }
+
+        function showResult(data, success = true) {
+            const el = document.getElementById('result');
+            el.textContent = JSON.stringify(data, null, 2);
+            el.className = 'result show ' + (success ? 'success' : 'error');
         }
 
         async function runVerify() {
             const input = document.getElementById('verify-input').value;
             if (!input) return;
-
-            const res = await fetch('/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ input })
-            });
-            const data = await res.json();
-            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
-            document.getElementById('result').style.display = 'block';
+            try {
+                const res = await fetch('/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input })
+                });
+                const data = await res.json();
+                showResult(data, data.verified);
+            } catch (e) { showResult({ error: e.message }, false); }
         }
 
         async function runAnalyze() {
             const input = document.getElementById('analyze-input').value;
             const method = document.getElementById('analyze-method').value;
+            const threshold = parseFloat(document.getElementById('analyze-threshold').value);
             if (!input) return;
+            const dataArr = input.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+            try {
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: dataArr, method, threshold })
+                });
+                const data = await res.json();
+                showResult(data, !data.error);
+            } catch (e) { showResult({ error: e.message }, false); }
+        }
 
-            const data = input.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+        async function runCompile() {
+            const intent = document.getElementById('compile-input').value;
+            const target_platform = document.getElementById('compile-platform').value;
+            const ios_version = document.getElementById('compile-version').value;
+            if (!intent) return;
+            try {
+                const res = await fetch('/compile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ intent, target_platform, ios_version })
+                });
+                const data = await res.json();
+                showResult(data, data.compiled);
+            } catch (e) { showResult({ error: e.message }, false); }
+        }
 
-            const res = await fetch('/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data, method })
-            });
-            const result = await res.json();
-            document.getElementById('result').textContent = JSON.stringify(result, null, 2);
-            document.getElementById('result').style.display = 'block';
+        async function runVisual() {
+            const intent = document.getElementById('visual-input').value;
+            const width = parseInt(document.getElementById('visual-width').value);
+            const height = parseInt(document.getElementById('visual-height').value);
+            if (!intent) return;
+            try {
+                const res = await fetch('/cartridge/visual', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ intent, width, height })
+                });
+                const data = await res.json();
+                showResult(data, data.verified);
+            } catch (e) { showResult({ error: e.message }, false); }
+        }
+
+        async function runSound() {
+            const intent = document.getElementById('sound-input').value;
+            const duration_ms = parseInt(document.getElementById('sound-duration').value);
+            const sample_rate = parseInt(document.getElementById('sound-samplerate').value);
+            if (!intent) return;
+            try {
+                const res = await fetch('/cartridge/sound', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ intent, duration_ms, sample_rate })
+                });
+                const data = await res.json();
+                showResult(data, data.verified);
+            } catch (e) { showResult({ error: e.message }, false); }
+        }
+
+        async function runData() {
+            const intent = document.getElementById('data-input').value;
+            const format = document.getElementById('data-format').value;
+            const max_rows = parseInt(document.getElementById('data-maxrows').value);
+            if (!intent) return;
+            try {
+                const res = await fetch('/cartridge/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ intent, format, max_rows })
+                });
+                const data = await res.json();
+                showResult(data, data.verified);
+            } catch (e) { showResult({ error: e.message }, false); }
+        }
+
+        async function runSign() {
+            const payload = document.getElementById('sign-payload').value;
+            const context = document.getElementById('sign-context').value;
+            if (!payload) return;
+            try {
+                const res = await fetch('/sign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payload, context: context || null })
+                });
+                const data = await res.json();
+                showResult(data, data.verified);
+            } catch (e) { showResult({ error: e.message }, false); }
+        }
+
+        async function runLedger() {
+            const limit = parseInt(document.getElementById('ledger-limit').value);
+            const offset = parseInt(document.getElementById('ledger-offset').value);
+            try {
+                const res = await fetch(`/ledger?limit=${limit}&offset=${offset}`);
+                const data = await res.json();
+                showResult(data, data.chain?.valid);
+            } catch (e) { showResult({ error: e.message }, false); }
+        }
+
+        async function verifyLedger() {
+            try {
+                const res = await fetch('/ledger/verify');
+                const data = await res.json();
+                showResult(data, data.valid);
+            } catch (e) { showResult({ error: e.message }, false); }
         }
     </script>
 </body>
