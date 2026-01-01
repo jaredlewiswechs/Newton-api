@@ -33,6 +33,9 @@ import json
 import os
 from pathlib import Path
 
+# Grounding Engine for claim verification
+from core.grounding import GroundingEngine
+
 # ═══════════════════════════════════════════════════════════════════════════
 # CONSTANTS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -246,6 +249,13 @@ class SignRequest(BaseModel):
     """Cryptographic signature request."""
     payload: str
     context: Optional[str] = None
+
+class GroundRequest(BaseModel):
+    """Claim verification request."""
+    query: str
+
+# Initialize Grounding Engine
+grounding_engine = GroundingEngine()
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CORE FUNCTIONS
@@ -2462,6 +2472,47 @@ async def verify_framework(intent: str, framework: str):
         **result,
         "fingerprint": fp,
         "timestamp": timestamp,
+        "engine": ENGINE
+    }
+
+# ═══════════════════════════════════════════════════════════════════════════
+# GROUNDING ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.post("/ground")
+async def ground_claim(request: GroundRequest):
+    """
+    Verify a claim against external sources.
+
+    Returns a confidence score and verification status based on
+    cross-referencing the query against trusted sources.
+
+    Confidence scores:
+    - 0-2: VERIFIED (strong evidence)
+    - 2-5: LIKELY (moderate evidence)
+    - 5-8: UNCERTAIN (weak evidence)
+    - 8-10: UNVERIFIED (no evidence)
+    """
+    query = request.query.strip()
+
+    if not query or len(query) < 3:
+        raise HTTPException(status_code=400, detail="Query required (min 3 characters)")
+
+    # Run verification
+    result = grounding_engine.verify_claim(query)
+
+    # Log to ledger
+    ledger_append("grounding_check", {
+        "query": query,
+        "confidence_score": result["confidence_score"],
+        "status": result["status"],
+        "source_count": len(result["sources"])
+    })
+
+    return {
+        "query": request.query,
+        "result": result,
+        "verified": result["status"] == "VERIFIED",
         "engine": ENGINE
     }
 
