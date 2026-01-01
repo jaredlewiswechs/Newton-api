@@ -173,15 +173,20 @@ Constraints are JSON objects with operators:
 - **Set**: `in`, `not_in`
 - **Existence**: `exists`, `empty`
 - **Temporal**: `within`, `after`, `before`
-- **Aggregation**: `sum_lt`, `count_lt`, `avg_lt`
+- **Aggregation**: `sum_lt`, `sum_le`, `sum_gt`, `sum_ge`, `count_lt`, `count_le`, `count_gt`, `count_ge`, `avg_lt`, `avg_le`, `avg_gt`, `avg_ge`
 
 ### Logic Operations
 Expression-based computation uses nested JSON:
 ```json
-{"op": "+", "args": [2, 3]}  // → 5
+{"op": "+", "args": [2, 3]}
 {"op": "if", "args": [condition, then_val, else_val]}
 {"op": "for", "args": ["i", start, end, body]}
 ```
+
+Examples:
+- `{"op": "+", "args": [2, 3]}` returns 5
+- `{"op": "if", "args": [condition, then_val, else_val]}` returns then_val or else_val
+- `{"op": "for", "args": ["i", start, end, body]}` returns list of evaluated body expressions
 
 ## Security Considerations
 
