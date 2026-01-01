@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ada · Newton OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --border: #e5e5e5;
+            --text: #1a1a1a;
+            --text-secondary: #666666;
+            --accent: #0066cc;
+            --verified: #00875a;
+            --verified-bg: #e3fcef;
+            --likely: #0066cc;
+            --likely-bg: #e6f0ff;
+            --uncertain: #b8860b;
+            --uncertain-bg: #fff8e6;
+            --unverified: #cc0000;
+            --unverified-bg: #ffe6e6;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0a0a0a;
+                --surface: #141414;
+                --border: #2a2a2a;
+                --text: #f0f0f0;
+                --text-secondary: #888888;
+                --verified-bg: #0d2818;
+                --likely-bg: #0d1a2d;
+                --uncertain-bg: #2d2510;
+                --unverified-bg: #2d0d0d;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #00c896 0%, #0088cc 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .logo-text span {
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--verified);
+            border-radius: 50%;
+        }
+
+        /* Chat Area */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 720px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .message-user {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .message-ada {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .message-content {
+            line-height: 1.6;
+        }
+
+        .message-content p {
+            margin-bottom: 12px;
+        }
+
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Verification Badge */
+        .verification {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .verification-verified {
+            background: var(--verified-bg);
+            border: 1px solid var(--verified);
+        }
+
+        .verification-likely {
+            background: var(--likely-bg);
+            border: 1px solid var(--likely);
+        }
+
+        .verification-uncertain {
+            background: var(--uncertain-bg);
+            border: 1px solid var(--uncertain);
+        }
+
+        .verification-unverified {
+            background: var(--unverified-bg);
+            border: 1px solid var(--unverified);
+        }
+
+        .verification-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .verification-verified .verification-header { color: var(--verified); }
+        .verification-likely .verification-header { color: var(--likely); }
+        .verification-uncertain .verification-header { color: var(--uncertain); }
+        .verification-unverified .verification-header { color: var(--unverified); }
+
+        .verification-score {
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .verification-sources {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .verification-sources a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .verification-sources a:hover {
+            text-decoration: underline;
+        }
+
+        /* Input Area */
+        .input-container {
+            padding: 16px 24px 24px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+        }
+
+        .input-wrapper {
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 56px 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 15px;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+        }
+
+        .send-btn:hover {
+            opacity: 0.9;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .send-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .loading-dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: pulse 1.4s infinite;
+        }
+
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { opacity: 0.3; }
+            40% { opacity: 1; }
+        }
+
+        /* Empty State */
+        .empty-state {
+            max-width: 480px;
+            margin: auto;
+            text-align: center;
+            padding: 48px 24px;
+        }
+
+        .empty-state h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .empty-state .examples {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .example-btn {
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 0.2s;
+        }
+
+        .example-btn:hover {
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-mark">A</div>
+            <div class="logo-text">Ada <span>· Newton OS</span></div>
+        </div>
+        <div class="status">
+            <div class="status-dot"></div>
+            <span>Grounding Engine Active</span>
+        </div>
+    </header>
+
+    <div class="chat-container" id="chat">
+        <div class="empty-state" id="emptyState">
+            <h2>Ask anything.</h2>
+            <p>Ada verifies factual claims in real-time using the Newton Grounding Engine. Claims are cross-referenced against trusted sources and scored for confidence.</p>
+            <div class="examples">
+                <button class="example-btn" onclick="useExample(this)">When did Apple release the first iPhone?</button>
+                <button class="example-btn" onclick="useExample(this)">Is it true that Python was created in 1991?</button>
+                <button class="example-btn" onclick="useExample(this)">What year was Anthropic founded?</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-container">
+        <div class="input-wrapper">
+            <textarea
+                class="input-field"
+                id="input"
+                placeholder="Ask a question..."
+                rows="1"
+                onkeydown="handleKeydown(event)"
+            ></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const NEWTON_API = window.location.origin;
+
+        // Patterns that indicate a fact-checkable claim
+        const FACT_PATTERNS = [
+            /\b(in|on|at|since|from|until|by)\s+\d{4}\b/i,           // Years
+            /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}/i,  // Dates
+            /\b(is it true|is it correct|did|was|were|has|have)\b/i, // Verification questions
+            /\b(founded|created|released|launched|invented|discovered|born|died)\b/i,  // Historical events
+            /\b(first|original|oldest|newest|largest|smallest)\b/i,   // Superlatives
+            /\b(ceo|founder|president|author|inventor)\s+(of|at)\b/i, // Titles/roles
+            /\d+\s*(million|billion|trillion|percent|%)/i,            // Statistics
+            /\b(apple|google|microsoft|amazon|meta|anthropic|openai)\b/i,  // Major companies
+        ];
+
+        // Detect if message contains fact-checkable claims
+        function needsGrounding(text) {
+            return FACT_PATTERNS.some(pattern => pattern.test(text));
+        }
+
+        // Extract the main claim from user input
+        function extractClaim(text) {
+            // Clean up question words for better search
+            let claim = text
+                .replace(/^(what|when|where|who|why|how|is it true that|did|was|were)\s+/i, '')
+                .replace(/\?+$/, '')
+                .trim();
+            return claim || text;
+        }
+
+        // Call Newton Grounding API
+        async function groundClaim(query) {
+            try {
+                const response = await fetch(`${NEWTON_API}/ground`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                if (!response.ok) throw new Error('Grounding failed');
+                return await response.json();
+            } catch (error) {
+                console.error('Grounding error:', error);
+                return null;
+            }
+        }
+
+        // Format verification result
+        function formatVerification(result) {
+            if (!result || !result.result) return '';
+
+            const { confidence_score, status, sources, signature } = result.result;
+            const statusClass = status.toLowerCase();
+
+            const statusLabels = {
+                'verified': 'Verified',
+                'likely': 'Likely Accurate',
+                'uncertain': 'Uncertain',
+                'unverified': 'Unverified'
+            };
+
+            const statusIcons = {
+                'verified': '&#10003;',
+                'likely': '&#8776;',
+                'uncertain': '?',
+                'unverified': '&#10005;'
+            };
+
+            let sourcesHtml = '';
+            if (sources && sources.length > 0) {
+                const sourceLinks = sources.map(url => {
+                    const domain = new URL(url).hostname.replace('www.', '');
+                    return `<a href="${url}" target="_blank">${domain}</a>`;
+                }).join(' · ');
+                sourcesHtml = `<div class="verification-sources">Sources: ${sourceLinks}</div>`;
+            }
+
+            return `
+                <div class="verification verification-${statusClass}">
+                    <div class="verification-header">
+                        <span>${statusIcons[statusClass]}</span>
+                        <span>${statusLabels[statusClass]}</span>
+                        <span class="verification-score">Score: ${confidence_score.toFixed(1)}</span>
+                    </div>
+                    ${sourcesHtml}
+                </div>
+            `;
+        }
+
+        // Generate response (placeholder - in production, call your LLM)
+        function generateResponse(query, groundingResult) {
+            // In production, this would call Claude/GPT with the grounding context
+            // For now, we return a simple acknowledgment with the grounding data
+
+            if (groundingResult && groundingResult.result) {
+                const { status, sources } = groundingResult.result;
+
+                if (status === 'VERIFIED' && sources.length > 0) {
+                    return `Based on verified sources, I found information about your query. The claim has been cross-referenced and confirmed.`;
+                } else if (status === 'LIKELY') {
+                    return `I found supporting evidence for this, though it could benefit from additional verification.`;
+                } else if (status === 'UNCERTAIN') {
+                    return `I found limited information about this. The available sources don't provide strong confirmation.`;
+                } else {
+                    return `I couldn't verify this claim with high confidence. Consider checking primary sources directly.`;
+                }
+            }
+
+            return `I'll help you with that. Note: This response hasn't been verified against external sources.`;
+        }
+
+        // Add message to chat
+        function addMessage(type, content, verification = '') {
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) emptyState.remove();
+
+            const chat = document.getElementById('chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+
+            const label = type === 'user' ? 'You' : 'Ada';
+
+            messageDiv.innerHTML = `
+                <div class="message-header">${label}</div>
+                <div class="message-content">${content}</div>
+                ${verification}
+            `;
+
+            chat.appendChild(messageDiv);
+            chat.scrollTop = chat.scrollHeight;
+
+            return messageDiv;
+        }
+
+        // Add loading indicator
+        function addLoading() {
+            const chat = document.getElementById('chat');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message message-ada';
+            loadingDiv.id = 'loading';
+            loadingDiv.innerHTML = `
+                <div class="message-header">Ada</div>
+                <div class="loading">
+                    <div class="loading-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span>Verifying...</span>
+                </div>
+            `;
+            chat.appendChild(loadingDiv);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function removeLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) loading.remove();
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const sendBtn = document.getElementById('sendBtn');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            // Clear input and disable
+            input.value = '';
+            input.style.height = 'auto';
+            sendBtn.disabled = true;
+
+            // Add user message
+            addMessage('user', text);
+
+            // Check if needs grounding
+            let groundingResult = null;
+            let verification = '';
+
+            if (needsGrounding(text)) {
+                addLoading();
+
+                const claim = extractClaim(text);
+                groundingResult = await groundClaim(claim);
+
+                removeLoading();
+
+                if (groundingResult) {
+                    verification = formatVerification(groundingResult);
+                }
+            }
+
+            // Generate and add response
+            const response = generateResponse(text, groundingResult);
+            addMessage('ada', `<p>${response}</p>`, verification);
+
+            sendBtn.disabled = false;
+            input.focus();
+        }
+
+        // Handle keyboard
+        function handleKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Use example
+        function useExample(btn) {
+            const input = document.getElementById('input');
+            input.value = btn.textContent;
+            input.focus();
+        }
+
+        // Auto-resize textarea
+        document.getElementById('input').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    </script>
+</body>
+</html>

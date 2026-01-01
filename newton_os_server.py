@@ -2106,6 +2106,14 @@ async def root():
 </html>
 """
 
+@app.get("/ada", response_class=HTMLResponse)
+async def ada_interface():
+    """Ada chat interface with Grounding Engine integration."""
+    ada_path = Path(__file__).parent / "ada.html"
+    if ada_path.exists():
+        return ada_path.read_text()
+    return "<h1>Ada interface not found</h1>"
+
 @app.get("/health")
 async def health():
     """Health check endpoint."""
@@ -2114,7 +2122,7 @@ async def health():
         "status": "ok",
         "engine": ENGINE,
         "capabilities": [
-            "verify", "analyze", "compile",
+            "verify", "analyze", "compile", "ground",
             "cartridge/visual", "cartridge/sound", "cartridge/sequence", "cartridge/data",
             "ledger", "sign",
             "frameworks/verify"
