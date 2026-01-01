@@ -119,6 +119,36 @@ from .logic import (
     calc,
 )
 
+from .vault_client import (
+    VaultClient,
+    ProvenanceRecord,
+    get_vault_client,
+)
+
+from .policy_engine import (
+    PolicyEngine,
+    Policy,
+    PolicyType,
+    PolicyAction,
+    PolicyEvaluationResult,
+    get_policy_engine,
+)
+
+from .negotiator import (
+    Negotiator,
+    ApprovalRequest,
+    ApprovalStatus,
+    RequestPriority,
+    get_negotiator,
+)
+
+from .merkle_anchor import (
+    MerkleAnchorScheduler,
+    MerkleAnchor,
+    MerkleProof,
+    verify_merkle_proof,
+)
+
 __all__ = [
     # CDL
     'CDLEvaluator', 'CDLParser', 'HaltChecker',
@@ -155,6 +185,12 @@ __all__ = [
     'LogicEngine', 'ExecutionBounds', 'ExecutionContext', 'ExecutionResult',
     'Value', 'ValueType', 'Expr', 'ExprType',
     'calculate', 'calc',
+    
+    # Glass Box Components
+    'VaultClient', 'ProvenanceRecord', 'get_vault_client',
+    'PolicyEngine', 'Policy', 'PolicyType', 'PolicyAction', 'PolicyEvaluationResult', 'get_policy_engine',
+    'Negotiator', 'ApprovalRequest', 'ApprovalStatus', 'RequestPriority', 'get_negotiator',
+    'MerkleAnchorScheduler', 'MerkleAnchor', 'MerkleProof', 'verify_merkle_proof',
 ]
 
 __version__ = "1.0.0"

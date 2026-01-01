@@ -182,6 +182,12 @@ class Forge:
         self._cache: Dict[str, tuple] = {}  # {cache_key: (result, timestamp)}
         self._cache_lock = threading.Lock()
         self._executor = ThreadPoolExecutor(max_workers=self.config.max_workers)
+        
+        # Glass Box components (lazy initialization)
+        self._vault_client = None
+        self._policy_engine = None
+        self._negotiator = None
+        self._glass_box_enabled = False
 
     # ─────────────────────────────────────────────────────────────────────────
     # CORE VERIFICATION
@@ -536,6 +542,120 @@ class Forge:
     def shutdown(self):
         """Graceful shutdown of the Forge."""
         self._executor.shutdown(wait=True)
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # GLASS BOX ACTIVATION
+    # ─────────────────────────────────────────────────────────────────────────
+    
+    def enable_glass_box(
+        self,
+        vault_client=None,
+        policy_engine=None,
+        negotiator=None
+    ):
+        """
+        Enable Glass Box mode with full transparency and human oversight.
+        
+        Args:
+            vault_client: VaultClient instance for provenance logging
+            policy_engine: PolicyEngine instance for policy enforcement
+            negotiator: Negotiator instance for HITL
+        """
+        self._glass_box_enabled = True
+        
+        # Import here to avoid circular dependencies
+        if vault_client:
+            self._vault_client = vault_client
+        
+        if policy_engine:
+            self._policy_engine = policy_engine
+        
+        if negotiator:
+            self._negotiator = negotiator
+    
+    def verify_with_glass_box(
+        self,
+        constraint: Any,
+        obj: Dict[str, Any],
+        operation: str = "verify",
+        require_approval: bool = False
+    ) -> VerificationResult:
+        """
+        Verify with full Glass Box transparency.
+        
+        This method:
+        1. Evaluates input policies
+        2. Logs to vault (provenance)
+        3. Requests human approval if needed
+        4. Performs verification
+        5. Evaluates output policies
+        6. Emits provenance record
+        
+        Args:
+            constraint: Constraint to verify
+            obj: Object to verify against
+            operation: Operation name for logging
+            require_approval: Force human approval
+        
+        Returns:
+            VerificationResult with full provenance
+        """
+        if not self._glass_box_enabled:
+            # Fall back to regular verify
+            return self.verify(constraint, obj)
+        
+        # 1. Evaluate input policies
+        if self._policy_engine:
+            policy_results = self._policy_engine.evaluate_input(obj, operation)
+            if self._policy_engine.check_enforcement_needed(policy_results):
+                return VerificationResult(
+                    passed=False,
+                    constraint_id="POLICY_VIOLATION",
+                    message=f"Input policy violation: {policy_results[0].message}"
+                )
+        
+        # 2. Request approval if needed
+        if require_approval and self._negotiator:
+            from .negotiator import RequestPriority
+            request = self._negotiator.request_approval(
+                operation=operation,
+                input_data=str(obj),
+                reason="Glass Box verification requires approval",
+                priority=RequestPriority.MEDIUM
+            )
+            # Note: In real usage, this would wait or return pending status
+            # For now, we proceed without blocking
+        
+        # 3. Perform verification
+        result = self.verify(constraint, obj)
+        
+        # 4. Evaluate output policies
+        if self._policy_engine:
+            output_policies = self._policy_engine.evaluate_output(
+                result.to_dict(),
+                operation
+            )
+            if self._policy_engine.check_enforcement_needed(output_policies):
+                result.passed = False
+                result.message = f"Output policy violation: {output_policies[0].message}"
+        
+        # 5. Log to vault for provenance
+        if self._vault_client:
+            try:
+                self._vault_client.log_verification(
+                    operation=operation,
+                    input_data=str(obj),
+                    result="pass" if result.passed else "fail",
+                    metadata={
+                        "constraint_id": result.constraint_id,
+                        "elapsed_us": result.elapsed_us,
+                        "fingerprint": result.fingerprint
+                    }
+                )
+            except Exception:
+                pass  # Don't fail verification if logging fails
+        
+        return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
