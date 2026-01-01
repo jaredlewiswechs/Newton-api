@@ -675,3 +675,318 @@ function setupMobileNav() {
 
 window.addEventListener('resize', setupMobileNav);
 setupMobileNav();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GLASS BOX FEATURES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Initialize Glass Box components
+ */
+function initGlassBox() {
+    // Get Glass Box stats
+    loadGlassBoxStats();
+    
+    // Set up event listeners
+    const createAnchorBtn = document.getElementById('create-anchor');
+    const viewApprovalsBtn = document.getElementById('view-approvals');
+    const managePoliciesBtn = document.getElementById('manage-policies');
+    
+    if (createAnchorBtn) {
+        createAnchorBtn.addEventListener('click', createMerkleAnchor);
+    }
+    
+    if (viewApprovalsBtn) {
+        viewApprovalsBtn.addEventListener('click', showApprovalRequests);
+    }
+    
+    if (managePoliciesBtn) {
+        managePoliciesBtn.addEventListener('click', showPolicyManager);
+    }
+}
+
+/**
+ * Load Glass Box statistics
+ */
+async function loadGlassBoxStats() {
+    try {
+        const [anchorsResp, approvalsResp, policiesResp] = await Promise.all([
+            fetch(`${CONFIG.API_BASE}/merkle/anchors`),
+            fetch(`${CONFIG.API_BASE}/negotiator/pending`),
+            fetch(`${CONFIG.API_BASE}/policy`)
+        ]);
+        
+        const anchorsData = await anchorsResp.json();
+        const approvalsData = await approvalsResp.json();
+        const policiesData = await policiesResp.json();
+        
+        // Update UI
+        document.getElementById('anchor-count').textContent = anchorsData.count || 0;
+        document.getElementById('pending-approvals').textContent = approvalsData.count || 0;
+        document.getElementById('policy-count').textContent = policiesData.stats?.enabled_policies || 0;
+        
+    } catch (error) {
+        console.error('Error loading Glass Box stats:', error);
+    }
+}
+
+/**
+ * Create a new Merkle anchor
+ */
+async function createMerkleAnchor() {
+    try {
+        showLoading();
+        const response = await fetch(`${CONFIG.API_BASE}/merkle/anchor`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.success) {
+            showNotification('Merkle anchor created successfully', 'success');
+            loadGlassBoxStats();
+        } else {
+            showNotification(data.message || 'No new entries to anchor', 'info');
+        }
+    } catch (error) {
+        hideLoading();
+        showNotification('Error creating anchor', 'error');
+        console.error(error);
+    }
+}
+
+/**
+ * Export Merkle proof for a ledger entry
+ */
+async function exportMerkleProof(entryIndex) {
+    try {
+        showLoading();
+        const response = await fetch(`${CONFIG.API_BASE}/merkle/proof/${entryIndex}`);
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.proof) {
+            // Download certificate as JSON
+            const certificate = data.certificate;
+            const blob = new Blob([JSON.stringify(certificate, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `newton-proof-${entryIndex}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Proof exported successfully', 'success');
+        }
+    } catch (error) {
+        hideLoading();
+        showNotification('Error exporting proof', 'error');
+        console.error(error);
+    }
+}
+
+/**
+ * Show approval requests (HITL)
+ */
+async function showApprovalRequests() {
+    try {
+        showLoading();
+        const response = await fetch(`${CONFIG.API_BASE}/negotiator/pending`);
+        const data = await response.json();
+        hideLoading();
+        
+        showApprovalModal(data.pending || []);
+    } catch (error) {
+        hideLoading();
+        showNotification('Error loading approval requests', 'error');
+        console.error(error);
+    }
+}
+
+/**
+ * Show policy manager
+ */
+async function showPolicyManager() {
+    try {
+        showLoading();
+        const response = await fetch(`${CONFIG.API_BASE}/policy`);
+        const data = await response.json();
+        hideLoading();
+        
+        showPolicyModal(data.policies || []);
+    } catch (error) {
+        hideLoading();
+        showNotification('Error loading policies', 'error');
+        console.error(error);
+    }
+}
+
+/**
+ * Show approval modal
+ */
+function showApprovalModal(requests) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pending Approval Requests</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="approval-list">
+                ${requests.length === 0 ? '<p>No pending approvals</p>' : requests.map(req => `
+                    <div class="approval-request">
+                        <div class="approval-request-header">
+                            <strong>${req.operation}</strong>
+                            <span class="approval-priority ${req.priority}">${req.priority}</span>
+                        </div>
+                        <p>${req.reason}</p>
+                        <code>${req.input_hash}</code>
+                        <div class="approval-actions">
+                            <button class="btn success" onclick="approveRequest('${req.id}')">Approve</button>
+                            <button class="btn danger" onclick="rejectRequest('${req.id}')">Reject</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+/**
+ * Show policy modal
+ */
+function showPolicyModal(policies) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Policy Management</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="policy-list">
+                ${policies.map(policy => `
+                    <div class="approval-request">
+                        <div class="approval-request-header">
+                            <strong>${policy.name}</strong>
+                            <span class="approval-priority ${policy.action}">${policy.type}</span>
+                        </div>
+                        <p>${policy.metadata?.description || 'No description'}</p>
+                        <p><strong>Action:</strong> ${policy.action}</p>
+                        <p><strong>Enabled:</strong> ${policy.enabled ? 'Yes' : 'No'}</p>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+/**
+ * Approve a request
+ */
+async function approveRequest(requestId) {
+    try {
+        const response = await fetch(`${CONFIG.API_BASE}/negotiator/approve/${requestId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                approver: 'user',
+                comments: 'Approved via UI'
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showNotification('Request approved', 'success');
+            document.querySelector('.modal-overlay').remove();
+            loadGlassBoxStats();
+        }
+    } catch (error) {
+        showNotification('Error approving request', 'error');
+        console.error(error);
+    }
+}
+
+/**
+ * Reject a request
+ */
+async function rejectRequest(requestId) {
+    try {
+        const reason = prompt('Enter rejection reason:');
+        if (!reason) return;
+        
+        const response = await fetch(`${CONFIG.API_BASE}/negotiator/reject/${requestId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                approver: 'user',
+                reason: reason
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showNotification('Request rejected', 'success');
+            document.querySelector('.modal-overlay').remove();
+            loadGlassBoxStats();
+        }
+    } catch (error) {
+        showNotification('Error rejecting request', 'error');
+        console.error(error);
+    }
+}
+
+/**
+ * Show notification
+ */
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        padding: 16px 24px;
+        background: ${type === 'success' ? '#30d158' : type === 'error' ? '#ff453a' : '#0a84ff'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: fadeIn 0.3s ease-out;
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Initialize Glass Box on page load
+document.addEventListener('DOMContentLoaded', initGlassBox);
+
+// Add export proof buttons to ledger entries when they're loaded
+const originalLoadLedger = window.loadLedger;
+if (originalLoadLedger) {
+    window.loadLedger = async function() {
+        await originalLoadLedger();
+        
+        // Add export buttons to entries
+        document.querySelectorAll('.ledger-entry').forEach((entry, index) => {
+            if (!entry.querySelector('.export-proof-btn')) {
+                const exportBtn = document.createElement('button');
+                exportBtn.className = 'export-proof-btn';
+                exportBtn.textContent = 'Export Proof';
+                exportBtn.onclick = () => exportMerkleProof(index);
+                entry.appendChild(exportBtn);
+            }
+        });
+    };
+}
+

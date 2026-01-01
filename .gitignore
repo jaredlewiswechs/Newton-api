@@ -52,6 +52,7 @@ Thumbs.db
 newton_storage/
 /tmp/
 .newton_ledger_test_*
+.newton_anchors
 .hypothesis/
 
 # Node (for frontend)
