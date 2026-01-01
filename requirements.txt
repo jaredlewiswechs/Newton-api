@@ -1,4 +1,13 @@
+# Newton Supercomputer - Python Dependencies
+
+# Web Framework
 fastapi==0.109.0
 uvicorn==0.27.0
 pydantic==2.5.3
+
+# External Search (for grounding)
 googlesearch-python==1.2.5
+
+# Testing
+pytest==7.4.4
+hypothesis==6.92.1
