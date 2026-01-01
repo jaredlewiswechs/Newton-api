@@ -50,6 +50,11 @@ from core import (
 
     # Logic (Verified Computation)
     LogicEngine, ExecutionBounds, calculate,
+    
+    # Glass Box Components
+    get_vault_client, get_policy_engine, get_negotiator,
+    MerkleAnchorScheduler, PolicyType, PolicyAction, Policy,
+    ApprovalStatus, RequestPriority,
 )
 
 
@@ -66,6 +71,22 @@ vault = get_vault(VaultConfig())
 ledger = get_ledger(LedgerConfig())
 grounding = GroundingEngine()
 logic = LogicEngine(ExecutionBounds(max_iterations=10000, max_operations=1000000))
+
+# Glass Box components
+vault_client = get_vault_client(vault)
+policy_engine = get_policy_engine()
+negotiator = get_negotiator()
+merkle_scheduler = MerkleAnchorScheduler(ledger, interval_seconds=300)
+
+# Enable Glass Box mode in Forge
+forge.enable_glass_box(
+    vault_client=vault_client,
+    policy_engine=policy_engine,
+    negotiator=negotiator
+)
+
+# Start Merkle anchoring scheduler
+merkle_scheduler.start()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -561,6 +582,233 @@ async def get_certificate(index: int):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# GLASS BOX - Policy, Negotiator, and Merkle Anchoring
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────
+# POLICY ENGINE ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────
+
+class PolicyRequest(BaseModel):
+    """Request to add a policy."""
+    id: str
+    name: str
+    type: str
+    action: str
+    condition: Dict[str, Any]
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@app.get("/policy")
+async def get_policies():
+    """Get all policies."""
+    return {
+        "policies": policy_engine.get_policies(),
+        "stats": policy_engine.stats(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/policy")
+async def add_policy(request: PolicyRequest):
+    """Add a new policy."""
+    try:
+        policy = Policy(
+            id=request.id,
+            name=request.name,
+            type=PolicyType(request.type),
+            action=PolicyAction(request.action),
+            condition=request.condition,
+            metadata=request.metadata or {}
+        )
+        policy_engine.add_policy(policy)
+        return {
+            "success": True,
+            "policy": policy.to_dict(),
+            "engine": ENGINE
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/policy/{policy_id}")
+async def remove_policy(policy_id: str):
+    """Remove a policy."""
+    removed = policy_engine.remove_policy(policy_id)
+    if not removed:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    return {
+        "success": True,
+        "message": f"Policy {policy_id} removed",
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# NEGOTIATOR (HITL) ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────
+
+class ApprovalRequestCreate(BaseModel):
+    """Request for human approval."""
+    operation: str
+    input_data: str
+    reason: str
+    priority: Optional[str] = "medium"
+    ttl_seconds: Optional[int] = None
+
+
+class ApprovalDecision(BaseModel):
+    """Approval decision."""
+    approver: str
+    comments: Optional[str] = None
+    reason: Optional[str] = None
+
+
+@app.get("/negotiator/pending")
+async def get_pending_approvals(priority: Optional[str] = None, operation: Optional[str] = None):
+    """Get pending approval requests."""
+    priority_filter = RequestPriority(priority) if priority else None
+    pending = negotiator.get_pending_requests(priority=priority_filter, operation=operation)
+    return {
+        "pending": [req.to_dict() for req in pending],
+        "count": len(pending),
+        "stats": negotiator.stats(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/negotiator/request")
+async def request_approval(request: ApprovalRequestCreate):
+    """Create a new approval request."""
+    priority = RequestPriority(request.priority)
+    approval_req = negotiator.request_approval(
+        operation=request.operation,
+        input_data=request.input_data,
+        reason=request.reason,
+        priority=priority,
+        ttl_seconds=request.ttl_seconds
+    )
+    return {
+        "request": approval_req.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/negotiator/request/{request_id}")
+async def get_approval_request(request_id: str):
+    """Get a specific approval request."""
+    request = negotiator.get_request(request_id)
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    return {
+        "request": request.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/negotiator/approve/{request_id}")
+async def approve_request(request_id: str, decision: ApprovalDecision):
+    """Approve an approval request."""
+    success = negotiator.approve(request_id, decision.approver, decision.comments)
+    if not success:
+        raise HTTPException(status_code=400, detail="Could not approve request")
+    return {
+        "success": True,
+        "request_id": request_id,
+        "engine": ENGINE
+    }
+
+
+@app.post("/negotiator/reject/{request_id}")
+async def reject_request(request_id: str, decision: ApprovalDecision):
+    """Reject an approval request."""
+    if not decision.reason:
+        raise HTTPException(status_code=400, detail="Rejection reason required")
+    success = negotiator.reject(request_id, decision.approver, decision.reason)
+    if not success:
+        raise HTTPException(status_code=400, detail="Could not reject request")
+    return {
+        "success": True,
+        "request_id": request_id,
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# MERKLE ANCHORING ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────
+
+@app.get("/merkle/anchors")
+async def get_merkle_anchors():
+    """Get all Merkle anchors."""
+    anchors = merkle_scheduler.get_all_anchors()
+    return {
+        "anchors": [a.to_dict() for a in anchors],
+        "count": len(anchors),
+        "stats": merkle_scheduler.stats(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/merkle/anchor")
+async def create_merkle_anchor():
+    """Manually create a Merkle anchor."""
+    anchor = merkle_scheduler.create_anchor()
+    if not anchor:
+        return {
+            "success": False,
+            "message": "No new entries to anchor",
+            "engine": ENGINE
+        }
+    return {
+        "success": True,
+        "anchor": anchor.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/merkle/anchor/{anchor_id}")
+async def get_merkle_anchor(anchor_id: str):
+    """Get a specific Merkle anchor."""
+    anchor = merkle_scheduler.get_anchor(anchor_id)
+    if not anchor:
+        raise HTTPException(status_code=404, detail="Anchor not found")
+    return {
+        "anchor": anchor.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/merkle/proof/{entry_index}")
+async def get_merkle_proof(entry_index: int):
+    """Get Merkle proof for a ledger entry."""
+    proof = merkle_scheduler.generate_proof(entry_index)
+    if not proof:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return {
+        "proof": proof.to_dict(),
+        "certificate": proof.export_certificate(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/merkle/latest")
+async def get_latest_anchor():
+    """Get the latest Merkle anchor."""
+    anchor = merkle_scheduler.get_latest_anchor()
+    if not anchor:
+        return {
+            "anchor": None,
+            "message": "No anchors created yet",
+            "engine": ENGINE
+        }
+    return {
+        "anchor": anchor.to_dict(),
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # METRICS & HEALTH
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -576,11 +824,20 @@ async def health():
             "forge": "operational",
             "vault": "operational",
             "ledger": "operational" if chain_valid else "degraded",
-            "grounding": "operational"
+            "grounding": "operational",
+            "policy_engine": "operational",
+            "negotiator": "operational",
+            "merkle_scheduler": "operational" if merkle_scheduler._running else "stopped"
         },
         "ledger": {
             "entries": len(ledger),
             "chain_valid": chain_valid
+        },
+        "glass_box": {
+            "enabled": forge._glass_box_enabled,
+            "policies": len(policy_engine.policies),
+            "pending_approvals": len(negotiator.get_pending_requests()),
+            "anchors": len(merkle_scheduler.anchors)
         }
     }
 
@@ -596,6 +853,9 @@ async def metrics():
         "forge": forge_metrics,
         "ledger": ledger_stats,
         "vault": vault_stats,
+        "policy_engine": policy_engine.stats(),
+        "negotiator": negotiator.stats(),
+        "merkle_scheduler": merkle_scheduler.stats(),
         "engine": ENGINE
     }
 

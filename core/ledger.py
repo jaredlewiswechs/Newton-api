@@ -143,16 +143,21 @@ class MerkleTree:
 
         idx = index
         while len(hashes) > 1:
+            # Ensure we have pairs
+            if len(hashes) % 2 == 1:
+                hashes.append(hashes[-1])
+            
             next_level = []
             for i in range(0, len(hashes), 2):
-                if i == idx or i + 1 == idx:
-                    # Include sibling in proof
-                    sibling_idx = i + 1 if i == idx else i
-                    direction = "right" if i == idx else "left"
-                    proof.append((hashes[sibling_idx], direction))
-                    idx = len(next_level)
+                if i + 1 < len(hashes):  # Safety check
+                    if i == idx or i + 1 == idx:
+                        # Include sibling in proof
+                        sibling_idx = i + 1 if i == idx else i
+                        direction = "right" if i == idx else "left"
+                        proof.append((hashes[sibling_idx], direction))
+                        idx = len(next_level)
 
-                next_level.append(self._hash_pair(hashes[i], hashes[i + 1]))
+                    next_level.append(self._hash_pair(hashes[i], hashes[i + 1]))
 
             hashes = next_level
 
