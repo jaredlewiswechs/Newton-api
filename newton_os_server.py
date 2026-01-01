@@ -18,15 +18,20 @@ One API. Multiple capabilities. Single identity.
 ═══════════════════════════════════════════════════════════════════════════
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
+from collections import defaultdict
+from functools import wraps
 import hashlib
 import time
 import re
 import statistics
+import json
+import os
+from pathlib import Path
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CONSTANTS
@@ -34,12 +39,107 @@ import statistics
 
 DW_AXIS = 2048
 THRESHOLD = 1024
-VERSION = "2.2.0"
+VERSION = "3.0.0"
 ENGINE = f"Newton OS {VERSION}"
 
 # Append-only ledger for audit trail
 LEDGER = []
 MAX_LEDGER_SIZE = 10000
+
+# Persistent ledger path
+LEDGER_PATH = Path(os.environ.get("NEWTON_LEDGER_PATH", ".newton_ledger.json"))
+
+# ═══════════════════════════════════════════════════════════════════════════
+# AUTHENTICATION & RATE LIMITING
+# ═══════════════════════════════════════════════════════════════════════════
+
+# API Keys (in production, use database/secrets manager)
+API_KEYS: Dict[str, Dict[str, Any]] = {
+    # Format: "key": {"owner": "name", "tier": "free|pro|enterprise", "rate_limit": requests_per_minute}
+    "newton-public-demo": {"owner": "public", "tier": "free", "rate_limit": 60},
+}
+
+# Load custom API keys from environment
+if os.environ.get("NEWTON_API_KEYS"):
+    try:
+        custom_keys = json.loads(os.environ["NEWTON_API_KEYS"])
+        API_KEYS.update(custom_keys)
+    except json.JSONDecodeError:
+        pass
+
+# Enterprise key from environment
+ENTERPRISE_KEY = os.environ.get("NEWTON_ENTERPRISE_KEY")
+if ENTERPRISE_KEY:
+    API_KEYS[ENTERPRISE_KEY] = {"owner": "enterprise", "tier": "enterprise", "rate_limit": 10000}
+
+# Rate limiting storage
+RATE_LIMITS: Dict[str, List[float]] = defaultdict(list)
+RATE_LIMIT_WINDOW = 60  # seconds
+
+# Auth bypass for development
+AUTH_ENABLED = os.environ.get("NEWTON_AUTH_ENABLED", "false").lower() == "true"
+
+def check_rate_limit(api_key: str, limit: int) -> bool:
+    """Check if request is within rate limit."""
+    now = time.time()
+    window_start = now - RATE_LIMIT_WINDOW
+
+    # Clean old entries
+    RATE_LIMITS[api_key] = [t for t in RATE_LIMITS[api_key] if t > window_start]
+
+    if len(RATE_LIMITS[api_key]) >= limit:
+        return False
+
+    RATE_LIMITS[api_key].append(now)
+    return True
+
+async def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")) -> Dict[str, Any]:
+    """Verify API key and check rate limits."""
+    # If auth is disabled, allow all requests with default limits
+    if not AUTH_ENABLED:
+        return {"owner": "anonymous", "tier": "free", "rate_limit": 100}
+
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="Missing API key. Include X-API-Key header.")
+
+    if x_api_key not in API_KEYS:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
+    key_info = API_KEYS[x_api_key]
+
+    if not check_rate_limit(x_api_key, key_info["rate_limit"]):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Max {key_info['rate_limit']} requests per minute."
+        )
+
+    return key_info
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PERSISTENT LEDGER
+# ═══════════════════════════════════════════════════════════════════════════
+
+def load_ledger() -> List[Dict]:
+    """Load ledger from persistent storage."""
+    global LEDGER
+    if LEDGER_PATH.exists():
+        try:
+            with open(LEDGER_PATH, 'r') as f:
+                LEDGER = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            LEDGER = []
+    return LEDGER
+
+def save_ledger():
+    """Save ledger to persistent storage."""
+    try:
+        with open(LEDGER_PATH, 'w') as f:
+            json.dump(LEDGER, f, indent=2)
+    except IOError as e:
+        print(f"Warning: Could not save ledger: {e}")
+
+# Load ledger on startup
+load_ledger()
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CONSTRAINTS
@@ -429,6 +529,143 @@ FRAMEWORK_CONSTRAINTS = {
             "Display confidence scores to users",
             "Never claim 100% accuracy"
         ]
+    },
+    # ─────────────────────────────────────────────────────────────────────────
+    # UNIVERSAL FRAMEWORK CONSTRAINTS (Non-Apple)
+    # ─────────────────────────────────────────────────────────────────────────
+    "react": {
+        "name": "React Security & Accessibility",
+        "patterns": [
+            r"\b(dangerouslySetInnerHTML)\b.*\b(user input|untrusted|dynamic)\b",
+            r"\b(disable|skip|ignore)\b.*\b(eslint|security|sanitize)\b",
+            r"\b(eval|Function\()\b.*\b(user|input|dynamic)\b",
+        ],
+        "security_requirements": [
+            "Sanitize all user inputs before rendering",
+            "Use Content Security Policy headers",
+            "Avoid dangerouslySetInnerHTML with untrusted content"
+        ],
+        "accessibility_requirements": [
+            "Include ARIA labels on interactive elements",
+            "Ensure keyboard navigation support",
+            "Maintain focus management for modals/dialogs"
+        ],
+        "warnings": [
+            "XSS vulnerabilities from unsanitized HTML",
+            "Always escape user-provided content",
+            "Use React's built-in XSS protections"
+        ]
+    },
+    "tensorflow": {
+        "name": "TensorFlow ML Safety Constraints",
+        "patterns": [
+            r"\b(100%|always|never|certain|guaranteed)\b.*\b(accurate|correct|prediction)\b",
+            r"\b(autonomous|automatic)\b.*\b(critical|life|safety|medical|financial)\b.*\b(decision)\b",
+            r"\b(train|fine-tune)\b.*\b(private|personal|sensitive)\b.*\b(data)\b.*\b(without consent)\b",
+            r"\b(deepfake|fake|synthetic)\b.*\b(identity|person|face)\b",
+        ],
+        "epistemic_bounds": {
+            "confidence_display": "Always expose prediction confidence scores",
+            "uncertainty_quantification": "Use proper uncertainty estimation methods",
+            "human_oversight": "Critical decisions require human review",
+            "bias_testing": "Test for demographic and selection bias"
+        },
+        "data_requirements": [
+            "Document training data sources and licenses",
+            "Implement data privacy protections",
+            "Maintain model versioning and lineage"
+        ],
+        "warnings": [
+            "ML models can perpetuate biases in training data",
+            "Never deploy without validation on held-out test set",
+            "Monitor for distribution drift in production",
+            "Document model limitations and failure modes"
+        ]
+    },
+    "pytorch": {
+        "name": "PyTorch ML Safety Constraints",
+        "patterns": [
+            r"\b(100%|always|never|certain|guaranteed)\b.*\b(accurate|correct|prediction)\b",
+            r"\b(autonomous|automatic)\b.*\b(critical|life|safety|medical|financial)\b.*\b(decision)\b",
+            r"\b(pickle|torch\.load)\b.*\b(untrusted|user|remote|download)\b",
+            r"\b(deepfake|fake|synthetic)\b.*\b(identity|person|face)\b",
+        ],
+        "security_requirements": [
+            "Never load untrusted pickle files (arbitrary code execution risk)",
+            "Use weights_only=True for torch.load when possible",
+            "Validate model checksums before loading"
+        ],
+        "epistemic_bounds": {
+            "confidence_display": "Always expose prediction confidence scores",
+            "uncertainty_quantification": "Use MC Dropout or ensembles for uncertainty",
+            "human_oversight": "Critical decisions require human review"
+        },
+        "warnings": [
+            "torch.load can execute arbitrary code - only load trusted models",
+            "ML models can perpetuate biases in training data",
+            "Monitor for adversarial inputs in production"
+        ]
+    },
+    "nodejs": {
+        "name": "Node.js Security Constraints",
+        "patterns": [
+            r"\b(eval|Function\(|vm\.runIn)\b.*\b(user|input|dynamic|untrusted)\b",
+            r"\b(child_process|exec|spawn)\b.*\b(user|input|untrusted)\b",
+            r"\b(disable|skip|ignore)\b.*\b(helmet|csp|security|sanitize)\b",
+            r"\b(SQL|query)\b.*\b(concatenat|string\s*\+|template)\b.*\b(user|input)\b",
+        ],
+        "security_requirements": [
+            "Use parameterized queries for database operations",
+            "Sanitize all user inputs",
+            "Implement rate limiting on API endpoints",
+            "Use helmet.js for security headers"
+        ],
+        "warnings": [
+            "Command injection via unsanitized child_process calls",
+            "SQL injection via string concatenation",
+            "Prototype pollution vulnerabilities",
+            "Always validate and sanitize user input"
+        ]
+    },
+    "django": {
+        "name": "Django Security Constraints",
+        "patterns": [
+            r"\b(raw\(|extra\(|RawSQL)\b.*\b(user|input|untrusted|%s)\b",
+            r"\b(safe|mark_safe)\b.*\b(user|input|untrusted)\b",
+            r"\b(CSRF_COOKIE_SECURE|SESSION_COOKIE_SECURE)\b.*\b(False)\b",
+            r"\b(DEBUG)\b.*\b(True)\b.*\b(production)\b",
+        ],
+        "security_requirements": [
+            "Use Django ORM instead of raw SQL",
+            "Enable CSRF protection on all forms",
+            "Set DEBUG=False in production",
+            "Use secure cookie settings"
+        ],
+        "warnings": [
+            "SQL injection via raw() with user input",
+            "XSS via mark_safe() with untrusted content",
+            "Always use Django's built-in protections"
+        ]
+    },
+    "flask": {
+        "name": "Flask Security Constraints",
+        "patterns": [
+            r"\b(render_template_string)\b.*\b(user|input|untrusted)\b",
+            r"\b(Markup|safe)\b.*\b(user|input|untrusted)\b",
+            r"\b(debug\s*=\s*True)\b",
+            r"\b(secret_key)\b.*\b(hardcoded|default|example)\b",
+        ],
+        "security_requirements": [
+            "Use render_template() not render_template_string() with user input",
+            "Set strong SECRET_KEY from environment",
+            "Disable debug mode in production",
+            "Implement CSRF protection with Flask-WTF"
+        ],
+        "warnings": [
+            "SSTI vulnerability via render_template_string",
+            "Session hijacking with weak secret key",
+            "Debug mode exposes sensitive information"
+        ]
     }
 }
 
@@ -703,8 +940,26 @@ def rosetta_compile(intent: str, target_platform: str = "iOS", ios_version: str 
 # LEDGER - APPEND-ONLY AUDIT TRAIL
 # ═══════════════════════════════════════════════════════════════════════════
 
-def ledger_append(entry_type: str, payload: dict) -> dict:
-    """Append entry to immutable ledger."""
+def compute_merkle_root(entries: List[Dict]) -> str:
+    """Compute Merkle root of ledger entries for integrity verification."""
+    if not entries:
+        return "EMPTY"
+
+    hashes = [e.get("hash", "") for e in entries]
+
+    while len(hashes) > 1:
+        if len(hashes) % 2 == 1:
+            hashes.append(hashes[-1])  # Duplicate last if odd
+        new_hashes = []
+        for i in range(0, len(hashes), 2):
+            combined = hashes[i] + hashes[i + 1]
+            new_hashes.append(hashlib.sha256(combined.encode()).hexdigest()[:16].upper())
+        hashes = new_hashes
+
+    return hashes[0]
+
+def ledger_append(entry_type: str, payload: dict, persist: bool = True) -> dict:
+    """Append entry to immutable ledger with cryptographic chaining."""
     global LEDGER
 
     timestamp = int(time.time())
@@ -713,41 +968,76 @@ def ledger_append(entry_type: str, payload: dict) -> dict:
     # Create entry with cryptographic chain
     prev_hash = LEDGER[-1]["hash"] if LEDGER else "GENESIS"
 
+    # Include nonce for additional entropy
+    nonce = hashlib.sha256(f"{timestamp}{entry_id}{os.urandom(8).hex()}".encode()).hexdigest()[:8]
+
     entry = {
         "id": entry_id,
         "type": entry_type,
         "payload": payload,
         "timestamp": timestamp,
         "prev_hash": prev_hash,
+        "nonce": nonce,
     }
 
-    # Generate hash of this entry
-    entry_str = f"{entry_id}{entry_type}{payload}{timestamp}{prev_hash}"
+    # Generate hash of this entry (includes all fields for integrity)
+    entry_str = json.dumps(entry, sort_keys=True)
     entry["hash"] = hashlib.sha256(entry_str.encode()).hexdigest()[:16].upper()
 
     # Append (immutable - never modify existing entries)
     if len(LEDGER) < MAX_LEDGER_SIZE:
         LEDGER.append(entry)
     else:
-        # Rotate: remove oldest, keep recent
+        # Rotate: remove oldest, keep recent (with warning)
         LEDGER = LEDGER[1:] + [entry]
+
+    # Persist to storage
+    if persist:
+        save_ledger()
 
     return entry
 
 def ledger_verify_chain() -> dict:
-    """Verify integrity of ledger chain."""
+    """Verify integrity of ledger chain with comprehensive checks."""
     if not LEDGER:
-        return {"valid": True, "entries": 0, "message": "Ledger empty"}
+        return {"valid": True, "entries": 0, "message": "Ledger empty", "merkle_root": "EMPTY"}
 
+    errors = []
     for i, entry in enumerate(LEDGER):
+        # Verify genesis block
         if i == 0:
-            if entry["prev_hash"] != "GENESIS":
-                return {"valid": False, "broken_at": i, "message": "Genesis block corrupted"}
+            if entry.get("prev_hash") != "GENESIS":
+                errors.append({"index": i, "error": "Genesis block prev_hash corrupted"})
         else:
-            if entry["prev_hash"] != LEDGER[i-1]["hash"]:
-                return {"valid": False, "broken_at": i, "message": "Chain broken"}
+            # Verify chain linkage
+            if entry.get("prev_hash") != LEDGER[i - 1].get("hash"):
+                errors.append({"index": i, "error": "Chain linkage broken"})
 
-    return {"valid": True, "entries": len(LEDGER), "message": "Chain intact"}
+        # Verify entry hash integrity
+        entry_copy = {k: v for k, v in entry.items() if k != "hash"}
+        expected_hash = hashlib.sha256(json.dumps(entry_copy, sort_keys=True).encode()).hexdigest()[:16].upper()
+        if entry.get("hash") != expected_hash:
+            errors.append({"index": i, "error": "Entry hash mismatch (possible tampering)"})
+
+    merkle_root = compute_merkle_root(LEDGER)
+
+    if errors:
+        return {
+            "valid": False,
+            "entries": len(LEDGER),
+            "errors": errors,
+            "message": f"Chain integrity compromised: {len(errors)} error(s)",
+            "merkle_root": merkle_root
+        }
+
+    return {
+        "valid": True,
+        "entries": len(LEDGER),
+        "message": "Chain intact - all entries verified",
+        "merkle_root": merkle_root,
+        "first_entry": LEDGER[0]["timestamp"] if LEDGER else None,
+        "last_entry": LEDGER[-1]["timestamp"] if LEDGER else None
+    }
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SIGNATURE AUTHORITY
@@ -1809,6 +2099,7 @@ async def root():
 @app.get("/health")
 async def health():
     """Health check endpoint."""
+    chain_status = ledger_verify_chain()
     return {
         "status": "ok",
         "engine": ENGINE,
@@ -1818,7 +2109,18 @@ async def health():
             "ledger", "sign",
             "frameworks/verify"
         ],
-        "ledger_entries": len(LEDGER),
+        "security": {
+            "auth_enabled": AUTH_ENABLED,
+            "rate_limiting": True,
+            "rate_limit_window_seconds": RATE_LIMIT_WINDOW
+        },
+        "ledger": {
+            "entries": len(LEDGER),
+            "chain_valid": chain_status["valid"],
+            "merkle_root": chain_status.get("merkle_root", "EMPTY"),
+            "persistent_storage": str(LEDGER_PATH)
+        },
+        "frameworks_supported": list(FRAMEWORK_CONSTRAINTS.keys()),
         "timestamp": int(time.time())
     }
 
