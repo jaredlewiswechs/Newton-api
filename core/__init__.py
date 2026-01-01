@@ -10,6 +10,7 @@ The Newton Supercomputer is a distributed verification system where:
 
 Components:
 - CDL: Constraint Definition Language (the instruction set)
+- Logic: Verified Computation Engine (Turing complete, bounded)
 - Forge: Verification Engine (the CPU)
 - Vault: Encrypted Storage (the RAM)
 - Ledger: Immutable History (the disk)
@@ -105,6 +106,19 @@ from .grounding import (
     Evidence,
 )
 
+from .logic import (
+    LogicEngine,
+    ExecutionBounds,
+    ExecutionContext,
+    ExecutionResult,
+    Value,
+    ValueType,
+    Expr,
+    ExprType,
+    calculate,
+    calc,
+)
+
 __all__ = [
     # CDL
     'CDLEvaluator', 'CDLParser', 'HaltChecker',
@@ -136,6 +150,11 @@ __all__ = [
 
     # Grounding
     'GroundingEngine', 'Evidence',
+
+    # Logic (Verified Computation)
+    'LogicEngine', 'ExecutionBounds', 'ExecutionContext', 'ExecutionResult',
+    'Value', 'ValueType', 'Expr', 'ExprType',
+    'calculate', 'calc',
 ]
 
 __version__ = "1.0.0"

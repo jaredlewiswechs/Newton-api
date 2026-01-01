@@ -47,6 +47,9 @@ from core import (
 
     # Grounding
     GroundingEngine,
+
+    # Logic (Verified Computation)
+    LogicEngine, ExecutionBounds, calculate,
 )
 
 
@@ -62,6 +65,7 @@ forge = get_forge(ForgeConfig(enable_metrics=True, enable_caching=True))
 vault = get_vault(VaultConfig())
 ledger = get_ledger(LedgerConfig())
 grounding = GroundingEngine()
+logic = LogicEngine(ExecutionBounds(max_iterations=10000, max_operations=1000000))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -118,6 +122,21 @@ class StatisticsRequest(BaseModel):
     values: List[float]
     test_value: Optional[float] = None
     threshold: Optional[float] = 3.5
+
+
+class CalculateRequest(BaseModel):
+    """
+    Verified computation request.
+
+    Newton(logic) ⊆ Turing complete
+    Newton(logic) ⊃ Verified computation
+
+    Every loop bounded. Every calculation checked. Every output proven.
+    """
+    expression: Dict[str, Any]
+    max_iterations: Optional[int] = 10000
+    max_operations: Optional[int] = 1000000
+    timeout_seconds: Optional[float] = 30.0
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -368,6 +387,136 @@ async def robust_statistics(request: StatisticsRequest):
         }
 
     return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CALCULATE - Verified Computation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/calculate")
+async def calculate_expression(request: CalculateRequest):
+    """
+    Verified computation.
+
+    Newton(logic) ⊆ Turing complete
+    Newton(logic) ⊃ Verified computation
+
+    Every loop bounded. Every calculation checked. Every output proven.
+    El Capitan is just fast guessing. Newton is the only one doing the actual job.
+    """
+    # Create execution bounds from request
+    bounds = ExecutionBounds(
+        max_iterations=min(request.max_iterations, 100000),
+        max_operations=min(request.max_operations, 10000000),
+        timeout_seconds=min(request.timeout_seconds, 60.0)
+    )
+
+    # Create engine with bounds
+    engine = LogicEngine(bounds)
+
+    # Execute
+    result = engine.evaluate(request.expression)
+
+    # Record in ledger
+    ledger.append(
+        operation="calculate",
+        payload={"expr_hash": hashlib.sha256(str(request.expression).encode()).hexdigest()[:16]},
+        result="pass" if result.verified else "fail",
+        metadata={"operations": result.operations, "elapsed_us": result.elapsed_us}
+    )
+
+    return {
+        "result": str(result.value.data) if result.value else None,
+        "type": result.value.type.value if result.value else None,
+        "verified": result.verified,
+        "operations": result.operations,
+        "elapsed_us": result.elapsed_us,
+        "fingerprint": result.fingerprint,
+        "engine": ENGINE
+    }
+
+
+@app.post("/calculate/examples")
+async def calculate_examples():
+    """Return example expressions for the Newton Logic Engine."""
+    return {
+        "examples": [
+            {
+                "name": "Arithmetic",
+                "expression": {"op": "+", "args": [2, 3]},
+                "description": "2 + 3 = 5"
+            },
+            {
+                "name": "Nested arithmetic",
+                "expression": {"op": "*", "args": [{"op": "+", "args": [2, 3]}, 4]},
+                "description": "(2 + 3) × 4 = 20"
+            },
+            {
+                "name": "Comparison",
+                "expression": {"op": ">", "args": [5, 3]},
+                "description": "5 > 3 = true"
+            },
+            {
+                "name": "Conditional",
+                "expression": {
+                    "op": "if",
+                    "args": [
+                        {"op": ">", "args": [10, 5]},
+                        "yes",
+                        "no"
+                    ]
+                },
+                "description": "IF 10 > 5 THEN 'yes' ELSE 'no'"
+            },
+            {
+                "name": "Bounded loop",
+                "expression": {
+                    "op": "for",
+                    "args": [
+                        "i",
+                        {"op": "literal", "args": [0]},
+                        {"op": "literal", "args": [5]},
+                        {"op": "*", "args": [{"op": "var", "args": ["i"]}, 2]}
+                    ]
+                },
+                "description": "FOR i FROM 0 TO 5 DO i*2 = [0, 2, 4, 6, 8]"
+            },
+            {
+                "name": "Sum reduction",
+                "expression": {
+                    "op": "reduce",
+                    "args": [
+                        {"op": "lambda", "args": [["acc", "x"], {"op": "+", "args": [{"op": "var", "args": ["acc"]}, {"op": "var", "args": ["x"]}]}]},
+                        0,
+                        {"op": "list", "args": [1, 2, 3, 4, 5]}
+                    ]
+                },
+                "description": "REDUCE + 0 [1,2,3,4,5] = 15"
+            },
+            {
+                "name": "Math function",
+                "expression": {"op": "sqrt", "args": [16]},
+                "description": "√16 = 4"
+            },
+            {
+                "name": "Boolean logic",
+                "expression": {"op": "xor", "args": [True, False]},
+                "description": "true XOR false = true"
+            }
+        ],
+        "operators": {
+            "arithmetic": ["+", "-", "*", "/", "%", "**", "neg", "abs"],
+            "comparison": ["==", "!=", "<", ">", "<=", ">="],
+            "boolean": ["and", "or", "not", "xor", "nand", "nor"],
+            "conditionals": ["if", "cond"],
+            "loops": ["for", "while", "map", "filter", "reduce"],
+            "functions": ["def", "call", "lambda"],
+            "assignment": ["let", "set"],
+            "sequences": ["block", "list", "index", "len"],
+            "math": ["sqrt", "log", "sin", "cos", "tan", "floor", "ceil", "round", "min", "max", "sum"]
+        },
+        "engine": ENGINE
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -662,6 +811,7 @@ async def home():
             <div class="endpoint"><span class="method">POST</span><span class="path">/verify</span></div>
             <div class="endpoint"><span class="method">POST</span><span class="path">/constraint</span></div>
             <div class="endpoint"><span class="method">POST</span><span class="path">/ground</span></div>
+            <div class="endpoint"><span class="method">POST</span><span class="path">/calculate</span></div>
             <div class="endpoint"><span class="method">GET</span><span class="path">/ledger</span></div>
             <div class="endpoint"><span class="method">GET</span><span class="path">/metrics</span></div>
         </div>
