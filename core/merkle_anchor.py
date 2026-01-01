@@ -204,10 +204,16 @@ class MerkleAnchorScheduler:
         Returns:
             MerkleProof if successful, None otherwise
         """
-        # Get Merkle proof from ledger
-        proof_path = self.ledger.get_merkle_proof(entry_index)
-        if not proof_path:
+        # Get Merkle proof from ledger (returns list of tuples)
+        proof_tuples = self.ledger.get_merkle_proof(entry_index)
+        if not proof_tuples:
             return None
+        
+        # Convert tuples to dict format
+        proof_path = [
+            {"hash": hash_val, "direction": direction}
+            for hash_val, direction in proof_tuples
+        ]
         
         # Get entry
         entry = self.ledger.get(entry_index)

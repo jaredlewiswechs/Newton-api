@@ -234,12 +234,9 @@ class PolicyEngine:
     
     def _check_content_filter(self, data: Any, condition: Dict[str, Any]) -> bool:
         """Check if data matches content filter."""
-        pattern = condition.get("pattern")
-        if not pattern:
-            return True
-        
         text = str(data)
         blacklist = condition.get("blacklist", [])
+        pattern = condition.get("pattern")
         
         # Check blacklist
         for term in blacklist:
