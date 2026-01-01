@@ -1,208 +1,352 @@
-# Newton OS: Constraint-First AI Verification
+# Newton Supercomputer: Verified Computation at Scale
 
-> The constraint IS the product. The compiler makes the constraint portable.
+> **The constraint IS the instruction. The verification IS the computation.**
 
-## Core Philosophy
+---
 
-Newton operates on a fundamental principle: **verify before execute, never after**.
+## Abstract
+
+Newton is a supercomputer architecture where verification is the fundamental operation. Unlike traditional computing where correctness is checked after execution, Newton makes verification the execution itself. This architectural inversion enables verified computation at any scale with fixed-cost verification.
 
 ```
-1 == 1  →  execute
-1 != 1  →  halt
+El Capitan: 1.809 exaFLOPs, unverified.
+Newton: Whatever speed you give it, verified.
+```
+
+Newton isn't slower. Newton is the only one doing the actual job. El Capitan is just fast guessing.
+
+---
+
+## 1. The Fundamental Law
+
+```python
+def newton(current, goal):
+    return current == goal
+
+# 1 == 1 → execute
+# 1 != 1 → halt
 ```
 
 This isn't a feature. It's the architecture.
 
----
+Every operation in Newton reduces to this closure condition. Before any computation proceeds, the constraint must resolve to `True`. This creates a system where:
 
-## Verified Capabilities
-
-### Newton OS Server (Python)
-**Production**: [newton-api.onrender.com](https://newton-api.onrender.com)
-
-| Endpoint | Function |
-|----------|----------|
-| `POST /verify` | Intent verification with harm/medical/legal constraints |
-| `POST /analyze` | THIA anomaly detection (Z-score, IQR, MAD) |
-| `POST /compile` | Rosetta compiler (Intent → AI Studio prompt) |
-| `GET /health` | System status |
-| `GET /constraints` | List content constraints |
-| `GET /methods` | List analysis methods |
-| `GET /frameworks` | List Apple frameworks |
-
-### Newton Tahoe (Ruby)
-Local verification kernel with cryptographic sovereignty.
-
-- **3-commit verification**: Z-score decay (10.0 → 6.67 → 3.33 → 0.0)
-- **AES-256 encrypted vault**: Local-first data sovereignty
-- **QR/web export**: Signature authority with audit trail
-- **Live/Draft mode**: Toggle between execution states
-- **Append-only ledger**: Immutable verification history
-
-### Newton PDA (PWA)
-Personal Data Assistant for Notes, Names, and Dates.
-
-- **Unified Soup**: Single encrypted data store for all item types
-- **Append-only versioning**: Nothing deleted, only superseded
-- **Identity-derived encryption**: AES-256-GCM from name/passphrase (PBKDF2)
-- **Relationship layer**: Explicit refs plus inferred @mentions and #tags
-- **Beaming**: Export verified items as signed payloads
-- **Offline-first**: IndexedDB storage, works without network
-
-### Ada (Swift)
-Conversational interface layer.
-
-- Siri Shortcut integration (on-device)
-- Voice → Newton verification → execution pipeline
-- iOS native implementation
-- Apple Silicon optimized
-
-### Rosetta Compiler Cartridge
-Meta-compiler for constraint-portable code generation.
-
-1. Parses natural language intent
-2. Verifies against domain constraints
-3. Generates HIG-compliant prompts
-4. Outputs structured specs for AI Studio
+- **Determinism** is guaranteed (same input → same output)
+- **Termination** is provable (HaltChecker validates before execution)
+- **Consistency** is enforced (no constraint can both pass and fail)
+- **Auditability** is inherent (every verification in immutable ledger)
 
 ---
 
-## Architectural Constraints (By Design)
+## 2. Architecture
 
-These are not limitations. They are differentiators.
-
-| Constraint | Implementation | Why |
-|------------|----------------|-----|
-| **Closure Condition** | `1 == 1` must resolve before execution | Determinism over probability |
-| **Deterministic Verification** | Pass/fail binary, no percentages | Auditable decisions |
-| **Local Processing** | <5ms verification, no cloud dependency | Data sovereignty |
-| **Constraint-First** | Verification IS the product | Safety as architecture |
-| **Immutable Ledger** | Append-only, cryptographically signed | Legal defensibility |
-
----
-
-## Extension Architecture
-
-### Compiler Cartridges
-
-The Rosetta pattern extends to any domain with definable constraints:
-
-| Cartridge | Input | Constraints | Output |
-|-----------|-------|-------------|--------|
-| **Visual** | Design intent | Dimension/color bounds | SVG/PNG |
-| **Sound** | Audio intent | Frequency/duration limits | WAV spec |
-| **Sequence** | Animation intent | Frame/timing constraints | Video spec |
-| **Data** | Report intent | Statistical bounds | Report spec |
-
-### API Extensions
+Newton is a distributed verification system with seven core components:
 
 ```
-POST /cartridge/visual    - SVG with dimension constraints
-POST /cartridge/sound     - Audio with frequency/duration limits
-POST /cartridge/sequence  - Video with frame constraints
-POST /cartridge/data      - Reports with statistical bounds
-GET  /ledger              - Append-only audit trail
-POST /sign                - Cryptographic signature authority
+┌─────────────────────────────────────────────────────────────────┐
+│                    NEWTON SUPERCOMPUTER                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
+│  │   CDL   │  │  LOGIC  │  │  FORGE  │  │ ROBUST  │           │
+│  │ (lang)  │  │ (calc)  │  │  (CPU)  │  │ (stats) │           │
+│  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘           │
+│       └────────────┴────────────┴────────────┘                 │
+│                         │                                       │
+│  ┌─────────┐  ┌────────┴────────┐  ┌─────────┐                │
+│  │  VAULT  │  │     LEDGER      │  │ BRIDGE  │                │
+│  │  (RAM)  │  │     (disk)      │  │  (bus)  │                │
+│  └─────────┘  └─────────────────┘  └─────────┘                │
+│                                                                 │
+│                      ASK NEWTON                                 │
+│                        /ask                                     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Framework Integration (via Rosetta)
+### 2.1 CDL - Constraint Definition Language
 
-Newton's constraint engine maps to Apple frameworks:
+The instruction set of Newton. CDL 3.0 provides:
 
-| Framework | Constraint Domain |
-|-----------|-------------------|
-| **HealthKit** | Medical data handling, HIPAA compliance |
-| **SwiftUI** | Accessibility verification, HIG compliance |
-| **ARKit** | Safety boundary enforcement |
-| **CoreML** | Epistemic bounds, model validation |
-| **StoreKit** | App Store guideline verification |
+| Capability | Operators |
+|------------|-----------|
+| **Comparison** | `eq`, `ne`, `lt`, `gt`, `le`, `ge` |
+| **String** | `contains`, `matches` (regex) |
+| **Set** | `in`, `not_in` |
+| **Existence** | `exists`, `empty` |
+| **Temporal** | `within`, `after`, `before` |
+| **Aggregation** | `sum_lt`, `count_lt`, `avg_lt` (with window) |
+| **Logic** | `and`, `or`, `not` composites |
+| **Conditional** | `if/then/else` branching |
+
+Every constraint is parsed and validated by `HaltChecker` before execution, proving termination.
+
+### 2.2 Logic Engine - Verified Turing Completeness
+
+Newton can calculate anything El Capitan can. Just verified.
+
+| Category | Operators |
+|----------|-----------|
+| **Arithmetic** | `+`, `-`, `*`, `/`, `%`, `**`, `neg`, `abs` |
+| **Boolean** | `and`, `or`, `not`, `xor`, `nand`, `nor` |
+| **Comparison** | `==`, `!=`, `<`, `>`, `<=`, `>=` |
+| **Conditionals** | `if`, `cond` (multi-branch) |
+| **Loops** | `for`, `while`, `map`, `filter`, `reduce` |
+| **Functions** | `def`, `call`, `lambda` |
+| **Assignment** | `let`, `set` |
+| **Sequences** | `block`, `list`, `index`, `len` |
+| **Math** | `sqrt`, `log`, `sin`, `cos`, `tan`, `floor`, `ceil`, `round`, `min`, `max`, `sum` |
+
+**Bounded Execution** ensures every computation terminates:
+
+```python
+ExecutionBounds(
+    max_iterations=10000,       # No infinite loops
+    max_recursion_depth=100,    # No stack overflow
+    max_operations=1000000,     # No runaway compute
+    timeout_seconds=30.0        # No endless waits
+)
+```
+
+### 2.3 Forge - Verification Engine (CPU)
+
+The CPU of Newton. Forge orchestrates verification:
+
+- Parallel constraint evaluation with thread pools
+- Content safety pattern matching
+- Signal verification (structured validation)
+- Sub-millisecond latency (<1ms typical)
+- Result caching for repeated verifications
+
+### 2.4 Vault - Encrypted Storage (RAM)
+
+Secure, identity-derived storage:
+
+- **AES-256-GCM encryption** with authenticated data
+- **PBKDF2 key derivation** (100,000 iterations)
+- **Identity-derived keys** - encryption tied to identity
+- **Type preservation** - maintains data types across encryption
+
+### 2.5 Ledger - Immutable History (Disk)
+
+Append-only audit trail with cryptographic proofs:
+
+- **Hash-chained entries** - each entry references previous
+- **Merkle tree** - O(log n) membership proofs
+- **Verification certificates** - exportable proof documents
+- **Complete audit trail** - every operation logged
+
+### 2.6 Bridge - Distributed Protocol (Bus)
+
+PBFT-inspired consensus for distributed verification:
+
+- **Node identity** - cryptographic key pairs
+- **Byzantine fault tolerance** - survives f=(n-1)/3 faulty nodes
+- **Consensus rounds** - prepare → commit → finalize
+- **View changes** - leader rotation on failure
+
+### 2.7 Robust - Adversarial Statistics
+
+Statistics designed to resist manipulation:
+
+- **MAD over mean** - Median Absolute Deviation resists outliers
+- **Locked baselines** - immutable reference points
+- **Source tracking** - provenance for all data
+- **Temporal decay** - recent data weighted appropriately
+- **Attack detection** - identifies manipulation attempts
 
 ---
 
-## What Newton Will Never Do
+## 3. The Economic Equation
 
-By design, Newton **intentionally blocks**:
+```
+Traditional Compute:
+Cost = f(operations) → grows with usage
 
-| Capability | Reason |
-|------------|--------|
-| Probabilistic decision-making | No LLM guessing in verification loop |
-| Cloud-dependent verification | Local sovereignty is non-negotiable |
-| Post-execution validation | Verify BEFORE run, always |
-| Unbounded generation | Closure condition required |
+Newton Compute:
+Cost = f(constraints) → fixed at definition time
+```
+
+When you define the constraint, you've done the work. Verification is just confirming the constraint holds. That's why Newton is a supercomputer that costs nothing to run.
+
+### 3.1 Why This Works
+
+Traditional systems:
+1. Execute computation
+2. Check if result is correct
+3. Re-execute if wrong
+4. Cost scales with compute
+
+Newton:
+1. Define constraint (one-time cost)
+2. Verify constraint holds (O(1) per check)
+3. Execute only on pass
+4. Cost fixed at definition
 
 ---
 
-## The Infinite Extension
+## 4. Guarantees
 
-Rosetta Compiler Cartridge is the expansion mechanism:
-
-```
-Developer Documentation
-        ↓
-   Newton Constraints
-        ↓
-   AI Studio Prompts
-        ↓
-   Compilable Specs
-```
-
-This makes Newton a **meta-compiler for any constrained domain**:
-
-- **Financial**: Regulatory compliance verification
-- **Medical**: Licensing and certification bounds
-- **Legal**: Jurisdiction-specific rule enforcement
-- **Physical**: Safety parameter validation
-- **Software**: Code generation with security constraints
+| Property | Implementation |
+|----------|----------------|
+| **Determinism** | Same input always produces same output |
+| **Termination** | HaltChecker proves all constraints terminate |
+| **Consistency** | No constraint can be both pass and fail |
+| **Auditability** | Every verification in immutable ledger |
+| **Adversarial Resistance** | MAD stats, locked baselines, source tracking |
+| **Byzantine Tolerance** | Consensus survives f=(n-1)/3 faulty nodes |
 
 ---
 
-## Competitive Position
+## 5. Security Model
+
+### 5.1 Content Safety
+
+Pattern-based detection for:
+- Harmful content (violence, illegal activities)
+- Medical claims (unverified health advice)
+- Legal advice (unlicensed practice)
+- Security threats (exploitation, attacks)
+
+### 5.2 Cryptographic Integrity
+
+- **Storage**: AES-256-GCM with identity-derived keys
+- **Audit**: Hash-chained ledger with Merkle proofs
+- **Identity**: ECDSA key pairs for node authentication
+- **Consensus**: PBFT with Byzantine fault tolerance
+
+### 5.3 Execution Safety
+
+- **Bounded loops** - max_iterations prevents infinite loops
+- **Stack limits** - max_recursion_depth prevents overflow
+- **Operation caps** - max_operations prevents runaway compute
+- **Timeouts** - timeout_seconds prevents endless waits
+
+---
+
+## 6. Comparison
+
+### 6.1 vs Traditional Supercomputers
+
+| Aspect | El Capitan | Newton |
+|--------|------------|--------|
+| **Speed** | 1.809 exaFLOPs | Scales with nodes |
+| **Verification** | None | Every operation |
+| **Correctness** | Assumed | Proven |
+| **Cost model** | Per-operation | Per-constraint |
+| **Audit trail** | Manual | Automatic |
+
+### 6.2 vs Traditional AI Systems
 
 | Traditional AI | Newton |
 |----------------|--------|
 | "Generate anything, hope it's correct" | "Verify constraints, execute only on pass" |
 | Probabilistic outputs | Deterministic verification |
-| Cloud-dependent | Local-first |
+| Cloud-dependent | Local-first capable |
 | Post-hoc safety | Pre-execution gates |
 | Black box | Auditable ledger |
 
 ---
 
-## Apple Integration Value
+## 7. What Newton Will Never Do
 
-Newton provides the missing safety layer for Apple Intelligence:
+By design, Newton **intentionally blocks**:
 
-| Capability | Apple Benefit |
-|------------|---------------|
-| Siri wrapper | Deterministic intent verification |
-| Local processing | Apple Silicon native, privacy-preserving |
-| HIG generation | Automatic interface compliance |
-| Audit trails | App Store review acceleration |
-| Constraint engine | Enterprise deployment confidence |
+| Capability | Reason |
+|------------|--------|
+| Probabilistic decisions | Binary pass/fail only |
+| Unbounded execution | All loops must terminate |
+| Unverified computation | Constraint check precedes everything |
+| Mutable history | Ledger is append-only |
+| Single point of failure | Byzantine fault tolerant |
 
 ---
 
-## The Newton Guarantee
+## 8. Implementation
 
-```python
-def newton_guarantee(intent):
-    if verify(intent) == PASS:
-        return execute(intent)  # Deterministic
-    else:
-        return HALT             # Safe
-    # Never: return maybe(intent)
+Newton is implemented in Python with FastAPI:
+
+```bash
+# Install
+git clone https://github.com/jaredlewiswechs/Newton-api.git
+pip install -r requirements.txt
+
+# Run
+python newton_supercomputer.py
+# Server at http://localhost:8000
 ```
 
-**The API limit is this**: Newton only executes what passes `1 == 1`.
+### Core Files
 
-Everything else is an extension of *which constraints* you're checking, not *whether* you check them.
+| File | Purpose |
+|------|---------|
+| `newton_supercomputer.py` | Unified API server |
+| `core/cdl.py` | Constraint Definition Language |
+| `core/logic.py` | Verified computation engine |
+| `core/forge.py` | Verification engine |
+| `core/vault.py` | Encrypted storage |
+| `core/ledger.py` | Immutable history |
+| `core/bridge.py` | Distributed consensus |
+| `core/robust.py` | Adversarial statistics |
+
+---
+
+## 9. API Overview
+
+### Core Operations
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/ask` | POST | Full verification pipeline |
+| `/verify` | POST | Content safety check |
+| `/calculate` | POST | Verified computation |
+| `/constraint` | POST | CDL evaluation |
+| `/ground` | POST | Claim verification |
+| `/statistics` | POST | Robust analysis |
+
+### Storage & Audit
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/vault/store` | POST | Encrypted storage |
+| `/vault/retrieve` | POST | Encrypted retrieval |
+| `/ledger` | GET | Audit trail |
+| `/ledger/{index}` | GET | Entry with proof |
+| `/ledger/certificate/{index}` | GET | Verification certificate |
+
+---
+
+## 10. Conclusion
+
+Newton represents a fundamental shift in computing architecture:
+
+**Traditional**: Compute first, verify later (maybe).
+
+**Newton**: Verify first, compute only on pass.
+
+This inversion makes verification the computation itself, enabling:
+- Guaranteed correctness
+- Fixed verification cost
+- Complete auditability
+- Adversarial resistance
+- Byzantine fault tolerance
+
+Newton isn't a faster computer. Newton is a verified computer. And in a world of unverified computation, that's the only computation that matters.
 
 ---
 
 ## Contact
 
-**Jn.Lewis1@outlook.com**
+**Ada Computing Company**
+Houston, Texas
 
-Newton OS v3.0.0 | Constraint-First AI Verification
+**Jared Lewis**
+- Email: jn.lewis1@outlook.com
+- LinkedIn: [linkedin.com/in/jaredlewisuh](https://linkedin.com/in/jaredlewisuh)
+- Web: [parcri.net](https://parcri.net)
 
-*The constraint IS the product. The compiler makes the constraint portable.*
+---
+
+© 2025-2026 Ada Computing Company · Houston, Texas
+
+*"1 == 1. The cloud is weather. We're building shelter."*

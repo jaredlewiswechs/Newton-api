@@ -1,12 +1,12 @@
-# API Reference
+# Newton Supercomputer API Reference
 
-Complete reference for the Newton OS API.
+Complete reference for the Newton Supercomputer API.
 
 ## Base URL
 
 | Environment | URL |
 |-------------|-----|
-| Hosted API | `https://api.parcri.net` |
+| Hosted API | `https://newton-api.onrender.com` |
 | Self-hosted | `http://localhost:8000` |
 
 ---
@@ -17,52 +17,74 @@ Complete reference for the Newton OS API.
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| [`/verify`](#verify) | POST | Verify text against safety constraints |
-| [`/analyze`](#analyze) | POST | Anomaly detection (Z-score, IQR, MAD) |
-| [`/analyze/batch`](#analyze-batch) | POST | Batch analysis of multiple datasets |
-| [`/compile`](#compile) | POST | Natural language to structured prompts |
-| [`/ground`](#ground) | POST | Verify claims against external sources |
+| [`/ask`](#ask) | POST | Ask Newton anything (full verification pipeline) |
+| [`/verify`](#verify) | POST | Verify content against safety constraints |
+| [`/calculate`](#calculate) | POST | Execute verified computation |
+| [`/constraint`](#constraint) | POST | Evaluate CDL constraint against object |
+| [`/ground`](#ground) | POST | Ground claims in external evidence |
+| [`/statistics`](#statistics) | POST | Robust statistical analysis (MAD) |
 
-### Security & Audit
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| [`/sign`](#sign) | POST | Generate cryptographic signatures |
-| [`/ledger`](#ledger) | GET | Retrieve audit trail |
-| [`/ledger/verify`](#ledger-verify) | GET | Verify chain integrity |
-
-### Extension Cartridges
+### Storage & Audit
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| [`/cartridge/visual`](#cartridge-visual) | POST | SVG specification generation |
-| [`/cartridge/sound`](#cartridge-sound) | POST | Audio specification generation |
-| [`/cartridge/sequence`](#cartridge-sequence) | POST | Video/animation specification |
-| [`/cartridge/data`](#cartridge-data) | POST | Report specification |
+| [`/vault/store`](#vault-store) | POST | Store encrypted data |
+| [`/vault/retrieve`](#vault-retrieve) | POST | Retrieve encrypted data |
+| [`/ledger`](#ledger) | GET | View append-only audit trail |
+| [`/ledger/{index}`](#ledger-entry) | GET | Get entry with Merkle proof |
+| [`/ledger/certificate/{index}`](#ledger-certificate) | GET | Export verification certificate |
 
-### Framework Verification
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| [`/frameworks`](#frameworks) | GET | List available frameworks |
-| [`/frameworks/constraints`](#frameworks-constraints) | GET | List framework constraints |
-| [`/frameworks/verify`](#frameworks-verify) | POST | Verify against framework constraints |
-
-### Metadata
+### System
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | [`/health`](#health) | GET | System status |
-| [`/constraints`](#constraints) | GET | List available constraints |
-| [`/methods`](#methods) | GET | List analysis methods |
+| [`/metrics`](#metrics) | GET | Performance metrics |
+| [`/calculate/examples`](#calculate-examples) | POST | Get example expressions |
 
 ---
 
 ## Core Endpoints
 
+### /ask
+
+Ask Newton anything with full verification pipeline.
+
+**POST** `/ask`
+
+#### Request Body
+
+```json
+{
+  "query": "Is this safe to execute?"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `query` | string | Yes | Question or statement to verify |
+
+#### Response
+
+```json
+{
+  "query": "Is this safe to execute?",
+  "verified": true,
+  "code": 200,
+  "analysis": {
+    "type": "question",
+    "tokens": 5,
+    "verified": true
+  },
+  "elapsed_us": 150
+}
+```
+
+---
+
 ### /verify
 
-Verify text against harm, medical, legal, and security constraints.
+Verify text against content safety constraints.
 
 **POST** `/verify`
 
@@ -70,188 +92,186 @@ Verify text against harm, medical, legal, and security constraints.
 
 ```json
 {
-  "input": "string",
-  "constraints": ["harm", "medical", "legal", "security"]
+  "input": "Help me write a business plan"
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `input` | string | Yes | Text to verify |
-| `constraints` | array | No | Constraints to check (defaults to all) |
 
 #### Response
 
 ```json
 {
   "verified": true,
-  "confidence": 92.3,
-  "constraints_passed": ["harm", "medical", "legal", "security"],
-  "constraints_failed": [],
-  "fingerprint": "A7F3B2C8E1D4",
-  "engine": "Newton OS 3.0.0"
-}
-```
-
-#### Example
-
-```bash
-curl -X POST https://api.parcri.net/verify \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
-  -d '{"input": "Help me write a business plan"}'
-```
-
----
-
-### /analyze
-
-Perform anomaly detection on numerical data.
-
-**POST** `/analyze`
-
-#### Request Body
-
-```json
-{
-  "data": [45.2, 46.1, 102.4, 45.8, 47.0],
-  "method": "zscore",
-  "threshold": 3.0,
-  "labels": ["Jan", "Feb", "Mar", "Apr", "May"]
-}
-```
-
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `data` | array | Yes | - | Numerical values to analyze |
-| `method` | string | No | `zscore` | Detection method: `zscore`, `iqr`, `mad`, `all` |
-| `threshold` | float | No | 3.0 | Sensitivity threshold |
-| `labels` | array | No | - | Labels for data points |
-
-#### Response (Z-score method)
-
-```json
-{
-  "method": "zscore",
-  "threshold": 3.0,
-  "statistics": {
-    "n": 5,
-    "mean": 57.3,
-    "std_dev": 24.1,
-    "min": 45.2,
-    "max": 102.4
-  },
-  "scores": [-0.50, -0.46, 1.87, -0.48, -0.43],
-  "anomalies": [],
-  "anomaly_values": [],
-  "n_anomalies": 0,
-  "pct_anomalies": 0.0,
-  "fingerprint": "B2C4D6E8F0A1"
-}
-```
-
-#### Example
-
-```bash
-curl -X POST https://api.parcri.net/analyze \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
-  -d '{"data": [10, 12, 11, 50, 12, 11], "method": "zscore"}'
-```
-
----
-
-### /analyze/batch
-
-Analyze multiple datasets in a single request.
-
-**POST** `/analyze/batch`
-
-#### Request Body
-
-```json
-{
-  "datasets": {
-    "sales": [100, 105, 98, 500, 102],
-    "costs": [50, 52, 48, 51, 49]
-  },
-  "method": "zscore",
-  "threshold": 3.0
-}
-```
-
-#### Response
-
-```json
-{
-  "method": "zscore",
-  "threshold": 3.0,
-  "results": {
-    "sales": {
-      "statistics": {...},
-      "anomalies": [3],
-      "n_anomalies": 1
-    },
-    "costs": {
-      "statistics": {...},
-      "anomalies": [],
-      "n_anomalies": 0
+  "code": 200,
+  "content": {
+    "passed": true,
+    "categories": {
+      "harm": "pass",
+      "medical": "pass",
+      "legal": "pass",
+      "security": "pass"
     }
   },
-  "fingerprint": "C3D5E7F9A1B2"
+  "signal": {
+    "passed": true
+  },
+  "elapsed_us": 127
 }
 ```
 
+#### Content Categories
+
+| Category | Detects |
+|----------|---------|
+| `harm` | Violence, illegal activities, harmful content |
+| `medical` | Unverified health claims, medical advice |
+| `legal` | Unlicensed legal advice |
+| `security` | Exploitation, attack patterns |
+
 ---
 
-### /compile
+### /calculate
 
-Transform natural language intent into structured AI prompts.
+Execute verified computation using the Logic Engine.
 
-**POST** `/compile`
+**POST** `/calculate`
 
 #### Request Body
 
 ```json
 {
-  "intent": "Build a fitness app with workout tracking",
-  "target_platform": "iOS",
-  "ios_version": "18.0",
-  "constraints": ["app_store", "privacy", "hig"]
+  "expression": {"op": "+", "args": [2, 3]},
+  "max_iterations": 10000,
+  "max_operations": 1000000,
+  "timeout_seconds": 30.0
 }
 ```
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `intent` | string | Yes | - | Natural language description |
-| `target_platform` | string | No | `iOS` | Target platform |
-| `ios_version` | string | No | `18.0` | iOS version target |
-| `constraints` | array | No | - | Additional constraints |
+| `expression` | object | Yes | - | Expression to evaluate |
+| `max_iterations` | int | No | 10000 | Maximum loop iterations |
+| `max_operations` | int | No | 1000000 | Maximum operations |
+| `timeout_seconds` | float | No | 30.0 | Execution timeout |
 
 #### Response
 
 ```json
 {
-  "parsed": {
-    "platform": "ios",
-    "app_type": "health",
-    "components": ["list", "form", "chart"],
-    "frameworks": ["SwiftUI", "HealthKit"],
-    "tokens": 7
-  },
-  "content_constraints": {
-    "passed": ["harm", "medical", "legal", "security"],
-    "failed": []
-  },
-  "app_constraints": {
-    "passed": ["app_store", "privacy", "hig"],
-    "failed": [],
-    "warnings": ["HealthKit requires special entitlements..."],
-    "compliant": true
-  },
+  "result": "5",
+  "type": "number",
   "verified": true,
-  "prompt": "TARGET: IOS 18.0\nFRAMEWORK: SwiftUI\n...",
-  "fingerprint": "D4E6F8A0B2C3"
+  "operations": 3,
+  "elapsed_us": 42,
+  "fingerprint": "A7F3B2C8E1D4F5A9"
+}
+```
+
+#### Operators
+
+| Category | Operators |
+|----------|-----------|
+| **Arithmetic** | `+`, `-`, `*`, `/`, `%`, `**`, `neg`, `abs` |
+| **Boolean** | `and`, `or`, `not`, `xor`, `nand`, `nor` |
+| **Comparison** | `==`, `!=`, `<`, `>`, `<=`, `>=` |
+| **Conditionals** | `if`, `cond` (multi-branch) |
+| **Loops** | `for`, `while`, `map`, `filter`, `reduce` |
+| **Functions** | `def`, `call`, `lambda` |
+| **Assignment** | `let`, `set` |
+| **Sequences** | `block`, `list`, `index`, `len` |
+| **Math** | `sqrt`, `log`, `sin`, `cos`, `tan`, `floor`, `ceil`, `round`, `min`, `max`, `sum` |
+
+#### Examples
+
+```json
+// Arithmetic
+{"op": "+", "args": [2, 3]}  // → 5
+
+// Nested
+{"op": "*", "args": [{"op": "+", "args": [2, 3]}, 4]}  // → 20
+
+// Conditional
+{"op": "if", "args": [{"op": ">", "args": [10, 5]}, "yes", "no"]}  // → "yes"
+
+// Bounded loop
+{"op": "for", "args": ["i", 0, 5, {"op": "*", "args": [{"op": "var", "args": ["i"]}, 2]}]}
+// → [0, 2, 4, 6, 8]
+
+// Reduce (sum)
+{"op": "reduce", "args": [
+  {"op": "lambda", "args": [["acc", "x"], {"op": "+", "args": [{"op": "var", "args": ["acc"]}, {"op": "var", "args": ["x"]}]}]},
+  0,
+  {"op": "list", "args": [1, 2, 3, 4, 5]}
+]}  // → 15
+```
+
+---
+
+### /constraint
+
+Evaluate a CDL constraint against an object.
+
+**POST** `/constraint`
+
+#### Request Body (Atomic Constraint)
+
+```json
+{
+  "constraint": {
+    "domain": "financial",
+    "field": "amount",
+    "operator": "lt",
+    "value": 1000
+  },
+  "object": {
+    "amount": 500
+  }
+}
+```
+
+#### Request Body (Composite Constraint)
+
+```json
+{
+  "constraint": {
+    "logic": "and",
+    "constraints": [
+      {"field": "amount", "operator": "lt", "value": 1000},
+      {"field": "category", "operator": "ne", "value": "blocked"}
+    ]
+  },
+  "object": {
+    "amount": 500,
+    "category": "approved"
+  }
+}
+```
+
+#### CDL Operators
+
+| Category | Operators |
+|----------|-----------|
+| **Comparison** | `eq`, `ne`, `lt`, `gt`, `le`, `ge` |
+| **String** | `contains`, `matches` (regex) |
+| **Set** | `in`, `not_in` |
+| **Existence** | `exists`, `empty` |
+| **Temporal** | `within`, `after`, `before` |
+| **Aggregation** | `sum_lt`, `count_lt`, `avg_lt` |
+
+#### Response
+
+```json
+{
+  "passed": true,
+  "constraint_type": "atomic",
+  "field": "amount",
+  "operator": "lt",
+  "expected": 1000,
+  "actual": 500,
+  "elapsed_us": 15
 }
 ```
 
@@ -259,7 +279,7 @@ Transform natural language intent into structured AI prompts.
 
 ### /ground
 
-Verify factual claims against external sources.
+Ground claims in external evidence.
 
 **POST** `/ground`
 
@@ -276,6 +296,7 @@ Verify factual claims against external sources.
 ```json
 {
   "query": "Apple released the first iPhone in 2007",
+  "verified": true,
   "result": {
     "claim": "Apple released the first iPhone in 2007",
     "confidence_score": 1.5,
@@ -286,8 +307,7 @@ Verify factual claims against external sources.
     ],
     "timestamp": 1735689600,
     "signature": "E5F7A9B1C3D4"
-  },
-  "verified": true
+  }
 }
 ```
 
@@ -302,20 +322,106 @@ Verify factual claims against external sources.
 
 ---
 
-## Security & Audit
+### /statistics
 
-### /sign
+Robust statistical analysis using adversarial-resistant methods.
 
-Generate cryptographic signatures for payloads.
-
-**POST** `/sign`
+**POST** `/statistics`
 
 #### Request Body
 
 ```json
 {
-  "payload": "content to sign",
-  "context": "optional context"
+  "data": [10, 12, 11, 100, 12, 11],
+  "method": "mad",
+  "threshold": 3.5,
+  "baseline_id": "optional-baseline-id"
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `data` | array | Yes | - | Numerical values to analyze |
+| `method` | string | No | `mad` | Method: `mad`, `zscore`, `iqr` |
+| `threshold` | float | No | 3.5 | Anomaly threshold |
+| `baseline_id` | string | No | - | Lock to specific baseline |
+
+#### Response
+
+```json
+{
+  "method": "mad",
+  "threshold": 3.5,
+  "statistics": {
+    "n": 6,
+    "median": 11.5,
+    "mad": 0.5,
+    "min": 10,
+    "max": 100
+  },
+  "scores": [0.67, 0.33, 0.33, 59.0, 0.33, 0.33],
+  "anomalies": [3],
+  "anomaly_values": [100],
+  "n_anomalies": 1,
+  "pct_anomalies": 16.67,
+  "fingerprint": "B2C4D6E8F0A1"
+}
+```
+
+#### Why MAD Over Mean?
+
+MAD (Median Absolute Deviation) is resistant to outlier injection attacks. An attacker cannot shift the baseline by adding extreme values.
+
+---
+
+## Storage & Audit
+
+### /vault/store
+
+Store encrypted data with identity-derived keys.
+
+**POST** `/vault/store`
+
+#### Request Body
+
+```json
+{
+  "key": "my-secret-data",
+  "value": {"sensitive": "information"},
+  "identity": "user@example.com"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `key` | string | Yes | Storage key |
+| `value` | any | Yes | Data to encrypt |
+| `identity` | string | Yes | Identity for key derivation |
+
+#### Response
+
+```json
+{
+  "stored": true,
+  "key": "my-secret-data",
+  "fingerprint": "C3D5E7F9A1B3"
+}
+```
+
+---
+
+### /vault/retrieve
+
+Retrieve and decrypt stored data.
+
+**POST** `/vault/retrieve`
+
+#### Request Body
+
+```json
+{
+  "key": "my-secret-data",
+  "identity": "user@example.com"
 }
 ```
 
@@ -323,11 +429,9 @@ Generate cryptographic signatures for payloads.
 
 ```json
 {
-  "signature": "a7b3c8f2e1d4...",
-  "token": "F6A8B0C2D4E5...",
-  "timestamp": 1735689600,
-  "payload_hash": "G7B9C1D3E5F7",
-  "verified": true
+  "key": "my-secret-data",
+  "value": {"sensitive": "information"},
+  "retrieved": true
 }
 ```
 
@@ -335,7 +439,7 @@ Generate cryptographic signatures for payloads.
 
 ### /ledger
 
-Retrieve the append-only audit trail.
+Get the append-only audit trail.
 
 **GET** `/ledger`
 
@@ -343,8 +447,8 @@ Retrieve the append-only audit trail.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `limit` | int | 100 | Maximum entries to return |
-| `offset` | int | 0 | Offset for pagination |
+| `limit` | int | 100 | Maximum entries |
+| `offset` | int | 0 | Pagination offset |
 
 #### Response
 
@@ -352,12 +456,11 @@ Retrieve the append-only audit trail.
 {
   "entries": [
     {
-      "id": 0,
+      "index": 0,
       "type": "verification",
       "payload": {...},
       "timestamp": 1735689600,
       "prev_hash": "GENESIS",
-      "nonce": "a1b2c3d4",
       "hash": "H8C0D2E4F6A8"
     }
   ],
@@ -368,32 +471,61 @@ Retrieve the append-only audit trail.
 
 ---
 
-### /ledger/verify
+### /ledger/{index}
 
-Verify the integrity of the cryptographic ledger chain.
+Get a specific entry with Merkle proof.
 
-**GET** `/ledger/verify`
+**GET** `/ledger/{index}`
 
 #### Response
 
 ```json
 {
-  "valid": true,
-  "entries": 1247,
-  "message": "Chain intact - all entries verified",
-  "merkle_root": "I9D1E3F5A7B9",
-  "first_entry": 1735600000,
-  "last_entry": 1735689600
+  "entry": {
+    "index": 42,
+    "type": "calculation",
+    "payload": {...},
+    "timestamp": 1735689600,
+    "hash": "J0E2F4A6B8C0"
+  },
+  "proof": {
+    "root": "I9D1E3F5A7B9",
+    "path": ["K1F3A5B7C9D1", "L2A4B6C8D0E2"],
+    "index": 42
+  }
 }
 ```
 
 ---
 
-## Metadata Endpoints
+### /ledger/certificate/{index}
+
+Export a verification certificate for an entry.
+
+**GET** `/ledger/certificate/{index}`
+
+#### Response
+
+```json
+{
+  "certificate": {
+    "version": "1.0",
+    "entry": {...},
+    "proof": {...},
+    "generated": 1735689600,
+    "issuer": "Newton Supercomputer",
+    "signature": "M3B5C7D9E1F3..."
+  }
+}
+```
+
+---
+
+## System Endpoints
 
 ### /health
 
-Get system status and version.
+Get system status.
 
 **GET** `/health`
 
@@ -402,74 +534,70 @@ Get system status and version.
 ```json
 {
   "status": "ok",
-  "version": "3.0.0",
-  "engine": "Newton OS 3.0.0",
+  "version": "1.0.0",
+  "engine": "Newton Supercomputer",
+  "components": {
+    "cdl": "ok",
+    "logic": "ok",
+    "forge": "ok",
+    "vault": "ok",
+    "ledger": "ok"
+  },
   "timestamp": 1735689600
 }
 ```
 
 ---
 
-### /constraints
+### /metrics
 
-List available content constraints.
+Get performance metrics.
 
-**GET** `/constraints`
+**GET** `/metrics`
 
 #### Response
 
 ```json
 {
-  "constraints": {
-    "harm": {
-      "name": "No Harm",
-      "patterns": 4
-    },
-    "medical": {
-      "name": "Medical Bounds",
-      "patterns": 3
-    },
-    "legal": {
-      "name": "Legal Bounds",
-      "patterns": 3
-    },
-    "security": {
-      "name": "Security",
-      "patterns": 2
-    }
-  }
+  "uptime_seconds": 3600,
+  "total_verifications": 12500,
+  "total_calculations": 8700,
+  "avg_verification_us": 127,
+  "avg_calculation_us": 42,
+  "cache_hit_rate": 0.73,
+  "ledger_entries": 21200
 }
 ```
 
 ---
 
-### /methods
+### /calculate/examples
 
-List available analysis methods.
+Get example expressions for the Logic Engine.
 
-**GET** `/methods`
+**POST** `/calculate/examples`
 
 #### Response
 
 ```json
 {
-  "methods": {
-    "zscore": {
-      "name": "Z-Score",
-      "default_threshold": 3.0,
-      "description": "Standard deviation-based anomaly detection"
+  "examples": [
+    {
+      "name": "Arithmetic",
+      "expression": {"op": "+", "args": [2, 3]},
+      "result": 5
     },
-    "iqr": {
-      "name": "Interquartile Range",
-      "default_threshold": 1.5,
-      "description": "Quartile-based outlier detection"
+    {
+      "name": "Conditional",
+      "expression": {"op": "if", "args": [{"op": ">", "args": [10, 5]}, "yes", "no"]},
+      "result": "yes"
     },
-    "mad": {
-      "name": "Median Absolute Deviation",
-      "default_threshold": 3.0,
-      "description": "Robust median-based detection"
+    {
+      "name": "Bounded Loop",
+      "expression": {"op": "for", "args": ["i", 0, 5, {"op": "var", "args": ["i"]}]},
+      "result": [0, 1, 2, 3, 4]
     }
-  }
+  ]
 }
 ```
 
@@ -481,31 +609,35 @@ List available analysis methods.
 
 ```json
 {
-  "detail": "Invalid request body"
+  "detail": "Invalid expression syntax",
+  "code": 400
 }
 ```
 
-### 401 Unauthorized
+### 422 Unprocessable Entity
 
 ```json
 {
-  "detail": "Missing API key. Include X-API-Key header."
+  "detail": "Constraint failed: amount must be less than 1000",
+  "code": 422
 }
 ```
 
-### 403 Forbidden
+### 408 Request Timeout
 
 ```json
 {
-  "detail": "Invalid API key"
+  "detail": "Execution exceeded timeout of 30.0 seconds",
+  "code": 408
 }
 ```
 
-### 429 Too Many Requests
+### 429 Too Many Operations
 
 ```json
 {
-  "detail": "Rate limit exceeded. Max 60 requests per minute."
+  "detail": "Execution exceeded maximum operations (1000000)",
+  "code": 429
 }
 ```
 
@@ -513,6 +645,30 @@ List available analysis methods.
 
 ```json
 {
-  "detail": "Internal server error"
+  "detail": "Internal server error",
+  "code": 500
 }
 ```
+
+---
+
+## Bounded Execution
+
+All computations are bounded to ensure termination:
+
+| Bound | Default | Max | Description |
+|-------|---------|-----|-------------|
+| `max_iterations` | 10,000 | 100,000 | Loop iteration limit |
+| `max_operations` | 1,000,000 | 10,000,000 | Total operation limit |
+| `timeout_seconds` | 30.0 | 60.0 | Execution timeout |
+| `max_recursion_depth` | 100 | 1,000 | Stack depth limit |
+
+These bounds ensure:
+- No infinite loops
+- No stack overflow
+- No runaway compute
+- No endless waits
+
+---
+
+© 2025-2026 Ada Computing Company · Houston, Texas
