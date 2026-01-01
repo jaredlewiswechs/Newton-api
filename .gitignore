@@ -51,6 +51,8 @@ Thumbs.db
 *.vault
 newton_storage/
 /tmp/
+.newton_ledger_test_*
+.hypothesis/
 
 # Node (for frontend)
 node_modules/
