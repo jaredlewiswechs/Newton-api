@@ -126,8 +126,9 @@ docker run -p 8000:8000 newton-supercomputer
 - FastAPI 0.109.0
 - Uvicorn 0.27.0
 - Pydantic 2.5.3
-- pytest 7.4.4
-- hypothesis 6.92.1
+- googlesearch-python 1.2.5 (for grounding engine)
+- pytest 7.4.4 (testing)
+- hypothesis 6.92.1 (property-based testing)
 
 ## API Patterns
 
@@ -147,12 +148,21 @@ class ExampleRequest(BaseModel):
 - All verification results should include a `verified` boolean
 
 ### Core Endpoints
-- `/ask` - Full verification pipeline
-- `/verify` - Content verification
-- `/calculate` - Verified computation
-- `/constraint` - CDL constraint evaluation
-- `/vault/store`, `/vault/retrieve` - Encrypted storage
-- `/ledger` - Immutable audit trail
+- `/ask` - Full verification pipeline (POST)
+- `/verify` - Content verification (POST)
+- `/verify/batch` - Batch verification (POST)
+- `/constraint` - CDL constraint evaluation (POST)
+- `/ground` - Ground claims in external evidence (POST)
+- `/calculate` - Verified computation (POST)
+- `/calculate/examples` - Get example expressions (POST)
+- `/statistics` - Robust statistical analysis (POST)
+- `/vault/store` - Store encrypted data (POST)
+- `/vault/retrieve` - Retrieve encrypted data (POST)
+- `/ledger` - View audit trail (GET)
+- `/ledger/{index}` - Get entry with Merkle proof (GET)
+- `/ledger/certificate/{index}` - Export verification certificate (GET)
+- `/health` - System status (GET)
+- `/metrics` - Performance metrics (GET)
 
 ## Verification Patterns
 
