@@ -1,31 +1,33 @@
 # NEWTON DEPLOYMENT PACKAGE
-## Ada Computing Company · December 2025
+## Ada Computing Company · January 2026
 
 ---
 
 ## OVERVIEW
 
-Newton is a deterministic state machine that governs AI execution. The system ensures no AI vendor (Claude, GPT, Groq, or local models) can execute until intent has been verified through the Z-score protocol.
+Newton OS v3.0.0 is a deterministic verification engine that governs AI execution. The system ensures no AI vendor (Claude, GPT, Groq, or local models) can execute until intent has been verified.
 
 **Architecture Summary**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
+│                         NEWTON OS v3.0.0                            │
 │                                                                     │
 │   USER INTENT                                                       │
 │        │                                                            │
 │        ▼                                                            │
 │   ┌─────────────┐                                                   │
-│   │   NEWTON    │  ← The Kernel (State Machine API)                │
-│   │   KERNEL    │     Hosted on Render                             │
+│   │   NEWTON    │  ← Python FastAPI (Primary)                      │
+│   │     API     │     newton_os_server.py                          │
 │   └──────┬──────┘                                                   │
 │          │                                                          │
-│          │  Z-Score Loop: 10.0 → 6.67 → 3.33 → 0.0                 │
+│          │  Deterministic Constraint Verification                   │
+│          │  harm | medical | legal | security                       │
 │          │                                                          │
 │          ▼                                                          │
 │   ┌─────────────┐                                                   │
-│   │  UNIVERSAL  │  ← The Adapter (Vendor Agnostic)                 │
-│   │   ADAPTER   │     Runs locally or on server                    │
+│   │  OPTIONAL   │  ← Ruby Adapter (Local use)                      │
+│   │   ADAPTER   │     adapter_universal.rb                         │
 │   └──────┬──────┘                                                   │
 │          │                                                          │
 │    ┌─────┴─────┬─────────────┬─────────────┐                       │
@@ -33,13 +35,10 @@ Newton is a deterministic state machine that governs AI execution. The system en
 │ [Claude]   [Groq]       [OpenAI]      [Ollama]                     │
 │  Remote     Remote       Remote        Local                       │
 │                                                                     │
-│   All vendors treated as commodity compute.                        │
-│   Newton decides WHEN they execute.                                │
-│                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**The Invariant:** `1 == 1` — Intent equals execution only when Z-score reaches zero.
+**The Invariant:** `1 == 1` — Execute only when verification passes.
 
 ---
 
@@ -47,52 +46,24 @@ Newton is a deterministic state machine that governs AI execution. The system en
 
 | File | Purpose | Deploy Location |
 |------|---------|-----------------|
-| `newton_api.rb` | The Kernel | Render (Web Service) |
-| `adapter_universal.rb` | Vendor Bridge | Local machine or server |
-| `newton_dashboard.html` | Visualization | Static hosting or local |
-| `Gemfile` | Dependencies | With API |
+| `newton_os_server.py` | **Primary API (Python)** | Render / Docker / Server |
+| `requirements.txt` | Python dependencies | With API |
 | `render.yaml` | Render config | Root of repo |
+| `Dockerfile` | Docker deployment | Container environments |
+| `core/grounding.py` | Claim verification engine | With API |
+| `newton-pda/` | Personal Data Assistant (PWA) | Static hosting |
+| `ada.html` | Verification interface | Served by API at `/ada` |
+| `newton_dashboard.html` | Dashboard visualization | Served by API at `/` |
+| `adapter_universal.rb` | Vendor bridge (optional) | Local machine |
+| `newton_api.rb` | Legacy Ruby kernel | Alternative deployment |
 
 ---
 
-## STEP 1: DEPLOY THE KERNEL TO RENDER
+## STEP 1: DEPLOY TO RENDER (RECOMMENDED)
 
-### 1.1 Create the API File
+The repository includes a `render.yaml` preconfigured for Python deployment.
 
-Save `newton_api.rb` (provided below) to a new GitHub repository.
-
-### 1.2 Create the Gemfile
-
-```ruby
-# Gemfile
-source 'https://rubygems.org'
-
-ruby '3.2.0'
-
-gem 'sinatra', '~> 3.0'
-gem 'sinatra-contrib', '~> 3.0'
-gem 'puma', '~> 6.0'
-gem 'json'
-```
-
-### 1.3 Create the Render Configuration
-
-```yaml
-# render.yaml
-services:
-  - type: web
-    name: newton-kernel
-    runtime: ruby
-    buildCommand: bundle install
-    startCommand: bundle exec ruby newton_api.rb
-    envVars:
-      - key: PORT
-        value: 4567
-      - key: NEWTON_STORAGE
-        value: /tmp/newton
-```
-
-### 1.4 Deploy to Render
+### 1.1 Deploy to Render
 
 1. Go to [render.com](https://render.com) and sign in
 2. Click "New" → "Web Service"
@@ -102,7 +73,7 @@ services:
 6. Wait for deployment (approximately 2-3 minutes)
 7. Copy your URL: `https://newton-kernel-xxxx.onrender.com`
 
-### 1.5 Verify Deployment
+### 1.2 Verify Deployment
 
 ```bash
 curl https://newton-kernel-xxxx.onrender.com/health
@@ -110,17 +81,89 @@ curl https://newton-kernel-xxxx.onrender.com/health
 
 Expected response:
 ```json
-{"status":"ok","version":"1.0.0"}
+{
+  "status": "ok",
+  "version": "3.0.0",
+  "engine": "Newton OS 3.0.0",
+  "uptime_seconds": 123.45
+}
+```
+
+### 1.3 Test Verification
+
+```bash
+curl -X POST https://newton-kernel-xxxx.onrender.com/verify \
+  -H "Content-Type: application/json" \
+  -d '{"input": "Help me write a business plan"}'
 ```
 
 ---
 
-## STEP 2: CONFIGURE THE UNIVERSAL ADAPTER
+## STEP 2: ALTERNATIVE DEPLOYMENTS
 
-### 2.1 Set Environment Variables
+### Docker
 
 ```bash
-# Required
+docker build -t newton-os .
+docker run -p 8000:8000 newton-os
+```
+
+### Local Python
+
+```bash
+pip install -r requirements.txt
+python newton_os_server.py
+# Server runs at http://localhost:8000
+```
+
+### Uvicorn (Production)
+
+```bash
+pip install -r requirements.txt
+uvicorn newton_os_server:app --host 0.0.0.0 --port 8000
+```
+
+---
+
+## STEP 3: NEWTON PDA (PWA)
+
+Newton PDA is included in the `newton-pda/` folder. It's a standalone Progressive Web App that can be deployed to any static hosting.
+
+### Deploy Options
+
+**Option A: Serve from Newton API**
+
+Configure your web server to serve `/newton-pda/` as a static path.
+
+**Option B: Separate Static Hosting**
+
+Deploy the `newton-pda/` folder to Netlify, Vercel, GitHub Pages, or any static host.
+
+**Option C: Local Development**
+
+```bash
+cd newton-pda
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
+### Features
+
+- **Encrypted Storage**: AES-256-GCM encryption derived from name/passphrase
+- **Offline-First**: IndexedDB persistence, works without network
+- **Z-Score Verification**: Items crystallize from DRAFT → PENDING → VERIFIED
+- **Append-Only**: Full version history, nothing ever deleted
+- **PWA**: Installable on iOS, Android, and desktop
+
+---
+
+## STEP 4: OPTIONAL VENDOR ADAPTER (RUBY)
+
+For local AI vendor integration, use the Ruby adapter.
+
+### 4.1 Set Environment Variables
+
+```bash
 export NEWTON_HOST="https://newton-kernel-xxxx.onrender.com"
 export NEWTON_OWNER="Jared"
 
@@ -137,86 +180,67 @@ export VENDOR="local"
 # No key needed, but Ollama must be running
 ```
 
-### 2.2 Run the Adapter
+### 4.2 Run the Adapter
 
 ```bash
+bundle install
 ruby adapter_universal.rb
 ```
 
-### 2.3 Test the Flow
-
-```
-Newton (Anthropic Claude)> Clean my inbox
-
-══ SOVEREIGN TRANSACTION (Anthropic Claude) ══
-Intent: "Clean my inbox"
-   [PENDING] Z: 6.67 | FP: A3F9B2C8
->  Verify? (y/n): y
-   [PENDING] Z: 3.33 | FP: A3F9B2C8
->  Verify? (y/n): y
-   [VERIFIED] Z: 0.00
-   [✓] VERIFIED. 1 == 1.
-   [-] Engaging Anthropic Claude...
-   [>] Action: {"tool":"gmail","action":"archive","query":"older_than:30d"}
-   [✓] COMMITTED. ID: X_7B3F2A1C
-```
-
 ---
 
-## STEP 3: OPTIONAL DASHBOARD
+## API REFERENCE (PYTHON)
 
-Host `newton_dashboard.html` on any static hosting service (Netlify, Vercel, GitHub Pages) or open locally in a browser. Update the `NEWTON_HOST` constant in the JavaScript to point to your deployed kernel.
+### Core Endpoints
 
-For local testing, the dashboard runs entirely client-side with a simulated Newton engine.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/verify` | POST | Verify intent against constraints |
+| `/analyze` | POST | Anomaly detection (Z-score, IQR, MAD) |
+| `/compile` | POST | Natural language to AI prompt |
+| `/ground` | POST | Fact-check claims against sources |
 
----
+### Cartridge Endpoints
 
-## API REFERENCE
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/cartridge/visual` | POST | SVG generation with constraints |
+| `/cartridge/sound` | POST | Audio specification |
+| `/cartridge/sequence` | POST | Video/animation specification |
+| `/cartridge/data` | POST | Report specification |
 
-### POST /make
-Commit an intent to the ledger. Each commit lowers the Z-score by 3.33.
+### Audit Endpoints
 
-**Request:**
-```json
-{
-  "owner": "Jared",
-  "intent": "Clean my inbox"
-}
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/sign` | POST | Cryptographic signatures |
+| `/ledger` | GET | Retrieve audit trail |
+| `/ledger/verify` | GET | Verify chain integrity |
 
-**Response:**
-```json
-{
-  "id": "N_A3F9B2C8",
-  "intent": "Clean my inbox",
-  "z": 6.67,
-  "status": "PENDING",
-  "fingerprint": "A3F9B2C8E1D4",
-  "timestamp": 1735654320,
-  "remaining": 2
-}
-```
+### Framework Endpoints
 
-### GET /verify/:fingerprint?owner=X
-Check if a fingerprint exists and its current status.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/frameworks` | GET | List supported frameworks |
+| `/frameworks/constraints` | GET | Get framework constraints |
+| `/frameworks/verify` | POST | Verify against framework rules |
 
-### GET /audit/:owner
-Retrieve the complete ledger for an owner.
+### Metadata Endpoints
 
-### POST /execute
-Execute an action against a verified intent.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | System status |
+| `/constraints` | GET | List constraints |
+| `/methods` | GET | List analysis methods |
 
-**Request:**
-```json
-{
-  "owner": "Jared",
-  "fingerprint": "A3F9B2C8E1D4",
-  "action": {"tool": "gmail", "action": "archive"}
-}
-```
+### Web Interfaces
 
-### POST /package
-Export all verified intents as a signed payload for sharing or backup.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Newton Dashboard |
+| `/ada` | GET | Ada verification interface |
+
+See [full documentation](docs/) for request/response details.
 
 ---
 
@@ -253,19 +277,24 @@ Export all verified intents as a signed payload for sharing or backup.
 
 ## SECURITY NOTES
 
-1. The Vault encrypts all ledger data with AES-256 using the owner name as key derivation input
-2. API keys are never sent to the Newton kernel—they stay in the adapter
-3. For production, add authentication to the Newton API endpoints
-4. Consider rate limiting on `/make` to prevent abuse
+1. **Newton API**: Deterministic pattern matching for constraint verification (no probabilistic models)
+2. **Newton PDA**: AES-256-GCM encryption derived from name/passphrase (PBKDF2 key derivation)
+3. **Ledger**: Append-only cryptographic chain with SHA-256 hashing
+4. **API Keys**: For production, set `NEWTON_AUTH_ENABLED=true` and configure `NEWTON_API_KEYS`
+5. **Rate Limiting**: Built-in rate limiting (100/min default, configurable by tier)
 
 ---
 
-## NEXT STEPS
+## ENVIRONMENT VARIABLES
 
-1. **Enterprise Pilot:** Deploy to a regulated industry client (healthcare, finance, legal)
-2. **Mobile App:** Wrap the adapter in a React Native or Swift app
-3. **Multi-Party Consensus:** Replace manual verification with multi-signature from separate systems
-4. **Billing Integration:** Add Stripe metering on `/execute` calls
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | 8000 |
+| `NEWTON_STORAGE` | Storage directory | /tmp/newton |
+| `NEWTON_AUTH_ENABLED` | Enable API key auth | false |
+| `NEWTON_API_KEYS` | Comma-separated API keys | - |
+| `GOOGLE_API_KEY` | For grounding engine | - |
+| `GOOGLE_CSE_ID` | For grounding engine | - |
 
 ---
 

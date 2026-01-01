@@ -18,6 +18,7 @@ Welcome to the Newton OS documentation. Newton is an AI safety layer that verifi
 - [Extension Cartridges](cartridges.md) - Visual, Audio, Sequence, Data
 - [Framework Verification](frameworks.md) - Apple, Web, ML framework constraints
 - [Claim Grounding](grounding.md) - Fact-checking against external sources
+- [Newton PDA](newton-pda.md) - Personal Data Assistant (PWA)
 
 ### Integration
 - [Self-Hosting Guide](self-hosting.md) - Deploy Newton on your infrastructure

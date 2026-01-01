@@ -39,6 +39,16 @@ Local verification kernel with cryptographic sovereignty.
 - **Live/Draft mode**: Toggle between execution states
 - **Append-only ledger**: Immutable verification history
 
+### Newton PDA (PWA)
+Personal Data Assistant for Notes, Names, and Dates.
+
+- **Unified Soup**: Single encrypted data store for all item types
+- **Append-only versioning**: Nothing deleted, only superseded
+- **Identity-derived encryption**: AES-256-GCM from name/passphrase (PBKDF2)
+- **Relationship layer**: Explicit refs plus inferred @mentions and #tags
+- **Beaming**: Export verified items as signed payloads
+- **Offline-first**: IndexedDB storage, works without network
+
 ### Ada (Swift)
 Conversational interface layer.
 
@@ -193,6 +203,6 @@ Everything else is an extension of *which constraints* you're checking, not *whe
 
 **Jn.Lewis1@outlook.com**
 
-Newton OS v2.1.0 | Constraint-First AI Verification
+Newton OS v3.0.0 | Constraint-First AI Verification
 
 *The constraint IS the product. The compiler makes the constraint portable.*
