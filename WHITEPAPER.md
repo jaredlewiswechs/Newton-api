@@ -2,6 +2,19 @@
 
 > **The constraint IS the instruction. The verification IS the computation.**
 
+**Version 1.0.0** | January 1, 2026
+
+---
+
+## Genesis
+
+```
+Flash-3 Instantiated // 50 seconds // AI Studio
+The Interface Singularity: Full frontend instantiation in 50s.
+```
+
+The market price of generated code is zero. The value is in the triggering, verification, and ownership of the keys. Architected by Jared Lewis. Instantiated by Flash 3. Sovereign by design.
+
 ---
 
 ## Abstract
@@ -40,11 +53,11 @@ Every operation in Newton reduces to this closure condition. Before any computat
 
 ## 2. Architecture
 
-Newton is a distributed verification system with seven core components:
+Newton is a distributed verification system with seven core components plus the Glass Box activation layer:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER                         │
+│                    NEWTON SUPERCOMPUTER v1.0.0                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
@@ -58,8 +71,16 @@ Newton is a distributed verification system with seven core components:
 │  │  (RAM)  │  │     (disk)      │  │  (bus)  │                │
 │  └─────────┘  └─────────────────┘  └─────────┘                │
 │                                                                 │
-│                      ASK NEWTON                                 │
-│                        /ask                                     │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    GLASS BOX LAYER                       │   │
+│  │  ┌──────────────┐ ┌────────────┐ ┌────────────────────┐ │   │
+│  │  │Policy Engine │ │ Negotiator │ │ Merkle Anchor      │ │   │
+│  │  │(policy-code) │ │   (HITL)   │ │ (proof export)     │ │   │
+│  │  └──────────────┘ └────────────┘ └────────────────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│                        ASK NEWTON                               │
+│                          /ask                                   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -155,6 +176,52 @@ Statistics designed to resist manipulation:
 - **Temporal decay** - recent data weighted appropriately
 - **Attack detection** - identifies manipulation attempts
 
+### 2.8 Glass Box Layer
+
+The Glass Box is Newton's transparency and governance layer, providing policy enforcement, human oversight, and cryptographic proof export.
+
+#### Policy Engine (Policy-as-Code)
+
+Declarative policy enforcement before and after every operation:
+
+| Policy Type | Purpose |
+|-------------|---------|
+| `INPUT_VALIDATION` | Required fields, structure checks |
+| `OUTPUT_VALIDATION` | Type verification, format enforcement |
+| `RATE_LIMIT` | Request throttling framework |
+| `CONTENT_FILTER` | Blacklist/whitelist, regex patterns |
+| `SIZE_LIMIT` | Maximum data size enforcement |
+
+Policy actions: `ALLOW`, `DENY`, `WARN`, `REQUIRE_APPROVAL`
+
+#### Negotiator (Human-in-the-Loop)
+
+Critical operations require human approval:
+
+- **Approval requests** with priority levels (CRITICAL, HIGH, MEDIUM, LOW)
+- **TTL-based expiration** (default 1 hour)
+- **Approval metadata** tracking
+- **Request history** for audit
+
+#### Merkle Anchor Scheduler
+
+Cryptographic proof generation and export:
+
+- **Scheduled anchoring** (5-minute intervals by default)
+- **Manual anchor creation** on demand
+- **Merkle proof generation** for any ledger entry
+- **Proof verification** (internal and external)
+- **Certificate export** for third-party verification
+
+#### Vault Client (Provenance Logging)
+
+Every operation logged with full provenance:
+
+- **Operation recording** with timestamps
+- **Identity tracking** for all actions
+- **Encrypted storage** of provenance data
+- **Audit trail** integration
+
 ---
 
 ## 3. The Economic Equation
@@ -187,14 +254,20 @@ Newton:
 
 ## 4. Guarantees
 
-| Property | Implementation |
-|----------|----------------|
-| **Determinism** | Same input always produces same output |
-| **Termination** | HaltChecker proves all constraints terminate |
-| **Consistency** | No constraint can be both pass and fail |
-| **Auditability** | Every verification in immutable ledger |
-| **Adversarial Resistance** | MAD stats, locked baselines, source tracking |
-| **Byzantine Tolerance** | Consensus survives f=(n-1)/3 faulty nodes |
+| Property | Implementation | Status |
+|----------|----------------|--------|
+| **Determinism** | Same input always produces same output | Proven |
+| **Termination** | HaltChecker proves all constraints terminate | Proven |
+| **Consistency** | No constraint can be both pass and fail | Proven |
+| **Auditability** | Every verification in immutable ledger | Proven |
+| **Adversarial Resistance** | MAD stats, locked baselines, source tracking | Proven |
+| **Byzantine Tolerance** | Consensus survives f=(n-1)/3 faulty nodes | Proven |
+| **Bounded Execution** | No infinite loops, no stack overflow | Enforced |
+| **Cryptographic Integrity** | Hash chains, Merkle proofs | Verified |
+| **Policy Enforcement** | Pre/post operation validation | Active |
+| **Human Oversight** | Critical operations require approval | Active |
+
+**Test Suite**: 47 test cases, all passing. Property-based testing with Hypothesis.
 
 ---
 
@@ -278,20 +351,29 @@ python newton_supercomputer.py
 
 ### Core Files
 
-| File | Purpose |
-|------|---------|
-| `newton_supercomputer.py` | Unified API server |
-| `core/cdl.py` | Constraint Definition Language |
-| `core/logic.py` | Verified computation engine |
-| `core/forge.py` | Verification engine |
-| `core/vault.py` | Encrypted storage |
-| `core/ledger.py` | Immutable history |
-| `core/bridge.py` | Distributed consensus |
-| `core/robust.py` | Adversarial statistics |
+| File | Lines | Purpose |
+|------|-------|---------|
+| `newton_supercomputer.py` | 1,158 | Unified API server |
+| `core/cdl.py` | 672 | Constraint Definition Language |
+| `core/logic.py` | 1,261 | Verified computation engine |
+| `core/forge.py` | 737 | Verification engine |
+| `core/vault.py` | 538 | Encrypted storage |
+| `core/ledger.py` | 576 | Immutable history |
+| `core/bridge.py` | 542 | Distributed consensus |
+| `core/robust.py` | 597 | Adversarial statistics |
+| `core/grounding.py` | 214 | Claim verification |
+| `core/policy_engine.py` | 354 | Policy-as-code |
+| `core/negotiator.py` | 361 | Human-in-the-loop |
+| `core/merkle_anchor.py` | 340 | Proof export |
+| `core/vault_client.py` | 132 | Provenance logging |
+| `core/newton_os.rb` | - | Tahoe Kernel - Knowledge Base |
+| `core/newton_tahoe.rb` | - | Tahoe Kernel - PixelEngine |
+
+**Total Core**: ~7,900 lines of verified computation
 
 ---
 
-## 9. API Overview
+## 9. API Overview (30+ Endpoints)
 
 ### Core Operations
 
@@ -299,6 +381,7 @@ python newton_supercomputer.py
 |----------|--------|---------|
 | `/ask` | POST | Full verification pipeline |
 | `/verify` | POST | Content safety check |
+| `/verify/batch` | POST | Batch verification |
 | `/calculate` | POST | Verified computation |
 | `/constraint` | POST | CDL evaluation |
 | `/ground` | POST | Claim verification |
@@ -313,6 +396,27 @@ python newton_supercomputer.py
 | `/ledger` | GET | Audit trail |
 | `/ledger/{index}` | GET | Entry with proof |
 | `/ledger/certificate/{index}` | GET | Verification certificate |
+
+### Glass Box
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/policy` | GET/POST/DELETE | Policy management |
+| `/negotiator/pending` | GET | Pending approvals |
+| `/negotiator/request` | POST | Create approval request |
+| `/negotiator/approve/{id}` | POST | Approve request |
+| `/negotiator/reject/{id}` | POST | Reject request |
+| `/merkle/anchors` | GET | List anchors |
+| `/merkle/anchor` | POST | Create anchor |
+| `/merkle/proof/{index}` | GET | Generate proof |
+| `/merkle/latest` | GET | Latest anchor |
+
+### System
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/health` | GET | System status |
+| `/metrics` | GET | Performance metrics |
 
 ---
 

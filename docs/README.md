@@ -4,6 +4,8 @@
 
 Welcome to the Newton Supercomputer documentation. Newton is a distributed verification system where the constraint IS the instruction and the verification IS the computation.
 
+**Version**: 1.0.0 | **Date**: January 1, 2026
+
 ---
 
 ## Documentation Index
@@ -11,11 +13,14 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 ### Getting Started
 - [Quick Start Guide](getting-started.md) - Get up and running in 5 minutes
 - [Authentication](authentication.md) - API keys, rate limits, and security
+- [Configuration](configuration.md) - Environment variables and settings
 
 ### Core Concepts
 - [Whitepaper](../WHITEPAPER.md) - Architecture and philosophy
+- [Glass Box](../GLASS_BOX.md) - Policy enforcement, HITL, Merkle proofs
 - [Logic Engine](logic-engine.md) - Verified Turing complete computation
 - [Technical Roadmap](ROADMAP.md) - Development phases and goals
+- [Changelog](../CHANGELOG.md) - Version history
 
 ### API Reference
 - [API Overview](api-reference.md) - Complete API reference
@@ -25,14 +30,34 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 
 ### Components
 
-| Component | Documentation | Purpose |
-|-----------|---------------|---------|
-| **CDL** | [api-reference.md#constraint](api-reference.md#constraint) | Constraint Definition Language |
-| **Logic** | [logic-engine.md](logic-engine.md) | Verified computation engine |
-| **Forge** | [api-reference.md#verify](api-reference.md#verify) | Content verification |
-| **Vault** | [api-reference.md#vault](api-reference.md#vault-store) | Encrypted storage |
-| **Ledger** | [api-reference.md#ledger](api-reference.md#ledger) | Immutable audit trail |
-| **Robust** | [api-reference.md#statistics](api-reference.md#statistics) | Adversarial statistics |
+#### Core Layer
+
+| Component | Documentation | Purpose | Lines |
+|-----------|---------------|---------|-------|
+| **CDL** | [Constraints](api-reference.md#constraint) | Constraint Definition Language | 672 |
+| **Logic** | [logic-engine.md](logic-engine.md) | Verified computation engine | 1,261 |
+| **Forge** | [Verification](api-reference.md#verify) | Parallel verification CPU | 737 |
+| **Vault** | [Storage](api-reference.md#vault-store) | Encrypted storage (AES-256-GCM) | 538 |
+| **Ledger** | [Audit](api-reference.md#ledger) | Immutable hash-chained history | 576 |
+| **Bridge** | [Distributed](api-reference.md) | PBFT Byzantine consensus | 542 |
+| **Robust** | [Statistics](api-reference.md#statistics) | Adversarial-resistant stats | 597 |
+| **Grounding** | [grounding.md](grounding.md) | Claim verification | 214 |
+
+#### Glass Box Layer
+
+| Component | Documentation | Purpose | Lines |
+|-----------|---------------|---------|-------|
+| **Policy Engine** | [Glass Box](../GLASS_BOX.md) | Policy-as-code enforcement | 354 |
+| **Negotiator** | [Glass Box](../GLASS_BOX.md) | Human-in-the-loop approvals | 361 |
+| **Merkle Anchor** | [Glass Box](../GLASS_BOX.md) | Proof scheduling and export | 340 |
+| **Vault Client** | [Glass Box](../GLASS_BOX.md) | Provenance logging | 132 |
+
+#### Tahoe Kernel
+
+| Component | Purpose |
+|-----------|---------|
+| **newton_os.rb** | Knowledge Base with origin truth |
+| **newton_tahoe.rb** | PixelEngine with genesis mark |
 
 ### Advanced Features
 - [Extension Cartridges](cartridges.md) - Visual, Audio, Sequence, Data
@@ -40,20 +65,9 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 - [Claim Grounding](grounding.md) - Fact-checking against external sources
 - [Newton PDA](newton-pda.md) - Personal Data Assistant (PWA)
 
-### Integration
+### Deployment
+- [Deployment Guide](../DEPLOYMENT.md) - Render.com, Docker, Local
 - [Self-Hosting Guide](self-hosting.md) - Deploy Newton on your infrastructure
-- [Environment Variables](configuration.md) - Configuration options
-
----
-
-## Quick Links
-
-| Resource | Description |
-|----------|-------------|
-| [API Reference](api-reference.md) | Full endpoint documentation |
-| [Logic Engine](logic-engine.md) | Verified computation guide |
-| [Hosted API](https://newton-api.onrender.com) | Production deployment |
-| [GitHub](https://github.com/jaredlewiswechs/Newton-api) | Source code |
 
 ---
 
@@ -61,7 +75,7 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER                         │
+│                    NEWTON SUPERCOMPUTER v1.0.0                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
@@ -75,21 +89,32 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 │  │  (RAM)  │  │     (disk)      │  │  (bus)  │                │
 │  └─────────┘  └─────────────────┘  └─────────┘                │
 │                                                                 │
-│                      ASK NEWTON                                 │
-│                        /ask                                     │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    GLASS BOX LAYER                       │   │
+│  │  ┌──────────────┐ ┌────────────┐ ┌────────────────────┐ │   │
+│  │  │Policy Engine │ │ Negotiator │ │ Merkle Anchor      │ │   │
+│  │  │(policy-code) │ │   (HITL)   │ │ (proof export)     │ │   │
+│  │  └──────────────┘ └────────────┘ └────────────────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│                        ASK NEWTON                               │
+│                          /ask                                   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-| Component | Purpose | Key Feature |
-|-----------|---------|-------------|
-| **CDL** | Constraint Definition Language | Conditionals, temporal ops, aggregations |
-| **Logic** | Verified Computation Engine | Turing complete with bounded loops |
-| **Forge** | Verification Engine | Parallel constraint evaluation, <1ms |
-| **Vault** | Encrypted Storage | AES-256-GCM, identity-derived keys |
-| **Ledger** | Immutable History | Hash-chained, Merkle proofs |
-| **Bridge** | Distributed Protocol | PBFT consensus, Byzantine fault tolerant |
-| **Robust** | Adversarial Statistics | MAD over mean, locked baselines |
+---
+
+## Quick Links
+
+| Resource | Description |
+|----------|-------------|
+| [Main README](../README.md) | Project overview |
+| [API Reference](api-reference.md) | Full endpoint documentation |
+| [Logic Engine](logic-engine.md) | Verified computation guide |
+| [Glass Box](../GLASS_BOX.md) | Policy, HITL, Merkle proofs |
+| [Whitepaper](../WHITEPAPER.md) | Technical architecture |
+| [GitHub](https://github.com/jaredlewiswechs/Newton-api) | Source code |
 
 ---
 
@@ -102,31 +127,48 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 
 ---
 
-## Quick Start
+## API Endpoints Summary
 
-### 1. Calculate (Verified Computation)
+### Core (7 endpoints)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/ask` | POST | Full verification pipeline |
+| `/verify` | POST | Content safety verification |
+| `/verify/batch` | POST | Batch verification |
+| `/calculate` | POST | Verified computation |
+| `/constraint` | POST | CDL constraint evaluation |
+| `/ground` | POST | Claim grounding |
+| `/statistics` | POST | Robust statistical analysis |
 
-```bash
-curl -X POST http://localhost:8000/calculate \
-  -H "Content-Type: application/json" \
-  -d '{"expression": {"op": "+", "args": [2, 3]}}'
-```
+### Storage & Audit (5 endpoints)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/vault/store` | POST | Store encrypted data |
+| `/vault/retrieve` | POST | Retrieve encrypted data |
+| `/ledger` | GET | View audit trail |
+| `/ledger/{index}` | GET | Entry with Merkle proof |
+| `/ledger/certificate/{index}` | GET | Export certificate |
 
-### 2. Verify (Content Safety)
+### Glass Box (10 endpoints)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/policy` | GET/POST/DELETE | Policy management |
+| `/negotiator/pending` | GET | Pending approvals |
+| `/negotiator/request` | POST | Create approval request |
+| `/negotiator/request/{id}` | GET | Get request |
+| `/negotiator/approve/{id}` | POST | Approve request |
+| `/negotiator/reject/{id}` | POST | Reject request |
+| `/merkle/anchors` | GET | List anchors |
+| `/merkle/anchor` | POST | Create anchor |
+| `/merkle/proof/{index}` | GET | Generate proof |
+| `/merkle/latest` | GET | Latest anchor |
 
-```bash
-curl -X POST http://localhost:8000/verify \
-  -H "Content-Type: application/json" \
-  -d '{"input": "Help me write a business plan"}'
-```
-
-### 3. Ask Newton (Full Pipeline)
-
-```bash
-curl -X POST http://localhost:8000/ask \
-  -H "Content-Type: application/json" \
-  -d '{"query": "Is this safe to execute?"}'
-```
+### System (3 endpoints)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | System status |
+| `/metrics` | GET | Performance metrics |
+| `/calculate/examples` | POST | Example expressions |
 
 ---
 
@@ -144,21 +186,32 @@ This isn't a feature. It's the architecture.
 
 ---
 
-## Guarantees
+## Proven Properties
 
-| Property | Implementation |
-|----------|----------------|
-| **Determinism** | Same input always produces same output |
-| **Termination** | HaltChecker proves all constraints terminate |
-| **Consistency** | No constraint can be both pass and fail |
-| **Auditability** | Every verification in immutable ledger |
-| **Adversarial Resistance** | MAD stats, locked baselines, source tracking |
+| Property | Implementation | Status |
+|----------|----------------|--------|
+| **Determinism** | Same input → same output | Proven |
+| **Termination** | HaltChecker proves termination | Proven |
+| **Consistency** | No constraint can both pass and fail | Proven |
+| **Auditability** | Every operation in ledger | Proven |
+| **Adversarial Resistance** | MAD stats, locked baselines | Proven |
+| **Byzantine Tolerance** | PBFT consensus | Proven |
+| **Bounded Execution** | Hard limits enforced | Enforced |
+| **Cryptographic Integrity** | Hash chains, Merkle proofs | Verified |
 
 ---
 
-## Version
+## Test Coverage
 
-Current version: **1.0.0**
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| Integration | 14 | Passing |
+| Glass Box | 12 | Passing |
+| Merkle Proofs | 13 | Passing |
+| Negotiator | 12 | Passing |
+| Policy Engine | 10 | Passing |
+| Properties | Multiple | Passing |
+| **Total** | **47+** | **All Passing** |
 
 ---
 

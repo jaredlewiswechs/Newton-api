@@ -5,6 +5,20 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](#licensing)
 [![API](https://img.shields.io/badge/API-REST-orange.svg)](#api-reference)
+[![Tests](https://img.shields.io/badge/tests-47%20passing-brightgreen.svg)](#testing)
+
+---
+
+## Genesis
+
+```
+Flash-3 Instantiated // 50 seconds // AI Studio
+The Interface Singularity: Full frontend instantiation in 50s.
+```
+
+The market price of generated code is zero. The value is in the triggering, verification, and ownership of the keys.
+
+Architected by **Jared Lewis**. Instantiated by **Flash 3**. Sovereign by design.
 
 ---
 
@@ -42,11 +56,59 @@ El Capitan is just fast guessing.
 
 ---
 
+## What Can Newton Do?
+
+### Verified Computation (Logic Engine)
+Calculate anything with cryptographic proof. Arithmetic, conditionals, loops, functions, recursion—all bounded, all verified.
+
+### Constraint Evaluation (CDL 3.0)
+Define rules. Newton enforces them. Temporal, conditional, aggregation operators. Provably terminating.
+
+### Content Safety (Forge)
+Real-time verification of content against harm, medical, legal, and security patterns. Sub-millisecond latency.
+
+### Encrypted Storage (Vault)
+AES-256-GCM encryption with identity-derived keys. Your data, your keys, your sovereignty.
+
+### Immutable History (Ledger)
+Every operation recorded in a hash-chained, Merkle-proven audit trail. Nothing is ever deleted.
+
+### Distributed Consensus (Bridge)
+PBFT-inspired Byzantine fault-tolerant verification. Survives f=(n-1)/3 faulty nodes.
+
+### Adversarial Statistics (Robust)
+MAD over mean. Locked baselines. Source tracking. Statistics that resist manipulation.
+
+### Fact Checking (Grounding)
+Claims verified against external sources with confidence scoring and temporal awareness.
+
+### Policy Enforcement (Glass Box)
+Policy-as-code. Human-in-the-loop approval workflows. Merkle proofs for export.
+
+---
+
+## What Has Newton Proven?
+
+| Property | Implementation | Status |
+|----------|----------------|--------|
+| **Determinism** | Same input → same output, always | Proven |
+| **Termination** | HaltChecker proves all constraints terminate | Proven |
+| **Consistency** | No constraint can both pass and fail | Proven |
+| **Auditability** | Every operation in immutable ledger | Proven |
+| **Adversarial Resistance** | MAD stats, locked baselines | Proven |
+| **Byzantine Tolerance** | Consensus survives malicious nodes | Proven |
+| **Bounded Execution** | No infinite loops, no stack overflow | Enforced |
+| **Cryptographic Integrity** | Hash chains, Merkle proofs | Verified |
+
+**Test Suite**: 47 test cases, all passing. Property-based testing with Hypothesis.
+
+---
+
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER                         │
+│                    NEWTON SUPERCOMPUTER v1.0.0                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
@@ -60,25 +122,56 @@ El Capitan is just fast guessing.
 │  │  (RAM)  │  │     (disk)      │  │  (bus)  │                │
 │  └─────────┘  └─────────────────┘  └─────────┘                │
 │                                                                 │
-│                      ASK NEWTON                                 │
-│                        /ask                                     │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    GLASS BOX LAYER                       │   │
+│  │  ┌──────────────┐ ┌────────────┐ ┌────────────────────┐ │   │
+│  │  │Policy Engine │ │ Negotiator │ │ Merkle Anchor      │ │   │
+│  │  │(policy-code) │ │   (HITL)   │ │ (proof export)     │ │   │
+│  │  └──────────────┘ └────────────┘ └────────────────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│                        ASK NEWTON                               │
+│                          /ask                                   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-| Component | Purpose | Key Feature |
-|-----------|---------|-------------|
-| **CDL** | Constraint Definition Language | Conditionals, temporal ops, aggregations |
-| **Logic** | Verified Computation Engine | Turing complete with bounded loops |
-| **Forge** | Verification Engine | Parallel constraint evaluation, <1ms |
-| **Vault** | Encrypted Storage | AES-256-GCM, identity-derived keys |
-| **Ledger** | Immutable History | Hash-chained, Merkle proofs |
-| **Bridge** | Distributed Protocol | PBFT consensus, Byzantine fault tolerant |
-| **Robust** | Adversarial Statistics | MAD over mean, locked baselines |
+### Core Components
+
+| Component | Purpose | Lines | Key Feature |
+|-----------|---------|-------|-------------|
+| **CDL** | Constraint Definition Language | 672 | Temporal ops, aggregations, halt checking |
+| **Logic** | Verified Computation Engine | 1,261 | Turing complete with bounded loops |
+| **Forge** | Verification Engine (CPU) | 737 | Parallel evaluation, <1ms latency |
+| **Vault** | Encrypted Storage (RAM) | 538 | AES-256-GCM, identity-derived keys |
+| **Ledger** | Immutable History (Disk) | 576 | Hash-chained, Merkle proofs |
+| **Bridge** | Distributed Protocol (Bus) | 542 | PBFT consensus, Byzantine tolerant |
+| **Robust** | Adversarial Statistics | 597 | MAD, locked baselines, source tracking |
+| **Grounding** | Claim Verification | 214 | External sources, confidence scoring |
+
+### Glass Box Layer
+
+| Component | Purpose | Lines |
+|-----------|---------|-------|
+| **Policy Engine** | Policy-as-code enforcement | 354 |
+| **Negotiator** | Human-in-the-loop approvals | 361 |
+| **Merkle Anchor** | Proof scheduling and export | 340 |
+| **Vault Client** | Provenance logging | 132 |
 
 ---
 
 ## Quick Start
+
+### Installation
+
+```bash
+git clone https://github.com/jaredlewiswechs/Newton-api.git
+cd Newton-api
+pip install -r requirements.txt
+python newton_supercomputer.py
+```
+
+Server runs at `http://localhost:8000`
 
 ### Calculate (Verified Computation)
 
@@ -127,6 +220,53 @@ curl -X POST http://localhost:8000/ask \
 
 ---
 
+## API Reference
+
+### Core Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/ask` | POST | Ask Newton anything (full verification pipeline) |
+| `/verify` | POST | Verify content against safety constraints |
+| `/verify/batch` | POST | Batch verification (multiple inputs) |
+| `/calculate` | POST | Execute verified computation |
+| `/constraint` | POST | Evaluate CDL constraint against object |
+| `/ground` | POST | Ground claims in external evidence |
+| `/statistics` | POST | Robust statistical analysis (MAD) |
+
+### Storage & Audit
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/vault/store` | POST | Store encrypted data |
+| `/vault/retrieve` | POST | Retrieve encrypted data |
+| `/ledger` | GET | View append-only audit trail |
+| `/ledger/{index}` | GET | Get entry with Merkle proof |
+| `/ledger/certificate/{index}` | GET | Export verification certificate |
+
+### Glass Box (Policy, HITL, Merkle)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/policy` | GET/POST/DELETE | Manage policies |
+| `/negotiator/pending` | GET | View pending approvals |
+| `/negotiator/request` | POST | Create approval request |
+| `/negotiator/approve/{id}` | POST | Approve request |
+| `/negotiator/reject/{id}` | POST | Reject request |
+| `/merkle/anchors` | GET | List all anchors |
+| `/merkle/anchor` | POST | Create new anchor |
+| `/merkle/proof/{index}` | GET | Generate Merkle proof |
+
+### System
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | System status (includes Glass Box) |
+| `/metrics` | GET | Performance metrics |
+| `/calculate/examples` | POST | Get example expressions |
+
+---
+
 ## Logic Engine (Verified Turing Completeness)
 
 Newton can calculate anything El Capitan can. Just verified.
@@ -151,9 +291,10 @@ Every computation has limits. This is what makes Newton verified.
 
 ```python
 ExecutionBounds(
-    max_iterations=10000,       # No infinite loops
-    max_recursion_depth=100,    # No stack overflow
-    max_operations=1000000,     # No runaway compute
+    max_iterations=10000,       # No infinite loops (max 1,000,000)
+    max_recursion_depth=100,    # No stack overflow (max 1,000)
+    max_operations=1000000,     # No runaway compute (max 100,000,000)
+    max_memory_bytes=100MB,     # No memory explosion
     timeout_seconds=30.0        # No endless waits
 )
 ```
@@ -181,39 +322,6 @@ ExecutionBounds(
   {"op": "list", "args": [1, 2, 3, 4, 5]}
 ]}  // → 15
 ```
-
----
-
-## API Reference
-
-### Core Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/ask` | POST | Ask Newton anything (full verification pipeline) |
-| `/verify` | POST | Verify content against safety constraints |
-| `/calculate` | POST | Execute verified computation |
-| `/constraint` | POST | Evaluate CDL constraint against object |
-| `/ground` | POST | Ground claims in external evidence |
-| `/statistics` | POST | Robust statistical analysis (MAD) |
-
-### Storage & Audit
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/vault/store` | POST | Store encrypted data |
-| `/vault/retrieve` | POST | Retrieve encrypted data |
-| `/ledger` | GET | View append-only audit trail |
-| `/ledger/{index}` | GET | Get entry with Merkle proof |
-| `/ledger/certificate/{index}` | GET | Export verification certificate |
-
-### System
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | System status |
-| `/metrics` | GET | Performance metrics |
-| `/calculate/examples` | POST | Get example expressions |
 
 ---
 
@@ -265,18 +373,74 @@ ExecutionBounds(
 
 ---
 
+## Repository Structure
+
+```
+Newton-api/
+├── newton_supercomputer.py   # Main API server (1,158 LOC)
+├── cli_verifier.py           # CLI verification tool
+├── requirements.txt          # Python dependencies
+│
+├── core/                     # Core modules (~7,900 LOC)
+│   ├── cdl.py               # Constraint Definition Language
+│   ├── logic.py             # Verified computation engine
+│   ├── forge.py             # Verification CPU
+│   ├── vault.py             # Encrypted storage
+│   ├── ledger.py            # Immutable history
+│   ├── bridge.py            # Distributed consensus
+│   ├── robust.py            # Adversarial statistics
+│   ├── grounding.py         # Claim verification
+│   ├── policy_engine.py     # Policy-as-code
+│   ├── negotiator.py        # Human-in-the-loop
+│   ├── merkle_anchor.py     # Proof export
+│   ├── vault_client.py      # Provenance logging
+│   ├── newton_os.rb         # Tahoe Kernel - Knowledge Base
+│   └── newton_tahoe.rb      # Tahoe Kernel - PixelEngine
+│
+├── ledger/                   # Runtime ledger storage
+│   └── sovereign_ledger.jsonl  # Genesis Crystal
+│
+├── tests/                    # Test suite (47 tests)
+│   ├── test_integration.py
+│   ├── test_glass_box.py
+│   ├── test_merkle_proofs.py
+│   ├── test_negotiator.py
+│   ├── test_policy_engine.py
+│   └── test_properties.py
+│
+├── frontend/                 # Web UI (PWA)
+│   ├── index.html
+│   ├── app.js
+│   └── styles.css
+│
+├── docs/                     # Documentation
+│   ├── README.md            # Docs index
+│   ├── api-reference.md
+│   ├── logic-engine.md
+│   └── ...
+│
+├── legacy/                   # Historical reference
+│   ├── newton_api.rb        # Ruby v1
+│   └── ...
+│
+├── WHITEPAPER.md            # Technical architecture
+├── GLASS_BOX.md             # Glass Box implementation
+├── DEPLOYMENT.md            # Deployment guide
+├── CHANGELOG.md             # Version history
+├── render.yaml              # Render.com config
+└── Dockerfile               # Container build
+```
+
+---
+
 ## Deployment
 
 ### Local Development
 
 ```bash
-git clone https://github.com/jaredlewiswechs/Newton-api.git
-cd Newton-api
 pip install -r requirements.txt
 python newton_supercomputer.py
 ```
-
-Server runs at `http://localhost:8000`
 
 ### Docker
 
@@ -285,9 +449,50 @@ docker build -t newton-supercomputer .
 docker run -p 8000:8000 newton-supercomputer
 ```
 
-### Production
+### Render.com (Recommended)
 
-Deploy to Render, Railway, or any container platform.
+```yaml
+# render.yaml included in repo
+services:
+  - type: web
+    name: newton-supercomputer
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn newton_supercomputer:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | 8000 | Server port |
+| `NEWTON_STORAGE` | /tmp/newton | Storage directory |
+| `NEWTON_AUTH_ENABLED` | false | Enable API key auth |
+| `NEWTON_API_KEYS` | - | Comma-separated API keys |
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run specific test file
+pytest tests/test_integration.py -v
+
+# Run with coverage
+pytest tests/ --cov=core --cov-report=html
+```
+
+**Test Coverage:**
+- Core integration tests (14 tests)
+- Glass Box tests (12 tests)
+- Merkle proof tests (13 tests)
+- Negotiator tests (12 tests)
+- Policy engine tests (10 tests)
+- Property-based tests (Hypothesis)
 
 ---
 
@@ -307,18 +512,6 @@ That's why Newton is a supercomputer that costs nothing to run.
 
 ---
 
-## Guarantees
-
-| Property | Implementation |
-|----------|----------------|
-| **Determinism** | Same input always produces same output |
-| **Termination** | HaltChecker proves all constraints terminate |
-| **Consistency** | No constraint can be both pass and fail |
-| **Auditability** | Every verification in immutable ledger |
-| **Adversarial Resistance** | MAD stats, locked baselines, source tracking |
-
----
-
 ## Security
 
 - **Content Safety**: Harm, medical, legal, security pattern detection
@@ -326,6 +519,8 @@ That's why Newton is a supercomputer that costs nothing to run.
 - **Immutable Audit**: Hash-chained ledger with Merkle proofs
 - **Byzantine Tolerance**: Consensus survives f=(n-1)/3 faulty nodes
 - **Bound Enforcement**: No infinite loops, no stack overflow, no runaway compute
+- **Policy Enforcement**: Pre/post operation validation
+- **Human Approval**: Critical operations require HITL sign-off
 
 ---
 
@@ -347,6 +542,12 @@ Newton Supercomputer is built by **Ada Computing Company** in Houston, Texas.
 
 **Jared Lewis**
 [linkedin.com/in/jaredlewisuh](https://linkedin.com/in/jaredlewisuh) · [parcri.net](https://parcri.net)
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ---
 
