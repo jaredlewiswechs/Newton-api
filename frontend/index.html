@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Newton Supercomputer - Verified Computation at Scale">
+
+    <title>Newton</title>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>N</text></svg>">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- App Shell -->
+    <div id="app">
+        <!-- Navigation Bar -->
+        <nav class="nav-bar">
+            <div class="nav-content">
+                <div class="nav-brand">
+                    <div class="brand-mark">N</div>
+                    <span class="brand-text">Newton</span>
+                </div>
+
+                <div class="nav-tabs">
+                    <button class="nav-tab active" data-view="ask">Ask</button>
+                    <button class="nav-tab" data-view="calculate">Calculate</button>
+                    <button class="nav-tab" data-view="orchestrate">Orchestrate</button>
+                    <button class="nav-tab" data-view="ledger">Ledger</button>
+                </div>
+
+                <div class="nav-status">
+                    <div class="status-indicator online"></div>
+                    <code class="invariant">1 == 1</code>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Ask View -->
+            <section class="view active" id="view-ask">
+                <div class="view-container">
+                    <div class="hero-section">
+                        <h1 class="hero-title">Ask Newton</h1>
+                        <p class="hero-subtitle">Verified computation. No guessing.</p>
+                    </div>
+
+                    <div class="ask-card">
+                        <div class="input-group">
+                            <textarea
+                                id="ask-input"
+                                class="input-field large"
+                                placeholder="What do you want to verify?"
+                                rows="3"
+                            ></textarea>
+                        </div>
+
+                        <div class="action-row">
+                            <button class="btn primary" id="ask-submit">
+                                <span class="btn-icon">N</span>
+                                Ask Newton
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="result-panel" id="ask-result" style="display: none;">
+                        <div class="result-header">
+                            <div class="result-status" id="ask-status">
+                                <div class="status-badge verified">VERIFIED</div>
+                            </div>
+                            <div class="result-meta">
+                                <span class="meta-item" id="ask-elapsed"></span>
+                            </div>
+                        </div>
+                        <div class="result-body">
+                            <pre class="result-output" id="ask-output"></pre>
+                        </div>
+                    </div>
+
+                    <!-- Capabilities Grid -->
+                    <div class="capabilities-section">
+                        <h2 class="section-title">Newton Capabilities</h2>
+
+                        <div class="capability-grid">
+                            <div class="capability-card">
+                                <div class="capability-icon generate">G</div>
+                                <h3>Generate</h3>
+                                <ul class="capability-list">
+                                    <li>Media & Templates</li>
+                                    <li>Documents & Contracts</li>
+                                    <li>Code (verified)</li>
+                                    <li>Data Transformations</li>
+                                </ul>
+                            </div>
+
+                            <div class="capability-card">
+                                <div class="capability-icon orchestrate">O</div>
+                                <h3>Orchestrate</h3>
+                                <ul class="capability-list">
+                                    <li>Figma API (constrained)</li>
+                                    <li>Canva API (verified)</li>
+                                    <li>External Services</li>
+                                    <li>Creative Pipelines</li>
+                                </ul>
+                            </div>
+
+                            <div class="capability-card">
+                                <div class="capability-icon verify">V</div>
+                                <h3>Verify</h3>
+                                <ul class="capability-list">
+                                    <li>Design System Compliance</li>
+                                    <li>Brand Guidelines</li>
+                                    <li>Legal Review Gates</li>
+                                    <li>Safety Constraints</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Calculate View -->
+            <section class="view" id="view-calculate">
+                <div class="view-container">
+                    <div class="hero-section">
+                        <h1 class="hero-title">Calculate</h1>
+                        <p class="hero-subtitle">Verified Turing Complete Computation</p>
+                    </div>
+
+                    <div class="calculate-card">
+                        <div class="editor-section">
+                            <div class="editor-header">
+                                <span class="editor-label">Expression</span>
+                                <div class="editor-actions">
+                                    <button class="btn-small" id="load-example">Load Example</button>
+                                </div>
+                            </div>
+                            <textarea
+                                id="calc-input"
+                                class="code-editor"
+                                placeholder='{"op": "+", "args": [2, 3]}'
+                                rows="8"
+                            ></textarea>
+                        </div>
+
+                        <div class="bounds-section">
+                            <h4 class="bounds-title">Execution Bounds</h4>
+                            <div class="bounds-grid">
+                                <div class="bound-item">
+                                    <label>Max Iterations</label>
+                                    <input type="number" id="max-iterations" value="10000" class="input-small">
+                                </div>
+                                <div class="bound-item">
+                                    <label>Max Operations</label>
+                                    <input type="number" id="max-operations" value="1000000" class="input-small">
+                                </div>
+                                <div class="bound-item">
+                                    <label>Timeout (s)</label>
+                                    <input type="number" id="timeout" value="30" step="0.1" class="input-small">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-row">
+                            <button class="btn primary" id="calc-submit">
+                                <span class="btn-icon">N</span>
+                                Calculate
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="result-panel" id="calc-result" style="display: none;">
+                        <div class="result-header">
+                            <div class="result-status" id="calc-status">
+                                <div class="status-badge verified">VERIFIED</div>
+                            </div>
+                            <div class="result-meta">
+                                <span class="meta-item" id="calc-elapsed"></span>
+                                <span class="meta-item" id="calc-ops"></span>
+                            </div>
+                        </div>
+                        <div class="result-body">
+                            <div class="result-value" id="calc-output"></div>
+                        </div>
+                    </div>
+
+                    <!-- Operators Reference -->
+                    <div class="reference-section">
+                        <h2 class="section-title">Operators</h2>
+                        <div class="operators-grid">
+                            <div class="operator-group">
+                                <h4>Arithmetic</h4>
+                                <code>+ - * / % ** neg abs</code>
+                            </div>
+                            <div class="operator-group">
+                                <h4>Boolean</h4>
+                                <code>and or not xor nand nor</code>
+                            </div>
+                            <div class="operator-group">
+                                <h4>Comparison</h4>
+                                <code>== != < > <= >=</code>
+                            </div>
+                            <div class="operator-group">
+                                <h4>Control</h4>
+                                <code>if cond for while</code>
+                            </div>
+                            <div class="operator-group">
+                                <h4>Functions</h4>
+                                <code>def call lambda</code>
+                            </div>
+                            <div class="operator-group">
+                                <h4>Collections</h4>
+                                <code>map filter reduce list</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Orchestrate View -->
+            <section class="view" id="view-orchestrate">
+                <div class="view-container">
+                    <div class="hero-section">
+                        <h1 class="hero-title">Orchestrate</h1>
+                        <p class="hero-subtitle">Constrained External Services</p>
+                    </div>
+
+                    <div class="orchestrate-diagram">
+                        <div class="diagram-flow">
+                            <div class="flow-node external">
+                                <div class="node-icon">F</div>
+                                <span>Figma</span>
+                            </div>
+                            <div class="flow-arrow"></div>
+                            <div class="flow-node newton">
+                                <div class="node-icon">N</div>
+                                <span>Newton</span>
+                            </div>
+                            <div class="flow-arrow"></div>
+                            <div class="flow-node constraint">
+                                <div class="node-icon">C</div>
+                                <span>Constraint</span>
+                            </div>
+                            <div class="flow-arrow"></div>
+                            <div class="flow-node result">
+                                <div class="node-icon success">1==1</div>
+                                <span>Execute</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="constraint-builder">
+                        <h3 class="builder-title">Define Constraint</h3>
+
+                        <div class="builder-form">
+                            <div class="form-row">
+                                <label>Domain</label>
+                                <select id="constraint-domain" class="input-field">
+                                    <option value="design">Design System</option>
+                                    <option value="brand">Brand Guidelines</option>
+                                    <option value="legal">Legal Review</option>
+                                    <option value="safety">Content Safety</option>
+                                    <option value="financial">Financial</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <label>Field</label>
+                                <input type="text" id="constraint-field" class="input-field" placeholder="e.g., colorContrast, fontSize">
+                            </div>
+
+                            <div class="form-row">
+                                <label>Operator</label>
+                                <select id="constraint-operator" class="input-field">
+                                    <option value="eq">equals (eq)</option>
+                                    <option value="ne">not equals (ne)</option>
+                                    <option value="lt">less than (lt)</option>
+                                    <option value="gt">greater than (gt)</option>
+                                    <option value="le">less or equal (le)</option>
+                                    <option value="ge">greater or equal (ge)</option>
+                                    <option value="contains">contains</option>
+                                    <option value="matches">matches (regex)</option>
+                                    <option value="in">in set</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <label>Value</label>
+                                <input type="text" id="constraint-value" class="input-field" placeholder="Constraint value">
+                            </div>
+                        </div>
+
+                        <div class="action-row">
+                            <button class="btn secondary" id="add-constraint">Add Constraint</button>
+                        </div>
+                    </div>
+
+                    <div class="constraint-list" id="constraint-list">
+                        <h4>Active Constraints</h4>
+                        <div class="constraints-empty">No constraints defined. Add one above.</div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3 class="builder-title">Test Object</h3>
+                        <textarea
+                            id="test-object"
+                            class="code-editor"
+                            placeholder='{"colorContrast": 4.5, "fontSize": 16}'
+                            rows="4"
+                        ></textarea>
+
+                        <div class="action-row">
+                            <button class="btn primary" id="verify-constraint">
+                                <span class="btn-icon">N</span>
+                                Verify Constraint
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="result-panel" id="constraint-result" style="display: none;">
+                        <div class="result-header">
+                            <div class="result-status" id="constraint-status">
+                                <div class="status-badge verified">PASSED</div>
+                            </div>
+                        </div>
+                        <div class="result-body">
+                            <pre class="result-output" id="constraint-output"></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ledger View -->
+            <section class="view" id="view-ledger">
+                <div class="view-container">
+                    <div class="hero-section">
+                        <h1 class="hero-title">Ledger</h1>
+                        <p class="hero-subtitle">Immutable Audit Trail</p>
+                    </div>
+
+                    <div class="ledger-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="ledger-count">0</div>
+                            <div class="stat-label">Entries</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="ledger-root">-</div>
+                            <div class="stat-label">Merkle Root</div>
+                        </div>
+                    </div>
+
+                    <div class="ledger-actions">
+                        <button class="btn secondary" id="refresh-ledger">Refresh</button>
+                        <button class="btn secondary" id="verify-chain">Verify Chain</button>
+                    </div>
+
+                    <div class="ledger-entries" id="ledger-entries">
+                        <div class="ledger-empty">
+                            <div class="empty-icon">L</div>
+                            <p>No ledger entries yet</p>
+                            <p class="empty-hint">Verified operations appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="brand-mark small">N</span>
+                    <span>Newton Supercomputer</span>
+                </div>
+                <div class="footer-quote">
+                    <code>1 == 1. The cloud is weather. We're building shelter.</code>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/jaredlewiswechs/Newton-api" target="_blank">GitHub</a>
+                    <span class="separator">|</span>
+                    <a href="/docs" target="_blank">Docs</a>
+                    <span class="separator">|</span>
+                    <span>Ada Computing Company</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-text">N</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
