@@ -4,15 +4,13 @@
 services:
   - type: web
     name: newton-kernel
-    runtime: ruby
-    buildCommand: bundle install
-    startCommand: bundle exec ruby newton_api.rb -o 0.0.0.0
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn newton_os_server:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: PORT
-        value: 4567
+      - key: PYTHONUNBUFFERED
+        value: "1"
       - key: NEWTON_STORAGE
         value: /tmp/newton
-      - key: RACK_ENV
-        value: production
     healthCheckPath: /health
     autoDeploy: true
