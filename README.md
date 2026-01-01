@@ -214,6 +214,13 @@ Self-hosted deployments require a commercial license for production use.
 │   │      SHA-256 | Chain Verification | Audit Trail     │  │
 │   └─────────────────────────────────────────────────────┘  │
 │                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                      WEB INTERFACES                         │
+│   ┌─────────┐   ┌────────────────┐   ┌─────────────────┐  │
+│   │   Ada   │   │   Dashboard    │   │   Newton PDA    │  │
+│   │  /ada   │   │       /        │   │  /newton-pda/   │  │
+│   └─────────┘   └────────────────┘   └─────────────────┘  │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -222,6 +229,32 @@ Self-hosted deployments require a commercial license for production use.
 ## Additional Capabilities
 
 Newton includes extension cartridges for visual, audio, and data specification generation, plus framework-specific verification for Apple, Web, and ML ecosystems. See [full documentation](docs/) for details.
+
+---
+
+## Newton PDA
+
+Newton PDA is a Progressive Web App for personal data management, built on the same verification principles as the API.
+
+**Features:**
+- **Notes, Names, Dates** — Three lenses on a unified data store (the "Soup")
+- **Append-only versioning** — Nothing deleted, only superseded. Full audit trail.
+- **Z-score verification** — Items crystallize from DRAFT → PENDING → VERIFIED over 3 commits
+- **Identity-derived encryption** — AES-256-GCM from your name/passphrase (like Tahoe-LAFS)
+- **Relationship layer** — Explicit refs plus inferred @mentions and #tags
+- **Offline-first** — IndexedDB storage, works without network
+- **PWA-ready** — Installable on iOS, Android, and desktop
+
+**Access:** `https://your-domain/newton-pda/`
+
+**Run locally:**
+```bash
+cd newton-pda
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
+See [Newton PDA documentation](docs/newton-pda.md) for details.
 
 ---
 
