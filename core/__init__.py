@@ -149,6 +149,37 @@ from .merkle_anchor import (
     verify_merkle_proof,
 )
 
+from .cartridges import (
+    # Types
+    CartridgeType,
+    OutputFormat,
+
+    # Results
+    ConstraintResult,
+    CartridgeResult,
+
+    # Checker
+    ConstraintChecker,
+
+    # Cartridges
+    VisualCartridge,
+    SoundCartridge,
+    SequenceCartridge,
+    DataCartridge,
+    RosettaCompiler,
+
+    # Manager
+    CartridgeManager,
+    get_cartridge_manager,
+
+    # Constraints
+    VISUAL_CONSTRAINTS,
+    SOUND_CONSTRAINTS,
+    SEQUENCE_CONSTRAINTS,
+    DATA_CONSTRAINTS,
+    ROSETTA_CONSTRAINTS,
+)
+
 __all__ = [
     # CDL
     'CDLEvaluator', 'CDLParser', 'HaltChecker',
@@ -191,6 +222,14 @@ __all__ = [
     'PolicyEngine', 'Policy', 'PolicyType', 'PolicyAction', 'PolicyEvaluationResult', 'get_policy_engine',
     'Negotiator', 'ApprovalRequest', 'ApprovalStatus', 'RequestPriority', 'get_negotiator',
     'MerkleAnchorScheduler', 'MerkleAnchor', 'MerkleProof', 'verify_merkle_proof',
+
+    # Cartridges
+    'CartridgeType', 'OutputFormat',
+    'ConstraintResult', 'CartridgeResult',
+    'ConstraintChecker',
+    'VisualCartridge', 'SoundCartridge', 'SequenceCartridge', 'DataCartridge', 'RosettaCompiler',
+    'CartridgeManager', 'get_cartridge_manager',
+    'VISUAL_CONSTRAINTS', 'SOUND_CONSTRAINTS', 'SEQUENCE_CONSTRAINTS', 'DATA_CONSTRAINTS', 'ROSETTA_CONSTRAINTS',
 ]
 
 __version__ = "1.0.0"

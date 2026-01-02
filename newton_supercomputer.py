@@ -55,6 +55,9 @@ from core import (
     get_vault_client, get_policy_engine, get_negotiator,
     MerkleAnchorScheduler, PolicyType, PolicyAction, Policy,
     ApprovalStatus, RequestPriority,
+
+    # Cartridges
+    get_cartridge_manager, CartridgeType,
 )
 
 
@@ -87,6 +90,9 @@ forge.enable_glass_box(
 
 # Start Merkle anchoring scheduler
 merkle_scheduler.start()
+
+# Cartridge manager
+cartridges = get_cartridge_manager()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -158,6 +164,60 @@ class CalculateRequest(BaseModel):
     max_iterations: Optional[int] = 10000
     max_operations: Optional[int] = 1000000
     timeout_seconds: Optional[float] = 30.0
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CARTRIDGE MODELS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class VisualCartridgeRequest(BaseModel):
+    """Visual cartridge request for SVG specification generation."""
+    intent: str
+    width: Optional[int] = 800
+    height: Optional[int] = 600
+    max_elements: Optional[int] = 100
+    color_palette: Optional[List[str]] = None
+
+
+class SoundCartridgeRequest(BaseModel):
+    """Sound cartridge request for audio specification generation."""
+    intent: str
+    duration_ms: Optional[int] = 5000
+    min_frequency: Optional[float] = 20.0
+    max_frequency: Optional[float] = 20000.0
+    sample_rate: Optional[int] = 44100
+
+
+class SequenceCartridgeRequest(BaseModel):
+    """Sequence cartridge request for video/animation specification generation."""
+    intent: str
+    duration_seconds: Optional[float] = 30.0
+    fps: Optional[int] = 30
+    width: Optional[int] = 1920
+    height: Optional[int] = 1080
+    max_scenes: Optional[int] = 10
+
+
+class DataCartridgeRequest(BaseModel):
+    """Data cartridge request for report specification generation."""
+    intent: str
+    data: Optional[Dict[str, Any]] = None
+    format: Optional[str] = "json"
+    max_rows: Optional[int] = 1000
+    include_statistics: Optional[bool] = True
+
+
+class RosettaRequest(BaseModel):
+    """Rosetta compiler request for code generation prompt."""
+    intent: str
+    target_platform: Optional[str] = "ios"
+    version: Optional[str] = "18.0"
+    language: Optional[str] = "swift"
+
+
+class AutoCartridgeRequest(BaseModel):
+    """Auto-detect cartridge type and compile."""
+    intent: str
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -536,6 +596,271 @@ async def calculate_examples():
             "sequences": ["block", "list", "index", "len"],
             "math": ["sqrt", "log", "sin", "cos", "tan", "floor", "ceil", "round", "min", "max", "sum"]
         },
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CARTRIDGES - Media Specification Generation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/cartridge/visual")
+async def visual_cartridge(request: VisualCartridgeRequest):
+    """
+    Visual Cartridge: Generate verified SVG specification.
+
+    Creates SVG specifications with:
+    - Dimension constraints (max 4096x4096)
+    - Element count limits (max 1000)
+    - Content safety verification
+    """
+    result = cartridges.compile_visual(
+        intent=request.intent,
+        width=request.width,
+        height=request.height,
+        max_elements=request.max_elements,
+        color_palette=request.color_palette
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="cartridge_visual",
+        payload={"intent_hash": hashlib.sha256(request.intent.encode()).hexdigest()[:16]},
+        result="pass" if result.verified else "fail",
+        metadata={"elapsed_us": result.elapsed_us}
+    )
+
+    return {
+        **result.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/cartridge/sound")
+async def sound_cartridge(request: SoundCartridgeRequest):
+    """
+    Sound Cartridge: Generate verified audio specification.
+
+    Creates audio specifications with:
+    - Duration limits (max 5 minutes)
+    - Frequency bounds (1 Hz - 22050 Hz)
+    - Sample rate validation
+    - Content safety verification
+    """
+    result = cartridges.compile_sound(
+        intent=request.intent,
+        duration_ms=request.duration_ms,
+        min_frequency=request.min_frequency,
+        max_frequency=request.max_frequency,
+        sample_rate=request.sample_rate
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="cartridge_sound",
+        payload={"intent_hash": hashlib.sha256(request.intent.encode()).hexdigest()[:16]},
+        result="pass" if result.verified else "fail",
+        metadata={"elapsed_us": result.elapsed_us}
+    )
+
+    return {
+        **result.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/cartridge/sequence")
+async def sequence_cartridge(request: SequenceCartridgeRequest):
+    """
+    Sequence Cartridge: Generate verified video/animation specification.
+
+    Creates video specifications with:
+    - Duration limits (max 10 minutes)
+    - Frame rate bounds (1-120 fps)
+    - Resolution limits (max 8K)
+    - Safety verification (no seizure-inducing content)
+    """
+    result = cartridges.compile_sequence(
+        intent=request.intent,
+        duration_seconds=request.duration_seconds,
+        fps=request.fps,
+        width=request.width,
+        height=request.height,
+        max_scenes=request.max_scenes
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="cartridge_sequence",
+        payload={"intent_hash": hashlib.sha256(request.intent.encode()).hexdigest()[:16]},
+        result="pass" if result.verified else "fail",
+        metadata={"elapsed_us": result.elapsed_us}
+    )
+
+    return {
+        **result.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/cartridge/data")
+async def data_cartridge(request: DataCartridgeRequest):
+    """
+    Data Cartridge: Generate verified report specification.
+
+    Creates report specifications with:
+    - Row limits (max 100,000)
+    - Format validation (JSON, CSV, Markdown, HTML)
+    - Statistical analysis
+    - Content safety verification
+    """
+    result = cartridges.compile_data(
+        intent=request.intent,
+        data=request.data,
+        output_format=request.format,
+        max_rows=request.max_rows,
+        include_statistics=request.include_statistics
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="cartridge_data",
+        payload={"intent_hash": hashlib.sha256(request.intent.encode()).hexdigest()[:16]},
+        result="pass" if result.verified else "fail",
+        metadata={"elapsed_us": result.elapsed_us}
+    )
+
+    return {
+        **result.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/cartridge/rosetta")
+async def rosetta_cartridge(request: RosettaRequest):
+    """
+    Rosetta Compiler: Generate verified code generation prompt.
+
+    Compiles app descriptions into structured prompts for:
+    - Swift/SwiftUI (iOS, macOS, watchOS, etc.)
+    - Python (FastAPI)
+    - TypeScript (React)
+
+    Verifies against security and App Store constraints.
+    """
+    result = cartridges.compile_rosetta(
+        intent=request.intent,
+        target_platform=request.target_platform,
+        version=request.version,
+        language=request.language
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="cartridge_rosetta",
+        payload={"intent_hash": hashlib.sha256(request.intent.encode()).hexdigest()[:16]},
+        result="pass" if result.verified else "fail",
+        metadata={"elapsed_us": result.elapsed_us}
+    )
+
+    return {
+        **result.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/cartridge/auto")
+async def auto_cartridge(request: AutoCartridgeRequest):
+    """
+    Auto Cartridge: Automatically detect cartridge type and compile.
+
+    Analyzes the intent to determine the most appropriate cartridge:
+    - Visual: images, graphics, icons, illustrations
+    - Sound: audio, music, sound effects
+    - Sequence: video, animations, motion
+    - Data: reports, analytics, charts
+    - Rosetta: apps, code, programs
+    """
+    result = cartridges.auto_compile(intent=request.intent)
+
+    # Record in ledger
+    ledger.append(
+        operation="cartridge_auto",
+        payload={
+            "intent_hash": hashlib.sha256(request.intent.encode()).hexdigest()[:16],
+            "detected_type": result.cartridge_type.value
+        },
+        result="pass" if result.verified else "fail",
+        metadata={"elapsed_us": result.elapsed_us}
+    )
+
+    return {
+        **result.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/cartridge/info")
+async def cartridge_info():
+    """Get information about available cartridges."""
+    return {
+        "cartridges": [
+            {
+                "name": "visual",
+                "endpoint": "/cartridge/visual",
+                "description": "Generate SVG/image specifications",
+                "constraints": {
+                    "max_width": 4096,
+                    "max_height": 4096,
+                    "max_elements": 1000,
+                    "max_colors": 256
+                }
+            },
+            {
+                "name": "sound",
+                "endpoint": "/cartridge/sound",
+                "description": "Generate audio specifications",
+                "constraints": {
+                    "max_duration_ms": 300000,
+                    "frequency_range": "1-22050 Hz",
+                    "sample_rates": [22050, 44100, 48000, 96000]
+                }
+            },
+            {
+                "name": "sequence",
+                "endpoint": "/cartridge/sequence",
+                "description": "Generate video/animation specifications",
+                "constraints": {
+                    "max_duration_seconds": 600,
+                    "fps_range": "1-120",
+                    "max_resolution": "7680x4320 (8K)"
+                }
+            },
+            {
+                "name": "data",
+                "endpoint": "/cartridge/data",
+                "description": "Generate report specifications",
+                "constraints": {
+                    "max_rows": 100000,
+                    "formats": ["json", "csv", "markdown", "html"]
+                }
+            },
+            {
+                "name": "rosetta",
+                "endpoint": "/cartridge/rosetta",
+                "description": "Generate code generation prompts",
+                "constraints": {
+                    "platforms": ["ios", "ipados", "macos", "watchos", "visionos", "tvos", "web", "android"],
+                    "languages": ["swift", "python", "typescript"]
+                }
+            },
+            {
+                "name": "auto",
+                "endpoint": "/cartridge/auto",
+                "description": "Auto-detect cartridge type and compile",
+                "constraints": {}
+            }
+        ],
         "engine": ENGINE
     }
 
