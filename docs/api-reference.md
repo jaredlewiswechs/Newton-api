@@ -46,7 +46,7 @@ Complete reference for the Newton Supercomputer API.
 | [`/cartridge/auto`](cartridges.md#cartridgeauto) | POST | Auto-detect type and compile |
 | [`/cartridge/info`](cartridges.md#cartridgeinfo) | GET | Get cartridge information |
 
-### Education (Teacher's Aide)
+### Education (Lesson Planning)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -58,6 +58,31 @@ Complete reference for the Newton Supercomputer API.
 | [`/education/teks/{code}`](#education-teks-code) | GET | Get specific TEKS standard |
 | [`/education/teks/search`](#education-teks-search) | POST | Search TEKS standards |
 | [`/education/info`](#education-info) | GET | Education API documentation |
+
+### Teacher's Aide Database (Classroom Management)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/teachers/db`](#teachers-db) | GET | Database summary |
+| [`/teachers/students`](#teachers-students-post) | POST | Add a new student |
+| [`/teachers/students/batch`](#teachers-students-batch) | POST | Add multiple students |
+| [`/teachers/students`](#teachers-students-get) | GET | List/search students |
+| [`/teachers/students/{id}`](#teachers-students-id) | GET | Get student details |
+| [`/teachers/classrooms`](#teachers-classrooms-post) | POST | Create a classroom |
+| [`/teachers/classrooms`](#teachers-classrooms-get) | GET | List all classrooms |
+| [`/teachers/classrooms/{id}`](#teachers-classrooms-id) | GET | Get classroom with roster |
+| [`/teachers/classrooms/{id}/students`](#teachers-classrooms-students) | POST | Add students to classroom |
+| [`/teachers/classrooms/{id}/groups`](#teachers-classrooms-groups) | GET | **Get differentiated groups** |
+| [`/teachers/classrooms/{id}/reteach`](#teachers-classrooms-reteach) | GET | Get reteach group |
+| [`/teachers/assessments`](#teachers-assessments) | POST | Create an assessment |
+| [`/teachers/assessments/{id}/scores`](#teachers-assessments-scores) | POST | Enter scores by student ID |
+| [`/teachers/assessments/{id}/quick-scores`](#teachers-assessments-quick-scores) | POST | Enter scores by name |
+| [`/teachers/interventions`](#teachers-interventions) | POST | Create intervention plan |
+| [`/teachers/teks`](#teachers-teks) | GET | Browse 188 TEKS (K-8) |
+| [`/teachers/teks/stats`](#teachers-teks-stats) | GET | TEKS statistics |
+| [`/teachers/db/save`](#teachers-db-save) | POST | Save database to file |
+| [`/teachers/db/load`](#teachers-db-load) | POST | Load database from file |
+| [`/teachers/info`](#teachers-info) | GET | Teacher's Aide API docs |
 
 ### System
 
@@ -937,6 +962,585 @@ Get education API documentation and available subjects/grades.
   "total_duration": 50,
   "accommodations": ["ell", "sped", "504", "gt"]
 }
+```
+
+---
+
+## Teacher's Aide Database Endpoints
+
+The Teacher's Aide Database provides classroom management with **automatic differentiation**. Students are automatically grouped into 4 tiers based on their assessment performance.
+
+### Differentiation Tiers
+
+| Tier | Level | Score Range | Instruction |
+|------|-------|-------------|-------------|
+| **Tier 3** | Needs Reteach | Below 70% | Small group with teacher, manipulatives |
+| **Tier 2** | Approaching | 70-79% | Guided practice with scaffolds |
+| **Tier 1** | Mastery | 80-89% | Standard instruction |
+| **Enrichment** | Advanced | 90%+ | Extension activities, peer tutoring |
+
+### /teachers/db
+
+Get database summary and statistics.
+
+**GET** `/teachers/db`
+
+#### Response
+
+```json
+{
+  "total_students": 125,
+  "total_classrooms": 5,
+  "total_assessments": 23,
+  "total_interventions": 8
+}
+```
+
+---
+
+### /teachers/students (POST)
+
+Add a new student to the database.
+
+**POST** `/teachers/students`
+
+#### Request Body
+
+```json
+{
+  "first_name": "Maria",
+  "last_name": "Garcia",
+  "grade": 5,
+  "accommodations": ["ell", "504"]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `first_name` | string | Yes | Student's first name |
+| `last_name` | string | Yes | Student's last name |
+| `grade` | int | Yes | Grade level (K=0, 1-12) |
+| `accommodations` | array | No | List: ell, sped, 504, gt, dyslexia, rti |
+
+#### Response
+
+```json
+{
+  "id": "STU0001",
+  "first_name": "Maria",
+  "last_name": "Garcia",
+  "grade": 5,
+  "accommodations": ["ell", "504"],
+  "mastery_levels": {},
+  "created_at": "2026-01-02T10:00:00Z"
+}
+```
+
+---
+
+### /teachers/students/batch
+
+Add multiple students at once.
+
+**POST** `/teachers/students/batch`
+
+#### Request Body
+
+```json
+{
+  "students": [
+    {"first_name": "John", "last_name": "Smith", "grade": 5},
+    {"first_name": "Sarah", "last_name": "Johnson", "grade": 5, "accommodations": ["gt"]},
+    {"first_name": "Carlos", "last_name": "Rodriguez", "grade": 5, "accommodations": ["ell"]}
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "added": 3,
+  "students": [
+    {"id": "STU0001", "name": "John Smith"},
+    {"id": "STU0002", "name": "Sarah Johnson"},
+    {"id": "STU0003", "name": "Carlos Rodriguez"}
+  ]
+}
+```
+
+---
+
+### /teachers/students (GET)
+
+List or search students.
+
+**GET** `/teachers/students`
+
+#### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Search by name (partial match) |
+| `grade` | int | Filter by grade level |
+
+#### Response
+
+```json
+{
+  "students": [
+    {
+      "id": "STU0001",
+      "first_name": "Maria",
+      "last_name": "Garcia",
+      "grade": 5,
+      "accommodations": ["ell", "504"]
+    }
+  ],
+  "total": 1
+}
+```
+
+---
+
+### /teachers/students/{id}
+
+Get detailed student information including mastery levels.
+
+**GET** `/teachers/students/{id}`
+
+#### Response
+
+```json
+{
+  "id": "STU0001",
+  "first_name": "Maria",
+  "last_name": "Garcia",
+  "grade": 5,
+  "accommodations": ["ell", "504"],
+  "mastery_levels": {
+    "5.3A": "mastery",
+    "5.3B": "approaching",
+    "5.4A": "needs_reteach"
+  },
+  "assessment_history": [
+    {"assessment_id": "ASSESS0001", "score": 85, "date": "2026-01-02"}
+  ]
+}
+```
+
+---
+
+### /teachers/classrooms (POST)
+
+Create a new classroom.
+
+**POST** `/teachers/classrooms`
+
+#### Request Body
+
+```json
+{
+  "name": "5th Period Math",
+  "grade": 5,
+  "subject": "mathematics",
+  "teacher_name": "Ms. Johnson",
+  "current_teks": ["5.3A", "5.3B"]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Classroom name |
+| `grade` | int | Yes | Grade level |
+| `subject` | string | Yes | Subject area |
+| `teacher_name` | string | Yes | Teacher's name |
+| `current_teks` | array | No | Current TEKS focus |
+
+#### Response
+
+```json
+{
+  "id": "CLASS001",
+  "name": "5th Period Math",
+  "grade": 5,
+  "subject": "mathematics",
+  "teacher_name": "Ms. Johnson",
+  "current_teks": ["5.3A", "5.3B"],
+  "student_ids": [],
+  "created_at": "2026-01-02T10:00:00Z"
+}
+```
+
+---
+
+### /teachers/classrooms (GET)
+
+List all classrooms.
+
+**GET** `/teachers/classrooms`
+
+---
+
+### /teachers/classrooms/{id}
+
+Get classroom details with full roster.
+
+**GET** `/teachers/classrooms/{id}`
+
+#### Response
+
+```json
+{
+  "classroom": {
+    "id": "CLASS001",
+    "name": "5th Period Math",
+    "grade": 5,
+    "subject": "mathematics",
+    "teacher_name": "Ms. Johnson"
+  },
+  "roster": [
+    {"id": "STU0001", "name": "Garcia, Maria", "accommodations": ["ell", "504"]},
+    {"id": "STU0002", "name": "Smith, John", "accommodations": []}
+  ],
+  "student_count": 2
+}
+```
+
+---
+
+### /teachers/classrooms/{id}/students
+
+Add students to a classroom roster.
+
+**POST** `/teachers/classrooms/{id}/students`
+
+#### Request Body
+
+```json
+{
+  "student_ids": ["STU0001", "STU0002", "STU0003"]
+}
+```
+
+---
+
+### /teachers/classrooms/{id}/groups
+
+**THE KEY FEATURE** - Get students grouped by differentiation tier.
+
+**GET** `/teachers/classrooms/{id}/groups`
+
+#### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `teks_code` | string | Filter by specific TEKS (optional) |
+
+#### Response
+
+```json
+{
+  "classroom_id": "CLASS001",
+  "classroom_name": "5th Period Math",
+  "teks_filter": null,
+  "groups": {
+    "needs_reteach": {
+      "students": [
+        {"id": "STU0003", "name": "Carlos Rodriguez", "score": 65}
+      ],
+      "count": 1,
+      "instruction": "Small group with teacher. Use manipulatives. Review prerequisite skills."
+    },
+    "approaching": {
+      "students": [
+        {"id": "STU0004", "name": "Emily Davis", "score": 75}
+      ],
+      "count": 1,
+      "instruction": "Guided practice with scaffolds. Pair with mastery student."
+    },
+    "mastery": {
+      "students": [
+        {"id": "STU0001", "name": "Maria Garcia", "score": 85}
+      ],
+      "count": 1,
+      "instruction": "Standard instruction. Independent practice."
+    },
+    "advanced": {
+      "students": [
+        {"id": "STU0002", "name": "Sarah Johnson", "score": 95}
+      ],
+      "count": 1,
+      "instruction": "Extension activities. Peer tutoring. Leadership roles."
+    },
+    "not_assessed": {
+      "students": [],
+      "count": 0,
+      "instruction": "Assess these students first."
+    }
+  },
+  "summary": {
+    "total": 4,
+    "needs_reteach": 1,
+    "approaching": 1,
+    "mastery": 1,
+    "advanced": 1
+  }
+}
+```
+
+---
+
+### /teachers/classrooms/{id}/reteach
+
+Get only the reteach group for quick intervention planning.
+
+**GET** `/teachers/classrooms/{id}/reteach`
+
+---
+
+### /teachers/assessments
+
+Create a new assessment.
+
+**POST** `/teachers/assessments`
+
+#### Request Body
+
+```json
+{
+  "name": "Exit Ticket - Fractions",
+  "classroom_id": "CLASS001",
+  "teks_codes": ["5.3A", "5.3B"],
+  "total_points": 10
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Assessment name |
+| `classroom_id` | string | Yes | Associated classroom |
+| `teks_codes` | array | Yes | TEKS being assessed |
+| `total_points` | int | Yes | Maximum score |
+
+---
+
+### /teachers/assessments/{id}/scores
+
+Enter scores by student ID.
+
+**POST** `/teachers/assessments/{id}/scores`
+
+#### Request Body
+
+```json
+{
+  "scores": {
+    "STU0001": 8,
+    "STU0002": 10,
+    "STU0003": 6
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "assessment_id": "ASSESS0001",
+  "scores_entered": 3,
+  "class_average": 80.0,
+  "mastery_rate": 0.67,
+  "groups_updated": true
+}
+```
+
+---
+
+### /teachers/assessments/{id}/quick-scores
+
+**Enter scores by student name** - No IDs needed!
+
+**POST** `/teachers/assessments/{id}/quick-scores`
+
+#### Request Body
+
+```json
+{
+  "scores": [
+    ["Maria Garcia", 8],
+    ["John Smith", 10],
+    ["Carlos Rodriguez", 6]
+  ]
+}
+```
+
+This matches students by name (case-insensitive, partial match supported) and automatically updates their mastery levels.
+
+---
+
+### /teachers/interventions
+
+Create an intervention plan for a group of students.
+
+**POST** `/teachers/interventions`
+
+#### Request Body
+
+```json
+{
+  "name": "Fraction Reteach Group",
+  "classroom_id": "CLASS001",
+  "teks_codes": ["5.3A"],
+  "tier": "needs_reteach",
+  "student_ids": ["STU0003", "STU0005"],
+  "strategies": ["Small group instruction", "Manipulatives", "Visual models"],
+  "notes": "Focus on finding common denominators"
+}
+```
+
+---
+
+### /teachers/teks
+
+Browse the extended TEKS database (188 standards, K-8).
+
+**GET** `/teachers/teks`
+
+#### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `grade` | int | Filter by grade (0-8) |
+| `subject` | string | Filter by subject |
+
+#### Response
+
+```json
+{
+  "teks": [
+    {
+      "code": "5.3A",
+      "grade": 5,
+      "subject": "mathematics",
+      "description": "Add and subtract fractions with unequal denominators...",
+      "strand": "Number and Operations",
+      "cognitive_level": "apply"
+    }
+  ],
+  "total": 188
+}
+```
+
+---
+
+### /teachers/teks/stats
+
+Get TEKS database statistics.
+
+**GET** `/teachers/teks/stats`
+
+#### Response
+
+```json
+{
+  "total_standards": 188,
+  "by_subject": {
+    "mathematics": 72,
+    "reading": 48,
+    "science": 40,
+    "social_studies": 28
+  },
+  "by_grade": {
+    "K": 16,
+    "1": 20,
+    "2": 22,
+    "3": 24,
+    "4": 26,
+    "5": 26,
+    "6": 18,
+    "7": 18,
+    "8": 18
+  }
+}
+```
+
+---
+
+### /teachers/db/save
+
+Save the entire database to a JSON file.
+
+**POST** `/teachers/db/save`
+
+#### Request Body
+
+```json
+{
+  "filename": "my_classroom_backup.json"
+}
+```
+
+---
+
+### /teachers/db/load
+
+Load a previously saved database from JSON.
+
+**POST** `/teachers/db/load`
+
+#### Request Body
+
+```json
+{
+  "filename": "my_classroom_backup.json"
+}
+```
+
+---
+
+### /teachers/info
+
+Get Teacher's Aide API documentation and feature summary.
+
+**GET** `/teachers/info`
+
+---
+
+## Quick Start: Differentiation Workflow
+
+```bash
+# 1. Add students (batch)
+curl -X POST http://localhost:8000/teachers/students/batch \
+  -H "Content-Type: application/json" \
+  -d '{"students": [
+    {"first_name": "Maria", "last_name": "Garcia", "grade": 5, "accommodations": ["ell"]},
+    {"first_name": "John", "last_name": "Smith", "grade": 5},
+    {"first_name": "Sarah", "last_name": "Johnson", "grade": 5, "accommodations": ["gt"]}
+  ]}'
+
+# 2. Create classroom
+curl -X POST http://localhost:8000/teachers/classrooms \
+  -H "Content-Type: application/json" \
+  -d '{"name": "5th Math", "grade": 5, "subject": "mathematics", "teacher_name": "Ms. Johnson"}'
+
+# 3. Add students to classroom
+curl -X POST http://localhost:8000/teachers/classrooms/CLASS001/students \
+  -H "Content-Type: application/json" \
+  -d '{"student_ids": ["STU0001", "STU0002", "STU0003"]}'
+
+# 4. Create assessment
+curl -X POST http://localhost:8000/teachers/assessments \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Exit Ticket", "classroom_id": "CLASS001", "teks_codes": ["5.3A"], "total_points": 10}'
+
+# 5. Enter scores by name (THE EASY WAY!)
+curl -X POST http://localhost:8000/teachers/assessments/ASSESS0001/quick-scores \
+  -H "Content-Type: application/json" \
+  -d '{"scores": [["Maria Garcia", 8], ["John Smith", 6], ["Sarah Johnson", 10]]}'
+
+# 6. GET DIFFERENTIATED GROUPS!
+curl http://localhost:8000/teachers/classrooms/CLASS001/groups
 ```
 
 ---
