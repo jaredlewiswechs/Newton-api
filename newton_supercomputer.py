@@ -18,9 +18,11 @@ This is the unified API that exposes all Newton capabilities.
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
+from pathlib import Path
 import time
 import hashlib
 import os
@@ -291,6 +293,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files for frontend
+FRONTEND_DIR = Path(__file__).parent / "frontend"
+if FRONTEND_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1510,277 +1517,44 @@ async def metrics():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# THE INTERFACE
+# THE INTERFACE - Jared Lewis Conglomerate Frontend
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def home():
-    """Ask Newton interface."""
-    return """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newton Supercomputer</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-            background: #000;
-            color: #e8e8e8;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-        }
-        .container { max-width: 600px; width: 100%; text-align: center; }
-        h1 {
-            font-size: 48px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            letter-spacing: -1px;
-        }
-        .tagline {
-            color: #666;
-            font-size: 18px;
-            margin-bottom: 48px;
-        }
-        .badge {
-            color: #00875a;
-            font-family: 'SF Mono', monospace;
-        }
-        .ask-box {
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        .ask-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        input {
-            width: 100%;
-            padding: 16px;
-            font-size: 18px;
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            color: #e8e8e8;
-            outline: none;
-            font-family: inherit;
-        }
-        input:focus { border-color: #00875a; }
-        button {
-            width: 100%;
-            padding: 16px;
-            font-size: 18px;
-            font-weight: 600;
-            background: #00875a;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 16px;
-            font-family: inherit;
-        }
-        button:hover { background: #00a36c; }
-        .result {
-            background: #0a0a0a;
-            border: 1px solid #222;
-            border-radius: 12px;
-            padding: 24px;
-            text-align: left;
-            display: none;
-            margin-bottom: 24px;
-        }
-        .result.show { display: block; }
-        .result-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .result-badge {
-            font-size: 14px;
-            font-weight: 600;
-            padding: 6px 12px;
-            border-radius: 20px;
-            margin-right: 12px;
-        }
-        .result-badge.pass { background: #00875a; color: #000; }
-        .result-badge.fail { background: #dc3545; color: #fff; }
-        .result-time { color: #666; font-size: 14px; }
-        .result-details {
-            font-family: 'SF Mono', monospace;
-            font-size: 13px;
-            color: #888;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .metric {
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 8px;
-            padding: 16px;
-        }
-        .metric-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #00875a;
-        }
-        .metric-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
-        }
-        footer {
-            margin-top: 48px;
-            color: #444;
-            font-size: 13px;
-        }
-        .endpoints {
-            text-align: left;
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 24px;
-        }
-        .endpoint {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #222;
-        }
-        .endpoint:last-child { border-bottom: none; }
-        .method {
-            background: #00875a;
-            color: #000;
-            padding: 4px 8px;
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 4px;
-            margin-right: 12px;
-            font-family: 'SF Mono', monospace;
-        }
-        .path {
-            font-family: 'SF Mono', monospace;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Newton</h1>
-        <p class="tagline">The Supercomputer. <span class="badge">1 == 1</span></p>
+    """Newton frontend - Claude-esque + Apple HIG 2026 design."""
+    frontend_index = FRONTEND_DIR / "index.html"
+    if frontend_index.exists():
+        return FileResponse(frontend_index, media_type="text/html")
+    # Fallback if frontend not found
+    return HTMLResponse(content="<h1>Newton</h1><p>Frontend not found. API available at /docs</p>")
 
-        <div class="metrics" id="metrics">
-            <div class="metric">
-                <div class="metric-value" id="m-total">-</div>
-                <div class="metric-label">Verifications</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value" id="m-rate">-</div>
-                <div class="metric-label">Pass Rate</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value" id="m-time">-</div>
-                <div class="metric-label">Avg Time</div>
-            </div>
-        </div>
 
-        <div class="ask-box">
-            <div class="ask-label">Ask Newton</div>
-            <input type="text" id="query" placeholder="Enter your query...">
-            <button onclick="askNewton()">Verify</button>
-        </div>
+@app.get("/styles.css")
+async def styles():
+    """Serve CSS."""
+    css_file = FRONTEND_DIR / "styles.css"
+    if css_file.exists():
+        return FileResponse(css_file, media_type="text/css")
+    raise HTTPException(status_code=404, detail="CSS not found")
 
-        <div class="result" id="result">
-            <div class="result-header">
-                <span class="result-badge" id="badge">PASS</span>
-                <span class="result-time" id="time">42μs</span>
-            </div>
-            <pre class="result-details" id="details"></pre>
-        </div>
 
-        <div class="endpoints">
-            <div class="endpoint"><span class="method">POST</span><span class="path">/ask</span></div>
-            <div class="endpoint"><span class="method">POST</span><span class="path">/verify</span></div>
-            <div class="endpoint"><span class="method">POST</span><span class="path">/constraint</span></div>
-            <div class="endpoint"><span class="method">POST</span><span class="path">/ground</span></div>
-            <div class="endpoint"><span class="method">POST</span><span class="path">/calculate</span></div>
-            <div class="endpoint"><span class="method">GET</span><span class="path">/ledger</span></div>
-            <div class="endpoint"><span class="method">GET</span><span class="path">/metrics</span></div>
-        </div>
+@app.get("/app.js")
+async def app_js():
+    """Serve JavaScript."""
+    js_file = FRONTEND_DIR / "app.js"
+    if js_file.exists():
+        return FileResponse(js_file, media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="JS not found")
 
-        <footer>
-            <p>© 2025-2026 Jared Lewis · Ada Computing Company · Houston</p>
-            <p style="margin-top: 8px; color: #333;">The cloud is weather. We're building shelter.</p>
-        </footer>
-    </div>
 
-    <script>
-        async function askNewton() {
-            const query = document.getElementById('query').value;
-            if (!query) return;
-
-            const resultEl = document.getElementById('result');
-            const badgeEl = document.getElementById('badge');
-            const timeEl = document.getElementById('time');
-            const detailsEl = document.getElementById('details');
-
-            resultEl.className = 'result show';
-            detailsEl.textContent = 'Verifying...';
-
-            try {
-                const res = await fetch('/ask', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query })
-                });
-                const data = await res.json();
-
-                badgeEl.textContent = data.answer.verified ? 'VERIFIED' : 'FAILED';
-                badgeEl.className = 'result-badge ' + (data.answer.verified ? 'pass' : 'fail');
-                timeEl.textContent = data.elapsed_us + 'μs';
-                detailsEl.textContent = JSON.stringify(data, null, 2);
-
-                loadMetrics();
-            } catch (e) {
-                detailsEl.textContent = 'Error: ' + e.message;
-            }
-        }
-
-        async function loadMetrics() {
-            try {
-                const res = await fetch('/metrics');
-                const data = await res.json();
-                document.getElementById('m-total').textContent = data.forge.total_evaluations;
-                document.getElementById('m-rate').textContent = data.forge.pass_rate + '%';
-                document.getElementById('m-time').textContent = Math.round(data.forge.avg_time_us) + 'μs';
-            } catch (e) {}
-        }
-
-        document.getElementById('query').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') askNewton();
-        });
-
-        loadMetrics();
-    </script>
-</body>
-</html>"""
+@app.get("/manifest.json")
+async def manifest():
+    """Serve PWA manifest."""
+    manifest_file = FRONTEND_DIR / "manifest.json"
+    if manifest_file.exists():
+        return FileResponse(manifest_file, media_type="application/json")
+    raise HTTPException(status_code=404, detail="Manifest not found")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

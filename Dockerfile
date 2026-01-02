@@ -11,6 +11,7 @@ COPY newton_supercomputer.py .
 COPY core/ ./core/
 COPY tinytalk_py/ ./tinytalk_py/
 COPY newton_sdk/ ./newton_sdk/
+COPY frontend/ ./frontend/
 
 ENV PYTHONPATH=/app
 
