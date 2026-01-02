@@ -10,6 +10,75 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+#### Teacher's Aide Database - Classroom Management for Teachers
+
+Complete classroom management system with automatic differentiation, designed to make teachers' lives easier:
+
+- **Student Management** (`/teachers/students/*`)
+  - Track students with accommodations (ELL, SPED, 504, GT, Dyslexia, RTI)
+  - Add students individually or in batch
+  - Search by name with partial matching
+  - Automatic mastery tracking per TEKS standard
+
+- **Classroom Management** (`/teachers/classrooms/*`)
+  - Create classrooms with grade, subject, and teacher info
+  - Manage class rosters
+  - Track current TEKS focus
+  - Get class roster sorted by last name
+
+- **Assessment Tracking** (`/teachers/assessments/*`)
+  - Create assessments linked to TEKS codes
+  - Enter scores by student ID or **by name (quick-scores)**
+  - Automatic calculation of class average and mastery rate
+  - Student grouping after each assessment
+
+- **Auto-Differentiation** - The Key Feature!
+  - Students automatically grouped into 4 tiers:
+    - **Tier 3 (Needs Reteach)**: Below 70% - Small group with teacher
+    - **Tier 2 (Approaching)**: 70-79% - Guided practice with scaffolds
+    - **Tier 1 (Mastery)**: 80-89% - Standard instruction
+    - **Enrichment (Advanced)**: 90%+ - Extension activities
+  - Groups update automatically after each assessment
+  - Includes instruction recommendations per tier
+
+- **Intervention Plans** (`/teachers/interventions`)
+  - Create intervention plans for student groups
+  - Auto-populate students from current grouping
+  - Track progress with notes
+
+- **Extended TEKS Database**
+  - 188 TEKS standards (K-8)
+  - Covers Math, Reading/ELA, Science, Social Studies
+  - Filter by grade and subject
+  - Statistics endpoint for database info
+
+- **Data Persistence**
+  - Save database to JSON file
+  - Load database from JSON file
+  - Portable data for backup and transfer
+
+#### New Files
+- `tinytalk_py/teachers_aide_db.py` (1,115 lines)
+- `tinytalk_py/teks_database.py` (1,334 lines)
+
+#### New Endpoints (20+)
+- `/teachers/db` - Database summary
+- `/teachers/students` - Student CRUD
+- `/teachers/classrooms` - Classroom management
+- `/teachers/classrooms/{id}/groups` - **Get differentiated groups**
+- `/teachers/classrooms/{id}/reteach` - Get reteach group
+- `/teachers/assessments` - Assessment management
+- `/teachers/assessments/{id}/scores` - Enter scores by ID
+- `/teachers/assessments/{id}/quick-scores` - Enter scores by name
+- `/teachers/interventions` - Intervention planning
+- `/teachers/teks` - Extended TEKS (188 standards)
+- `/teachers/teks/stats` - TEKS statistics
+- `/teachers/db/save` - Save database
+- `/teachers/db/load` - Load database
+- `/teachers/info` - API documentation
+
+---
+
 #### Cartridge Layer - Media Specification Generation
 
 Newton now generates verified specifications for media content through the Cartridge system:

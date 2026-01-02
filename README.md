@@ -16,10 +16,10 @@
 
 **Verified Computation. Ask Newton. Go.**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](#licensing)
 [![API](https://img.shields.io/badge/API-REST-orange.svg)](#api-reference)
-[![Tests](https://img.shields.io/badge/tests-47%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-68%20passing-brightgreen.svg)](#testing)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
 
 ---
@@ -118,6 +118,9 @@ Generate verified specifications for media content. Visual (SVG), Sound (audio),
 ### Education (Teacher's Aide)
 HISD NES-compliant lesson planning with TEKS as machine-readable objects. Generate personalized lesson plans, slide decks, assessment analytics, and PLC reports. All governed by tinyTalk laws ensuring 50-minute duration and TEKS alignment.
 
+### Teacher's Aide Database (NEW)
+Complete classroom management system with automatic differentiation. Track students, classrooms, assessments, and interventions. Students are automatically grouped into 4 tiers (Needs Reteach, Approaching, Mastery, Advanced) based on assessment performance. Includes 188 TEKS standards (K-8) and easy score entry by student name.
+
 ---
 
 ## What Has Newton Proven?
@@ -133,7 +136,7 @@ HISD NES-compliant lesson planning with TEKS as machine-readable objects. Genera
 | **Bounded Execution** | No infinite loops, no stack overflow | Enforced |
 | **Cryptographic Integrity** | Hash chains, Merkle proofs | Verified |
 
-**Test Suite**: 47 test cases, all passing. Property-based testing with Hypothesis.
+**Test Suite**: 68 test cases, all passing. Property-based testing with Hypothesis.
 
 ---
 
@@ -141,7 +144,7 @@ HISD NES-compliant lesson planning with TEKS as machine-readable objects. Genera
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER v1.0.0                  │
+│                    NEWTON SUPERCOMPUTER v1.1.0                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
@@ -177,6 +180,14 @@ HISD NES-compliant lesson planning with TEKS as machine-readable objects. Genera
 │  │  │  TEKS  │ │Lessons │ │  Slides  │ │Assess│ │  PLC   │ │   │
 │  │  │(stds)  │ │ (NES)  │ │  (deck)  │ │(anal)│ │(report)│ │   │
 │  │  └────────┘ └────────┘ └──────────┘ └──────┘ └────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │               TEACHER'S AIDE DATABASE                    │   │
+│  │  ┌────────┐ ┌────────┐ ┌──────────┐ ┌────────────────┐  │   │
+│  │  │Students│ │Classes │ │  Scores  │ │ Differentiate  │  │   │
+│  │  │ (ELL)  │ │(roster)│ │ (quick)  │ │  (4 tiers)     │  │   │
+│  │  └────────┘ └────────┘ └──────────┘ └────────────────┘  │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │                        ASK NEWTON                               │
@@ -367,6 +378,29 @@ curl -X POST http://localhost:8000/education/lesson \
 | `/education/teks/search` | POST | Search TEKS by keyword/grade/subject |
 | `/education/info` | GET | Education API documentation |
 
+### Teacher's Aide Database (NEW)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/teachers/students` | POST | Add a new student |
+| `/teachers/students/batch` | POST | Add multiple students at once |
+| `/teachers/students` | GET | List/search students |
+| `/teachers/students/{id}` | GET | Get student details |
+| `/teachers/classrooms` | POST | Create a new classroom |
+| `/teachers/classrooms` | GET | List all classrooms |
+| `/teachers/classrooms/{id}` | GET | Get classroom with roster |
+| `/teachers/classrooms/{id}/students` | POST | Add students to classroom |
+| `/teachers/classrooms/{id}/groups` | GET | **Get differentiated groups (THE KEY FEATURE!)** |
+| `/teachers/classrooms/{id}/reteach` | GET | Get reteach group students |
+| `/teachers/assessments` | POST | Create a new assessment |
+| `/teachers/assessments/{id}/scores` | POST | Enter scores by student ID |
+| `/teachers/assessments/{id}/quick-scores` | POST | Enter scores by student name |
+| `/teachers/interventions` | POST | Create intervention plan |
+| `/teachers/teks` | GET | Browse 188 TEKS standards (K-8) |
+| `/teachers/db/save` | POST | Save database to JSON |
+| `/teachers/db/load` | POST | Load database from JSON |
+| `/teachers/info` | GET | Teacher's Aide API documentation |
+
 ### System
 
 | Endpoint | Method | Description |
@@ -554,7 +588,9 @@ Newton-api/
 │   ├── core.py             # Blueprint, Law, Forge, when, finfr
 │   ├── matter.py           # Typed values (Money, Celsius, etc.)
 │   ├── engine.py           # KineticEngine for motion
-│   └── education.py        # Education module (TEKS, NES, PLC)
+│   ├── education.py        # Education module (TEKS, NES, PLC)
+│   ├── teachers_aide_db.py # Teacher's Aide Database (NEW)
+│   └── teks_database.py    # Extended TEKS standards (188 K-8)
 │
 ├── teachers-aide/           # Teacher's Aide Web App (PWA)
 │   ├── index.html          # Single-page application
@@ -627,7 +663,9 @@ pytest tests/ --cov=core --cov-report=html
 - Merkle proof tests (13 tests)
 - Negotiator tests (12 tests)
 - Policy engine tests (10 tests)
+- tinyTalk language tests (51 tests)
 - Property-based tests (Hypothesis)
+- Chess puzzle solver tests (17 tests)
 
 ---
 

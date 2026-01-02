@@ -4,7 +4,7 @@
 
 Welcome to the Newton Supercomputer documentation. Newton is a distributed verification system where the constraint IS the instruction and the verification IS the computation.
 
-**Version**: 1.0.0 | **Date**: January 1, 2026
+**Version**: 1.1.0 | **Date**: January 2, 2026
 
 ---
 
@@ -64,7 +64,7 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 - [Framework Verification](frameworks.md) - Apple, Web, ML framework constraints
 - [Claim Grounding](grounding.md) - Fact-checking against external sources
 - [Newton PDA](newton-pda.md) - Personal Data Assistant (PWA)
-- [Teacher's Aide](../teachers-aide/README.md) - HISD NES lesson planning and TEKS alignment
+- [Teacher's Aide](../teachers-aide/README.md) - HISD NES lesson planning, TEKS alignment, classroom management, and auto-differentiation
 
 ### Deployment
 - [Deployment Guide](../DEPLOYMENT.md) - Render.com, Docker, Local
@@ -76,7 +76,7 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER v1.0.0                  │
+│                    NEWTON SUPERCOMPUTER v1.1.0                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
@@ -96,6 +96,15 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 │  │  │Policy Engine │ │ Negotiator │ │ Merkle Anchor      │ │   │
 │  │  │(policy-code) │ │   (HITL)   │ │ (proof export)     │ │   │
 │  │  └──────────────┘ └────────────┘ └────────────────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │               TEACHER'S AIDE DATABASE                    │   │
+│  │  ┌──────────┐ ┌────────────┐ ┌─────────────────────────┐│   │
+│  │  │ Students │ │ Classrooms │ │ Auto-Differentiation    ││   │
+│  │  │   (188   │ │ Assessment │ │ Tier 3→2→1→Enrichment   ││   │
+│  │  │   TEKS)  │ │  Tracking  │ │ (groups after scores)   ││   │
+│  │  └──────────┘ └────────────┘ └─────────────────────────┘│   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │                        ASK NEWTON                               │
@@ -187,6 +196,30 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 | `/education/teks/search` | POST | Search standards |
 | `/education/info` | GET | Education API documentation |
 
+### Teacher's Aide Database (20 endpoints)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/teachers/db` | GET | Database summary |
+| `/teachers/students` | POST | Add student |
+| `/teachers/students/batch` | POST | Add multiple students |
+| `/teachers/students` | GET | List/search students |
+| `/teachers/students/{id}` | GET | Get student details |
+| `/teachers/classrooms` | POST | Create classroom |
+| `/teachers/classrooms` | GET | List classrooms |
+| `/teachers/classrooms/{id}` | GET | Get classroom with roster |
+| `/teachers/classrooms/{id}/students` | POST | Add students to roster |
+| `/teachers/classrooms/{id}/groups` | GET | **Get differentiated groups** |
+| `/teachers/classrooms/{id}/reteach` | GET | Get reteach group |
+| `/teachers/assessments` | POST | Create assessment |
+| `/teachers/assessments/{id}/scores` | POST | Enter scores by ID |
+| `/teachers/assessments/{id}/quick-scores` | POST | Enter scores by name |
+| `/teachers/interventions` | POST | Create intervention plan |
+| `/teachers/teks` | GET | Browse 188 TEKS (K-8) |
+| `/teachers/teks/stats` | GET | TEKS statistics |
+| `/teachers/db/save` | POST | Save database to file |
+| `/teachers/db/load` | POST | Load database from file |
+| `/teachers/info` | GET | Teacher's Aide API docs |
+
 ### System (3 endpoints)
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -234,8 +267,9 @@ This isn't a feature. It's the architecture.
 | Merkle Proofs | 13 | Passing |
 | Negotiator | 12 | Passing |
 | Policy Engine | 10 | Passing |
+| Education | 7 | Passing |
 | Properties | Multiple | Passing |
-| **Total** | **47+** | **All Passing** |
+| **Total** | **68+** | **All Passing** |
 
 ---
 
