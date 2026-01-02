@@ -78,6 +78,7 @@ try:
         KineticEngine,
         Presence,
         Delta,
+        motion,
     )
 except ImportError:
     # Fall back to absolute imports (when running directly)
@@ -120,6 +121,7 @@ except ImportError:
         KineticEngine,
         Presence,
         Delta,
+        motion,
     )
 
 __version__ = "1.0.0"
@@ -159,4 +161,5 @@ __all__ = [
     "KineticEngine",
     "Presence",
     "Delta",
+    "motion",
 ]
