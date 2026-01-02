@@ -2400,13 +2400,30 @@ class ApiKeyRequest(BaseModel):
 # LICENSE & API KEY ENDPOINTS
 # ─────────────────────────────────────────────────────────────────────────────
 
+def get_client_ip(request: Request) -> str:
+    """Extract client IP from request, handling proxies."""
+    # Check for forwarded headers (when behind proxy/load balancer)
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip
+    return request.client.host if request.client else "unknown"
+
+
 @app.post("/license/verify")
-async def verify_license(request: LicenseVerifyRequest):
+async def verify_license(request: Request, body: LicenseVerifyRequest):
     """
     Verify a Gumroad license key.
 
     After purchasing Newton access on Gumroad, use this endpoint to verify
     your license and get your API key.
+
+    Rate limited to prevent brute force attacks:
+    - 10 attempts per minute per IP
+    - 30 attempts per hour per IP
+    - 15 minute lockout after 5 consecutive failures
 
     Example:
         POST /license/verify
@@ -2414,15 +2431,29 @@ async def verify_license(request: LicenseVerifyRequest):
 
     Returns your API key if valid.
     """
-    result = gumroad.verify_license(request.license_key)
+    client_ip = get_client_ip(request)
+    result = gumroad.verify_license(body.license_key, ip_address=client_ip)
+
+    # Handle rate limiting
+    if result.rate_limited:
+        ledger.append(
+            operation="license_verify_rate_limited",
+            payload={"ip": client_ip[:16] + "...", "retry_after": result.retry_after_seconds},
+            result="blocked"
+        )
+        raise HTTPException(
+            status_code=429,
+            detail=result.error,
+            headers={"Retry-After": str(result.retry_after_seconds)}
+        )
 
     if result.valid:
         # Get or create API key for this license
-        api_key = gumroad.get_api_key_for_license(request.license_key)
+        api_key = gumroad.get_api_key_for_license(body.license_key)
 
         ledger.append(
             operation="license_verify",
-            payload={"email": result.email, "valid": True},
+            payload={"email": result.email, "valid": True, "ip": client_ip[:16] + "..."},
             result="pass"
         )
 
@@ -2439,11 +2470,137 @@ async def verify_license(request: LicenseVerifyRequest):
 
     ledger.append(
         operation="license_verify",
-        payload={"valid": False, "error": result.error},
+        payload={"valid": False, "error": result.error, "ip": client_ip[:16] + "..."},
         result="fail"
     )
 
     raise HTTPException(status_code=401, detail=result.error or "Invalid license key")
+
+
+class RegenerateKeyRequest(BaseModel):
+    """Request to regenerate or create additional API key."""
+    license_key: str
+    key_name: Optional[str] = None
+
+
+class RevokeKeyRequest(BaseModel):
+    """Request to revoke an API key."""
+    api_key: str
+
+
+@app.post("/license/keys/regenerate")
+async def regenerate_api_key(request: Request, body: RegenerateKeyRequest):
+    """
+    Generate a new API key for your license.
+
+    Use this if:
+    - Your key was compromised
+    - You need separate keys for different projects
+    - Your key expired
+
+    You can have up to 3 active keys per license.
+    If you already have 3, the oldest key will be revoked.
+
+    Example:
+        POST /license/keys/regenerate
+        {"license_key": "YOUR_LICENSE_KEY", "key_name": "Production"}
+    """
+    client_ip = get_client_ip(request)
+
+    # First verify the license
+    result = gumroad.verify_license(body.license_key, ip_address=client_ip, increment_uses=False)
+    if not result.valid:
+        if result.rate_limited:
+            raise HTTPException(
+                status_code=429,
+                detail=result.error,
+                headers={"Retry-After": str(result.retry_after_seconds)}
+            )
+        raise HTTPException(status_code=401, detail="Invalid license key")
+
+    # Generate new key
+    new_key = gumroad.regenerate_api_key(body.license_key, key_name=body.key_name)
+    if not new_key:
+        raise HTTPException(status_code=400, detail="Could not generate new key")
+
+    ledger.append(
+        operation="api_key_regenerate",
+        payload={"email": result.email, "key_name": body.key_name},
+        result="pass"
+    )
+
+    return {
+        "success": True,
+        "api_key": new_key.key,
+        "name": new_key.name,
+        "expires_at": new_key.expires_at,
+        "message": "New API key generated. Old keys remain valid unless you revoke them.",
+        "engine": ENGINE
+    }
+
+
+@app.post("/license/keys/revoke")
+async def revoke_api_key(request: Request, body: RevokeKeyRequest):
+    """
+    Revoke an API key.
+
+    Use this if a key was compromised or is no longer needed.
+    The key will be immediately invalidated.
+
+    Example:
+        POST /license/keys/revoke
+        {"api_key": "newton_xxxxx..."}
+    """
+    success = gumroad.revoke_api_key(body.api_key)
+
+    if not success:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    ledger.append(
+        operation="api_key_revoke",
+        payload={"key_prefix": body.api_key[:12] + "..."},
+        result="pass"
+    )
+
+    return {
+        "success": True,
+        "message": "API key revoked. It can no longer be used.",
+        "engine": ENGINE
+    }
+
+
+@app.post("/license/keys/list")
+async def list_api_keys(request: Request, body: LicenseVerifyRequest):
+    """
+    List all API keys for a license.
+
+    Shows key status, expiration, and usage statistics.
+
+    Example:
+        POST /license/keys/list
+        {"license_key": "YOUR_LICENSE_KEY"}
+    """
+    client_ip = get_client_ip(request)
+
+    # First verify the license
+    result = gumroad.verify_license(body.license_key, ip_address=client_ip, increment_uses=False)
+    if not result.valid:
+        if result.rate_limited:
+            raise HTTPException(
+                status_code=429,
+                detail=result.error,
+                headers={"Retry-After": str(result.retry_after_seconds)}
+            )
+        raise HTTPException(status_code=401, detail="Invalid license key")
+
+    keys = gumroad.list_api_keys(body.license_key)
+
+    return {
+        "email": result.email,
+        "keys": keys,
+        "max_keys": 3,
+        "engine": ENGINE
+    }
 
 
 @app.get("/license/info")
@@ -2461,6 +2618,11 @@ async def license_info():
             "step_3": "You'll receive a license key via email",
             "step_4": "POST /license/verify with your license key",
             "step_5": "Use your API key in the X-API-Key header for all requests"
+        },
+        "key_management": {
+            "regenerate": "POST /license/keys/regenerate - Create new key",
+            "revoke": "POST /license/keys/revoke - Invalidate a key",
+            "list": "POST /license/keys/list - View all your keys"
         },
         "engine": ENGINE
     }
@@ -2587,6 +2749,32 @@ async def gumroad_stats():
     """Get Gumroad integration statistics."""
     return {
         **gumroad.stats(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/gumroad/security-log")
+async def get_security_log(limit: int = 100, event_type: Optional[str] = None):
+    """
+    Get recent security events (admin endpoint).
+
+    Shows verification attempts, rate limiting, key operations, and webhook events.
+
+    Query params:
+        limit: Number of events to return (default 100)
+        event_type: Filter by event type (verify_success, verify_fail, rate_limit, etc.)
+    """
+    events = gumroad.get_security_log(limit=limit, event_type=event_type)
+    return {
+        "events": events,
+        "count": len(events),
+        "event_types": [
+            "verify_success_cached", "verify_success_gumroad", "verify_success_test",
+            "verify_fail_invalid", "verify_fail_error", "verify_fail_not_configured",
+            "rate_limit", "key_regenerated", "key_revoked",
+            "webhook_sale", "webhook_refund", "webhook_dispute", "webhook_dispute_won",
+            "webhook_no_secret", "webhook_missing_signature", "webhook_invalid_signature"
+        ],
         "engine": ENGINE
     }
 

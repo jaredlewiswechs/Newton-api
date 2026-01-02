@@ -186,6 +186,9 @@ from .gumroad import (
     Customer,
     Feedback,
     LicenseVerification,
+    APIKey,
+    SecurityEvent,
+    RateLimiter,
     get_gumroad_service,
 )
 
@@ -241,7 +244,8 @@ __all__ = [
     'VISUAL_CONSTRAINTS', 'SOUND_CONSTRAINTS', 'SEQUENCE_CONSTRAINTS', 'DATA_CONSTRAINTS', 'ROSETTA_CONSTRAINTS',
 
     # Gumroad Integration
-    'GumroadService', 'GumroadConfig', 'Customer', 'Feedback', 'LicenseVerification', 'get_gumroad_service',
+    'GumroadService', 'GumroadConfig', 'Customer', 'Feedback', 'LicenseVerification',
+    'APIKey', 'SecurityEvent', 'RateLimiter', 'get_gumroad_service',
 ]
 
 __version__ = "1.0.0"
