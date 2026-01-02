@@ -468,6 +468,12 @@ Newton-api/
 │
 ├── examples/                # Working demos
 │   └── tinytalk_demo.py    # tinyTalk concepts in action
+│
+├── tinytalk/                # tinyTalk documentation
+│   ├── ruby/               # Ruby module
+│   └── r/                  # R package
+│
+├── tinytalk_py/             # Python package (importable)
 ```
 
 ---
@@ -589,6 +595,54 @@ Newton Supercomputer is built by **Ada Computing Company** in Houston, Texas.
 Newton implements the tinyTalk philosophy: a "No-First" approach where we define what **cannot** happen rather than what can.
 
 See [TINYTALK_BIBLE.md](TINYTALK_BIBLE.md) for the complete philosophical and technical manual.
+
+### Import in Your Language
+
+tinyTalk is available as an importable library for **Python**, **Ruby**, and **R**:
+
+```python
+# Python - add Newton-api to your path, then:
+from tinytalk_py import Blueprint, field, law, forge, when, finfr, Money
+
+class RiskGovernor(Blueprint):
+    assets = field(float, default=1000.0)
+    liabilities = field(float, default=0.0)
+
+    @law
+    def insolvency(self):
+        when(self.liabilities > self.assets, finfr)
+
+    @forge
+    def execute_trade(self, amount):
+        self.liabilities += amount
+        return "cleared"
+```
+
+```ruby
+# Ruby
+require_relative 'tinytalk/ruby/tinytalk'
+include TinyTalk
+
+class RiskGovernor < Blueprint
+  field :assets, Float, default: 1000.0
+  law(:insolvency) { when_condition(liabilities > assets) { finfr } }
+  forge(:execute_trade) { |amt| self.liabilities += amt; :cleared }
+end
+```
+
+```r
+# R
+source("tinytalk/r/tinytalk.R")
+
+RiskGovernor <- Blueprint(
+  fields = list(assets = 1000.0, liabilities = 0.0),
+  laws = list(insolvency = function(self) {
+    when_cond(self$liabilities > self$assets, function() finfr())
+  })
+)
+```
+
+See [tinytalk/README.md](tinytalk/README.md) for full documentation.
 
 **Quick Demo:**
 ```bash
