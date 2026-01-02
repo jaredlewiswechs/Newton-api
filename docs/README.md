@@ -60,7 +60,7 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 | **newton_tahoe.rb** | PixelEngine with genesis mark |
 
 ### Advanced Features
-- [Extension Cartridges](cartridges.md) - Visual, Audio, Sequence, Data
+- [Cartridges](cartridges.md) - Visual, Sound, Sequence, Data, Rosetta, Auto
 - [Framework Verification](frameworks.md) - Apple, Web, ML framework constraints
 - [Claim Grounding](grounding.md) - Fact-checking against external sources
 - [Newton PDA](newton-pda.md) - Personal Data Assistant (PWA)
@@ -162,6 +162,17 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 | `/merkle/anchor` | POST | Create anchor |
 | `/merkle/proof/{index}` | GET | Generate proof |
 | `/merkle/latest` | GET | Latest anchor |
+
+### Cartridges (7 endpoints)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/cartridge/visual` | POST | SVG/image specification |
+| `/cartridge/sound` | POST | Audio specification |
+| `/cartridge/sequence` | POST | Video/animation specification |
+| `/cartridge/data` | POST | Report specification |
+| `/cartridge/rosetta` | POST | Code generation prompt |
+| `/cartridge/auto` | POST | Auto-detect and compile |
+| `/cartridge/info` | GET | Cartridge information |
 
 ### System (3 endpoints)
 | Endpoint | Method | Description |

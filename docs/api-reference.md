@@ -34,6 +34,18 @@ Complete reference for the Newton Supercomputer API.
 | [`/ledger/{index}`](#ledger-entry) | GET | Get entry with Merkle proof |
 | [`/ledger/certificate/{index}`](#ledger-certificate) | GET | Export verification certificate |
 
+### Cartridges (Media Specification)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/cartridge/visual`](cartridges.md#cartridgevisual) | POST | Generate SVG/image specification |
+| [`/cartridge/sound`](cartridges.md#cartridgesound) | POST | Generate audio specification |
+| [`/cartridge/sequence`](cartridges.md#cartridgesequence) | POST | Generate video/animation specification |
+| [`/cartridge/data`](cartridges.md#cartridgedata) | POST | Generate report specification |
+| [`/cartridge/rosetta`](cartridges.md#cartridgerosetta) | POST | Generate code generation prompt |
+| [`/cartridge/auto`](cartridges.md#cartridgeauto) | POST | Auto-detect type and compile |
+| [`/cartridge/info`](cartridges.md#cartridgeinfo) | GET | Get cartridge information |
+
 ### System
 
 | Endpoint | Method | Description |

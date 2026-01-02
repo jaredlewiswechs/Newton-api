@@ -6,6 +6,52 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.0] - 2026-01-02
+
+### Added
+
+#### Cartridge Layer - Media Specification Generation
+
+Newton now generates verified specifications for media content through the Cartridge system:
+
+- **Visual Cartridge** (`/cartridge/visual`) - SVG/image specifications
+  - Max 4096x4096 resolution, 1000 elements, 256 colors
+  - Auto-detects elements (circle, rect, text, polygon, etc.)
+  - Style and color scheme parsing
+
+- **Sound Cartridge** (`/cartridge/sound`) - Audio specifications
+  - Max 5 minutes duration, 1-22050 Hz frequency range
+  - Sample rates: 22050, 44100, 48000, 96000 Hz
+  - Sound type detection (tone, melody, ambient, voice, etc.)
+
+- **Sequence Cartridge** (`/cartridge/sequence`) - Video/animation specifications
+  - Max 10 minutes, up to 8K resolution, 1-120 fps
+  - Transition detection (fade, cut, wipe, zoom)
+  - Type detection (video, animation, slideshow, timelapse)
+
+- **Data Cartridge** (`/cartridge/data`) - Report specifications
+  - Max 100,000 rows, formats: JSON, CSV, Markdown, HTML
+  - Report type detection (financial, analytics, trend, etc.)
+  - Built-in statistics calculation
+
+- **Rosetta Compiler** (`/cartridge/rosetta`) - Code generation prompts
+  - Platforms: iOS, iPadOS, macOS, watchOS, visionOS, tvOS, web, Android
+  - Languages: Swift, Python, TypeScript
+  - Auto-detects frameworks (HealthKit, CoreML, ARKit, etc.)
+  - App Store and security constraint verification
+
+- **Auto Cartridge** (`/cartridge/auto`) - Automatic type detection and compilation
+
+- **Cartridge Info** (`/cartridge/info`) - Get cartridge information
+
+#### Core Changes
+- New `core/cartridges.py` module (1,015 lines)
+- `CartridgeManager` for unified cartridge access
+- All cartridge operations recorded in immutable ledger
+- Safety constraint verification on all intents
+
+---
+
 ## [1.0.0] - 2026-01-01
 
 ### Genesis

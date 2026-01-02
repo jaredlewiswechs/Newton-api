@@ -1,17 +1,43 @@
-# Extension Cartridges
+# Newton Cartridges
 
-Newton's constraint engine extends to any domain with definable bounds through Extension Cartridges.
+Newton's constraint engine extends to any domain with definable bounds through Cartridges. Generate verified specifications for media content—all constraint-checked before generation.
 
 ## Overview
 
 | Cartridge | Input | Output | Use Case |
 |-----------|-------|--------|----------|
-| Visual | Design intent | SVG specification | UI components, diagrams |
-| Sound | Audio intent | WAV specification | Sound effects, audio |
-| Sequence | Animation intent | Video specification | Animations, videos |
-| Data | Report intent | Report specification | Reports, analytics |
+| Visual | Design intent | SVG specification | UI components, diagrams, logos |
+| Sound | Audio intent | Audio specification | Sound effects, music, ambient |
+| Sequence | Animation intent | Video specification | Animations, videos, slideshows |
+| Data | Report intent | Report specification | Reports, analytics, dashboards |
+| Rosetta | App intent | Code generation prompt | iOS, macOS, web apps |
+| Auto | Any intent | Auto-detected specification | Automatic type detection |
 
-All cartridges verify content against both standard constraints and domain-specific rules.
+All cartridges verify content against both standard safety constraints and domain-specific rules.
+
+---
+
+## Quick Start
+
+```bash
+# Visual cartridge - generate SVG spec
+curl -X POST http://localhost:8000/cartridge/visual \
+  -H "Content-Type: application/json" \
+  -d '{"intent": "Create a modern logo with circles and text"}'
+
+# Rosetta compiler - generate code prompt
+curl -X POST http://localhost:8000/cartridge/rosetta \
+  -H "Content-Type: application/json" \
+  -d '{"intent": "Build an iOS fitness app with HealthKit"}'
+
+# Auto-detect cartridge type
+curl -X POST http://localhost:8000/cartridge/auto \
+  -H "Content-Type: application/json" \
+  -d '{"intent": "Create an image with geometric shapes"}'
+
+# Get cartridge info
+curl http://localhost:8000/cartridge/info
+```
 
 ---
 
@@ -392,3 +418,301 @@ curl -X POST https://api.parcri.net/cartridge/data \
     "include_statistics": true
   }'
 ```
+
+---
+
+## /cartridge/rosetta
+
+Generate verified code generation prompts for apps.
+
+### Request
+
+**POST** `/cartridge/rosetta`
+
+```json
+{
+  "intent": "Build an iOS fitness app with HealthKit integration",
+  "target_platform": "ios",
+  "version": "18.0",
+  "language": "swift"
+}
+```
+
+| Field | Type | Required | Default | Options | Description |
+|-------|------|----------|---------|---------|-------------|
+| `intent` | string | Yes | - | - | App description |
+| `target_platform` | string | No | `ios` | ios, ipados, macos, watchos, visionos, tvos, web, android | Target platform |
+| `version` | string | No | `18.0` | - | Platform version |
+| `language` | string | No | `swift` | swift, python, typescript | Output language |
+
+### Response
+
+```json
+{
+  "verified": true,
+  "cartridge_type": "rosetta",
+  "constraints": {
+    "safety": {
+      "passed": true,
+      "violations": []
+    },
+    "security": {
+      "passed": true,
+      "violations": []
+    },
+    "app_store": {
+      "passed": true,
+      "violations": []
+    }
+  },
+  "spec": {
+    "type": "code_prompt",
+    "format": "swift_prompt",
+    "platform": "ios",
+    "version": "18.0",
+    "language": "swift",
+    "parsed": {
+      "platform": "ios",
+      "app_type": "health",
+      "components": ["list", "detail", "chart"],
+      "frameworks": ["SwiftUI", "HealthKit", "HealthKitUI"]
+    },
+    "prompt": "TARGET: IOS 18.0\nFRAMEWORK: SwiftUI\n...",
+    "frameworks": ["SwiftUI", "HealthKit", "HealthKitUI"],
+    "warnings": [
+      "HealthKit requires special entitlements and privacy descriptions"
+    ]
+  },
+  "fingerprint": "A7F3B2C8E1D4",
+  "elapsed_us": 142,
+  "timestamp": 1735689600000,
+  "engine": "Newton Supercomputer 1.0.0"
+}
+```
+
+### Detected Frameworks
+
+Rosetta automatically detects required frameworks from intent:
+
+| Category | Keywords | Frameworks |
+|----------|----------|------------|
+| Health | health, fitness, workout, steps | HealthKit, HealthKitUI |
+| Location | map, location, gps, directions | CoreLocation, MapKit |
+| Media | photo, video, camera, music | AVFoundation, PhotosUI, MusicKit |
+| ML | ml, ai, recognize, detect, classify | CoreML, Vision, NaturalLanguage |
+| AR | ar, augmented, 3d, spatial | ARKit, RealityKit |
+| Payments | payment, purchase, subscription | StoreKit, PassKit |
+| Auth | login, auth, face id, touch id | AuthenticationServices, LocalAuthentication |
+| Data | save, store, sync, cloud | CoreData, SwiftData, CloudKit |
+
+### App Types
+
+Automatically detected from intent:
+
+| Type | Keywords |
+|------|----------|
+| utility | utility, tool, calculator, converter |
+| social | social, community, share, friends |
+| productivity | productivity, task, todo, notes |
+| media | photo, video, music, podcast |
+| health | health, fitness, wellness, meditation |
+| finance | finance, budget, expense, investment |
+| education | education, learn, study, course |
+| lifestyle | lifestyle, recipe, travel, weather |
+| game | game, play, puzzle, arcade |
+
+### Security Constraints
+
+Rosetta blocks:
+- Malware, virus, trojan, backdoor patterns
+- Data exfiltration intent
+- Security bypass intent
+- Keylogger/spyware without consent
+
+### App Store Constraints
+
+Rosetta blocks:
+- Real-money gambling/casino
+- Cryptocurrency mining
+- Adult/explicit content
+
+### Example
+
+```bash
+curl -X POST https://api.parcri.net/cartridge/rosetta \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "intent": "Create a meditation app with timer and ambient sounds",
+    "target_platform": "ios",
+    "language": "swift"
+  }'
+```
+
+---
+
+## /cartridge/auto
+
+Automatically detect cartridge type and compile.
+
+### Request
+
+**POST** `/cartridge/auto`
+
+```json
+{
+  "intent": "Create a colorful logo with geometric shapes"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `intent` | string | Yes | Natural language description |
+
+### Response
+
+Returns the same response format as the detected cartridge type, with an additional `cartridge_type` field indicating which cartridge was used.
+
+### Detection Patterns
+
+| Cartridge | Trigger Keywords |
+|-----------|------------------|
+| Visual | image, picture, graphic, svg, visual, icon, logo, illustration |
+| Sound | sound, audio, music, tone, melody, beep, voice, sfx |
+| Sequence | video, animation, movie, clip, slideshow, motion |
+| Rosetta | app, application, code, build, create, develop, program |
+| Data | report, data, analytics, statistics, chart, graph, table |
+
+### Example
+
+```bash
+# This will auto-detect as Visual
+curl -X POST https://api.parcri.net/cartridge/auto \
+  -H "Content-Type: application/json" \
+  -d '{"intent": "Design a minimalist icon"}'
+
+# This will auto-detect as Rosetta
+curl -X POST https://api.parcri.net/cartridge/auto \
+  -H "Content-Type: application/json" \
+  -d '{"intent": "Build a weather app for iPhone"}'
+
+# This will auto-detect as Sound
+curl -X POST https://api.parcri.net/cartridge/auto \
+  -H "Content-Type: application/json" \
+  -d '{"intent": "Create a notification chime"}'
+```
+
+---
+
+## /cartridge/info
+
+Get information about available cartridges.
+
+### Request
+
+**GET** `/cartridge/info`
+
+### Response
+
+```json
+{
+  "cartridges": [
+    {
+      "name": "visual",
+      "endpoint": "/cartridge/visual",
+      "description": "Generate SVG/image specifications",
+      "constraints": {
+        "max_width": 4096,
+        "max_height": 4096,
+        "max_elements": 1000,
+        "max_colors": 256
+      }
+    },
+    {
+      "name": "sound",
+      "endpoint": "/cartridge/sound",
+      "description": "Generate audio specifications",
+      "constraints": {
+        "max_duration_ms": 300000,
+        "frequency_range": "1-22050 Hz",
+        "sample_rates": [22050, 44100, 48000, 96000]
+      }
+    },
+    {
+      "name": "sequence",
+      "endpoint": "/cartridge/sequence",
+      "description": "Generate video/animation specifications",
+      "constraints": {
+        "max_duration_seconds": 600,
+        "fps_range": "1-120",
+        "max_resolution": "7680x4320 (8K)"
+      }
+    },
+    {
+      "name": "data",
+      "endpoint": "/cartridge/data",
+      "description": "Generate report specifications",
+      "constraints": {
+        "max_rows": 100000,
+        "formats": ["json", "csv", "markdown", "html"]
+      }
+    },
+    {
+      "name": "rosetta",
+      "endpoint": "/cartridge/rosetta",
+      "description": "Generate code generation prompts",
+      "constraints": {
+        "platforms": ["ios", "ipados", "macos", "watchos", "visionos", "tvos", "web", "android"],
+        "languages": ["swift", "python", "typescript"]
+      }
+    },
+    {
+      "name": "auto",
+      "endpoint": "/cartridge/auto",
+      "description": "Auto-detect cartridge type and compile",
+      "constraints": {}
+    }
+  ],
+  "engine": "Newton Supercomputer 1.0.0"
+}
+```
+
+---
+
+## Safety Constraints
+
+All cartridges verify content against these safety patterns before generation:
+
+| Category | Detects |
+|----------|---------|
+| **Harm** | Violence, weapons, self-harm instructions |
+| **Medical** | Unverified medical advice, drug dosages |
+| **Legal** | Tax evasion, money laundering, counterfeiting |
+| **Security** | Hacking, phishing, malware |
+
+If any safety constraint fails, the cartridge returns `verified: false` with the violations listed.
+
+---
+
+## Ledger Integration
+
+All cartridge operations are recorded in the immutable ledger:
+
+```json
+{
+  "operation": "cartridge_visual",
+  "payload": {
+    "intent_hash": "A7F3B2C8E1D4F5A9"
+  },
+  "result": "pass",
+  "metadata": {
+    "elapsed_us": 142
+  }
+}
+```
+
+This provides a complete audit trail of all media specification generation.
+
+---
+
+© 2025-2026 Ada Computing Company · Houston, Texas

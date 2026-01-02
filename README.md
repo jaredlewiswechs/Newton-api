@@ -85,6 +85,9 @@ Claims verified against external sources with confidence scoring and temporal aw
 ### Policy Enforcement (Glass Box)
 Policy-as-code. Human-in-the-loop approval workflows. Merkle proofs for export.
 
+### Media Specification (Cartridges)
+Generate verified specifications for media content. Visual (SVG), Sound (audio), Sequence (video), Data (reports), and Rosetta (code generation prompts). All constraint-verified before generation.
+
 ---
 
 ## What Has Newton Proven?
@@ -130,6 +133,14 @@ Policy-as-code. Human-in-the-loop approval workflows. Merkle proofs for export.
 │  │  └──────────────┘ └────────────┘ └────────────────────┘ │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    CARTRIDGE LAYER                       │   │
+│  │  ┌────────┐ ┌────────┐ ┌──────────┐ ┌──────┐ ┌────────┐ │   │
+│  │  │ Visual │ │ Sound  │ │ Sequence │ │ Data │ │Rosetta │ │   │
+│  │  │ (SVG)  │ │(audio) │ │ (video)  │ │(rpt) │ │ (code) │ │   │
+│  │  └────────┘ └────────┘ └──────────┘ └──────┘ └────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
 │                        ASK NEWTON                               │
 │                          /ask                                   │
 │                                                                 │
@@ -157,6 +168,16 @@ Policy-as-code. Human-in-the-loop approval workflows. Merkle proofs for export.
 | **Negotiator** | Human-in-the-loop approvals | 361 |
 | **Merkle Anchor** | Proof scheduling and export | 340 |
 | **Vault Client** | Provenance logging | 132 |
+
+### Cartridge Layer
+
+| Cartridge | Purpose | Constraints |
+|-----------|---------|-------------|
+| **Visual** | SVG/image specifications | 4096x4096 max, 1000 elements |
+| **Sound** | Audio specifications | 5 min duration, 22kHz max |
+| **Sequence** | Video/animation specs | 10 min, 8K, 120fps |
+| **Data** | Report specifications | 100K rows, multiple formats |
+| **Rosetta** | Code generation prompts | Swift, Python, TypeScript |
 
 ---
 
@@ -256,6 +277,18 @@ curl -X POST http://localhost:8000/ask \
 | `/merkle/anchors` | GET | List all anchors |
 | `/merkle/anchor` | POST | Create new anchor |
 | `/merkle/proof/{index}` | GET | Generate Merkle proof |
+
+### Cartridges (Media Specification)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/cartridge/visual` | POST | Generate SVG/image specification |
+| `/cartridge/sound` | POST | Generate audio specification |
+| `/cartridge/sequence` | POST | Generate video/animation specification |
+| `/cartridge/data` | POST | Generate report specification |
+| `/cartridge/rosetta` | POST | Generate code generation prompt |
+| `/cartridge/auto` | POST | Auto-detect type and compile |
+| `/cartridge/info` | GET | Get cartridge information |
 
 ### System
 
@@ -381,7 +414,7 @@ Newton-api/
 ├── cli_verifier.py           # CLI verification tool
 ├── requirements.txt          # Python dependencies
 │
-├── core/                     # Core modules (~7,900 LOC)
+├── core/                     # Core modules (~9,000 LOC)
 │   ├── cdl.py               # Constraint Definition Language
 │   ├── logic.py             # Verified computation engine
 │   ├── forge.py             # Verification CPU
@@ -394,6 +427,7 @@ Newton-api/
 │   ├── negotiator.py        # Human-in-the-loop
 │   ├── merkle_anchor.py     # Proof export
 │   ├── vault_client.py      # Provenance logging
+│   ├── cartridges.py        # Media specification cartridges
 │   ├── newton_os.rb         # Tahoe Kernel - Knowledge Base
 │   └── newton_tahoe.rb      # Tahoe Kernel - PixelEngine
 │
