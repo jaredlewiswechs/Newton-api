@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY newton_supercomputer.py .
 COPY core/ ./core/
+COPY tinytalk_py/ ./tinytalk_py/
 
 ENV PYTHONPATH=/app
 
