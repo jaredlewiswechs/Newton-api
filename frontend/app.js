@@ -227,7 +227,7 @@ async function handleAsk() {
         // Update UI
         elements.askResult.style.display = 'block';
 
-        const verified = result.verified;
+        const verified = result.answer?.verified ?? result.verified;
         elements.askStatus.innerHTML = `
             <div class="status-badge ${verified ? 'verified' : 'failed'}">
                 ${verified ? 'VERIFIED' : 'FAILED'}
