@@ -16,11 +16,13 @@
 
 **Verified Computation. Ask Newton. Go.**
 
-[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
+[![Version](https://img.shields.io/badge/version-1.2.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](#licensing)
 [![API](https://img.shields.io/badge/API-REST-orange.svg)](#api-reference)
-[![Tests](https://img.shields.io/badge/tests-68%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-94%20passing-brightgreen.svg)](#testing)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
+
+**January 2, 2026** · **Jared Lewis Conglomerate** · **Ada Computing Company**
 
 ---
 
@@ -60,6 +62,38 @@ def newton(current, goal):
 ```
 
 This isn't a feature. It's the architecture.
+
+---
+
+## NEW: f/g Ratio Constraints (Dimensional Analysis)
+
+**finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
+
+```python
+from tinytalk_py import Blueprint, field, law, forge, when, finfr, ratio
+
+class Account(Blueprint):
+    balance = field(float, default=1000.0)
+    liabilities = field(float, default=0.0)
+
+    @law
+    def no_insolvency(self):
+        # liabilities/balance must be <= 1.0
+        when(ratio(self.liabilities, self.balance) > 1.0, finfr)
+
+    @forge
+    def borrow(self, amount: float):
+        self.liabilities += amount
+
+# Use it
+acc = Account()
+acc.borrow(500)    # ✓ Works (ratio = 0.5)
+acc.borrow(600)    # ✗ BLOCKED (ratio would be 1.1 > 1.0)
+```
+
+**The ratio IS the constraint. When f/g is undefined (g=0) → finfr (ontological death).**
+
+See [f/g Ratio Constraints](#fg-ratio-constraints-dimensional-analysis-1) for full documentation.
 
 ---
 
@@ -492,6 +526,30 @@ ExecutionBounds(
 | **Existence** | `exists`, `empty` |
 | **Temporal** | `within`, `after`, `before` |
 | **Aggregation** | `sum_lt`, `count_lt`, `avg_lt` (with window) |
+| **Ratio** | `ratio_lt`, `ratio_le`, `ratio_gt`, `ratio_ge`, `ratio_eq`, `ratio_ne`, `ratio_undefined` |
+
+### Ratio Constraints (f/g Dimensional Analysis)
+
+**NEW in CDL 3.0** — Define constraints as ratios between two fields:
+
+```json
+{
+  "f_field": "liabilities",
+  "g_field": "assets",
+  "operator": "ratio_le",
+  "threshold": 1.0,
+  "domain": "financial",
+  "message": "finfr: Liabilities cannot exceed assets"
+}
+```
+
+**Use Cases:**
+- **Overdraft Protection**: `withdrawal/balance <= 1.0`
+- **Leverage Limits**: `debt/equity <= 3.0`
+- **Seizure Safety**: `flicker_rate/safe_threshold < 1.0`
+- **Resource Allocation**: `requested/available <= 1.0`
+
+When g=0, the ratio is undefined → **finfr** (ontological death).
 
 ### Composite Constraints
 
@@ -514,6 +572,129 @@ ExecutionBounds(
   "else": {"field": "auto_approved", "operator": "eq", "value": true}
 }
 ```
+
+---
+
+## f/g Ratio Constraints (Dimensional Analysis)
+
+**finfr = f/g** — Newton's core insight: every constraint is a ratio.
+
+### The Philosophy
+
+In physics, ratios define reality:
+- **Force/Mass = Acceleration** (F = ma)
+- **Energy/Time = Power** (P = E/t)
+- **Distance/Time = Velocity** (v = d/t)
+
+In Newton, ratios define constraints:
+- **f** = forge/fact/function (what you're trying to do)
+- **g** = ground/goal/governance (what reality allows)
+- **f/g > threshold** → finfr (forbidden)
+- **f/g undefined (g=0)** → finfr (ontological death)
+
+### Python API
+
+```python
+from tinytalk_py import Blueprint, field, law, forge, when, finfr, ratio, finfr_if_undefined, RatioResult
+
+class LeverageGovernor(Blueprint):
+    debt = field(float, default=0.0)
+    equity = field(float, default=1000.0)
+
+    @law
+    def max_leverage(self):
+        """Debt-to-equity ratio cannot exceed 3:1"""
+        when(ratio(self.debt, self.equity) > 3.0, finfr)
+
+    @law
+    def valid_equity(self):
+        """Equity cannot be zero (would make ratio undefined)"""
+        finfr_if_undefined(self.debt, self.equity)
+
+    @forge
+    def take_loan(self, amount: float):
+        self.debt += amount
+
+# Usage
+gov = LeverageGovernor()
+gov.take_loan(2000)   # ✓ Works (ratio = 2.0)
+gov.take_loan(1500)   # ✗ BLOCKED (ratio would be 3.5 > 3.0)
+```
+
+### CDL API
+
+```python
+from core.cdl import verify_ratio, ratio, RatioConstraint, Operator
+
+# One-liner verification
+result = verify_ratio("debt", "equity", "ratio_le", 3.0,
+                      {"debt": 2000, "equity": 1000})
+# result.passed = True, ratio = 2.0
+
+# Undefined ratio (g=0) → finfr
+result = verify_ratio("withdrawal", "balance", "ratio_le", 1.0,
+                      {"withdrawal": 100, "balance": 0})
+# result.passed = False, message = "finfr: ratio is undefined (denominator ≈ 0)"
+```
+
+### REST API
+
+```bash
+# Verify ratio constraint
+curl -X POST http://localhost:8000/constraint \
+  -H "Content-Type: application/json" \
+  -d '{
+    "constraint": {
+      "f_field": "liabilities",
+      "g_field": "assets",
+      "operator": "ratio_le",
+      "threshold": 1.0
+    },
+    "object": {
+      "liabilities": 500,
+      "assets": 1000
+    }
+  }'
+
+# Response
+{
+  "passed": true,
+  "constraint_id": "RATIO_A7F3B2C8",
+  "message": null
+}
+```
+
+### RatioResult Class
+
+The `RatioResult` class provides comparison operators:
+
+```python
+from tinytalk_py import RatioResult
+
+r = RatioResult(500, 1000)  # f=500, g=1000
+r.value     # 0.5
+r.undefined # False
+r < 1.0     # True
+r <= 1.0    # True
+r > 1.0     # False
+
+# Undefined ratio
+r_undef = RatioResult(100, 0)
+r_undef.undefined  # True
+r_undef > 1.0      # True (undefined always exceeds finite)
+r_undef <= 1.0     # False (undefined never satisfies <=)
+```
+
+### Real-World Use Cases
+
+| Domain | Constraint | f | g | Threshold |
+|--------|------------|---|---|-----------|
+| **Banking** | No overdraft | withdrawal | balance | ≤ 1.0 |
+| **Finance** | Leverage limit | debt | equity | ≤ 3.0 |
+| **Healthcare** | Seizure safety | flicker_rate | safe_limit | < 1.0 |
+| **Education** | Class size | students | capacity | ≤ 1.0 |
+| **Infrastructure** | Resource allocation | requested | available | ≤ 1.0 |
+| **Manufacturing** | Defect rate | defects | total | < 0.01 |
 
 ---
 
@@ -795,6 +976,121 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ---
 
-© 2025-2026 Ada Computing Company · Houston, Texas
+---
 
-*"1 == 1. The cloud is weather. We're building shelter."*
+## Use Cases & Examples
+
+### Financial Services
+
+```python
+from tinytalk_py import Blueprint, field, law, forge, when, finfr, ratio
+
+class TradingGovernor(Blueprint):
+    """Prevents overleveraging and margin violations."""
+    position_value = field(float, default=0.0)
+    collateral = field(float, default=10000.0)
+    max_leverage = field(float, default=10.0)
+
+    @law
+    def leverage_limit(self):
+        """Position cannot exceed max leverage × collateral"""
+        when(ratio(self.position_value, self.collateral) > self.max_leverage, finfr)
+
+    @forge
+    def open_position(self, value: float):
+        self.position_value += value
+
+# Use Case: Margin trading
+trader = TradingGovernor(collateral=10000.0, max_leverage=5.0)
+trader.open_position(40000)   # ✓ Works (4x leverage)
+trader.open_position(20000)   # ✗ BLOCKED (would be 6x > 5x limit)
+```
+
+### Healthcare Compliance
+
+```python
+class SeizureSafetyGovernor(Blueprint):
+    """Prevents content that could trigger photosensitive seizures."""
+    flicker_rate = field(float, default=0.0)
+    safe_threshold = field(float, default=3.0)  # Hz
+
+    @law
+    def seizure_safety(self):
+        """Flicker rate must stay below seizure threshold"""
+        when(ratio(self.flicker_rate, self.safe_threshold) >= 1.0, finfr)
+
+    @forge
+    def set_animation(self, rate: float):
+        self.flicker_rate = rate
+
+# Use Case: Video content verification
+content = SeizureSafetyGovernor(safe_threshold=3.0)
+content.set_animation(2.5)  # ✓ Safe (ratio = 0.83)
+content.set_animation(4.0)  # ✗ BLOCKED (ratio = 1.33 >= 1.0)
+```
+
+### Education & Resource Management
+
+```python
+class ClassroomGovernor(Blueprint):
+    """Manages class size and resource allocation."""
+    enrolled = field(int, default=0)
+    capacity = field(int, default=30)
+
+    @law
+    def capacity_limit(self):
+        """Cannot exceed room capacity"""
+        when(ratio(self.enrolled, self.capacity) > 1.0, finfr)
+
+    @forge
+    def enroll_student(self):
+        self.enrolled += 1
+
+# Use Case: School enrollment
+classroom = ClassroomGovernor(capacity=30)
+for _ in range(30):
+    classroom.enroll_student()  # ✓ Works
+classroom.enroll_student()      # ✗ BLOCKED (at capacity)
+```
+
+### API Verification Examples
+
+```bash
+# Example 1: Verify content safety
+curl -X POST http://localhost:8000/verify \
+  -H "Content-Type: application/json" \
+  -d '{"input": "How do I write a business plan?"}'
+
+# Example 2: Calculate with verification
+curl -X POST http://localhost:8000/calculate \
+  -H "Content-Type: application/json" \
+  -d '{"expression": {"op": "sqrt", "args": [{"op": "+", "args": [9, 16]}]}}'
+
+# Example 3: Ratio constraint verification
+curl -X POST http://localhost:8000/constraint \
+  -H "Content-Type: application/json" \
+  -d '{
+    "constraint": {
+      "f_field": "debt",
+      "g_field": "income",
+      "operator": "ratio_le",
+      "threshold": 0.43,
+      "message": "Debt-to-income ratio exceeds 43% limit"
+    },
+    "object": {"debt": 2000, "income": 5000}
+  }'
+
+# Example 4: Generate lesson plan
+curl -X POST http://localhost:8000/education/lesson \
+  -H "Content-Type: application/json" \
+  -d '{"grade": 5, "subject": "math", "teks_codes": ["5.3A"], "topic": "Fractions"}'
+
+# Example 5: Get differentiated student groups
+curl http://localhost:8000/teachers/classrooms/CLASS001/groups
+```
+
+---
+
+© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company · Houston, Texas
+
+*"finfr = f/g. The ratio IS the constraint. 1 == 1."*

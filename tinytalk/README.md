@@ -1,18 +1,22 @@
 # tinyTalk
 
 ```
-    ╭──────────────────────────────────────────────────────────╮
-    │                                                          │
-    │   tinyTalk                                               │
-    │   Smalltalk is back. With boundaries.                    │
-    │                                                          │
-    │   "Objects all the way down,                             │
-    │    but some states cannot exist."                        │
-    │                                                          │
-    ╰──────────────────────────────────────────────────────────╯
+    ╭──────────────────────────────────────────────────────────────╮
+    │                                                              │
+    │   tinyTalk                                                   │
+    │   Smalltalk is back. With boundaries.                        │
+    │                                                              │
+    │   "Objects all the way down,                                 │
+    │    but some states cannot exist."                            │
+    │                                                              │
+    │   finfr = f/g — The ratio IS the constraint.                 │
+    │                                                              │
+    ╰──────────────────────────────────────────────────────────────╯
 ```
 
 **The "No-First" constraint language. Define what cannot happen.**
+
+**January 2, 2026** · **Jared Lewis Conglomerate**
 
 Available for **Python**, **Ruby**, and **R**.
 
@@ -37,12 +41,12 @@ tinyTalk:     "Here's what CANNOT happen."
 pip install -e .
 
 # Then just import
-from newton_sdk import Blueprint, field, law, forge, when, finfr
+from newton_sdk import Blueprint, field, law, forge, when, finfr, ratio
 ```
 
 ---
 
-## The Four Sacred Words
+## The Five Sacred Words
 
 | Word | Meaning | When to Use |
 |------|---------|-------------|
@@ -50,6 +54,7 @@ from newton_sdk import Blueprint, field, law, forge, when, finfr
 | `and` | "Also this" | Combining conditions |
 | `fin` | "Stop here" | Soft closure (can reopen) |
 | `finfr` | "FORBIDDEN" | Hard stop. Ontological death. |
+| `ratio` | "f divided by g" | Dimensional constraint checking |
 
 ---
 
@@ -58,7 +63,7 @@ from newton_sdk import Blueprint, field, law, forge, when, finfr
 ### Python 🐍
 
 ```python
-from newton_sdk import Blueprint, field, law, forge, when, finfr
+from newton_sdk import Blueprint, field, law, forge, when, finfr, ratio
 
 class BankAccount(Blueprint):
     balance = field(float, default=100.0)
@@ -129,6 +134,43 @@ account$withdraw(60)    # ✗ Error: finfr
 
 ---
 
+## NEW: f/g Ratio Constraints
+
+**finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
+
+```python
+from newton_sdk import Blueprint, field, law, forge, when, finfr, ratio
+
+class LeverageGovernor(Blueprint):
+    debt = field(float, default=0.0)
+    equity = field(float, default=1000.0)
+
+    @law
+    def max_leverage(self):
+        # Debt-to-equity ratio cannot exceed 3:1
+        when(ratio(self.debt, self.equity) > 3.0, finfr)
+
+    @forge
+    def take_loan(self, amount: float):
+        self.debt += amount
+
+# Use it
+gov = LeverageGovernor()
+gov.take_loan(2000)   # ✓ Works (ratio = 2.0)
+gov.take_loan(1500)   # ✗ BLOCKED (ratio would be 3.5 > 3.0)
+```
+
+### Use Cases
+
+| Domain | Constraint | f | g | Threshold |
+|--------|------------|---|---|-----------|
+| **Banking** | No overdraft | withdrawal | balance | ≤ 1.0 |
+| **Finance** | Leverage limit | debt | equity | ≤ 3.0 |
+| **Healthcare** | Seizure safety | flicker_rate | safe_limit | < 1.0 |
+| **Education** | Class size | students | capacity | ≤ 1.0 |
+
+---
+
 ## The Three Layers
 
 ```
@@ -141,6 +183,7 @@ account$withdraw(60)    # ✗ Error: finfr
 ├─────────────────────────────────────────────────────┤
 │  Layer 0: GOVERNANCE                                │
 │  law() = physics    finfr = impossible              │
+│  ratio() = dimensional analysis                     │
 ╰─────────────────────────────────────────────────────╯
 ```
 
@@ -213,9 +256,11 @@ tinyTalk continues the Smalltalk tradition:
 - Everything is an object (**Blueprint**)
 - Objects communicate via messages (**forge**)
 - But now, objects have **laws** they cannot break
+- And **ratios** define their dimensional constraints
 
 **The constraint IS the instruction.**
 **The boundary IS the behavior.**
+**finfr = f/g. The ratio IS the physics.**
 
 ---
 
@@ -233,16 +278,19 @@ tinyTalk continues the Smalltalk tradition:
 
 ```
 ╭────────────────────────────────────────────────────────────────╮
-│  KEYWORDS        when, and, fin, finfr                         │
+│  KEYWORDS        when, and, fin, finfr, ratio                   │
 │  DECORATORS      @law (Layer 0), @forge (Layer 1)              │
 │  STATE           field(type, default=value)                    │
 │  TYPES           Money, Celsius, PSI, Meters, etc.             │
+│  RATIO           ratio(f, g) → RatioResult                     │
 │  CLI             newton demo | newton serve                    │
 ╰────────────────────────────────────────────────────────────────╯
 ```
 
 ---
 
-*"Smalltalk gave us objects. tinyTalk gives us boundaries."*
+© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company
+
+*"Smalltalk gave us objects. tinyTalk gives us boundaries. finfr = f/g."*
 
 **finfr.** 🍎

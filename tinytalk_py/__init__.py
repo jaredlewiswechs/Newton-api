@@ -53,6 +53,10 @@ try:
         finfr,
         FINFR,
         FIN,
+        # f/g Ratio Constraint System
+        RatioResult,
+        ratio,
+        finfr_if_undefined,
     )
 
     from .matter import (
@@ -121,6 +125,10 @@ except ImportError:
         finfr,
         FINFR,
         FIN,
+        # f/g Ratio Constraint System
+        RatioResult,
+        ratio,
+        finfr_if_undefined,
     )
 
     from matter import (
@@ -190,6 +198,10 @@ __all__ = [
     "finfr",
     "FINFR",
     "FIN",
+    # f/g Ratio Constraint System
+    "RatioResult",
+    "ratio",
+    "finfr_if_undefined",
     # Matter types
     "Matter",
     "Money",

@@ -4,7 +4,9 @@
 
 Welcome to the Newton Supercomputer documentation. Newton is a distributed verification system where the constraint IS the instruction and the verification IS the computation.
 
-**Version**: 1.1.0 | **Date**: January 2, 2026
+**finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
+
+**Version**: 1.2.0 | **Date**: January 2, 2026 | **Jared Lewis Conglomerate**
 
 ---
 
@@ -273,6 +275,63 @@ This isn't a feature. It's the architecture.
 
 ---
 
-© 2025-2026 Ada Computing Company · Houston, Texas
+---
 
-*"1 == 1. The cloud is weather. We're building shelter."*
+## NEW: f/g Ratio Constraints
+
+**finfr = f/g** — Newton's core insight: every constraint is a ratio.
+
+### Quick Example
+
+```python
+from tinytalk_py import Blueprint, field, law, forge, when, finfr, ratio
+
+class LeverageGovernor(Blueprint):
+    debt = field(float, default=0.0)
+    equity = field(float, default=1000.0)
+
+    @law
+    def max_leverage(self):
+        when(ratio(self.debt, self.equity) > 3.0, finfr)
+
+    @forge
+    def take_loan(self, amount: float):
+        self.debt += amount
+
+gov = LeverageGovernor()
+gov.take_loan(2000)   # ✓ Works (ratio = 2.0)
+gov.take_loan(1500)   # ✗ BLOCKED (ratio = 3.5 > 3.0)
+```
+
+### REST API
+
+```bash
+curl -X POST http://localhost:8000/constraint \
+  -H "Content-Type: application/json" \
+  -d '{
+    "constraint": {
+      "f_field": "liabilities",
+      "g_field": "assets",
+      "operator": "ratio_le",
+      "threshold": 1.0
+    },
+    "object": {"liabilities": 500, "assets": 1000}
+  }'
+```
+
+### Use Cases
+
+| Domain | Constraint | f | g | Threshold |
+|--------|------------|---|---|-----------|
+| **Banking** | No overdraft | withdrawal | balance | ≤ 1.0 |
+| **Finance** | Leverage limit | debt | equity | ≤ 3.0 |
+| **Healthcare** | Seizure safety | flicker_rate | safe_limit | < 1.0 |
+| **Education** | Class size | students | capacity | ≤ 1.0 |
+
+See [f/g Ratio Constraints](../README.md#fg-ratio-constraints-dimensional-analysis-1) for full documentation.
+
+---
+
+© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company · Houston, Texas
+
+*"finfr = f/g. The ratio IS the constraint. 1 == 1."*
