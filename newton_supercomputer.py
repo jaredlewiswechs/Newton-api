@@ -83,6 +83,14 @@ from tinytalk_py.teachers_aide_db import (
 # Extended TEKS Database
 from tinytalk_py.teks_database import get_extended_teks_library
 
+# Interface Builder
+from tinytalk_py.interface_builder import (
+    get_interface_builder,
+    InterfaceType,
+    LayoutPattern,
+    ComponentType,
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -124,6 +132,9 @@ teks_library = get_teks_library()
 # Teacher's Aide Database - Easy data management for teachers
 teachers_db = get_teachers_aide_db()
 extended_teks = get_extended_teks_library()
+
+# Interface Builder - Verified UI Generation
+interface_builder = get_interface_builder()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2159,6 +2170,196 @@ async def get_latest_anchor():
         }
     return {
         "anchor": anchor.to_dict(),
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTERFACE BUILDER - Verified UI Generation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class InterfaceBuildRequest(BaseModel):
+    """Build interface from template or spec."""
+    template_id: Optional[str] = None
+    variables: Optional[Dict[str, Any]] = None
+    spec: Optional[Dict[str, Any]] = None
+    output_format: str = "json"  # json, jsx, html, all
+
+
+@app.get("/interface/templates")
+async def get_interface_templates(
+    query: str = "",
+    type: Optional[str] = None,
+    tags: Optional[str] = None
+):
+    """
+    Get available interface templates.
+
+    Query params:
+        query: Search query string
+        type: Filter by interface type (form, dashboard, settings, etc.)
+        tags: Comma-separated tags to filter by
+
+    Example:
+        GET /interface/templates?type=dashboard
+        GET /interface/templates?query=form
+        GET /interface/templates?tags=settings,preferences
+    """
+    tag_list = tags.split(",") if tags else None
+    result = interface_builder.get_templates(query, type, tag_list)
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+
+@app.get("/interface/templates/{template_id}")
+async def get_interface_template(template_id: str):
+    """
+    Get a specific template by ID.
+
+    Example:
+        GET /interface/templates/dashboard-basic
+    """
+    template = interface_builder.get_template(template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail=f"Template not found: {template_id}")
+
+    return {
+        "template": template,
+        "engine": ENGINE
+    }
+
+
+@app.post("/interface/build")
+async def build_interface(request: InterfaceBuildRequest):
+    """
+    Build a verified interface.
+
+    Either provide:
+    - template_id + variables: Build from a template with variable substitution
+    - spec: Build from a complete component specification
+
+    Output formats:
+    - json: Component tree as JSON
+    - jsx: React JSX component code
+    - html: Production HTML
+    - all: All formats
+
+    Example (from template):
+        POST /interface/build
+        {
+            "template_id": "dashboard-basic",
+            "variables": {
+                "title": "My Dashboard",
+                "metric1_value": "98.4%",
+                "metric1_label": "Pass Rate"
+            },
+            "output_format": "all"
+        }
+
+    Example (from spec):
+        POST /interface/build
+        {
+            "spec": {
+                "name": "Custom Form",
+                "type": "form",
+                "layout": "single_column",
+                "components": [
+                    {"id": "title", "type": "heading", "props": {"content": "Contact"}}
+                ]
+            },
+            "output_format": "jsx"
+        }
+    """
+    if request.template_id:
+        result = interface_builder.build_from_template(
+            template_id=request.template_id,
+            variables=request.variables,
+            output_format=request.output_format
+        )
+    elif request.spec:
+        result = interface_builder.build_from_spec(
+            spec=request.spec,
+            output_format=request.output_format
+        )
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Either template_id or spec must be provided"
+        )
+
+    # Log to ledger
+    ledger.append(
+        operation="interface_build",
+        payload={
+            "template_id": request.template_id,
+            "has_spec": request.spec is not None,
+            "output_format": request.output_format
+        },
+        result="pass" if result.get("verified") else "fail",
+        metadata={"elapsed_us": result.get("elapsed_us", 0)}
+    )
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+
+@app.get("/interface/components")
+async def get_component_types():
+    """
+    Get all available component types.
+
+    Returns components grouped by category:
+    - layout: Container, Grid, Flex, Sidebar, Header, Footer, Card, Modal
+    - input: Button, Input, Textarea, Select, Checkbox, Radio, Toggle, Slider
+    - display: Text, Heading, Badge, Metric, Code, Table, List, Image, Icon
+    - feedback: Alert, Toast, Progress, Spinner, Skeleton
+    """
+    return {
+        "components": interface_builder.get_component_types(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/interface/info")
+async def interface_builder_info():
+    """Get Interface Builder capabilities and documentation."""
+    info = interface_builder.get_info()
+
+    return {
+        **info,
+        "endpoints": [
+            {"method": "GET", "path": "/interface/templates", "description": "List all templates"},
+            {"method": "GET", "path": "/interface/templates/{id}", "description": "Get template by ID"},
+            {"method": "POST", "path": "/interface/build", "description": "Build interface from template or spec"},
+            {"method": "GET", "path": "/interface/components", "description": "List component types"},
+            {"method": "GET", "path": "/interface/info", "description": "This info endpoint"}
+        ],
+        "examples": {
+            "build_from_template": {
+                "endpoint": "POST /interface/build",
+                "body": {
+                    "template_id": "dashboard-basic",
+                    "variables": {"title": "My App"},
+                    "output_format": "all"
+                }
+            },
+            "build_from_spec": {
+                "endpoint": "POST /interface/build",
+                "body": {
+                    "spec": {
+                        "name": "Custom UI",
+                        "type": "form",
+                        "layout": "single_column",
+                        "components": [{"id": "btn", "type": "button", "props": {"label": "Click"}}]
+                    }
+                }
+            }
+        },
         "engine": ENGINE
     }
 
