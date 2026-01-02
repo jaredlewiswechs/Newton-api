@@ -189,6 +189,43 @@ from .gumroad import (
     get_gumroad_service,
 )
 
+from .voice_interface import (
+    # Core Interface
+    NewtonVoiceInterface,
+    StreamingVoiceInterface,
+    VoiceResponse,
+    get_voice_interface,
+    get_streaming_interface,
+    ask_newton,
+
+    # Intent System
+    IntentParser,
+    ParsedIntent,
+    IntentType,
+    DomainCategory,
+
+    # Pattern Library
+    PatternLibrary,
+    AppPattern,
+    find_pattern,
+
+    # CDL Generator
+    CDLGenerator,
+
+    # Memory System
+    ConversationMemory,
+    MemoryObject,
+    MemoryType,
+
+    # Session Management
+    SessionManager,
+    Session,
+    ConversationTurn,
+
+    # Convenience
+    parse_intent,
+)
+
 __all__ = [
     # CDL
     'CDLEvaluator', 'CDLParser', 'HaltChecker',
@@ -242,6 +279,16 @@ __all__ = [
 
     # Gumroad Integration
     'GumroadService', 'GumroadConfig', 'Customer', 'Feedback', 'LicenseVerification', 'get_gumroad_service',
+
+    # Voice Interface (MOAD - Mother Of All Demos)
+    'NewtonVoiceInterface', 'StreamingVoiceInterface', 'VoiceResponse',
+    'get_voice_interface', 'get_streaming_interface', 'ask_newton',
+    'IntentParser', 'ParsedIntent', 'IntentType', 'DomainCategory',
+    'PatternLibrary', 'AppPattern', 'find_pattern',
+    'CDLGenerator',
+    'ConversationMemory', 'MemoryObject', 'MemoryType',
+    'SessionManager', 'Session', 'ConversationTurn',
+    'parse_intent',
 ]
 
 __version__ = "1.0.0"
