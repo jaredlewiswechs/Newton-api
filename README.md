@@ -1,11 +1,38 @@
 # Newton Supercomputer
 
+```
+    ╭──────────────────────────────────────────────────────────────╮
+    │                                                              │
+    │   🍎 Newton SDK + tinyTalk                                   │
+    │                                                              │
+    │   Smalltalk is back.                                         │
+    │   But this time, with boundaries.                            │
+    │                                                              │
+    │   pip install -e .                                           │
+    │   newton demo                                                │
+    │                                                              │
+    ╰──────────────────────────────────────────────────────────────╯
+```
+
 **Verified Computation. Ask Newton. Go.**
 
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](#licensing)
 [![API](https://img.shields.io/badge/API-REST-orange.svg)](#api-reference)
 [![Tests](https://img.shields.io/badge/tests-47%20passing-brightgreen.svg)](#testing)
+[![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
+
+---
+
+## Quick Install
+
+```bash
+pip install -e .        # Install Newton SDK
+newton demo             # See it in action
+newton serve            # Start the server
+```
+
+**New to Newton?** Start here → [GETTING_STARTED.md](GETTING_STARTED.md)
 
 ---
 
