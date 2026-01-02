@@ -195,6 +195,42 @@ class TradingAccount(Blueprint):
         return f"Sold {quantity} {symbol} @ ${price}"
 ```
 
+### Example: Teacher's Lesson Planner
+
+```python
+from newton_sdk import Newton
+
+# Connect to Newton API
+newton = Newton("http://localhost:8000")
+
+# Generate a TEKS-aligned lesson plan
+lesson = newton.education_lesson(
+    grade=5,
+    subject="math",
+    teks_codes=["5.3A"],
+    topic="Adding Fractions with Unlike Denominators",
+    accommodations={"ell": True}
+)
+
+print(f"Lesson: {lesson['title']}")
+for phase in lesson['phases']:
+    print(f"  {phase['name']}: {phase['duration']}min")
+    for activity in phase['activities']:
+        print(f"    - {activity}")
+
+# Generate PLC report for the class
+report = newton.education_plc(
+    campus="Example Elementary",
+    grade=5,
+    subject="math",
+    scores=[85, 72, 90, 65, 88, 45, 92, 78, 80, 95],
+    teks_codes=["5.3A", "5.3B"]
+)
+
+print(f"\nPLC Summary: {report['summary']}")
+print(f"MAD Score: {report['statistics']['mad']}")
+```
+
 ### Example: IoT Sensor Network
 
 ```python
@@ -376,7 +412,13 @@ Newton-api/
 ├── tinytalk_py/          # The tinyTalk language
 │   ├── core.py          # Blueprint, Law, Forge, when, finfr
 │   ├── matter.py        # Typed values (Money, Temperature, etc.)
-│   └── engine.py        # KineticEngine for motion/animation
+│   ├── engine.py        # KineticEngine for motion/animation
+│   └── education.py     # Education module (TEKS, NES, PLC)
+│
+├── teachers-aide/        # Teacher's Aide PWA
+│   ├── index.html       # Web application
+│   ├── app.js           # Frontend logic
+│   └── styles.css       # Newton theme
 │
 ├── core/                 # Newton Supercomputer internals
 │   ├── cdl.py           # Constraint Definition Language
@@ -468,6 +510,13 @@ git push -u origin feature/my-feature
 │    newton demo          Run interactive demo                   │
 │    newton calc "2+3"    Quick calculation                      │
 │    newton health        Check server status                    │
+│                                                                │
+│  EDUCATION ENDPOINTS                                           │
+│    /education/lesson    Generate NES lesson plan               │
+│    /education/slides    Generate slide deck                    │
+│    /education/assess    Analyze student assessments            │
+│    /education/plc       Generate PLC report                    │
+│    /education/teks      Browse TEKS standards                  │
 │                                                                │
 ╰────────────────────────────────────────────────────────────────╯
 ```

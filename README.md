@@ -115,6 +115,9 @@ Policy-as-code. Human-in-the-loop approval workflows. Merkle proofs for export.
 ### Media Specification (Cartridges)
 Generate verified specifications for media content. Visual (SVG), Sound (audio), Sequence (video), Data (reports), and Rosetta (code generation prompts). All constraint-verified before generation.
 
+### Education (Teacher's Aide)
+HISD NES-compliant lesson planning with TEKS as machine-readable objects. Generate personalized lesson plans, slide decks, assessment analytics, and PLC reports. All governed by tinyTalk laws ensuring 50-minute duration and TEKS alignment.
+
 ---
 
 ## What Has Newton Proven?
@@ -168,6 +171,14 @@ Generate verified specifications for media content. Visual (SVG), Sound (audio),
 │  │  └────────┘ └────────┘ └──────────┘ └──────┘ └────────┘ │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    EDUCATION LAYER                       │   │
+│  │  ┌────────┐ ┌────────┐ ┌──────────┐ ┌──────┐ ┌────────┐ │   │
+│  │  │  TEKS  │ │Lessons │ │  Slides  │ │Assess│ │  PLC   │ │   │
+│  │  │(stds)  │ │ (NES)  │ │  (deck)  │ │(anal)│ │(report)│ │   │
+│  │  └────────┘ └────────┘ └──────────┘ └──────┘ └────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
 │                        ASK NEWTON                               │
 │                          /ask                                   │
 │                                                                 │
@@ -205,6 +216,7 @@ Generate verified specifications for media content. Visual (SVG), Sound (audio),
 | **Sequence** | Video/animation specs | 10 min, 8K, 120fps |
 | **Data** | Report specifications | 100K rows, multiple formats |
 | **Rosetta** | Code generation prompts | Swift, Python, TypeScript |
+| **Education** | TEKS-aligned lesson plans | 50 min NES, Grades K-12 |
 
 ---
 
@@ -266,6 +278,31 @@ curl -X POST http://localhost:8000/ask \
   -d '{"query": "Is this safe to execute?"}'
 ```
 
+### Generate Lesson Plan (Education)
+
+```bash
+curl -X POST http://localhost:8000/education/lesson \
+  -H "Content-Type: application/json" \
+  -d '{"grade": 5, "subject": "math", "teks_codes": ["5.3A"], "topic": "Adding Fractions"}'
+```
+
+```json
+{
+  "lesson_plan": {
+    "title": "Adding Fractions - Grade 5 Math",
+    "duration_minutes": 50,
+    "phases": [
+      {"name": "Opening", "duration": 5, "activities": ["..."]},
+      {"name": "Instruction", "duration": 15, "activities": ["..."]},
+      {"name": "Guided Practice", "duration": 15, "activities": ["..."]},
+      {"name": "Independent Practice", "duration": 10, "activities": ["..."]},
+      {"name": "Closing", "duration": 5, "activities": ["..."]}
+    ],
+    "teks_aligned": true
+  }
+}
+```
+
 ---
 
 ## API Reference
@@ -316,6 +353,19 @@ curl -X POST http://localhost:8000/ask \
 | `/cartridge/rosetta` | POST | Generate code generation prompt |
 | `/cartridge/auto` | POST | Auto-detect type and compile |
 | `/cartridge/info` | GET | Get cartridge information |
+
+### Education (Teacher's Aide)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/education/lesson` | POST | Generate NES-compliant lesson plan |
+| `/education/slides` | POST | Generate presentation slide deck |
+| `/education/assess` | POST | Analyze student assessment data (MAD) |
+| `/education/plc` | POST | Generate PLC meeting report |
+| `/education/teks` | GET | Browse all TEKS standards |
+| `/education/teks/{code}` | GET | Get specific TEKS standard |
+| `/education/teks/search` | POST | Search TEKS by keyword/grade/subject |
+| `/education/info` | GET | Education API documentation |
 
 ### System
 
@@ -501,6 +551,19 @@ Newton-api/
 │   └── r/                  # R package
 │
 ├── tinytalk_py/             # Python package (importable)
+│   ├── core.py             # Blueprint, Law, Forge, when, finfr
+│   ├── matter.py           # Typed values (Money, Celsius, etc.)
+│   ├── engine.py           # KineticEngine for motion
+│   └── education.py        # Education module (TEKS, NES, PLC)
+│
+├── teachers-aide/           # Teacher's Aide Web App (PWA)
+│   ├── index.html          # Single-page application
+│   ├── app.js              # Frontend logic
+│   ├── styles.css          # Newton-themed design
+│   ├── wrangler.toml       # Cloudflare Pages config
+│   ├── _headers            # Security headers
+│   ├── _redirects          # SPA routing
+│   └── README.md           # Teacher's Aide documentation
 ```
 
 ---
