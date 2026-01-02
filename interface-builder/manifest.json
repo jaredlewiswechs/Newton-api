@@ -1,0 +1,16 @@
+{
+    "name": "Newton Interface Builder",
+    "short_name": "Interface Builder",
+    "description": "Build verified interfaces from templates",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0d0d0d",
+    "theme_color": "#4ecdc4",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%234ecdc4' width='512' height='512' rx='100'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='300' font-weight='bold' fill='%230d0d0d'>N</text></svg>",
+            "sizes": "512x512",
+            "type": "image/svg+xml"
+        }
+    ]
+}

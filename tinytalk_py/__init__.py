@@ -109,6 +109,25 @@ try:
         EducationCartridge,
         get_education_cartridge,
     )
+
+    from .interface_builder import (
+        # Enums
+        ComponentType,
+        InterfaceType,
+        LayoutPattern,
+        Variant,
+        Size,
+        # Data Classes
+        Component,
+        InterfaceSpec,
+        Template,
+        # Classes
+        TemplateLibrary,
+        InterfaceBuilder,
+        InterfaceBuilderCartridge,
+        # Factory
+        get_interface_builder,
+    )
 except ImportError:
     # Fall back to absolute imports (when running directly)
     from core import (
@@ -182,6 +201,25 @@ except ImportError:
         get_education_cartridge,
     )
 
+    from interface_builder import (
+        # Enums
+        ComponentType,
+        InterfaceType,
+        LayoutPattern,
+        Variant,
+        Size,
+        # Data Classes
+        Component,
+        InterfaceSpec,
+        Template,
+        # Classes
+        TemplateLibrary,
+        InterfaceBuilder,
+        InterfaceBuilderCartridge,
+        # Factory
+        get_interface_builder,
+    )
+
 __version__ = "1.0.0"
 __all__ = [
     # Core
@@ -241,4 +279,17 @@ __all__ = [
     "get_teks_library",
     "EducationCartridge",
     "get_education_cartridge",
+    # Interface Builder
+    "ComponentType",
+    "InterfaceType",
+    "LayoutPattern",
+    "Variant",
+    "Size",
+    "Component",
+    "InterfaceSpec",
+    "Template",
+    "TemplateLibrary",
+    "InterfaceBuilder",
+    "InterfaceBuilderCartridge",
+    "get_interface_builder",
 ]
