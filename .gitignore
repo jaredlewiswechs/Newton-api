@@ -53,6 +53,8 @@ newton_storage/
 /tmp/
 .newton_ledger_test_*
 .newton_anchors
+.newton_ledger/
+.newton_vault/
 .hypothesis/
 
 # Node (for frontend)
