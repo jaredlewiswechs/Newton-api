@@ -759,43 +759,49 @@ Generate an NES-compliant lesson plan with TEKS alignment.
 ```json
 {
   "lesson_plan": {
-    "title": "Adding Fractions with Unlike Denominators",
+    "title": "Mathematics: Adding Fractions with Unlike Denominators",
     "grade": 5,
-    "subject": "math",
-    "teks_codes": ["5.3A", "5.3B"],
-    "duration_minutes": 50,
+    "subject": "mathematics",
+    "date": "2026-01-02",
+    "teks_alignment": [{"code": "5.3A", "...": "..."}],
+    "total_duration_minutes": 50,
     "phases": [
       {
-        "name": "Opening",
-        "duration": 5,
-        "activities": ["Number talk with fraction comparison", "Review previous day's learning"]
+        "phase": "opening",
+        "duration_minutes": 5,
+        "title": "Hook & Objective",
+        "activities": ["Real-world connection question", "Share learning objective"]
       },
       {
-        "name": "Instruction",
-        "duration": 15,
-        "activities": ["Model finding common denominators", "Demonstrate addition process"]
+        "phase": "instruction",
+        "duration_minutes": 15,
+        "title": "I Do - Teacher Modeling",
+        "activities": ["Model 2-3 examples using think-aloud", "Highlight key vocabulary"]
       },
       {
-        "name": "Guided Practice",
-        "duration": 15,
-        "activities": ["Partner work with fraction tiles", "Collaborative problem solving"]
+        "phase": "guided",
+        "duration_minutes": 15,
+        "title": "We Do - Collaborative Practice",
+        "activities": ["Partner work with fraction tiles", "Teacher circulates"]
       },
       {
-        "name": "Independent Practice",
-        "duration": 10,
-        "activities": ["Individual worksheet", "Self-assessment checklist"]
+        "phase": "independent",
+        "duration_minutes": 10,
+        "title": "You Do - Independent Work",
+        "activities": ["Complete 5-8 problems independently", "Self-check work"]
       },
       {
-        "name": "Closing",
-        "duration": 5,
-        "activities": ["Exit ticket", "Preview next lesson"]
+        "phase": "closing",
+        "duration_minutes": 5,
+        "title": "Exit Ticket & Closure",
+        "activities": ["Complete 2-3 question exit ticket", "Preview next lesson"]
       }
     ],
-    "accommodations_applied": ["ell"],
-    "teks_aligned": true
+    "differentiation": {"below_level": "...", "above_level": "..."}
   },
   "verified": true,
-  "fingerprint": "EDU-A1B2C3D4"
+  "fingerprint": "EDU-A1B2C3D4",
+  "elapsed_us": 1234
 }
 ```
 
@@ -911,11 +917,16 @@ Get a specific TEKS standard by code.
 {
   "code": "5.3A",
   "grade": 5,
-  "subject": "math",
-  "description": "Add and subtract fractions with unequal denominators",
-  "cognitive_level": "apply",
-  "prerequisites": ["4.3A", "4.3B"],
-  "strand": "Number and Operations"
+  "subject": "mathematics",
+  "strand": "3",
+  "knowledge_statement": "Estimate and solve decimal operations",
+  "skill_statement": "Estimate to determine solutions involving addition and subtraction",
+  "cognitive_level": "APPLY",
+  "bloom_level": 3,
+  "prerequisites": [],
+  "leads_to": [],
+  "keywords": ["estimate", "decimals", "addition", "subtraction"],
+  "rigor": 2
 }
 ```
 
@@ -1241,51 +1252,54 @@ Add students to a classroom roster.
 
 ```json
 {
-  "classroom_id": "CLASS001",
-  "classroom_name": "5th Period Math",
-  "teks_filter": null,
+  "classroom": "5th Period Math",
+  "grade": 5,
+  "subject": "mathematics",
+  "total_students": 4,
+  "current_teks": [],
   "groups": {
-    "needs_reteach": {
-      "students": [
-        {"id": "STU0003", "name": "Carlos Rodriguez", "score": 65}
-      ],
+    "tier_3_intensive": {
+      "label": "🔴 Needs Reteach (Tier 3)",
       "count": 1,
-      "instruction": "Small group with teacher. Use manipulatives. Review prerequisite skills."
-    },
-    "approaching": {
       "students": [
-        {"id": "STU0004", "name": "Emily Davis", "score": 75}
+        {"id": "STU0003", "name": "Carlos Rodriguez", "group": "needs_reteach", "avg": 65.0, "accommodations": []}
       ],
-      "count": 1,
-      "instruction": "Guided practice with scaffolds. Pair with mastery student."
+      "instruction": "Small group with teacher, prerequisite skills, manipulatives",
+      "time": "15-20 min daily"
     },
-    "mastery": {
+    "tier_2_targeted": {
+      "label": "🟡 Approaching (Tier 2)",
+      "count": 1,
       "students": [
-        {"id": "STU0001", "name": "Maria Garcia", "score": 85}
+        {"id": "STU0004", "name": "Emily Davis", "group": "approaching", "avg": 75.0, "accommodations": []}
       ],
-      "count": 1,
-      "instruction": "Standard instruction. Independent practice."
+      "instruction": "Guided practice with scaffolds, peer partners",
+      "time": "10-15 min daily"
     },
-    "advanced": {
+    "tier_1_core": {
+      "label": "🟢 Mastery (Tier 1)",
+      "count": 1,
       "students": [
-        {"id": "STU0002", "name": "Sarah Johnson", "score": 95}
+        {"id": "STU0001", "name": "Maria Garcia", "group": "mastery", "avg": 85.0, "accommodations": ["ell"]}
       ],
-      "count": 1,
-      "instruction": "Extension activities. Peer tutoring. Leadership roles."
+      "instruction": "Independent practice, can assist peers",
+      "time": "Standard instruction"
     },
-    "not_assessed": {
-      "students": [],
-      "count": 0,
-      "instruction": "Assess these students first."
+    "enrichment": {
+      "label": "🔵 Advanced (Enrichment)",
+      "count": 1,
+      "students": [
+        {"id": "STU0002", "name": "Sarah Johnson", "group": "advanced", "avg": 95.0, "accommodations": ["gt"]}
+      ],
+      "instruction": "Extension activities, leadership roles, peer tutoring",
+      "time": "Challenge problems"
     }
   },
-  "summary": {
-    "total": 4,
-    "needs_reteach": 1,
-    "approaching": 1,
-    "mastery": 1,
-    "advanced": 1
-  }
+  "accommodations_summary": {
+    "ell": ["Maria Garcia"],
+    "gt": ["Sarah Johnson"]
+  },
+  "generated_at": "2026-01-02T12:00:00.000000"
 }
 ```
 
@@ -1347,11 +1361,16 @@ Enter scores by student ID.
 
 ```json
 {
-  "assessment_id": "ASSESS0001",
-  "scores_entered": 3,
+  "assessment": "Exit Ticket - Fractions",
+  "students_scored": 3,
   "class_average": 80.0,
-  "mastery_rate": 0.67,
-  "groups_updated": true
+  "mastery_rate": 66.7,
+  "groups": {
+    "needs_reteach": 1,
+    "approaching": 0,
+    "mastery": 1,
+    "advanced": 1
+  }
 }
 ```
 
@@ -1376,6 +1395,24 @@ Enter scores by student ID.
 ```
 
 This matches students by name (case-insensitive, partial match supported) and automatically updates their mastery levels.
+
+#### Response
+
+```json
+{
+  "assessment": "Exit Ticket - Fractions",
+  "students_scored": 3,
+  "class_average": 80.0,
+  "mastery_rate": 66.7,
+  "groups": {
+    "needs_reteach": 1,
+    "approaching": 0,
+    "mastery": 1,
+    "advanced": 1
+  },
+  "students_not_found": []
+}
+```
 
 ---
 

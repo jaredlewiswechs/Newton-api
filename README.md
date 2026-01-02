@@ -388,16 +388,17 @@ curl -X POST http://localhost:8000/education/lesson \
 {
   "lesson_plan": {
     "title": "Adding Fractions - Grade 5 Math",
-    "duration_minutes": 50,
+    "total_duration_minutes": 50,
     "phases": [
-      {"name": "Opening", "duration": 5, "activities": ["..."]},
-      {"name": "Instruction", "duration": 15, "activities": ["..."]},
-      {"name": "Guided Practice", "duration": 15, "activities": ["..."]},
-      {"name": "Independent Practice", "duration": 10, "activities": ["..."]},
-      {"name": "Closing", "duration": 5, "activities": ["..."]}
+      {"phase": "opening", "duration_minutes": 5, "title": "Hook & Objective"},
+      {"phase": "instruction", "duration_minutes": 15, "title": "I Do - Teacher Modeling"},
+      {"phase": "guided", "duration_minutes": 15, "title": "We Do - Collaborative Practice"},
+      {"phase": "independent", "duration_minutes": 10, "title": "You Do - Independent Work"},
+      {"phase": "closing", "duration_minutes": 5, "title": "Exit Ticket & Closure"}
     ],
-    "teks_aligned": true
-  }
+    "teks_alignment": [{"code": "5.3A", "...": "..."}]
+  },
+  "verified": true
 }
 ```
 
