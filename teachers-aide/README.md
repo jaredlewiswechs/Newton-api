@@ -2,9 +2,13 @@
 
 ## The Ultimate Teaching Assistant for HISD's New Education System
 
+**finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
+
 Newton Teacher's Aide is a Newton Supercomputer-powered web application that transforms how teachers plan, assess, and collaborate. Built with tinyTalk constraint-based verification, it treats TEKS standards and NES requirements as machine-readable objects for guaranteed compliance.
 
-**"1 == 1. The constraint IS the instruction."**
+**Version**: 1.2.0 | **Date**: January 2, 2026 | **Jared Lewis Conglomerate**
+
+**"1 == 1. The constraint IS the instruction. finfr = f/g."**
 
 ---
 
@@ -83,6 +87,42 @@ The Teacher's Aide now includes a complete classroom management system designed 
 4. Create Assessment → 5. Enter Scores → 6. GET GROUPS!
        ↓
 7. View Differentiation Report → 8. Plan Interventions
+```
+
+---
+
+## f/g Ratio Constraints in Education
+
+Newton's **finfr = f/g** dimensional analysis applies to education:
+
+| Constraint | f | g | Threshold | Description |
+|------------|---|---|-----------|-------------|
+| **Class Size** | students | capacity | ≤ 1.0 | No overcrowding |
+| **Workload** | assigned_tasks | available_time | ≤ 1.0 | Reasonable workload |
+| **Mastery Rate** | mastered_students | total_students | ≥ 0.8 | 80% mastery target |
+| **Intervention** | struggling_students | teacher_capacity | ≤ 1.0 | Manageable intervention groups |
+
+### Example: Class Size Constraint
+
+```python
+from newton_sdk import Blueprint, field, law, forge, when, finfr, ratio
+
+class Classroom(Blueprint):
+    students = field(int, default=0)
+    capacity = field(int, default=25)
+
+    @law
+    def no_overcrowding(self):
+        # Students cannot exceed capacity
+        when(ratio(self.students, self.capacity) > 1.0, finfr)
+
+    @forge
+    def enroll(self, count: int):
+        self.students += count
+
+room = Classroom()
+room.enroll(20)   # ✓ Works (ratio = 0.8)
+room.enroll(10)   # ✗ BLOCKED (ratio would be 1.2 > 1.0)
 ```
 
 ---
@@ -373,6 +413,6 @@ class NESLessonPlan(Blueprint):
 
 **Newton Teacher's Aide** is part of the Newton Supercomputer project.
 
-© 2025-2026 Jared Lewis · Ada Computing Company · Houston, Texas
+© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company · Houston, Texas
 
-*"Less paperwork, more teaching."*
+*"Less paperwork, more teaching. finfr = f/g."*
