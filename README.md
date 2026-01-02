@@ -83,6 +83,7 @@ python examples/nes_helper_demo.py --live # Against running Newton server
 
 | Document | Description |
 |----------|-------------|
+| **[TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md)** | **Complete TinyTalk programming guide** (start here!) |
 | **[WHITEPAPER.md](WHITEPAPER.md)** | Technical architecture and guarantees |
 | **[TINYTALK_BIBLE.md](TINYTALK_BIBLE.md)** | The "No-First" philosophy |
 | **[GLASS_BOX.md](GLASS_BOX.md)** | Policy, HITL, and Merkle proofs |
