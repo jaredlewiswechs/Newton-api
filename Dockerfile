@@ -2,12 +2,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy application files
 COPY newton_supercomputer.py .
 COPY core/ ./core/
 COPY tinytalk_py/ ./tinytalk_py/
+COPY newton_sdk/ ./newton_sdk/
 
 ENV PYTHONPATH=/app
 
