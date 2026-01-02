@@ -80,6 +80,123 @@ def when(condition: bool, result: Any = None) -> bool:
     return condition
 
 
+class RatioResult:
+    """
+    Result of a ratio calculation for f/g dimensional analysis.
+
+    This encapsulates the ratio between what you're trying to do (f)
+    and what reality allows (g). When the ratio is undefined (g=0)
+    or exceeds bounds, finfr is triggered.
+    """
+
+    def __init__(self, f: float, g: float, epsilon: float = 1e-9):
+        self.f = f
+        self.g = g
+        self.epsilon = epsilon
+        self._undefined = abs(g) < epsilon
+
+    @property
+    def undefined(self) -> bool:
+        """True if the ratio is undefined (g ≈ 0)."""
+        return self._undefined
+
+    @property
+    def value(self) -> float:
+        """The ratio value (f/g). Returns infinity if undefined."""
+        if self._undefined:
+            return float('inf') if self.f >= 0 else float('-inf')
+        return self.f / self.g
+
+    def __lt__(self, other: float) -> bool:
+        if self._undefined:
+            return False  # Undefined ratio never satisfies < comparison
+        return self.value < other
+
+    def __le__(self, other: float) -> bool:
+        if self._undefined:
+            return False  # Undefined ratio never satisfies <= comparison
+        return self.value <= other
+
+    def __gt__(self, other: float) -> bool:
+        if self._undefined:
+            return True  # Undefined ratio always exceeds any finite threshold
+        return self.value > other
+
+    def __ge__(self, other: float) -> bool:
+        if self._undefined:
+            return True  # Undefined ratio always exceeds any finite threshold
+        return self.value >= other
+
+    def __eq__(self, other: float) -> bool:
+        if self._undefined:
+            return False  # Undefined ratio is never equal to a finite value
+        return abs(self.value - other) < self.epsilon
+
+    def __repr__(self) -> str:
+        if self._undefined:
+            return f"RatioResult(f={self.f}, g={self.g}, undefined=True)"
+        return f"RatioResult(f={self.f}, g={self.g}, value={self.value:.4f})"
+
+
+def ratio(f: float, g: float, epsilon: float = 1e-9) -> RatioResult:
+    """
+    Calculate the f/g ratio for dimensional analysis.
+
+    This is Newton's core insight: finfr = f/g where:
+    - f = forge/fact/function (what you're trying to do)
+    - g = ground/goal/governance (what reality allows)
+
+    When the ratio is undefined (g=0) or exceeds bounds,
+    the operation cannot phase into existence.
+
+    Usage in laws:
+        @law
+        def no_overdraft(self):
+            # withdrawal/balance must be <= 1.0
+            when(ratio(self.withdrawal, self.balance) > 1.0, finfr)
+
+        @law
+        def leverage_limit(self):
+            # debt/equity must be <= 3.0
+            when(ratio(self.debt, self.equity) > 3.0, finfr)
+
+        @law
+        def seizure_safety(self):
+            # flicker_rate/safe_threshold must be < 1.0
+            when(ratio(self.flicker_rate, self.safe_threshold) >= 1.0, finfr)
+
+    Args:
+        f: The numerator (forge/fact/function)
+        g: The denominator (ground/goal/governance)
+        epsilon: Tolerance for zero comparison (default: 1e-9)
+
+    Returns:
+        RatioResult that can be compared with <, <=, >, >=, ==
+    """
+    return RatioResult(float(f), float(g), epsilon)
+
+
+def finfr_if_undefined(f: float, g: float, epsilon: float = 1e-9) -> None:
+    """
+    Trigger finfr if the ratio f/g is undefined (g ≈ 0).
+
+    This is the ontological death check - if the denominator is zero,
+    the ratio cannot exist and the operation must be forbidden.
+
+    Usage:
+        @law
+        def valid_balance(self):
+            finfr_if_undefined(self.withdrawal, self.balance)
+
+    Args:
+        f: The numerator
+        g: The denominator
+        epsilon: Tolerance for zero comparison
+    """
+    if abs(float(g)) < epsilon:
+        raise LawViolation("ratio_undefined", f"finfr: ratio is undefined (denominator ≈ 0)")
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # BOOK II: THE SCAFFOLDS - Fields and Forges
 # ═══════════════════════════════════════════════════════════════════════════════

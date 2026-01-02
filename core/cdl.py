@@ -72,6 +72,16 @@ class Operator(Enum):
     AVG_GT = "avg_gt"
     AVG_GE = "avg_ge"
 
+    # Ratio (CDL 3.0) - f/g dimensional analysis
+    # finfr = f/g where f=forge/fact/function, g=ground/goal/governance
+    RATIO_LT = "ratio_lt"      # f/g < value
+    RATIO_LE = "ratio_le"      # f/g <= value
+    RATIO_GT = "ratio_gt"      # f/g > value
+    RATIO_GE = "ratio_ge"      # f/g >= value
+    RATIO_EQ = "ratio_eq"      # f/g == value (within epsilon)
+    RATIO_NE = "ratio_ne"      # f/g != value
+    RATIO_UNDEFINED = "ratio_undefined"  # f/g is undefined (g=0) → finfr
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DURATION PARSER - For temporal constraints
@@ -115,12 +125,19 @@ class AtomicConstraint:
     group_by: Optional[str] = None    # For aggregations: field to group by
     reference: Optional[str] = None   # For temporal: reference field
 
+    # Ratio extensions (f/g dimensional analysis)
+    # For ratio operators: field is 'f' (numerator), denominator is 'g'
+    denominator: Optional[str] = None  # The 'g' in f/g ratio
+    epsilon: float = 1e-9              # For ratio_eq comparison tolerance
+
     def __post_init__(self):
         if self.id is None:
             self.id = self._generate_id()
 
     def _generate_id(self) -> str:
         data = f"{self.domain.value}:{self.field}:{self.operator.value}:{self.value}"
+        if self.denominator:
+            data += f":{self.denominator}"
         return f"C_{hashlib.sha256(data.encode()).hexdigest()[:8].upper()}"
 
 
@@ -149,8 +166,45 @@ class CompositeConstraint:
             self.id = f"COMP_{hashlib.sha256(str(id(self)).encode()).hexdigest()[:8].upper()}"
 
 
+@dataclass
+class RatioConstraint:
+    """
+    CDL 3.0: f/g Ratio Constraint - Dimensional Analysis for Computation.
+
+    This is the core of Newton's ontological verification:
+    - f (numerator): forge/fact/function - what you're trying to do
+    - g (denominator): ground/goal/governance - what reality allows
+
+    When f/g is undefined (g=0) or exceeds bounds → finfr (ontological death)
+
+    Examples:
+        - Overdraft: withdrawal/balance > 1.0 → finfr
+        - Seizure safety: flicker_rate/safe_threshold > 1.0 → finfr
+        - Leverage limit: liabilities/assets > max_leverage → finfr
+    """
+    f_field: str                       # Numerator field path (f in f/g)
+    g_field: str                       # Denominator field path (g in f/g)
+    operator: Operator                 # How to compare the ratio
+    threshold: float                   # The threshold value
+    domain: Domain = Domain.CUSTOM
+    message: Optional[str] = None
+    action: str = "reject"
+    id: Optional[str] = None
+    epsilon: float = 1e-9              # For ratio_eq comparison tolerance
+
+    def __post_init__(self):
+        if self.id is None:
+            data = f"ratio:{self.f_field}/{self.g_field}:{self.operator.value}:{self.threshold}"
+            self.id = f"RATIO_{hashlib.sha256(data.encode()).hexdigest()[:8].upper()}"
+
+    @property
+    def is_undefined_check(self) -> bool:
+        """Returns True if this constraint checks for undefined ratios (g=0)."""
+        return self.operator == Operator.RATIO_UNDEFINED
+
+
 # Union type for all constraints
-Constraint = Union[AtomicConstraint, ConditionalConstraint, CompositeConstraint]
+Constraint = Union[AtomicConstraint, ConditionalConstraint, CompositeConstraint, RatioConstraint]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -268,6 +322,8 @@ class CDLEvaluator:
 
         if isinstance(constraint, AtomicConstraint):
             return self._evaluate_atomic(constraint, obj)
+        elif isinstance(constraint, RatioConstraint):
+            return self._evaluate_ratio(constraint, obj)
         elif isinstance(constraint, ConditionalConstraint):
             return self._evaluate_conditional(constraint, obj)
         elif isinstance(constraint, CompositeConstraint):
@@ -303,6 +359,12 @@ class CDLEvaluator:
                           Operator.COUNT_LT, Operator.COUNT_LE, Operator.COUNT_GT, Operator.COUNT_GE,
                           Operator.AVG_LT, Operator.AVG_LE, Operator.AVG_GT, Operator.AVG_GE):
             return self._evaluate_aggregation(c, obj, field_value)
+
+        # Handle ratio operators (f/g dimensional analysis)
+        if c.operator in (Operator.RATIO_LT, Operator.RATIO_LE, Operator.RATIO_GT,
+                          Operator.RATIO_GE, Operator.RATIO_EQ, Operator.RATIO_NE,
+                          Operator.RATIO_UNDEFINED):
+            return self._evaluate_atomic_ratio(c, obj, field_value)
 
         # Standard comparison
         if c.operator in self._operator_map:
@@ -410,6 +472,82 @@ class CDLEvaluator:
             message=f"{op_name}({c.field}) = {agg_value}, limit = {c.value}" if not passed else None
         )
 
+    def _evaluate_atomic_ratio(self, c: AtomicConstraint, obj: Dict[str, Any], f_value: Any) -> EvaluationResult:
+        """
+        Evaluate ratio operators on AtomicConstraint.
+
+        Uses c.field as numerator (f) and c.denominator as denominator (g).
+        This provides convenient f/g evaluation within the AtomicConstraint structure.
+        """
+        if c.denominator is None:
+            return EvaluationResult(
+                passed=False,
+                constraint_id=c.id,
+                message="Ratio operator requires 'denominator' field to be specified"
+            )
+
+        g_value = self._get_field_value(obj, c.denominator)
+
+        if f_value is None:
+            return EvaluationResult(
+                passed=False,
+                constraint_id=c.id,
+                message=c.message or f"Numerator field '{c.field}' not found"
+            )
+        if g_value is None:
+            return EvaluationResult(
+                passed=False,
+                constraint_id=c.id,
+                message=c.message or f"Denominator field '{c.denominator}' not found"
+            )
+
+        try:
+            f = float(f_value)
+            g = float(g_value)
+        except (TypeError, ValueError) as e:
+            return EvaluationResult(
+                passed=False,
+                constraint_id=c.id,
+                message=c.message or f"Cannot convert to numeric: {e}"
+            )
+
+        # Check for undefined ratio (g ≈ 0)
+        if abs(g) < c.epsilon:
+            if c.operator == Operator.RATIO_UNDEFINED:
+                return EvaluationResult(passed=True, constraint_id=c.id)
+            else:
+                return EvaluationResult(
+                    passed=False,
+                    constraint_id=c.id,
+                    message=c.message or f"finfr: ratio {c.field}/{c.denominator} is undefined (g ≈ 0)"
+                )
+
+        ratio = f / g
+
+        if c.operator == Operator.RATIO_UNDEFINED:
+            passed = False
+        elif c.operator == Operator.RATIO_LT:
+            passed = ratio < c.value
+        elif c.operator == Operator.RATIO_LE:
+            passed = ratio <= c.value
+        elif c.operator == Operator.RATIO_GT:
+            passed = ratio > c.value
+        elif c.operator == Operator.RATIO_GE:
+            passed = ratio >= c.value
+        elif c.operator == Operator.RATIO_EQ:
+            passed = abs(ratio - c.value) < c.epsilon
+        elif c.operator == Operator.RATIO_NE:
+            passed = abs(ratio - c.value) >= c.epsilon
+        else:
+            passed = False
+
+        if not passed:
+            message = c.message or f"finfr: {c.field}/{c.denominator} = {ratio:.4f} violates {c.operator.value} {c.value}"
+        else:
+            message = None
+
+        return EvaluationResult(passed=passed, constraint_id=c.id, message=message)
+
     def _evaluate_conditional(self, c: ConditionalConstraint, obj: Dict[str, Any]) -> EvaluationResult:
         """Evaluate conditional (if/then/else) constraint."""
         condition_result = self.evaluate(c.condition, obj)
@@ -442,6 +580,102 @@ class CDLEvaluator:
 
         return EvaluationResult(passed=passed, constraint_id=c.id, message=message)
 
+    def _evaluate_ratio(self, c: RatioConstraint, obj: Dict[str, Any]) -> EvaluationResult:
+        """
+        Evaluate f/g ratio constraint - the core of Newton's dimensional analysis.
+
+        The ratio f/g represents:
+        - f: forge/fact/function (what you're trying to do)
+        - g: ground/goal/governance (what reality allows)
+
+        When f/g is undefined (g=0) → finfr (ontological death)
+        When f/g exceeds threshold → finfr based on operator
+
+        This is not just verification - it's physics.
+        """
+        # Get numerator (f) and denominator (g) values
+        f_value = self._get_field_value(obj, c.f_field)
+        g_value = self._get_field_value(obj, c.g_field)
+
+        # Check for missing fields
+        if f_value is None:
+            return EvaluationResult(
+                passed=False,
+                constraint_id=c.id,
+                message=c.message or f"Numerator field '{c.f_field}' not found"
+            )
+        if g_value is None:
+            return EvaluationResult(
+                passed=False,
+                constraint_id=c.id,
+                message=c.message or f"Denominator field '{c.g_field}' not found"
+            )
+
+        # Convert to numeric
+        try:
+            f = float(f_value)
+            g = float(g_value)
+        except (TypeError, ValueError) as e:
+            return EvaluationResult(
+                passed=False,
+                constraint_id=c.id,
+                message=c.message or f"Cannot convert to numeric: {e}"
+            )
+
+        # Check for undefined ratio (g ≈ 0) - this is always finfr
+        if abs(g) < c.epsilon:
+            # Ratio is undefined - this is ontological death
+            if c.operator == Operator.RATIO_UNDEFINED:
+                # Checking if ratio IS undefined - it is, so constraint passes
+                return EvaluationResult(
+                    passed=True,
+                    constraint_id=c.id
+                )
+            else:
+                # Any other ratio check with g=0 fails (undefined state)
+                return EvaluationResult(
+                    passed=False,
+                    constraint_id=c.id,
+                    message=c.message or f"finfr: ratio {c.f_field}/{c.g_field} is undefined (denominator ≈ 0)"
+                )
+
+        # Calculate the ratio
+        ratio = f / g
+
+        # Evaluate based on operator
+        if c.operator == Operator.RATIO_UNDEFINED:
+            # Checking if ratio IS undefined - it's not, so constraint fails
+            passed = False
+        elif c.operator == Operator.RATIO_LT:
+            passed = ratio < c.threshold
+        elif c.operator == Operator.RATIO_LE:
+            passed = ratio <= c.threshold
+        elif c.operator == Operator.RATIO_GT:
+            passed = ratio > c.threshold
+        elif c.operator == Operator.RATIO_GE:
+            passed = ratio >= c.threshold
+        elif c.operator == Operator.RATIO_EQ:
+            passed = abs(ratio - c.threshold) < c.epsilon
+        elif c.operator == Operator.RATIO_NE:
+            passed = abs(ratio - c.threshold) >= c.epsilon
+        else:
+            return EvaluationResult(
+                passed=False,
+                constraint_id=c.id,
+                message=f"Unknown ratio operator: {c.operator}"
+            )
+
+        if not passed:
+            message = c.message or f"finfr: {c.f_field}/{c.g_field} = {ratio:.4f} violates {c.operator.value} {c.threshold}"
+        else:
+            message = None
+
+        return EvaluationResult(
+            passed=passed,
+            constraint_id=c.id,
+            message=message
+        )
+
     @property
     def evaluation_count(self) -> int:
         return self._evaluation_count
@@ -472,6 +706,8 @@ class HaltChecker:
 
         if isinstance(constraint, AtomicConstraint):
             return self._check_atomic(constraint)
+        elif isinstance(constraint, RatioConstraint):
+            return self._check_ratio(constraint)
         elif isinstance(constraint, ConditionalConstraint):
             return self._check_conditional(constraint, depth)
         elif isinstance(constraint, CompositeConstraint):
@@ -492,6 +728,12 @@ class HaltChecker:
             except ValueError as e:
                 return False, str(e)
 
+        return True, None
+
+    def _check_ratio(self, c: RatioConstraint) -> tuple[bool, Optional[str]]:
+        """Ratio constraints always halt (O(1) - simple division and comparison)."""
+        # Ratio constraints are always bounded - they perform a single division
+        # and comparison operation. No loops, no recursion.
         return True, None
 
     def _check_conditional(self, c: ConditionalConstraint, depth: int) -> tuple[bool, Optional[str]]:
@@ -553,6 +795,19 @@ class CDLParser:
                 constraints=[self._parse_internal(c) for c in d['constraints']]
             )
 
+        # Check for ratio constraint (f/g dimensional analysis)
+        if 'f_field' in d and 'g_field' in d:
+            return RatioConstraint(
+                f_field=d['f_field'],
+                g_field=d['g_field'],
+                operator=Operator(d['operator']),
+                threshold=float(d.get('threshold', d.get('value', 1.0))),
+                domain=Domain(d.get('domain', 'custom')),
+                message=d.get('message'),
+                action=d.get('action', 'reject'),
+                epsilon=float(d.get('epsilon', 1e-9))
+            )
+
         # Atomic constraint
         return AtomicConstraint(
             domain=Domain(d.get('domain', 'custom')),
@@ -563,7 +818,9 @@ class CDLParser:
             action=d.get('action', 'reject'),
             window=d.get('window'),
             group_by=d.get('group_by'),
-            reference=d.get('reference')
+            reference=d.get('reference'),
+            denominator=d.get('denominator'),
+            epsilon=float(d.get('epsilon', 1e-9))
         )
 
 
@@ -611,6 +868,79 @@ def verify_or(constraints: List[Union[Constraint, Dict]], obj: Dict[str, Any]) -
         passed=passed,
         constraint_id="OR_" + "_".join(r.constraint_id[:4] for r in results),
         message="All constraints failed" if not passed else None
+    )
+
+
+def verify_ratio(
+    f_field: str,
+    g_field: str,
+    operator: str,
+    threshold: float,
+    obj: Dict[str, Any],
+    message: Optional[str] = None
+) -> EvaluationResult:
+    """
+    Verify an f/g ratio constraint - dimensional analysis for computation.
+
+    Args:
+        f_field: The numerator field (forge/fact/function)
+        g_field: The denominator field (ground/goal/governance)
+        operator: One of "ratio_lt", "ratio_le", "ratio_gt", "ratio_ge", "ratio_eq", "ratio_ne"
+        threshold: The threshold value to compare against
+        obj: The object to evaluate
+        message: Optional custom message for failure
+
+    Examples:
+        >>> verify_ratio("liabilities", "assets", "ratio_le", 1.0,
+        ...              {"liabilities": 500, "assets": 1000})
+        EvaluationResult(passed=True, ...)
+
+        >>> verify_ratio("withdrawal", "balance", "ratio_le", 1.0,
+        ...              {"withdrawal": 150, "balance": 100})
+        EvaluationResult(passed=False, message="finfr: withdrawal/balance = 1.5000 violates ratio_le 1.0")
+    """
+    constraint = RatioConstraint(
+        f_field=f_field,
+        g_field=g_field,
+        operator=Operator(operator),
+        threshold=threshold,
+        message=message
+    )
+    evaluator = CDLEvaluator()
+    return evaluator.evaluate(constraint, obj)
+
+
+def ratio(f_field: str, g_field: str, op: str = "ratio_le", threshold: float = 1.0) -> RatioConstraint:
+    """
+    Create a ratio constraint for f/g dimensional analysis.
+
+    This is the syntactic sugar for Newton's core insight:
+    finfr = f/g where undefined or invalid ratios cannot exist.
+
+    Args:
+        f_field: Numerator (forge/fact/function) - what you're trying to do
+        g_field: Denominator (ground/goal/governance) - what reality allows
+        op: Comparison operator (default: "ratio_le")
+        threshold: Threshold value (default: 1.0)
+
+    Returns:
+        RatioConstraint ready for evaluation
+
+    Examples:
+        # Overdraft protection: withdrawal/balance must be <= 1.0
+        ratio("withdrawal", "balance")
+
+        # Leverage limit: debt/equity must be <= 3.0
+        ratio("debt", "equity", threshold=3.0)
+
+        # Safety threshold: flicker_rate/safe_limit must be < 1.0
+        ratio("flicker_rate", "safe_limit", op="ratio_lt")
+    """
+    return RatioConstraint(
+        f_field=f_field,
+        g_field=g_field,
+        operator=Operator(op),
+        threshold=threshold
     )
 
 
@@ -668,5 +998,63 @@ if __name__ == "__main__":
     print(f"  Object: amount=2000, category='allowed'")
     print(f"  Result: {'PASS' if result3.passed else 'FAIL'}")
 
+    # Test ratio constraints (f/g dimensional analysis)
+    print("\n" + "-" * 60)
+    print("RATIO CONSTRAINTS (f/g Dimensional Analysis)")
+    print("-" * 60)
+
+    # Test 1: Overdraft protection (liabilities/assets <= 1.0)
+    result4 = verify_ratio("liabilities", "assets", "ratio_le", 1.0,
+                           {"liabilities": 500, "assets": 1000})
+    print(f"\nOverdraft: liabilities/assets <= 1.0")
+    print(f"  Object: liabilities=500, assets=1000")
+    print(f"  Ratio: 0.5")
+    print(f"  Result: {'PASS' if result4.passed else 'FAIL'}")
+
+    # Test 2: Overdraft violation
+    result5 = verify_ratio("liabilities", "assets", "ratio_le", 1.0,
+                           {"liabilities": 1500, "assets": 1000})
+    print(f"\nOverdraft VIOLATION: liabilities/assets <= 1.0")
+    print(f"  Object: liabilities=1500, assets=1000")
+    print(f"  Ratio: 1.5")
+    print(f"  Result: {'PASS' if result5.passed else 'FAIL'}")
+    if result5.message:
+        print(f"  Message: {result5.message}")
+
+    # Test 3: Undefined ratio (division by zero) → finfr
+    result6 = verify_ratio("withdrawal", "balance", "ratio_le", 1.0,
+                           {"withdrawal": 100, "balance": 0})
+    print(f"\nUndefined Ratio (g=0): withdrawal/balance")
+    print(f"  Object: withdrawal=100, balance=0")
+    print(f"  Result: {'PASS' if result6.passed else 'FAIL'} (finfr - ontological death)")
+    if result6.message:
+        print(f"  Message: {result6.message}")
+
+    # Test 4: Using ratio() convenience function
+    leverage_constraint = ratio("debt", "equity", threshold=3.0)
+    evaluator = CDLEvaluator()
+    result7 = evaluator.evaluate(leverage_constraint, {"debt": 2000, "equity": 1000})
+    print(f"\nLeverage Limit: debt/equity <= 3.0 (using ratio() function)")
+    print(f"  Object: debt=2000, equity=1000")
+    print(f"  Ratio: 2.0")
+    print(f"  Result: {'PASS' if result7.passed else 'FAIL'}")
+
+    # Test 5: JSON/Dict ratio constraint
+    c4 = {
+        "f_field": "flicker_rate",
+        "g_field": "safe_threshold",
+        "operator": "ratio_lt",
+        "threshold": 1.0,
+        "domain": "health",
+        "message": "finfr: Flicker rate exceeds seizure safety threshold"
+    }
+    obj4 = {"flicker_rate": 2.5, "safe_threshold": 3.0}
+    result8 = verify(c4, obj4)
+    print(f"\nSeizure Safety: flicker_rate/safe_threshold < 1.0")
+    print(f"  Object: flicker_rate=2.5, safe_threshold=3.0")
+    print(f"  Ratio: 0.833")
+    print(f"  Result: {'PASS' if result8.passed else 'FAIL'}")
+
     print("\n" + "=" * 60)
+    print("finfr = f/g. The ratio IS the constraint.")
     print("1 == 1. The constraint IS the computation.")
