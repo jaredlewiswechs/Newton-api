@@ -180,6 +180,15 @@ from .cartridges import (
     ROSETTA_CONSTRAINTS,
 )
 
+from .gumroad import (
+    GumroadService,
+    GumroadConfig,
+    Customer,
+    Feedback,
+    LicenseVerification,
+    get_gumroad_service,
+)
+
 __all__ = [
     # CDL
     'CDLEvaluator', 'CDLParser', 'HaltChecker',
@@ -230,6 +239,9 @@ __all__ = [
     'VisualCartridge', 'SoundCartridge', 'SequenceCartridge', 'DataCartridge', 'RosettaCompiler',
     'CartridgeManager', 'get_cartridge_manager',
     'VISUAL_CONSTRAINTS', 'SOUND_CONSTRAINTS', 'SEQUENCE_CONSTRAINTS', 'DATA_CONSTRAINTS', 'ROSETTA_CONSTRAINTS',
+
+    # Gumroad Integration
+    'GumroadService', 'GumroadConfig', 'Customer', 'Feedback', 'LicenseVerification', 'get_gumroad_service',
 ]
 
 __version__ = "1.0.0"

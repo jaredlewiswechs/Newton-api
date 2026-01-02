@@ -52,7 +52,7 @@ from core import (
 
     # Logic (Verified Computation)
     LogicEngine, ExecutionBounds, calculate,
-    
+
     # Glass Box Components
     get_vault_client, get_policy_engine, get_negotiator,
     MerkleAnchorScheduler, PolicyType, PolicyAction, Policy,
@@ -60,6 +60,9 @@ from core import (
 
     # Cartridges
     get_cartridge_manager, CartridgeType,
+
+    # Gumroad (Payments)
+    get_gumroad_service, GumroadConfig,
 )
 
 # Education Module
@@ -135,6 +138,9 @@ extended_teks = get_extended_teks_library()
 
 # Interface Builder - Verified UI Generation
 interface_builder = get_interface_builder()
+
+# Gumroad - Payment & License Management
+gumroad = get_gumroad_service()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2365,6 +2371,227 @@ async def interface_builder_info():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# GUMROAD - Payments, Licensing, and Feedback
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GUMROAD MODELS
+# ─────────────────────────────────────────────────────────────────────────────
+
+class LicenseVerifyRequest(BaseModel):
+    """Verify a Gumroad license key."""
+    license_key: str
+
+
+class FeedbackRequest(BaseModel):
+    """Submit feedback."""
+    message: str
+    email: Optional[str] = "anonymous"
+    rating: Optional[int] = None  # 1-5 stars
+    category: Optional[str] = "general"  # bug, feature, general, praise
+
+
+class ApiKeyRequest(BaseModel):
+    """Get API key using license."""
+    license_key: str
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LICENSE & API KEY ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/license/verify")
+async def verify_license(request: LicenseVerifyRequest):
+    """
+    Verify a Gumroad license key.
+
+    After purchasing Newton access on Gumroad, use this endpoint to verify
+    your license and get your API key.
+
+    Example:
+        POST /license/verify
+        {"license_key": "YOUR_GUMROAD_LICENSE_KEY"}
+
+    Returns your API key if valid.
+    """
+    result = gumroad.verify_license(request.license_key)
+
+    if result.valid:
+        # Get or create API key for this license
+        api_key = gumroad.get_api_key_for_license(request.license_key)
+
+        ledger.append(
+            operation="license_verify",
+            payload={"email": result.email, "valid": True},
+            result="pass"
+        )
+
+        return {
+            "valid": True,
+            "email": result.email,
+            "api_key": api_key,
+            "uses": result.uses,
+            "purchase_date": result.purchase_date,
+            "product": result.product_name,
+            "message": "License verified! Use your API key in the X-API-Key header.",
+            "engine": ENGINE
+        }
+
+    ledger.append(
+        operation="license_verify",
+        payload={"valid": False, "error": result.error},
+        result="fail"
+    )
+
+    raise HTTPException(status_code=401, detail=result.error or "Invalid license key")
+
+
+@app.get("/license/info")
+async def license_info():
+    """
+    Get information about purchasing Newton access.
+
+    Returns pricing, what's included, and how to buy.
+    """
+    return {
+        **gumroad.get_pricing_info(),
+        "how_to_buy": {
+            "step_1": "Visit the Gumroad product page (link in response)",
+            "step_2": "Purchase Newton Supercomputer Access for $5",
+            "step_3": "You'll receive a license key via email",
+            "step_4": "POST /license/verify with your license key",
+            "step_5": "Use your API key in the X-API-Key header for all requests"
+        },
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WEBHOOK ENDPOINT (for Gumroad)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/webhooks/gumroad")
+async def gumroad_webhook(request: Request):
+    """
+    Gumroad webhook endpoint.
+
+    Receives events from Gumroad when:
+    - New sale occurs
+    - Refund is processed
+    - Dispute is opened/resolved
+
+    Configure this URL in your Gumroad product settings:
+    https://your-domain.com/webhooks/gumroad
+    """
+    # Get raw body for signature verification
+    body = await request.body()
+    signature = request.headers.get("X-Gumroad-Signature", "")
+
+    # Verify webhook signature
+    if not gumroad.verify_webhook_signature(body, signature):
+        ledger.append(
+            operation="webhook_gumroad",
+            payload={"error": "Invalid signature"},
+            result="fail"
+        )
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
+
+    # Parse webhook data
+    try:
+        data = await request.json()
+    except Exception:
+        # Gumroad sends form data, not JSON
+        form = await request.form()
+        data = dict(form)
+
+    event_type = data.get("resource_name", "sale")
+
+    # Process the webhook
+    result = gumroad.process_webhook(event_type, data)
+
+    ledger.append(
+        operation="webhook_gumroad",
+        payload={"event": event_type, "processed": result.get("processed", False)},
+        result="pass" if result.get("processed") else "fail"
+    )
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FEEDBACK ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/feedback")
+async def submit_feedback(request: FeedbackRequest):
+    """
+    Submit feedback about Newton.
+
+    We're in testing mode and would LOVE to hear from you!
+    Bug reports, feature requests, general thoughts - all welcome.
+
+    Example:
+        POST /feedback
+        {
+            "message": "The constraint verification is super fast!",
+            "rating": 5,
+            "category": "praise"
+        }
+
+    Categories: bug, feature, general, praise
+    Rating: 1-5 stars (optional)
+    """
+    feedback = gumroad.submit_feedback(
+        message=request.message,
+        email=request.email or "anonymous",
+        rating=request.rating,
+        category=request.category or "general"
+    )
+
+    ledger.append(
+        operation="feedback_submit",
+        payload={"category": request.category, "has_rating": request.rating is not None},
+        result="pass"
+    )
+
+    return {
+        "success": True,
+        "feedback_id": feedback.id,
+        "message": "Thank you for your feedback! We read every submission.",
+        "engine": ENGINE
+    }
+
+
+@app.get("/feedback/summary")
+async def get_feedback_summary():
+    """
+    Get a summary of all feedback (admin endpoint).
+
+    Shows feedback statistics and trends.
+    """
+    return {
+        **gumroad.get_feedback_summary(),
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GUMROAD STATS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/gumroad/stats")
+async def gumroad_stats():
+    """Get Gumroad integration statistics."""
+    return {
+        **gumroad.stats(),
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # METRICS & HEALTH
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -2372,6 +2599,7 @@ async def interface_builder_info():
 async def health():
     """System health check."""
     chain_valid, _ = ledger.verify_chain()
+    gumroad_stats = gumroad.stats()
 
     return {
         "status": "ok",
@@ -2383,7 +2611,8 @@ async def health():
             "grounding": "operational",
             "policy_engine": "operational",
             "negotiator": "operational",
-            "merkle_scheduler": "operational" if merkle_scheduler._running else "stopped"
+            "merkle_scheduler": "operational" if merkle_scheduler._running else "stopped",
+            "gumroad": "operational"
         },
         "ledger": {
             "entries": len(ledger),
@@ -2394,6 +2623,10 @@ async def health():
             "policies": len(policy_engine.policies),
             "pending_approvals": len(negotiator.get_pending_requests()),
             "anchors": len(merkle_scheduler.anchors)
+        },
+        "gumroad": {
+            "active_customers": gumroad_stats.get("active_customers", 0),
+            "total_feedback": gumroad_stats.get("feedback_count", 0)
         }
     }
 
@@ -2469,13 +2702,17 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"\nEngine: {ENGINE}")
     print("Starting server on http://0.0.0.0:8000")
-    print("\nEndpoints:")
+    print("\nCore Endpoints:")
     print("  POST /ask        - Ask Newton anything")
     print("  POST /verify     - Verify input")
     print("  POST /constraint - Evaluate CDL constraint")
     print("  POST /ground     - Ground a claim")
     print("  GET  /ledger     - View audit trail")
     print("  GET  /metrics    - System metrics")
+    print("\nPayment & Access ($5 during testing):")
+    print("  GET  /license/info   - Pricing & how to buy")
+    print("  POST /license/verify - Verify license & get API key")
+    print("  POST /feedback       - Send us feedback!")
     print("\n1 == 1. The cloud is weather. We're building shelter.")
     print("=" * 60)
     uvicorn.run(app, host="0.0.0.0", port=8000)
