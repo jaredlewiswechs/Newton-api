@@ -1240,11 +1240,12 @@ select.input-field {
 }
 
 .ledger-entry {
-    padding: var(--space-4) var(--space-6);
+    padding: var(--space-4) var(--space-5);
     border-bottom: 1px solid var(--border-secondary);
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
     align-items: center;
-    gap: var(--space-4);
+    gap: var(--space-3);
     transition: background var(--duration-fast);
 }
 
@@ -1260,30 +1261,44 @@ select.input-field {
     font-family: var(--font-mono);
     font-size: 12px;
     color: var(--text-tertiary);
-    min-width: 44px;
+    min-width: 32px;
 }
 
 .entry-type {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 5px 10px;
+    letter-spacing: 0.04em;
+    padding: 4px 8px;
     background: var(--surface-tertiary);
     border-radius: var(--radius-xs);
     color: var(--text-secondary);
+    white-space: nowrap;
 }
 
 .entry-hash {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--newton-primary);
-    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: none;
 }
 
 .entry-time {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-tertiary);
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .ledger-entry {
+        grid-template-columns: auto auto 1fr auto auto;
+    }
+
+    .entry-hash {
+        display: block;
+    }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -1691,18 +1706,39 @@ select.input-field {
         min-width: auto;
     }
 
-    .footer-content {
-        flex-direction: column;
-        gap: var(--space-5);
-        text-align: center;
-    }
-
-    .footer-quote {
+    .app-footer {
         display: none;
     }
 
     .ledger-stats {
         grid-template-columns: 1fr;
+        gap: var(--space-4);
+    }
+
+    .stat-card {
+        padding: var(--space-5);
+    }
+
+    .stat-value {
+        font-size: 32px;
+    }
+
+    .glass-box-panel {
+        margin: var(--space-6) 0;
+        padding: var(--space-5);
+    }
+
+    .glass-box-panel h3 {
+        font-size: 18px;
+        margin-bottom: var(--space-4);
+    }
+
+    .glass-box-card {
+        padding: var(--space-4);
+    }
+
+    .glass-box-card .stat-value {
+        font-size: 28px;
     }
 
     /* Mobile Navigation */
@@ -1728,7 +1764,7 @@ select.input-field {
     }
 
     .main-content {
-        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
     }
 
     .glass-box-grid {
@@ -1738,6 +1774,15 @@ select.input-field {
     .modal-content {
         width: 95%;
         padding: var(--space-6);
+    }
+
+    .ledger-entries {
+        min-height: 200px;
+    }
+
+    .export-proof-btn {
+        padding: var(--space-1) var(--space-2);
+        font-size: 10px;
     }
 }
 
