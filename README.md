@@ -36,6 +36,59 @@ newton serve            # Start the server
 
 ---
 
+## Why Newton is Different
+
+Traditional AI safety: Hope the model behaves, test after generation.
+Newton: Define constraints first, verify before execution.
+
+**The constraint IS the instruction. The verification IS the computation.**
+
+---
+
+## Proven Performance
+
+| Metric | Result | Notes |
+|--------|--------|-------|
+| **Median Latency** | 2.31ms | 15x faster than marketing claims |
+| **Internal Processing** | 46.5μs | Sub-millisecond verification |
+| **Throughput** | 605 req/sec | 52M verifications/day per instance |
+| **vs Stripe** | 638x faster | 2.31ms vs 1,475ms |
+| **vs GPT-4** | 563x faster | 2.31ms vs 1,300ms |
+
+See [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md) for full benchmark data.
+
+---
+
+## Real-World Use Cases
+
+| Domain | Use Case | Newton Value |
+|--------|----------|--------------|
+| **Education** | NES lesson planning, TEKS alignment, student differentiation | Verified compliance, auto-grouping, <50ms generation |
+| **Healthcare** | HIPAA compliance verification, clinical decision support | Pre-execution gates, audit trails, policy enforcement |
+| **Finance** | Transaction verification, risk limits, regulatory compliance | Bounded execution, MAD statistics, Byzantine tolerance |
+| **Legal** | Contract constraint checking, clause verification | Deterministic results, cryptographic proofs |
+| **AI Safety** | Content moderation, prompt verification, output filtering | Sub-millisecond latency, pattern matching, harm detection |
+
+**Try the Education Demo:**
+```bash
+python examples/nes_helper_demo.py        # See NES lesson planning in action
+python examples/nes_helper_demo.py --live # Against running Newton server
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| **[WHITEPAPER.md](WHITEPAPER.md)** | Technical architecture and guarantees |
+| **[TINYTALK_BIBLE.md](TINYTALK_BIBLE.md)** | The "No-First" philosophy |
+| **[GLASS_BOX.md](GLASS_BOX.md)** | Policy, HITL, and Merkle proofs |
+| **[PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md)** | Verified benchmark data |
+| **[DEVELOPERS.md](DEVELOPERS.md)** | Developer guide |
+
+---
+
 ## Genesis
 
 ```
@@ -578,7 +631,8 @@ Newton-api/
 ├── Dockerfile               # Container build
 │
 ├── examples/                # Working demos
-│   └── tinytalk_demo.py    # tinyTalk concepts in action
+│   ├── tinytalk_demo.py    # tinyTalk concepts in action
+│   └── nes_helper_demo.py  # NES Teacher's Aide demo (NEW)
 │
 ├── tinytalk/                # tinyTalk documentation
 │   ├── ruby/               # Ruby module
