@@ -1,171 +1,248 @@
-# tinyTalk Libraries
+# tinyTalk
+
+```
+    ╭──────────────────────────────────────────────────────────╮
+    │                                                          │
+    │   tinyTalk                                               │
+    │   Smalltalk is back. With boundaries.                    │
+    │                                                          │
+    │   "Objects all the way down,                             │
+    │    but some states cannot exist."                        │
+    │                                                          │
+    ╰──────────────────────────────────────────────────────────╯
+```
 
 **The "No-First" constraint language. Define what cannot happen.**
 
-tinyTalk is available for Python, Ruby, and R.
+Available for **Python**, **Ruby**, and **R**.
+
+---
+
+## The Idea
+
+```
+Traditional:  "Here's what to do, step by step."
+tinyTalk:     "Here's what CANNOT happen."
+```
+
+**Smalltalk** gave us objects and messages.
+**tinyTalk** adds boundaries and laws.
+
+---
+
+## Install
+
+```bash
+# From Newton-api directory
+pip install -e .
+
+# Then just import
+from newton_sdk import Blueprint, field, law, forge, when, finfr
+```
+
+---
+
+## The Four Sacred Words
+
+| Word | Meaning | When to Use |
+|------|---------|-------------|
+| `when` | "This is true" | Declaring facts |
+| `and` | "Also this" | Combining conditions |
+| `fin` | "Stop here" | Soft closure (can reopen) |
+| `finfr` | "FORBIDDEN" | Hard stop. Ontological death. |
 
 ---
 
 ## Quick Start
 
-### Python
+### Python 🐍
 
 ```python
-# Add Newton-api to your path
-import sys
-sys.path.insert(0, 'path/to/Newton-api')
+from newton_sdk import Blueprint, field, law, forge, when, finfr
 
-from tinytalk_py import Blueprint, field, law, forge, when, finfr, Money
-
-class RiskGovernor(Blueprint):
-    assets = field(float, default=1000.0)
-    liabilities = field(float, default=0.0)
+class BankAccount(Blueprint):
+    balance = field(float, default=100.0)
 
     @law
-    def insolvency(self):
-        when(self.liabilities > self.assets, finfr)
+    def no_overdraft(self):
+        when(self.balance < 0, finfr)  # This state CANNOT exist
 
     @forge
-    def execute_trade(self, amount: float):
-        self.liabilities += amount
-        return "cleared"
+    def withdraw(self, amount):
+        self.balance -= amount
+        return f"Withdrew ${amount}"
 
 # Use it
-gov = RiskGovernor()
-gov.execute_trade(500)   # Works: liabilities=500
-gov.execute_trade(600)   # Raises LawViolation: liabilities would exceed assets
+account = BankAccount()
+account.withdraw(50)    # ✓ Works
+account.withdraw(60)    # ✗ BLOCKED by no_overdraft
 ```
 
-### Ruby
+### Ruby 💎
 
 ```ruby
-require_relative 'path/to/Newton-api/tinytalk/ruby/tinytalk'
+require_relative 'tinytalk/ruby/tinytalk'
 include TinyTalk
 
-class RiskGovernor < Blueprint
-  field :assets, Float, default: 1000.0
-  field :liabilities, Float, default: 0.0
+class BankAccount < Blueprint
+  field :balance, Float, default: 100.0
 
-  law :insolvency do
-    when_condition(liabilities > assets) { finfr }
+  law :no_overdraft do
+    when_condition(balance < 0) { finfr }
   end
 
-  forge :execute_trade do |amount|
-    self.liabilities = liabilities + amount
-    :cleared
+  forge :withdraw do |amount|
+    self.balance = balance - amount
+    "Withdrew $#{amount}"
   end
 end
 
-# Use it
-gov = RiskGovernor.new
-gov.execute_trade(500)   # Works
-gov.execute_trade(600)   # Raises Finfr
+account = BankAccount.new
+account.withdraw(50)    # ✓ Works
+account.withdraw(60)    # ✗ Raises Finfr
 ```
 
-### R
+### R 📊
 
 ```r
-source("path/to/Newton-api/tinytalk/r/tinytalk.R")
+source("tinytalk/r/tinytalk.R")
 
-RiskGovernor <- Blueprint(
-  fields = list(
-    assets = 1000.0,
-    liabilities = 0.0
-  ),
+BankAccount <- Blueprint(
+  fields = list(balance = 100.0),
   laws = list(
-    insolvency = function(self) {
-      when_cond(self$liabilities > self$assets, function() finfr())
+    no_overdraft = function(self) {
+      when_cond(self$balance < 0, function() finfr())
     }
   ),
   forges = list(
-    execute_trade = function(self, amount) {
-      self$liabilities <- self$liabilities + amount
-      "cleared"
+    withdraw = function(self, amount) {
+      self$balance <- self$balance - amount
+      paste("Withdrew $", amount)
     }
   )
 )
 
-# Use it
-gov <- RiskGovernor$new()
-gov$execute_trade(500)   # Works
-gov$execute_trade(600)   # Error: finfr
+account <- BankAccount$new()
+account$withdraw(50)    # ✓ Works
+account$withdraw(60)    # ✗ Error: finfr
 ```
-
----
-
-## The Lexicon
-
-| Keyword | Purpose | Description |
-|---------|---------|-------------|
-| `when` | Declare a fact | The present state. It acknowledges "is". |
-| `and` | Combine facts | Join multiple facts into a complex shape. |
-| `fin` | Closure | A stopping point (can be reopened). |
-| `finfr` | Finality | Ontological death. The state is forbidden. |
-
----
-
-## Matter Types
-
-All languages include typed values that prevent unit confusion:
-
-```python
-# Python
-from tinytalk import Money, Temperature, Celsius, PSI
-
-balance = Money(100)
-temp = Celsius(22.5)
-
-# These work:
-total = Money(100) + Money(50)   # Money(150)
-hot = Celsius(100) > Celsius(50) # True
-
-# These fail (type safety):
-Money(100) + Celsius(50)         # TypeError!
-```
-
-Available types: `Money`, `Mass`, `Distance`, `Temperature`, `Pressure`, `Volume`, `FlowRate`, `Velocity`, `Time`
 
 ---
 
 ## The Three Layers
 
-1. **Layer 0: Governance** - Laws define what cannot happen (`finfr`)
-2. **Layer 1: Executive** - Forges define what happens (mutations)
-3. **Layer 2: Application** - Your specific use case
+```
+╭─────────────────────────────────────────────────────╮
+│  Layer 2: APPLICATION                               │
+│  Your code. Your use case.                          │
+├─────────────────────────────────────────────────────┤
+│  Layer 1: EXECUTIVE                                 │
+│  field() = state    forge() = actions               │
+├─────────────────────────────────────────────────────┤
+│  Layer 0: GOVERNANCE                                │
+│  law() = physics    finfr = impossible              │
+╰─────────────────────────────────────────────────────╯
+```
+
+**Layer 0** defines the physics of your world.
+**Layer 1** defines what can happen within those physics.
+**Layer 2** is your application.
+
+---
+
+## Matter Types
+
+Prevent unit confusion with typed values:
+
+```python
+from newton_sdk import Money, Celsius, PSI, Meters
+
+# These work:
+total = Money(100) + Money(50)      # Money(150)
+hot = Celsius(100) > Celsius(50)    # True
+
+# These FAIL (type safety):
+Money(100) + Celsius(50)            # TypeError!
+Celsius(20) + PSI(30)               # TypeError!
+```
+
+Remember the Mars Climate Orbiter? It crashed because of unit confusion.
+**tinyTalk prevents that.**
+
+Available: `Money`, `Mass`, `Distance`, `Temperature`, `Pressure`, `Volume`, `FlowRate`, `Velocity`, `Time`
 
 ---
 
 ## Kinetic Engine
 
-Calculate motion as the mathematical delta between states:
+Motion = the mathematical delta between two states.
 
 ```python
-from tinytalk import KineticEngine, Presence
+from newton_sdk import KineticEngine, Presence
 
 engine = KineticEngine()
 
-# Add boundaries
+# Add a boundary
 engine.add_boundary(
     lambda d: d.changes.get('x', {}).get('to', 0) > 100,
     name="MaxX"
 )
 
-# Resolve motion
+# Calculate motion
 start = Presence({'x': 0, 'y': 0})
 end = Presence({'x': 50, 'y': 25})
 
 result = engine.resolve_motion(start, end)
-# {'status': 'synchronized', 'delta': {'x': {...}, 'y': {...}}, ...}
+# {'status': 'synchronized', 'delta': {...}}
 
-# Violates boundary:
+# Violate boundary
 end_bad = Presence({'x': 150, 'y': 0})
 result = engine.resolve_motion(start, end_bad)
-# {'status': 'finfr', 'reason': "Boundary 'MaxX' violated", ...}
+# {'status': 'finfr', 'reason': "Boundary 'MaxX' violated"}
 ```
+
+---
+
+## Philosophy
+
+> "I made up the term 'object-oriented', and I can tell you
+>  I didn't have C++ in mind."
+>  — Alan Kay, creator of Smalltalk
+
+tinyTalk continues the Smalltalk tradition:
+- Everything is an object (**Blueprint**)
+- Objects communicate via messages (**forge**)
+- But now, objects have **laws** they cannot break
+
+**The constraint IS the instruction.**
+**The boundary IS the behavior.**
 
 ---
 
 ## Learn More
 
-- [TINYTALK_BIBLE.md](../TINYTALK_BIBLE.md) - The complete philosophical manual
-- [examples/tinytalk_demo.py](../examples/tinytalk_demo.py) - Interactive demo
+| Resource | Description |
+|----------|-------------|
+| [GETTING_STARTED.md](../GETTING_STARTED.md) | Multi-level developer guide |
+| [TINYTALK_BIBLE.md](../TINYTALK_BIBLE.md) | Complete philosophical manual |
+| [examples/tinytalk_demo.py](../examples/tinytalk_demo.py) | Interactive demo |
+
+---
+
+## Quick Reference
+
+```
+╭────────────────────────────────────────────────────────────────╮
+│  KEYWORDS        when, and, fin, finfr                         │
+│  DECORATORS      @law (Layer 0), @forge (Layer 1)              │
+│  STATE           field(type, default=value)                    │
+│  TYPES           Money, Celsius, PSI, Meters, etc.             │
+│  CLI             newton demo | newton serve                    │
+╰────────────────────────────────────────────────────────────────╯
+```
+
+---
+
+*"Smalltalk gave us objects. tinyTalk gives us boundaries."*
+
+**finfr.** 🍎
