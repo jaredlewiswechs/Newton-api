@@ -125,7 +125,55 @@ uvicorn newton_os_server:app --host 0.0.0.0 --port 8000
 
 ---
 
-## STEP 3: NEWTON PDA (PWA)
+## STEP 3: TEACHER'S AIDE (CLOUDFLARE PAGES)
+
+Newton Teacher's Aide is a Progressive Web App for HISD educators, providing TEKS-aligned lesson planning, slide deck generation, assessment analytics, and PLC reports.
+
+### 3.1 Deploy to Cloudflare Pages
+
+```bash
+# Install Wrangler CLI
+npm install -g wrangler
+
+# Authenticate
+wrangler login
+
+# Deploy
+npx wrangler pages deploy teachers-aide
+```
+
+### 3.2 Manual Deployment
+
+1. Go to [Cloudflare Pages](https://pages.cloudflare.com)
+2. Click "Create a project" → "Direct Upload"
+3. Upload the `teachers-aide/` folder
+4. Your site deploys at: `https://newton-teachers-aide.pages.dev`
+
+### 3.3 Features
+
+| Feature | Description |
+|---------|-------------|
+| **Lesson Planner** | NES-compliant 50-min lesson plans with 5 phases |
+| **Slide Deck** | Presentation-ready slide specifications |
+| **Assessment Analyzer** | MAD-based student performance analytics |
+| **PLC Report** | Automated PLC meeting documentation |
+| **TEKS Browser** | Searchable Texas standards database |
+| **Accommodations** | ELL, 504, SPED, and GT support |
+
+### 3.4 Configuration
+
+Update `teachers-aide/app.js` to point to your Newton API:
+
+```javascript
+const CONFIG = {
+  API_BASE: 'https://your-newton-api.onrender.com',
+  TIMEOUT: 60000
+};
+```
+
+---
+
+## STEP 4: NEWTON PDA (PWA)
 
 Newton PDA is included in the `newton-pda/` folder. It's a standalone Progressive Web App that can be deployed to any static hosting.
 
@@ -157,11 +205,11 @@ python3 -m http.server 8000
 
 ---
 
-## STEP 4: OPTIONAL VENDOR ADAPTER (RUBY)
+## STEP 5: OPTIONAL VENDOR ADAPTER (RUBY)
 
 For local AI vendor integration, use the Ruby adapter.
 
-### 4.1 Set Environment Variables
+### 5.1 Set Environment Variables
 
 ```bash
 export NEWTON_HOST="https://newton-kernel-xxxx.onrender.com"
@@ -180,7 +228,7 @@ export VENDOR="local"
 # No key needed, but Ollama must be running
 ```
 
-### 4.2 Run the Adapter
+### 5.2 Run the Adapter
 
 ```bash
 bundle install
@@ -208,6 +256,19 @@ ruby adapter_universal.rb
 | `/cartridge/sound` | POST | Audio specification |
 | `/cartridge/sequence` | POST | Video/animation specification |
 | `/cartridge/data` | POST | Report specification |
+
+### Education Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/education/lesson` | POST | Generate NES lesson plan |
+| `/education/slides` | POST | Generate slide deck |
+| `/education/assess` | POST | Analyze assessment data |
+| `/education/plc` | POST | Generate PLC report |
+| `/education/teks` | GET | Browse TEKS standards |
+| `/education/teks/{code}` | GET | Get specific standard |
+| `/education/teks/search` | POST | Search standards |
+| `/education/info` | GET | API documentation |
 
 ### Audit Endpoints
 

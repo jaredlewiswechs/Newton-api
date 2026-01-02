@@ -46,6 +46,19 @@ Complete reference for the Newton Supercomputer API.
 | [`/cartridge/auto`](cartridges.md#cartridgeauto) | POST | Auto-detect type and compile |
 | [`/cartridge/info`](cartridges.md#cartridgeinfo) | GET | Get cartridge information |
 
+### Education (Teacher's Aide)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/education/lesson`](#education-lesson) | POST | Generate NES-compliant lesson plan |
+| [`/education/slides`](#education-slides) | POST | Generate slide deck |
+| [`/education/assess`](#education-assess) | POST | Analyze student assessments (MAD) |
+| [`/education/plc`](#education-plc) | POST | Generate PLC report |
+| [`/education/teks`](#education-teks) | GET | Browse all TEKS standards |
+| [`/education/teks/{code}`](#education-teks-code) | GET | Get specific TEKS standard |
+| [`/education/teks/search`](#education-teks-search) | POST | Search TEKS standards |
+| [`/education/info`](#education-info) | GET | Education API documentation |
+
 ### System
 
 | Endpoint | Method | Description |
@@ -680,6 +693,251 @@ These bounds ensure:
 - No stack overflow
 - No runaway compute
 - No endless waits
+
+---
+
+## Education Endpoints
+
+### /education/lesson
+
+Generate an NES-compliant lesson plan with TEKS alignment.
+
+**POST** `/education/lesson`
+
+#### Request Body
+
+```json
+{
+  "grade": 5,
+  "subject": "math",
+  "teks_codes": ["5.3A", "5.3B"],
+  "topic": "Adding Fractions with Unlike Denominators",
+  "accommodations": {
+    "ell": true,
+    "sped": false,
+    "504": false,
+    "gt": false
+  }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `grade` | int | Yes | Grade level (K=0, 1-12) |
+| `subject` | string | Yes | Subject: math, science, ela, social_studies |
+| `teks_codes` | array | Yes | TEKS standard codes |
+| `topic` | string | No | Specific lesson topic |
+| `accommodations` | object | No | ELL, SPED, 504, GT flags |
+
+#### Response
+
+```json
+{
+  "lesson_plan": {
+    "title": "Adding Fractions with Unlike Denominators",
+    "grade": 5,
+    "subject": "math",
+    "teks_codes": ["5.3A", "5.3B"],
+    "duration_minutes": 50,
+    "phases": [
+      {
+        "name": "Opening",
+        "duration": 5,
+        "activities": ["Number talk with fraction comparison", "Review previous day's learning"]
+      },
+      {
+        "name": "Instruction",
+        "duration": 15,
+        "activities": ["Model finding common denominators", "Demonstrate addition process"]
+      },
+      {
+        "name": "Guided Practice",
+        "duration": 15,
+        "activities": ["Partner work with fraction tiles", "Collaborative problem solving"]
+      },
+      {
+        "name": "Independent Practice",
+        "duration": 10,
+        "activities": ["Individual worksheet", "Self-assessment checklist"]
+      },
+      {
+        "name": "Closing",
+        "duration": 5,
+        "activities": ["Exit ticket", "Preview next lesson"]
+      }
+    ],
+    "accommodations_applied": ["ell"],
+    "teks_aligned": true
+  },
+  "verified": true,
+  "fingerprint": "EDU-A1B2C3D4"
+}
+```
+
+---
+
+### /education/slides
+
+Generate a slide deck specification for a lesson.
+
+**POST** `/education/slides`
+
+#### Request Body
+
+```json
+{
+  "grade": 5,
+  "subject": "math",
+  "teks_codes": ["5.3A"],
+  "topic": "Adding Fractions",
+  "slide_count": 10
+}
+```
+
+---
+
+### /education/assess
+
+Analyze student assessment data using MAD statistics.
+
+**POST** `/education/assess`
+
+#### Request Body
+
+```json
+{
+  "scores": [85, 72, 90, 65, 88, 45, 92, 78, 80, 95],
+  "teks_codes": ["5.3A", "5.3B"],
+  "class_size": 25
+}
+```
+
+#### Response
+
+```json
+{
+  "analysis": {
+    "n": 10,
+    "median": 81.5,
+    "mad": 8.0,
+    "passing_rate": 0.8,
+    "at_risk_students": [5],
+    "mastery_students": [2, 6, 9],
+    "teks_performance": {
+      "5.3A": {"median": 83, "mastery_rate": 0.7},
+      "5.3B": {"median": 78, "mastery_rate": 0.6}
+    }
+  },
+  "recommendations": [
+    "Reteach 5.3B with additional scaffolding",
+    "Provide intervention for student at index 5"
+  ],
+  "verified": true
+}
+```
+
+---
+
+### /education/plc
+
+Generate a PLC (Professional Learning Community) report.
+
+**POST** `/education/plc`
+
+#### Request Body
+
+```json
+{
+  "campus": "Example Elementary",
+  "grade": 5,
+  "subject": "math",
+  "scores": [85, 72, 90, 65, 88, 45, 92, 78, 80, 95],
+  "teks_codes": ["5.3A", "5.3B"],
+  "period": "Week 12"
+}
+```
+
+---
+
+### /education/teks
+
+Browse all available TEKS standards.
+
+**GET** `/education/teks`
+
+#### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `grade` | int | - | Filter by grade level |
+| `subject` | string | - | Filter by subject |
+
+---
+
+### /education/teks/{code}
+
+Get a specific TEKS standard by code.
+
+**GET** `/education/teks/{code}`
+
+#### Response
+
+```json
+{
+  "code": "5.3A",
+  "grade": 5,
+  "subject": "math",
+  "description": "Add and subtract fractions with unequal denominators",
+  "cognitive_level": "apply",
+  "prerequisites": ["4.3A", "4.3B"],
+  "strand": "Number and Operations"
+}
+```
+
+---
+
+### /education/teks/search
+
+Search TEKS standards by keyword, grade, or subject.
+
+**POST** `/education/teks/search`
+
+#### Request Body
+
+```json
+{
+  "query": "fractions",
+  "grade": 5,
+  "subject": "math"
+}
+```
+
+---
+
+### /education/info
+
+Get education API documentation and available subjects/grades.
+
+**GET** `/education/info`
+
+#### Response
+
+```json
+{
+  "version": "1.0.0",
+  "subjects": ["math", "science", "ela", "social_studies"],
+  "grades": ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+  "nes_phases": [
+    {"name": "Opening", "duration": 5},
+    {"name": "Instruction", "duration": 15},
+    {"name": "Guided Practice", "duration": 15},
+    {"name": "Independent Practice", "duration": 10},
+    {"name": "Closing", "duration": 5}
+  ],
+  "total_duration": 50,
+  "accommodations": ["ell", "sped", "504", "gt"]
+}
+```
 
 ---
 

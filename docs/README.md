@@ -64,6 +64,7 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 - [Framework Verification](frameworks.md) - Apple, Web, ML framework constraints
 - [Claim Grounding](grounding.md) - Fact-checking against external sources
 - [Newton PDA](newton-pda.md) - Personal Data Assistant (PWA)
+- [Teacher's Aide](../teachers-aide/README.md) - HISD NES lesson planning and TEKS alignment
 
 ### Deployment
 - [Deployment Guide](../DEPLOYMENT.md) - Render.com, Docker, Local
@@ -173,6 +174,18 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 | `/cartridge/rosetta` | POST | Code generation prompt |
 | `/cartridge/auto` | POST | Auto-detect and compile |
 | `/cartridge/info` | GET | Cartridge information |
+
+### Education (8 endpoints)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/education/lesson` | POST | Generate NES-compliant lesson plan |
+| `/education/slides` | POST | Generate slide deck |
+| `/education/assess` | POST | Analyze student assessments (MAD) |
+| `/education/plc` | POST | Generate PLC report |
+| `/education/teks` | GET | Browse TEKS standards |
+| `/education/teks/{code}` | GET | Get specific standard |
+| `/education/teks/search` | POST | Search standards |
+| `/education/info` | GET | Education API documentation |
 
 ### System (3 endpoints)
 | Endpoint | Method | Description |
