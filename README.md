@@ -458,11 +458,16 @@ Newton-api/
 │   └── ...
 │
 ├── WHITEPAPER.md            # Technical architecture
+├── TINYTALK_BIBLE.md        # tinyTalk philosophy
 ├── GLASS_BOX.md             # Glass Box implementation
+├── CONTRIBUTING.md          # Developer guide (newbie-friendly)
 ├── DEPLOYMENT.md            # Deployment guide
 ├── CHANGELOG.md             # Version history
 ├── render.yaml              # Render.com config
-└── Dockerfile               # Container build
+├── Dockerfile               # Container build
+│
+├── examples/                # Working demos
+│   └── tinytalk_demo.py    # tinyTalk concepts in action
 ```
 
 ---
@@ -576,6 +581,29 @@ Newton Supercomputer is built by **Ada Computing Company** in Houston, Texas.
 
 **Jared Lewis**
 [linkedin.com/in/jaredlewisuh](https://linkedin.com/in/jaredlewisuh) · [parcri.net](https://parcri.net)
+
+---
+
+## tinyTalk Bible
+
+Newton implements the tinyTalk philosophy: a "No-First" approach where we define what **cannot** happen rather than what can.
+
+See [TINYTALK_BIBLE.md](TINYTALK_BIBLE.md) for the complete philosophical and technical manual.
+
+**Quick Demo:**
+```bash
+python examples/tinytalk_demo.py
+```
+
+---
+
+## Contributing
+
+New to development? See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- IDE setup (VS Code, PyCharm, Cursor)
+- First-time project setup
+- How to run tests
+- Making your first contribution
 
 ---
 
