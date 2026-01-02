@@ -67,6 +67,20 @@ from tinytalk_py.education import (
     Subject,
 )
 
+# Teacher's Aide Database
+from tinytalk_py.teachers_aide_db import (
+    get_teachers_aide_db,
+    Student,
+    Classroom,
+    Assessment,
+    InterventionPlan,
+    MasteryLevel,
+    AccommodationType,
+)
+
+# Extended TEKS Database
+from tinytalk_py.teks_database import get_extended_teks_library
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -104,6 +118,10 @@ cartridges = get_cartridge_manager()
 # Education cartridge
 education = get_education_cartridge()
 teks_library = get_teks_library()
+
+# Teacher's Aide Database - Easy data management for teachers
+teachers_db = get_teachers_aide_db()
+extended_teks = get_extended_teks_library()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -270,6 +288,65 @@ class PLCReportRequest(BaseModel):
 class TEKSSearchRequest(BaseModel):
     """Request to search TEKS standards."""
     query: str
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEACHER'S AIDE DATABASE MODELS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class AddStudentRequest(BaseModel):
+    """Add a new student."""
+    first_name: str
+    last_name: str
+    grade: int
+    accommodations: Optional[List[str]] = None
+    student_id: Optional[str] = None
+
+
+class AddStudentsRequest(BaseModel):
+    """Add multiple students at once."""
+    students: List[AddStudentRequest]
+
+
+class CreateClassroomRequest(BaseModel):
+    """Create a new classroom."""
+    name: str
+    grade: int
+    subject: str
+    teacher_name: Optional[str] = ""
+
+
+class AddStudentToClassRequest(BaseModel):
+    """Add student(s) to a classroom."""
+    student_ids: List[str]
+
+
+class CreateAssessmentRequest(BaseModel):
+    """Create a new assessment."""
+    name: str
+    classroom_id: str
+    teks_codes: List[str]
+    total_points: float
+    assessment_type: Optional[str] = "formative"
+
+
+class EnterScoresRequest(BaseModel):
+    """Enter scores for an assessment."""
+    scores: Dict[str, float]  # student_id -> points
+
+
+class QuickScoresRequest(BaseModel):
+    """Quick score entry by student name."""
+    scores: List[List[Any]]  # [[name, points], ...]
+
+
+class CreateInterventionRequest(BaseModel):
+    """Create an intervention plan."""
+    classroom_id: str
+    teks_codes: List[str]
+    target_group: str
+    strategy: str
+    student_ids: Optional[List[str]] = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1185,6 +1262,628 @@ async def education_info():
         "supported_grades": [3, 4, 5, 6, 7, 8],
         "supported_subjects": ["mathematics", "reading_ela", "science", "social_studies"],
         "teks_count": len(teks_library.all_codes()),
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEACHER'S AIDE DATABASE - Easy Classroom Management
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/teachers/db")
+async def teachers_db_summary():
+    """
+    Get Teacher's Aide Database summary.
+
+    Shows total counts of students, classrooms, assessments, and interventions.
+    """
+    return {
+        **teachers_db.get_summary(),
+        "extended_teks_count": len(extended_teks.all_codes()),
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STUDENTS - Manage student data
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/teachers/students")
+async def add_student(request: AddStudentRequest):
+    """
+    Add a new student.
+
+    Example:
+        POST /teachers/students
+        {"first_name": "Maria", "last_name": "Garcia", "grade": 5, "accommodations": ["ell"]}
+    """
+    student = teachers_db.add_student(
+        first_name=request.first_name,
+        last_name=request.last_name,
+        grade=request.grade,
+        accommodations=request.accommodations,
+        student_id=request.student_id
+    )
+
+    ledger.append(
+        operation="teachers_add_student",
+        payload={"student_id": student.student_id},
+        result="pass"
+    )
+
+    return {
+        "message": f"Added {student.full_name}",
+        "student": student.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/teachers/students/batch")
+async def add_students_batch(request: AddStudentsRequest):
+    """
+    Add multiple students at once.
+
+    Example:
+        POST /teachers/students/batch
+        {"students": [
+            {"first_name": "Maria", "last_name": "Garcia", "grade": 5},
+            {"first_name": "John", "last_name": "Smith", "grade": 5}
+        ]}
+    """
+    added = []
+    for s in request.students:
+        student = teachers_db.add_student(
+            first_name=s.first_name,
+            last_name=s.last_name,
+            grade=s.grade,
+            accommodations=s.accommodations,
+            student_id=s.student_id
+        )
+        added.append(student.to_dict())
+
+    ledger.append(
+        operation="teachers_add_students_batch",
+        payload={"count": len(added)},
+        result="pass"
+    )
+
+    return {
+        "message": f"Added {len(added)} students",
+        "students": added,
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/students")
+async def list_students(grade: Optional[int] = None, name: Optional[str] = None):
+    """
+    List or search students.
+
+    Query params:
+        grade: Filter by grade level
+        name: Search by name (partial match)
+    """
+    if name:
+        students = teachers_db.find_students(name)
+    else:
+        students = teachers_db.list_students(grade=grade)
+
+    return {
+        "students": [s.to_dict() for s in students],
+        "count": len(students),
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/students/{student_id}")
+async def get_student(student_id: str):
+    """Get a specific student by ID."""
+    student = teachers_db.get_student(student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail=f"Student {student_id} not found")
+
+    return {
+        "student": student.to_dict(),
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLASSROOMS - Manage classroom data
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/teachers/classrooms")
+async def create_classroom(request: CreateClassroomRequest):
+    """
+    Create a new classroom.
+
+    Example:
+        POST /teachers/classrooms
+        {"name": "5th Period Math", "grade": 5, "subject": "math", "teacher_name": "Ms. Johnson"}
+    """
+    classroom = teachers_db.create_classroom(
+        name=request.name,
+        grade=request.grade,
+        subject=request.subject,
+        teacher_name=request.teacher_name
+    )
+
+    ledger.append(
+        operation="teachers_create_classroom",
+        payload={"classroom_id": classroom.classroom_id},
+        result="pass"
+    )
+
+    return {
+        "message": f"Created classroom: {classroom.name}",
+        "classroom": classroom.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/classrooms")
+async def list_classrooms():
+    """List all classrooms."""
+    classrooms = list(teachers_db.classrooms.values())
+    return {
+        "classrooms": [c.to_dict() for c in classrooms],
+        "count": len(classrooms),
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/classrooms/{classroom_id}")
+async def get_classroom(classroom_id: str):
+    """Get a specific classroom by ID."""
+    classroom = teachers_db.get_classroom(classroom_id)
+    if not classroom:
+        raise HTTPException(status_code=404, detail=f"Classroom {classroom_id} not found")
+
+    return {
+        "classroom": classroom.to_dict(),
+        "roster": classroom.get_roster(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/teachers/classrooms/{classroom_id}/students")
+async def add_students_to_classroom(classroom_id: str, request: AddStudentToClassRequest):
+    """
+    Add students to a classroom.
+
+    Example:
+        POST /teachers/classrooms/CLASS001/students
+        {"student_ids": ["STU0001", "STU0002"]}
+    """
+    result = teachers_db.add_students_to_classroom(request.student_ids, classroom_id)
+
+    ledger.append(
+        operation="teachers_add_to_classroom",
+        payload={"classroom_id": classroom_id, "count": len(request.student_ids)},
+        result="pass"
+    )
+
+    return {
+        "message": result,
+        "classroom_id": classroom_id,
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/classrooms/{classroom_id}/roster")
+async def get_classroom_roster(classroom_id: str):
+    """Get the class roster sorted by last name."""
+    classroom = teachers_db.get_classroom(classroom_id)
+    if not classroom:
+        raise HTTPException(status_code=404, detail=f"Classroom {classroom_id} not found")
+
+    return {
+        "classroom": classroom.name,
+        "roster": classroom.get_roster(),
+        "count": classroom.student_count,
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DIFFERENTIATION - The core feature for teachers
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/teachers/classrooms/{classroom_id}/groups")
+async def get_differentiated_groups(classroom_id: str):
+    """
+    Get differentiated student groups for a classroom.
+
+    THIS IS THE KEY FEATURE - automatically groups students by mastery level
+    for differentiated instruction.
+
+    Returns:
+        - Tier 3 (Needs Reteach): Students below 70%
+        - Tier 2 (Approaching): Students 70-79%
+        - Tier 1 (Mastery): Students 80-89%
+        - Enrichment (Advanced): Students 90%+
+    """
+    result = teachers_db.get_groups(classroom_id)
+
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+
+    ledger.append(
+        operation="teachers_get_groups",
+        payload={"classroom_id": classroom_id},
+        result="pass"
+    )
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/classrooms/{classroom_id}/reteach")
+async def get_reteach_group(classroom_id: str):
+    """
+    Get students who need reteaching.
+
+    Quick access to the Tier 3 intervention group.
+    """
+    students = teachers_db.get_reteach_group(classroom_id)
+
+    return {
+        "classroom_id": classroom_id,
+        "reteach_group": [s.to_simple_dict() for s in students],
+        "count": len(students),
+        "recommendation": "Small group instruction on prerequisite skills",
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ASSESSMENTS - Track and enter scores
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/teachers/assessments")
+async def create_assessment(request: CreateAssessmentRequest):
+    """
+    Create a new assessment.
+
+    Example:
+        POST /teachers/assessments
+        {
+            "name": "Exit Ticket 5.3A",
+            "classroom_id": "CLASS001",
+            "teks_codes": ["5.3A"],
+            "total_points": 3
+        }
+    """
+    assessment = teachers_db.create_assessment(
+        name=request.name,
+        classroom_id=request.classroom_id,
+        teks_codes=request.teks_codes,
+        total_points=request.total_points,
+        assessment_type=request.assessment_type
+    )
+
+    ledger.append(
+        operation="teachers_create_assessment",
+        payload={"assessment_id": assessment.assessment_id, "teks": request.teks_codes},
+        result="pass"
+    )
+
+    return {
+        "message": f"Created assessment: {assessment.name}",
+        "assessment": assessment.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/assessments")
+async def list_assessments():
+    """List all assessments."""
+    assessments = list(teachers_db.assessments.values())
+    return {
+        "assessments": [a.to_dict() for a in assessments],
+        "count": len(assessments),
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/assessments/{assessment_id}")
+async def get_assessment(assessment_id: str):
+    """Get a specific assessment by ID."""
+    assessment = teachers_db.assessments.get(assessment_id)
+    if not assessment:
+        raise HTTPException(status_code=404, detail=f"Assessment {assessment_id} not found")
+
+    return {
+        "assessment": assessment.to_dict(),
+        "groups": assessment.get_results_grouped(),
+        "engine": ENGINE
+    }
+
+
+@app.post("/teachers/assessments/{assessment_id}/scores")
+async def enter_scores(assessment_id: str, request: EnterScoresRequest):
+    """
+    Enter scores for an assessment.
+
+    Automatically updates student mastery levels and groupings!
+
+    Example:
+        POST /teachers/assessments/ASSESS0001/scores
+        {"scores": {"STU0001": 3, "STU0002": 2, "STU0003": 1}}
+    """
+    result = teachers_db.enter_scores(assessment_id, request.scores)
+
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+
+    ledger.append(
+        operation="teachers_enter_scores",
+        payload={"assessment_id": assessment_id, "count": len(request.scores)},
+        result="pass"
+    )
+
+    return {
+        **result,
+        "message": "Scores entered! Student groups have been updated.",
+        "engine": ENGINE
+    }
+
+
+@app.post("/teachers/assessments/{assessment_id}/quick-scores")
+async def quick_enter_scores(assessment_id: str, request: QuickScoresRequest):
+    """
+    Quick score entry by student name.
+
+    Enter scores using student names instead of IDs.
+
+    Example:
+        POST /teachers/assessments/ASSESS0001/quick-scores
+        {"scores": [["Maria Garcia", 3], ["John Smith", 2]]}
+    """
+    scores_list = [(s[0], float(s[1])) for s in request.scores]
+    result = teachers_db.quick_enter_scores(assessment_id, scores_list)
+
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+
+    ledger.append(
+        operation="teachers_quick_scores",
+        payload={"assessment_id": assessment_id, "count": len(request.scores)},
+        result="pass"
+    )
+
+    return {
+        **result,
+        "message": "Scores entered! Student groups have been updated.",
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# INTERVENTIONS - Track intervention plans
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/teachers/interventions")
+async def create_intervention(request: CreateInterventionRequest):
+    """
+    Create an intervention plan.
+
+    If student_ids not provided, auto-populates from current grouping.
+
+    Example:
+        POST /teachers/interventions
+        {
+            "classroom_id": "CLASS001",
+            "teks_codes": ["5.3A"],
+            "target_group": "needs_reteach",
+            "strategy": "Small group manipulatives"
+        }
+    """
+    plan = teachers_db.create_intervention(
+        classroom_id=request.classroom_id,
+        teks_codes=request.teks_codes,
+        target_group=request.target_group,
+        strategy=request.strategy,
+        student_ids=request.student_ids
+    )
+
+    ledger.append(
+        operation="teachers_create_intervention",
+        payload={"plan_id": plan.plan_id, "group": request.target_group},
+        result="pass"
+    )
+
+    return {
+        "message": f"Created intervention plan for {len(plan.student_ids)} students",
+        "intervention": plan.to_dict(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/interventions")
+async def list_interventions():
+    """List all intervention plans."""
+    interventions = list(teachers_db.interventions.values())
+    return {
+        "interventions": [i.to_dict() for i in interventions],
+        "count": len(interventions),
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEKS - Extended standards database
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/teachers/teks")
+async def get_extended_teks(grade: Optional[int] = None, subject: Optional[str] = None):
+    """
+    Get TEKS standards from the extended database.
+
+    Includes 200+ standards across K-8 Math, Reading, Science, and Social Studies.
+    """
+    if grade is not None and subject is not None:
+        try:
+            subject_enum = Subject(subject)
+            standards = extended_teks.get_by_grade_and_subject(grade, subject_enum)
+        except ValueError:
+            standards = extended_teks.get_by_grade(grade)
+    elif grade is not None:
+        standards = extended_teks.get_by_grade(grade)
+    elif subject is not None:
+        try:
+            subject_enum = Subject(subject)
+            standards = extended_teks.get_by_subject(subject_enum)
+        except ValueError:
+            standards = []
+    else:
+        standards = [extended_teks.get(code) for code in extended_teks.all_codes()]
+
+    return {
+        "standards": [s.to_dict() for s in standards if s],
+        "count": len([s for s in standards if s]),
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/teks/stats")
+async def get_teks_statistics():
+    """Get statistics about the TEKS database."""
+    return {
+        **extended_teks.get_statistics(),
+        "engine": ENGINE
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DATA PERSISTENCE - Save and load
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/teachers/db/save")
+async def save_teachers_db(filename: Optional[str] = None):
+    """
+    Save the database to a JSON file.
+
+    Example:
+        POST /teachers/db/save?filename=my_class_data.json
+    """
+    filepath = teachers_db.save(filename)
+
+    ledger.append(
+        operation="teachers_db_save",
+        payload={"filepath": filepath},
+        result="pass"
+    )
+
+    return {
+        "message": "Database saved",
+        "filepath": filepath,
+        "engine": ENGINE
+    }
+
+
+@app.post("/teachers/db/load")
+async def load_teachers_db(filename: str):
+    """
+    Load the database from a JSON file.
+
+    Example:
+        POST /teachers/db/load?filename=my_class_data.json
+    """
+    result = teachers_db.load(filename)
+
+    ledger.append(
+        operation="teachers_db_load",
+        payload={"filename": filename},
+        result="pass" if "Loaded" in result else "fail"
+    )
+
+    return {
+        "message": result,
+        "summary": teachers_db.get_summary(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/teachers/info")
+async def teachers_aide_info():
+    """Get information about Teacher's Aide Database endpoints."""
+    return {
+        "description": "Easy-to-use classroom management for teachers",
+        "philosophy": "Less paperwork, more teaching.",
+        "endpoints": [
+            {
+                "category": "Students",
+                "endpoints": [
+                    {"method": "POST", "path": "/teachers/students", "description": "Add a student"},
+                    {"method": "POST", "path": "/teachers/students/batch", "description": "Add multiple students"},
+                    {"method": "GET", "path": "/teachers/students", "description": "List/search students"},
+                    {"method": "GET", "path": "/teachers/students/{id}", "description": "Get student details"}
+                ]
+            },
+            {
+                "category": "Classrooms",
+                "endpoints": [
+                    {"method": "POST", "path": "/teachers/classrooms", "description": "Create a classroom"},
+                    {"method": "GET", "path": "/teachers/classrooms", "description": "List classrooms"},
+                    {"method": "GET", "path": "/teachers/classrooms/{id}", "description": "Get classroom details"},
+                    {"method": "POST", "path": "/teachers/classrooms/{id}/students", "description": "Add students to class"},
+                    {"method": "GET", "path": "/teachers/classrooms/{id}/roster", "description": "Get class roster"}
+                ]
+            },
+            {
+                "category": "Differentiation",
+                "endpoints": [
+                    {"method": "GET", "path": "/teachers/classrooms/{id}/groups", "description": "Get student groups by mastery (THE KEY FEATURE!)"},
+                    {"method": "GET", "path": "/teachers/classrooms/{id}/reteach", "description": "Get reteach group"}
+                ]
+            },
+            {
+                "category": "Assessments",
+                "endpoints": [
+                    {"method": "POST", "path": "/teachers/assessments", "description": "Create an assessment"},
+                    {"method": "GET", "path": "/teachers/assessments", "description": "List assessments"},
+                    {"method": "POST", "path": "/teachers/assessments/{id}/scores", "description": "Enter scores"},
+                    {"method": "POST", "path": "/teachers/assessments/{id}/quick-scores", "description": "Quick entry by name"}
+                ]
+            },
+            {
+                "category": "Interventions",
+                "endpoints": [
+                    {"method": "POST", "path": "/teachers/interventions", "description": "Create intervention plan"},
+                    {"method": "GET", "path": "/teachers/interventions", "description": "List interventions"}
+                ]
+            },
+            {
+                "category": "TEKS",
+                "endpoints": [
+                    {"method": "GET", "path": "/teachers/teks", "description": "Browse 200+ TEKS standards"},
+                    {"method": "GET", "path": "/teachers/teks/stats", "description": "TEKS database statistics"}
+                ]
+            },
+            {
+                "category": "Data",
+                "endpoints": [
+                    {"method": "POST", "path": "/teachers/db/save", "description": "Save database to file"},
+                    {"method": "POST", "path": "/teachers/db/load", "description": "Load database from file"}
+                ]
+            }
+        ],
+        "key_features": [
+            "Automatic student grouping by mastery level",
+            "Enter scores by name (no IDs needed!)",
+            "Auto-update groups after each assessment",
+            "200+ TEKS standards included",
+            "Save/load data for persistence"
+        ],
+        "differentiation_tiers": {
+            "tier_3": "Needs Reteach - Below 70% - Small group with teacher",
+            "tier_2": "Approaching - 70-79% - Guided practice with scaffolds",
+            "tier_1": "Mastery - 80-89% - Standard instruction",
+            "enrichment": "Advanced - 90%+ - Extension activities"
+        },
         "engine": ENGINE
     }
 
