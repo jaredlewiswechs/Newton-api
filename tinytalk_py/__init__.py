@@ -80,6 +80,31 @@ try:
         Delta,
         motion,
     )
+
+    from .education import (
+        # Enums
+        Subject,
+        GradeLevel,
+        CognitiveLevel,
+        NESPhase,
+        # Data Classes
+        TEKSStandard,
+        LessonPhase,
+        StudentScore,
+        # Blueprints
+        NESLessonPlan,
+        AssessmentAnalyzer,
+        # Generators
+        LessonPlanGenerator,
+        SlideDeckGenerator,
+        PLCReportGenerator,
+        # Library
+        TEKSLibrary,
+        get_teks_library,
+        # Cartridge
+        EducationCartridge,
+        get_education_cartridge,
+    )
 except ImportError:
     # Fall back to absolute imports (when running directly)
     from core import (
@@ -124,6 +149,31 @@ except ImportError:
         motion,
     )
 
+    from education import (
+        # Enums
+        Subject,
+        GradeLevel,
+        CognitiveLevel,
+        NESPhase,
+        # Data Classes
+        TEKSStandard,
+        LessonPhase,
+        StudentScore,
+        # Blueprints
+        NESLessonPlan,
+        AssessmentAnalyzer,
+        # Generators
+        LessonPlanGenerator,
+        SlideDeckGenerator,
+        PLCReportGenerator,
+        # Library
+        TEKSLibrary,
+        get_teks_library,
+        # Cartridge
+        EducationCartridge,
+        get_education_cartridge,
+    )
+
 __version__ = "1.0.0"
 __all__ = [
     # Core
@@ -162,4 +212,21 @@ __all__ = [
     "Presence",
     "Delta",
     "motion",
+    # Education
+    "Subject",
+    "GradeLevel",
+    "CognitiveLevel",
+    "NESPhase",
+    "TEKSStandard",
+    "LessonPhase",
+    "StudentScore",
+    "NESLessonPlan",
+    "AssessmentAnalyzer",
+    "LessonPlanGenerator",
+    "SlideDeckGenerator",
+    "PLCReportGenerator",
+    "TEKSLibrary",
+    "get_teks_library",
+    "EducationCartridge",
+    "get_education_cartridge",
 ]

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Newton Teacher's Aide - The Ultimate Teaching Assistant</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>N</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">N</div>
+          <div class="logo-text">
+            <span class="logo-title">Newton</span>
+            <span class="logo-subtitle">Teacher's Aide</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Planning</div>
+        <button class="nav-item active" data-view="lesson">
+          <span class="nav-icon">📚</span>
+          <span class="nav-text">Lesson Planner</span>
+        </button>
+        <button class="nav-item" data-view="slides">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Slide Deck</span>
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Assessment</div>
+        <button class="nav-item" data-view="assess">
+          <span class="nav-icon">✅</span>
+          <span class="nav-text">Grade & Analyze</span>
+        </button>
+        <button class="nav-item" data-view="plc">
+          <span class="nav-icon">📈</span>
+          <span class="nav-text">PLC Report</span>
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Standards</div>
+        <button class="nav-item" data-view="teks">
+          <span class="nav-icon">📋</span>
+          <span class="nav-text">TEKS Browser</span>
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Help</div>
+        <button class="nav-item" data-view="guide">
+          <span class="nav-icon">📖</span>
+          <span class="nav-text">User Guide</span>
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="status-indicator" id="status">
+          <span class="status-dot"></span>
+          <span class="status-text">Connecting...</span>
+        </div>
+        <div class="version">Powered by Newton 1.0.0</div>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content">
+      <!-- Lesson Planner View -->
+      <div id="view-lesson" class="view active">
+        <div class="view-header">
+          <h1>Lesson Planner</h1>
+          <p class="view-description">Generate NES-compliant lesson plans aligned to TEKS standards</p>
+        </div>
+
+        <div class="form-container">
+          <form id="lesson-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="lesson-grade">Grade Level</label>
+                <select id="lesson-grade" required>
+                  <option value="">Select grade...</option>
+                  <option value="3">3rd Grade</option>
+                  <option value="4">4th Grade</option>
+                  <option value="5">5th Grade</option>
+                  <option value="6">6th Grade</option>
+                  <option value="7">7th Grade</option>
+                  <option value="8">8th Grade</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="lesson-subject">Subject</label>
+                <select id="lesson-subject" required>
+                  <option value="">Select subject...</option>
+                  <option value="mathematics">Mathematics</option>
+                  <option value="reading_ela">Reading/ELA</option>
+                  <option value="science">Science</option>
+                  <option value="social_studies">Social Studies</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="lesson-teks">TEKS Standards <span class="label-hint">(comma-separated codes)</span></label>
+              <input type="text" id="lesson-teks" placeholder="e.g., 5.3A, 5.3B, 5.3C" required>
+              <div class="teks-suggestions" id="teks-suggestions"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="lesson-topic">Lesson Topic <span class="label-hint">(optional)</span></label>
+              <input type="text" id="lesson-topic" placeholder="e.g., Adding fractions with unlike denominators">
+            </div>
+
+            <div class="form-group">
+              <label>Student Accommodations <span class="label-hint">(optional)</span></label>
+              <div class="accommodations-grid">
+                <div class="accommodation-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="acc-ell"> ELL Students
+                  </label>
+                  <input type="text" id="acc-ell-names" placeholder="Student names..." class="accommodation-names" disabled>
+                </div>
+                <div class="accommodation-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="acc-504"> 504 Plans
+                  </label>
+                  <input type="text" id="acc-504-names" placeholder="Student names..." class="accommodation-names" disabled>
+                </div>
+                <div class="accommodation-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="acc-sped"> Special Education
+                  </label>
+                  <input type="text" id="acc-sped-names" placeholder="Student names..." class="accommodation-names" disabled>
+                </div>
+                <div class="accommodation-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="acc-gt"> Gifted & Talented
+                  </label>
+                  <input type="text" id="acc-gt-names" placeholder="Student names..." class="accommodation-names" disabled>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary">
+              <span class="btn-icon">✨</span>
+              Generate Lesson Plan
+            </button>
+          </form>
+        </div>
+
+        <div id="lesson-result" class="result-container hidden">
+          <div class="result-header">
+            <h2>Generated Lesson Plan</h2>
+            <div class="result-meta">
+              <span class="result-time" id="lesson-time"></span>
+              <span class="result-fingerprint" id="lesson-fingerprint"></span>
+            </div>
+          </div>
+          <div id="lesson-content" class="lesson-content"></div>
+          <div class="result-actions">
+            <button class="btn-secondary" onclick="generateSlidesFromLesson()">
+              <span class="btn-icon">📊</span>
+              Generate Slides
+            </button>
+            <button class="btn-secondary" onclick="printLesson()">
+              <span class="btn-icon">🖨️</span>
+              Print
+            </button>
+            <button class="btn-secondary" onclick="exportLesson()">
+              <span class="btn-icon">📥</span>
+              Export JSON
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide Deck View -->
+      <div id="view-slides" class="view">
+        <div class="view-header">
+          <h1>Slide Deck Generator</h1>
+          <p class="view-description">Create presentation slides from your lesson plan</p>
+        </div>
+
+        <div id="slides-input" class="form-container">
+          <div class="info-banner">
+            <span class="info-icon">💡</span>
+            <p>Generate a lesson plan first, then click "Generate Slides" to create a presentation.</p>
+          </div>
+
+          <form id="slides-form">
+            <div class="form-group">
+              <label for="slides-style">Presentation Style</label>
+              <select id="slides-style">
+                <option value="modern">Modern (Clean & Minimal)</option>
+                <option value="colorful">Colorful (Engaging)</option>
+                <option value="professional">Professional (Formal)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="slides-json">Lesson Plan JSON <span class="label-hint">(paste from export)</span></label>
+              <textarea id="slides-json" rows="10" placeholder="Paste your lesson plan JSON here..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary">
+              <span class="btn-icon">📊</span>
+              Generate Slides
+            </button>
+          </form>
+        </div>
+
+        <div id="slides-result" class="result-container hidden">
+          <div class="result-header">
+            <h2>Generated Slide Deck</h2>
+            <div class="result-meta">
+              <span class="result-time" id="slides-time"></span>
+              <span id="slides-count"></span>
+            </div>
+          </div>
+          <div id="slides-content" class="slides-preview"></div>
+        </div>
+      </div>
+
+      <!-- Assessment View -->
+      <div id="view-assess" class="view">
+        <div class="view-header">
+          <h1>Assessment Analyzer</h1>
+          <p class="view-description">Grade assessments and generate student groupings for differentiation</p>
+        </div>
+
+        <div class="form-container">
+          <form id="assess-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="assess-name">Assessment Name</label>
+                <input type="text" id="assess-name" placeholder="e.g., Unit 3 Exit Ticket" required>
+              </div>
+
+              <div class="form-group">
+                <label for="assess-teks">TEKS Standards</label>
+                <input type="text" id="assess-teks" placeholder="e.g., 5.3A, 5.3B" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="assess-total">Total Points</label>
+                <input type="number" id="assess-total" value="100" min="1" required>
+              </div>
+
+              <div class="form-group">
+                <label for="assess-threshold">Mastery Threshold (%)</label>
+                <input type="number" id="assess-threshold" value="80" min="0" max="100" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="assess-data">Student Scores <span class="label-hint">(one per line: Name, Score)</span></label>
+              <textarea id="assess-data" rows="10" placeholder="Maria, 85
+James, 72
+Sofia, 95
+..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary">
+              <span class="btn-icon">✅</span>
+              Analyze Assessment
+            </button>
+          </form>
+        </div>
+
+        <div id="assess-result" class="result-container hidden">
+          <div class="result-header">
+            <h2>Assessment Analysis</h2>
+            <div class="result-meta">
+              <span class="result-time" id="assess-time"></span>
+            </div>
+          </div>
+
+          <div class="stats-grid" id="assess-stats"></div>
+          <div class="groups-container" id="assess-groups"></div>
+        </div>
+      </div>
+
+      <!-- PLC Report View -->
+      <div id="view-plc" class="view">
+        <div class="view-header">
+          <h1>PLC Report Generator</h1>
+          <p class="view-description">Generate data-driven PLC reports that replace traditional meetings</p>
+        </div>
+
+        <div class="form-container">
+          <form id="plc-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="plc-team">Team Name</label>
+                <input type="text" id="plc-team" placeholder="e.g., 5th Grade Math Team" value="Grade Level Team">
+              </div>
+
+              <div class="form-group">
+                <label for="plc-period">Reporting Period</label>
+                <input type="text" id="plc-period" placeholder="e.g., January 2026">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="plc-teks">TEKS Focus Standards</label>
+              <input type="text" id="plc-teks" placeholder="e.g., 5.3A, 5.3B, 5.3C" required>
+            </div>
+
+            <div class="form-group">
+              <label for="plc-data">Assessment Data <span class="label-hint">(one per line: Name, Score)</span></label>
+              <textarea id="plc-data" rows="10" placeholder="Maria, 85
+James, 72
+Sofia, 95
+..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary">
+              <span class="btn-icon">📈</span>
+              Generate PLC Report
+            </button>
+          </form>
+        </div>
+
+        <div id="plc-result" class="result-container hidden">
+          <div class="result-header">
+            <h2>PLC Report</h2>
+            <div class="result-meta">
+              <span class="result-time" id="plc-time"></span>
+              <button class="btn-secondary btn-sm" onclick="printPLC()">
+                <span class="btn-icon">🖨️</span>
+                Print Report
+              </button>
+            </div>
+          </div>
+
+          <div id="plc-content" class="plc-content"></div>
+        </div>
+      </div>
+
+      <!-- TEKS Browser View -->
+      <div id="view-teks" class="view">
+        <div class="view-header">
+          <h1>TEKS Standards Browser</h1>
+          <p class="view-description">Search and explore Texas Essential Knowledge and Skills standards</p>
+        </div>
+
+        <div class="search-container">
+          <div class="search-bar">
+            <input type="text" id="teks-search" placeholder="Search by keyword, code, or skill...">
+            <button onclick="searchTEKS()" class="btn-search">Search</button>
+          </div>
+
+          <div class="filter-row">
+            <select id="teks-grade-filter">
+              <option value="">All Grades</option>
+              <option value="3">Grade 3</option>
+              <option value="4">Grade 4</option>
+              <option value="5">Grade 5</option>
+              <option value="6">Grade 6</option>
+              <option value="7">Grade 7</option>
+              <option value="8">Grade 8</option>
+            </select>
+
+            <select id="teks-subject-filter">
+              <option value="">All Subjects</option>
+              <option value="mathematics">Mathematics</option>
+              <option value="reading_ela">Reading/ELA</option>
+              <option value="science">Science</option>
+              <option value="social_studies">Social Studies</option>
+            </select>
+
+            <button onclick="filterTEKS()" class="btn-secondary">Apply Filters</button>
+          </div>
+        </div>
+
+        <div id="teks-results" class="teks-grid"></div>
+      </div>
+
+      <!-- User Guide View -->
+      <div id="view-guide" class="view">
+        <div class="view-header">
+          <h1>User Guide</h1>
+          <p class="view-description">Learn how to use Newton Teacher's Aide effectively</p>
+        </div>
+
+        <div class="guide-content">
+          <section class="guide-section">
+            <h2>Getting Started</h2>
+            <p>Newton Teacher's Aide is your AI-powered teaching assistant for HISD's New Education System. It helps you create TEKS-aligned lesson plans, analyze assessments, and generate comprehensive PLC reports.</p>
+
+            <div class="feature-cards">
+              <div class="feature-card">
+                <div class="feature-icon">📚</div>
+                <h3>Lesson Planner</h3>
+                <p>Generate complete 50-minute NES-compliant lesson plans with all 5 phases, differentiation strategies, and exit tickets.</p>
+              </div>
+
+              <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Slide Deck</h3>
+                <p>Convert your lesson plans into ready-to-use presentation slides with objectives, examples, and practice problems.</p>
+              </div>
+
+              <div class="feature-card">
+                <div class="feature-icon">✅</div>
+                <h3>Assessment Analyzer</h3>
+                <p>Grade exit tickets and formative assessments instantly. Get automatic student groupings for reteach, on-track, and mastery.</p>
+              </div>
+
+              <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3>PLC Report</h3>
+                <p>Replace traditional PLC meetings with data-driven reports including insights, action items, and next steps.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="guide-section">
+            <h2>Quick Start Guide</h2>
+
+            <div class="steps">
+              <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  <h4>Select Your Grade and Subject</h4>
+                  <p>Choose the grade level (3-8) and subject area you're planning for.</p>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  <h4>Enter TEKS Standards</h4>
+                  <p>Type the TEKS codes for your lesson (e.g., 5.3A, 5.3B). You can search for standards in the TEKS Browser.</p>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  <h4>Add Topic and Accommodations</h4>
+                  <p>Optionally add a specific topic and identify students needing accommodations (ELL, 504, SPED, GT).</p>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                  <h4>Generate and Review</h4>
+                  <p>Click "Generate Lesson Plan" and review the complete NES-compliant lesson with all phases.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="guide-section">
+            <h2>Understanding NES Phases</h2>
+
+            <div class="nes-phases">
+              <div class="phase-card opening">
+                <h4>Opening (5 min)</h4>
+                <p>Hook students with a real-world connection. Share the learning objective. Students restate in their own words.</p>
+              </div>
+
+              <div class="phase-card instruction">
+                <h4>Direct Instruction (15 min)</h4>
+                <p>Teacher models 2-3 examples using think-aloud strategy. Check for understanding every 3-5 minutes.</p>
+              </div>
+
+              <div class="phase-card guided">
+                <h4>Guided Practice (15 min)</h4>
+                <p>Collaborative practice in pairs or small groups. Teacher circulates and provides immediate feedback.</p>
+              </div>
+
+              <div class="phase-card independent">
+                <h4>Independent Practice (10 min)</h4>
+                <p>Students work individually on 5-8 problems. This serves as formative assessment data.</p>
+              </div>
+
+              <div class="phase-card closing">
+                <h4>Closing (5 min)</h4>
+                <p>Exit ticket with 2-3 questions. Use results to determine tomorrow's reteach groups.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="guide-section">
+            <h2>Tips for Best Results</h2>
+            <ul class="tips-list">
+              <li><strong>Be specific with TEKS:</strong> Enter the exact TEKS codes for better alignment.</li>
+              <li><strong>Use the topic field:</strong> Adding a specific topic improves the lesson focus.</li>
+              <li><strong>Include accommodations:</strong> List students who need ELL, 504, SPED, or GT support.</li>
+              <li><strong>Analyze exit tickets promptly:</strong> Use the Assessment Analyzer immediately after class.</li>
+              <li><strong>Generate PLC reports weekly:</strong> Keep your team informed with regular data updates.</li>
+            </ul>
+          </section>
+
+          <section class="guide-section">
+            <h2>About Newton</h2>
+            <p>Newton Teacher's Aide is powered by the Newton Supercomputer - a verified computation system where every calculation is proven correct. All lesson plans, assessments, and reports are constraint-verified before delivery.</p>
+            <p class="newton-motto">"1 == 1. The constraint IS the instruction."</p>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

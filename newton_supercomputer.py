@@ -60,6 +60,13 @@ from core import (
     get_cartridge_manager, CartridgeType,
 )
 
+# Education Module
+from tinytalk_py.education import (
+    get_education_cartridge,
+    get_teks_library,
+    Subject,
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -93,6 +100,10 @@ merkle_scheduler.start()
 
 # Cartridge manager
 cartridges = get_cartridge_manager()
+
+# Education cartridge
+education = get_education_cartridge()
+teks_library = get_teks_library()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -218,6 +229,47 @@ class RosettaRequest(BaseModel):
 class AutoCartridgeRequest(BaseModel):
     """Auto-detect cartridge type and compile."""
     intent: str
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EDUCATION MODELS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class LessonPlanRequest(BaseModel):
+    """Request to generate an NES-compliant lesson plan."""
+    grade: int
+    subject: str
+    teks_codes: List[str]
+    topic: Optional[str] = None
+    student_needs: Optional[Dict[str, List[str]]] = None
+
+
+class SlideDeckRequest(BaseModel):
+    """Request to generate a slide deck from a lesson plan."""
+    lesson_plan: Dict[str, Any]
+    style: Optional[str] = "modern"
+
+
+class AssessmentRequest(BaseModel):
+    """Request to analyze assessment data."""
+    assessment_name: str
+    teks_codes: List[str]
+    total_points: Optional[float] = 100.0
+    mastery_threshold: Optional[float] = 80.0
+    students: List[Dict[str, Any]]
+
+
+class PLCReportRequest(BaseModel):
+    """Request to generate a PLC report."""
+    assessment_data: List[Dict[str, Any]]
+    teks_codes: List[str]
+    team_name: Optional[str] = "Grade Level Team"
+    reporting_period: Optional[str] = None
+
+
+class TEKSSearchRequest(BaseModel):
+    """Request to search TEKS standards."""
+    query: str
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -861,6 +913,278 @@ async def cartridge_info():
                 "constraints": {}
             }
         ],
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EDUCATION - The Ultimate Teacher's Aide
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/education/lesson")
+async def generate_lesson(request: LessonPlanRequest):
+    """
+    Generate an NES-compliant lesson plan.
+
+    Creates a verified lesson plan with:
+    - 5 NES phases (Opening, Instruction, Guided, Independent, Closing)
+    - TEKS alignment verification
+    - Differentiation strategies
+    - Exit ticket aligned to objective
+    """
+    result = education.generate_lesson(
+        grade=request.grade,
+        subject=request.subject,
+        teks_codes=request.teks_codes,
+        topic=request.topic,
+        student_needs=request.student_needs
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="education_lesson",
+        payload={
+            "grade": request.grade,
+            "subject": request.subject,
+            "teks": request.teks_codes
+        },
+        result="pass" if result.get("verified") else "fail",
+        metadata={"elapsed_us": result.get("elapsed_us", 0)}
+    )
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+
+@app.post("/education/slides")
+async def generate_slides(request: SlideDeckRequest):
+    """
+    Generate a slide deck from a lesson plan.
+
+    Creates presentation specifications with:
+    - Title, objective, and vocabulary slides
+    - Phase-specific content slides
+    - Example and practice slides
+    - Exit ticket slide
+    """
+    result = education.generate_slides(
+        lesson_plan=request.lesson_plan,
+        style=request.style
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="education_slides",
+        payload={"style": request.style},
+        result="pass" if result.get("verified") else "fail",
+        metadata={"elapsed_us": result.get("elapsed_us", 0)}
+    )
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+
+@app.post("/education/assess")
+async def analyze_assessment(request: AssessmentRequest):
+    """
+    Analyze assessment data and generate student groupings.
+
+    Provides:
+    - Class statistics (mean, median, mastery rate)
+    - Student groupings (reteach, approaching, mastery)
+    - Differentiation recommendations
+    """
+    result = education.analyze_assessment(
+        data=request.students,
+        assessment_name=request.assessment_name,
+        teks_codes=request.teks_codes,
+        total_points=request.total_points,
+        mastery_threshold=request.mastery_threshold
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="education_assess",
+        payload={
+            "assessment": request.assessment_name,
+            "teks": request.teks_codes,
+            "student_count": len(request.students)
+        },
+        result="pass" if result.get("verified") else "fail"
+    )
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+
+@app.post("/education/plc")
+async def generate_plc_report(request: PLCReportRequest):
+    """
+    Generate a comprehensive PLC report.
+
+    Replaces traditional PLC meetings with:
+    - Data-driven insights
+    - Action items with priorities
+    - Student groupings
+    - Recommended resources
+    - Next steps
+    """
+    result = education.generate_plc_report(
+        assessment_data=request.assessment_data,
+        teks_codes=request.teks_codes,
+        team_name=request.team_name,
+        reporting_period=request.reporting_period
+    )
+
+    # Record in ledger
+    ledger.append(
+        operation="education_plc",
+        payload={
+            "team": request.team_name,
+            "teks": request.teks_codes,
+            "student_count": len(request.assessment_data)
+        },
+        result="pass" if result.get("verified") else "fail",
+        metadata={"elapsed_us": result.get("elapsed_us", 0)}
+    )
+
+    return {
+        **result,
+        "engine": ENGINE
+    }
+
+
+@app.get("/education/teks")
+async def get_teks_standards(grade: Optional[int] = None, subject: Optional[str] = None):
+    """
+    Get TEKS standards.
+
+    Filter by grade level and/or subject.
+    """
+    if grade is not None and subject is not None:
+        try:
+            subject_enum = Subject(subject)
+            standards = teks_library.get_by_grade_and_subject(grade, subject_enum)
+        except ValueError:
+            standards = teks_library.get_by_grade(grade)
+    elif grade is not None:
+        standards = teks_library.get_by_grade(grade)
+    elif subject is not None:
+        try:
+            subject_enum = Subject(subject)
+            standards = teks_library.get_by_subject(subject_enum)
+        except ValueError:
+            standards = []
+    else:
+        standards = [teks_library.get(code) for code in teks_library.all_codes()]
+
+    return {
+        "standards": [s.to_dict() for s in standards if s],
+        "count": len(standards),
+        "engine": ENGINE
+    }
+
+
+@app.get("/education/teks/{code}")
+async def get_teks_standard(code: str):
+    """Get a specific TEKS standard by code."""
+    standard = teks_library.get(code)
+    if not standard:
+        raise HTTPException(status_code=404, detail=f"TEKS code {code} not found")
+
+    return {
+        "standard": standard.to_dict(),
+        "learning_path": education.get_learning_path(code),
+        "engine": ENGINE
+    }
+
+
+@app.post("/education/teks/search")
+async def search_teks(request: TEKSSearchRequest):
+    """Search TEKS standards by keyword."""
+    results = education.search_teks(request.query)
+    return {
+        "query": request.query,
+        "results": results,
+        "count": len(results),
+        "engine": ENGINE
+    }
+
+
+@app.get("/education/info")
+async def education_info():
+    """Get information about education endpoints."""
+    return {
+        "endpoints": [
+            {
+                "name": "lesson",
+                "endpoint": "/education/lesson",
+                "method": "POST",
+                "description": "Generate NES-compliant lesson plans",
+                "features": [
+                    "5 NES phases (50 min total)",
+                    "TEKS alignment verification",
+                    "Differentiation strategies",
+                    "Exit ticket generation"
+                ]
+            },
+            {
+                "name": "slides",
+                "endpoint": "/education/slides",
+                "method": "POST",
+                "description": "Generate slide decks from lesson plans",
+                "features": [
+                    "Title and objective slides",
+                    "Phase-specific content",
+                    "Example and practice slides",
+                    "Multiple export formats"
+                ]
+            },
+            {
+                "name": "assess",
+                "endpoint": "/education/assess",
+                "method": "POST",
+                "description": "Analyze assessment data",
+                "features": [
+                    "Robust statistics (MAD)",
+                    "Student groupings",
+                    "Mastery classification",
+                    "Reteach recommendations"
+                ]
+            },
+            {
+                "name": "plc",
+                "endpoint": "/education/plc",
+                "method": "POST",
+                "description": "Generate PLC reports",
+                "features": [
+                    "Data-driven insights",
+                    "Action items with priorities",
+                    "Next steps planning",
+                    "Resource recommendations"
+                ]
+            },
+            {
+                "name": "teks",
+                "endpoint": "/education/teks",
+                "method": "GET",
+                "description": "Browse TEKS standards",
+                "features": [
+                    "Filter by grade and subject",
+                    "Learning path navigation",
+                    "Keyword search"
+                ]
+            }
+        ],
+        "supported_grades": [3, 4, 5, 6, 7, 8],
+        "supported_subjects": ["mathematics", "reading_ela", "science", "social_studies"],
+        "teks_count": len(teks_library.all_codes()),
         "engine": ENGINE
     }
 
