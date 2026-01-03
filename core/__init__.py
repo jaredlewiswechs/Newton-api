@@ -226,6 +226,31 @@ from .voice_interface import (
     parse_intent,
 )
 
+from .constraint_extractor import (
+    # Core Extraction
+    ConstraintExtractor,
+    extract_constraints,
+    get_extractor,
+
+    # Verification
+    PlanVerifier,
+    verify_plan,
+    VerifiedPlan,
+    VerificationCertificate,
+
+    # Extraction Results
+    ExtractionResult,
+    ExtractedConstraint,
+
+    # Categories and Types
+    ConstraintCategory,
+    ConstraintStrength,
+    ConstraintPolarity,
+
+    # Patterns
+    ExtractionPatterns,
+)
+
 __all__ = [
     # CDL
     'CDLEvaluator', 'CDLParser', 'HaltChecker',
@@ -289,6 +314,13 @@ __all__ = [
     'ConversationMemory', 'MemoryObject', 'MemoryType',
     'SessionManager', 'Session', 'ConversationTurn',
     'parse_intent',
+
+    # Constraint Extraction - From Fuzzy to Formal
+    'ConstraintExtractor', 'extract_constraints', 'get_extractor',
+    'PlanVerifier', 'verify_plan', 'VerifiedPlan', 'VerificationCertificate',
+    'ExtractionResult', 'ExtractedConstraint',
+    'ConstraintCategory', 'ConstraintStrength', 'ConstraintPolarity',
+    'ExtractionPatterns',
 ]
 
 __version__ = "1.0.0"

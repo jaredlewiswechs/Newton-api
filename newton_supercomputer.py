@@ -102,6 +102,15 @@ from core.voice_interface import (
     DomainCategory,
 )
 
+# Constraint Extractor - From Fuzzy to Formal
+from core.constraint_extractor import (
+    extract_constraints,
+    verify_plan,
+    get_extractor,
+    ConstraintCategory,
+    ConstraintStrength,
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -224,6 +233,39 @@ class CalculateRequest(BaseModel):
     max_iterations: Optional[int] = 10000
     max_operations: Optional[int] = 1000000
     timeout_seconds: Optional[float] = 30.0
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONSTRAINT EXTRACTION MODELS - From Fuzzy to Formal
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class ExtractConstraintsRequest(BaseModel):
+    """
+    Extract formal constraints from natural language.
+
+    "You're parsing it like a CONSTRAINT EXTRACTOR, not a language model."
+
+    Example input:
+        "I want to take my 4 friends to Costa Rica for 2 weeks in December.
+         Nothing too expensive, but it should be safe and fun.
+         We all want at least 3 activities. Oh, and we're not night people."
+
+    Output: Formal CDL constraints + TinyTalk specification
+    """
+    text: str
+    include_tinytalk: Optional[bool] = True
+    include_cdl: Optional[bool] = True
+
+
+class VerifyPlanRequest(BaseModel):
+    """
+    Verify a plan against extracted constraints.
+
+    Not "I think this is good" but "This IS verified."
+    """
+    plan: Dict[str, Any]
+    extraction_id: Optional[str] = None
+    text: Optional[str] = None  # Alternative: extract constraints from text
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -558,6 +600,198 @@ async def evaluate_constraint(request: ConstraintRequest):
         "message": result.message,
         "elapsed_us": elapsed_us,
         "fingerprint": result.fingerprint,
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONSTRAINT EXTRACTION - From Fuzzy to Formal
+# "You're parsing it like a CONSTRAINT EXTRACTOR, not a language model."
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Cache for extractions (so verify_plan can reference by ID)
+_extraction_cache: Dict[str, Any] = {}
+
+@app.post("/extract")
+async def extract_constraints_endpoint(request: ExtractConstraintsRequest):
+    """
+    Extract formal constraints from natural language.
+
+    Pipeline: Natural Language → Constraint Extraction → Formal Spec → Verified Output
+                  (fuzzy)            (parsing)           (Newton^2)      (deterministic)
+
+    Example:
+        Input: "I want to take my 4 friends to Costa Rica for 2 weeks in December.
+                Nothing too expensive, but it should be safe and fun."
+
+        Output:
+        {
+            "constraints": [
+                {"field": "group_size", "operator": "eq", "value": 5},
+                {"field": "duration_week", "operator": "eq", "value": 2},
+                {"field": "cost", "operator": "lt", "value": 0.8},
+                {"field": "safety_rating", "operator": "ge", "value": 0.8}
+            ],
+            "tinytalk": "when(self.group_size == 5, finfr)...",
+            "cdl": {...}
+        }
+    """
+    start_us = time.perf_counter_ns() // 1000
+
+    # Extract constraints
+    extraction = extract_constraints(request.text)
+
+    # Cache for later verification
+    _extraction_cache[extraction.id] = extraction
+
+    elapsed_us = (time.perf_counter_ns() // 1000) - start_us
+
+    # Build response
+    response = {
+        "id": extraction.id,
+        "source_text": extraction.source_text,
+        "action": extraction.action,
+        "subject": extraction.subject,
+        "objects": extraction.objects,
+        "constraints": [c.to_dict() for c in extraction.constraints],
+        "constraint_count": len(extraction.constraints),
+        "all_extractable": extraction.all_extractable,
+        "ambiguities": extraction.ambiguities,
+        "assumptions": extraction.assumptions,
+        "verification": {
+            "merkle_root": extraction.merkle_root,
+            "signature": extraction.signature,
+            "timestamp": extraction.timestamp
+        },
+        "elapsed_us": elapsed_us,
+        "engine": ENGINE
+    }
+
+    # Include TinyTalk specification if requested
+    if request.include_tinytalk:
+        response["tinytalk"] = extraction.to_tinytalk_blueprint("ExtractedPlan")
+
+    # Include CDL specification if requested
+    if request.include_cdl:
+        response["cdl"] = extraction.to_cdl_spec()
+
+    # Record in ledger
+    ledger.append(
+        operation="extract_constraints",
+        payload={
+            "text_hash": hashlib.sha256(request.text.encode()).hexdigest()[:16],
+            "constraint_count": len(extraction.constraints)
+        },
+        result="success"
+    )
+
+    return response
+
+
+@app.post("/extract/verify")
+async def verify_plan_endpoint(request: VerifyPlanRequest):
+    """
+    Verify a plan against extracted constraints.
+
+    Not "I think this is good" but "This IS verified."
+
+    Returns verification certificates for each constraint, proving
+    whether the plan satisfies all requirements.
+    """
+    start_us = time.perf_counter_ns() // 1000
+
+    # Get or create extraction
+    extraction = None
+
+    if request.extraction_id and request.extraction_id in _extraction_cache:
+        extraction = _extraction_cache[request.extraction_id]
+    elif request.text:
+        extraction = extract_constraints(request.text)
+        _extraction_cache[extraction.id] = extraction
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Either extraction_id or text must be provided"
+        )
+
+    # Verify the plan
+    verified_plan = verify_plan(request.plan, extraction)
+
+    elapsed_us = (time.perf_counter_ns() // 1000) - start_us
+
+    # Record in ledger
+    ledger.append(
+        operation="verify_plan",
+        payload={
+            "plan_id": verified_plan.id,
+            "all_verified": verified_plan.all_verified,
+            "certificate_count": len(verified_plan.certificates)
+        },
+        result="verified" if verified_plan.all_verified else "failed"
+    )
+
+    return {
+        **verified_plan.to_dict(),
+        "elapsed_us": elapsed_us,
+        "engine": ENGINE
+    }
+
+
+@app.get("/extract/example")
+async def extract_example():
+    """
+    Show an example of constraint extraction.
+
+    This demonstrates Newton^2's constraint extraction pipeline:
+    Natural Language → Constraints → Verified Plan
+    """
+    example_input = (
+        "I want to take my 4 friends to Costa Rica for 2 weeks in December. "
+        "Nothing too expensive, but it should be safe and fun. "
+        "We all want at least 3 activities. Oh, and we're not night people."
+    )
+
+    extraction = extract_constraints(example_input)
+
+    # Example plan that satisfies the constraints
+    example_plan = {
+        "name": "Costa Rica Adventure",
+        "group_size": 5,
+        "duration_week": 2,
+        "cost": 4500,
+        "safety_rating": 0.9,
+        "activities": [
+            {"name": "Hiking La Fortuna", "end_time": 16},
+            {"name": "Zip-lining", "end_time": 15},
+            {"name": "Snorkeling", "end_time": 14}
+        ],
+        "count": 3
+    }
+
+    verified = verify_plan(example_plan, extraction)
+
+    return {
+        "example_input": example_input,
+        "extraction": {
+            "id": extraction.id,
+            "constraints": [c.to_dict() for c in extraction.constraints],
+            "ambiguities": extraction.ambiguities,
+            "assumptions": extraction.assumptions
+        },
+        "example_plan": example_plan,
+        "verification": {
+            "all_verified": verified.all_verified,
+            "certificates": [
+                {
+                    "constraint": c.constraint_description,
+                    "verified": c.verified,
+                    "actual": c.actual_value,
+                    "expected": c.expected_value
+                }
+                for c in verified.certificates
+            ]
+        },
+        "message": "This is Newton^2: Not 'I think this is good' but 'This IS verified'",
         "engine": ENGINE
     }
 

@@ -38,6 +38,12 @@ from .forge import get_forge, ForgeConfig
 from .vault import get_vault, VaultConfig
 from .ledger import get_ledger, LedgerConfig
 from .logic import LogicEngine, ExecutionBounds, calculate
+from .constraint_extractor import (
+    extract_constraints,
+    ConstraintCategory,
+    ConstraintStrength,
+    ExtractionResult,
+)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1018,6 +1024,59 @@ class CDLGenerator:
             ],
         }
         return defaults.get(domain, [])
+
+    def generate_with_extraction(self, text: str, intent: Optional[ParsedIntent] = None) -> Dict[str, Any]:
+        """
+        Generate CDL using the enhanced constraint extraction system.
+
+        This method uses Newton^2's constraint extractor for sophisticated
+        natural language → formal constraint conversion.
+
+        "You're parsing it like a CONSTRAINT EXTRACTOR, not a language model."
+        """
+        # Extract constraints using Newton^2
+        extraction = extract_constraints(text)
+
+        # Convert to CDL format
+        cdl_constraints = []
+        for c in extraction.constraints:
+            cdl_constraints.append({
+                "field": c.field,
+                "operator": c.operator.value,
+                "value": c.value,
+                "strength": c.strength.value,
+                "category": c.category.value,
+                "confidence": c.confidence,
+                "source": c.source_text[:50] + "..." if len(c.source_text) > 50 else c.source_text
+            })
+
+        cdl = {
+            "id": f"cdl_extracted_{extraction.id}",
+            "extraction_id": extraction.id,
+            "name": f"Extracted Plan: {extraction.action}",
+            "description": f"Constraints extracted from: {text[:50]}...",
+            "action": extraction.action,
+            "subject": extraction.subject,
+            "objects": extraction.objects,
+            "constraints": cdl_constraints,
+            "constraint_count": len(cdl_constraints),
+            "ambiguities": extraction.ambiguities,
+            "assumptions": extraction.assumptions,
+            "all_extractable": extraction.all_extractable,
+            "verification": {
+                "merkle_root": extraction.merkle_root,
+                "signature": extraction.signature,
+                "timestamp": extraction.timestamp
+            },
+            "generated_at": int(time.time() * 1000),
+        }
+
+        # If we have an intent, include it
+        if intent:
+            cdl["intent"] = intent.to_dict()
+            cdl["domain"] = intent.domain.value
+
+        return cdl
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
