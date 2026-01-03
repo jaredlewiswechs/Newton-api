@@ -832,3 +832,402 @@ window.printPLC = printPLC;
 window.searchTEKS = searchTEKS;
 window.filterTEKS = filterTEKS;
 window.selectTEKS = selectTEKS;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENHANCED FEATURES - JANUARY 2026
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Keyboard Navigation
+ * Alt+1-6 for quick view switching
+ * Cmd/Ctrl+S for save
+ * Cmd/Ctrl+E for export
+ */
+function initKeyboardNavigation() {
+  document.addEventListener('keydown', (e) => {
+    // View switching: Alt + Number
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      const viewMap = {
+        '1': 'lesson',
+        '2': 'slides',
+        '3': 'assess',
+        '4': 'plc',
+        '5': 'teks',
+        '6': 'guide'
+      };
+      
+      if (viewMap[e.key]) {
+        e.preventDefault();
+        const navItem = document.querySelector(`[data-view="${viewMap[e.key]}"]`);
+        if (navItem) navItem.click();
+      }
+    }
+
+    // Save: Cmd/Ctrl+S
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      e.preventDefault();
+      autoSave();
+    }
+
+    // Export: Cmd/Ctrl+E
+    if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+      e.preventDefault();
+      exportCurrentView();
+    }
+
+    // Print: Cmd/Ctrl+P (enhanced)
+    if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+      e.preventDefault();
+      enhancedPrint();
+    }
+  });
+}
+
+/**
+ * Auto-save functionality
+ */
+let autoSaveTimer = null;
+const AUTO_SAVE_DELAY = 3000; // 3 seconds
+
+function setupAutoSave() {
+  // Watch all form inputs
+  document.querySelectorAll('input, textarea, select').forEach(input => {
+    input.addEventListener('input', () => {
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(autoSave, AUTO_SAVE_DELAY);
+      showAutoSaveIndicator('saving');
+    });
+  });
+}
+
+function autoSave() {
+  const currentView = document.querySelector('.view.active');
+  if (!currentView) return;
+
+  const viewId = currentView.id.replace('view-', '');
+  const formData = gatherFormData(viewId);
+  
+  // Save to localStorage
+  localStorage.setItem(`newton-aide-${viewId}`, JSON.stringify({
+    data: formData,
+    timestamp: Date.now()
+  }));
+  
+  showAutoSaveIndicator('saved');
+  setTimeout(() => showAutoSaveIndicator('idle'), 2000);
+}
+
+function gatherFormData(viewId) {
+  const form = document.querySelector(`#view-${viewId} form`);
+  if (!form) return {};
+
+  const formData = {};
+  new FormData(form).forEach((value, key) => {
+    formData[key] = value;
+  });
+  return formData;
+}
+
+function showAutoSaveIndicator(state) {
+  let indicator = document.getElementById('auto-save-indicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'auto-save-indicator';
+    indicator.className = 'auto-save-indicator';
+    document.body.appendChild(indicator);
+  }
+
+  const messages = {
+    saving: '💾 Saving...',
+    saved: '✅ Saved',
+    idle: ''
+  };
+
+  indicator.textContent = messages[state] || '';
+  indicator.className = `auto-save-indicator ${state}`;
+}
+
+/**
+ * Enhanced export functionality
+ */
+function exportCurrentView() {
+  const currentView = document.querySelector('.view.active');
+  if (!currentView) return;
+
+  const viewId = currentView.id.replace('view-', '');
+  
+  // Check for current result data
+  if (viewId === 'lesson' && currentLessonPlan) {
+    exportLesson();
+  } else if (viewId === 'plc') {
+    exportPLCReport();
+  } else if (viewId === 'assess') {
+    exportAssessment();
+  } else {
+    showNotification('No data to export', 'warning');
+  }
+}
+
+/**
+ * Export PLC report as PDF/CSV
+ */
+function exportPLCReport() {
+  const content = document.getElementById('plc-content');
+  if (!content || !content.innerHTML) {
+    showNotification('No PLC report to export', 'warning');
+    return;
+  }
+
+  // For now, trigger browser print (can be enhanced with PDF library)
+  window.print();
+  showNotification('Use browser print dialog to save as PDF', 'info');
+}
+
+/**
+ * Export assessment data
+ */
+function exportAssessment() {
+  const statsEl = document.getElementById('assess-stats');
+  if (!statsEl || !statsEl.innerHTML) {
+    showNotification('No assessment data to export', 'warning');
+    return;
+  }
+
+  // Create CSV from visible data
+  const rows = [['Metric', 'Value']];
+  statsEl.querySelectorAll('.stat-card').forEach(card => {
+    const label = card.querySelector('.stat-label')?.textContent || '';
+    const value = card.querySelector('.stat-value')?.textContent || '';
+    rows.push([label, value]);
+  });
+
+  const csv = rows.map(row => row.join(',')).join('\n');
+  downloadFile(csv, 'assessment-analysis.csv', 'text/csv');
+  showNotification('Assessment data exported as CSV', 'success');
+}
+
+/**
+ * Download file helper
+ */
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Enhanced print with better formatting
+ */
+function enhancedPrint() {
+  // Add print-specific classes before printing
+  document.body.classList.add('printing');
+  window.print();
+  setTimeout(() => document.body.classList.remove('printing'), 100);
+}
+
+/**
+ * Show notification/toast
+ */
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    padding: 16px 24px;
+    background: ${type === 'success' ? '#10B981' : type === 'warning' ? '#F59E0B' : type === 'error' ? '#EF4444' : '#3B82F6'};
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+  `;
+  document.body.appendChild(notification);
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+/**
+ * CSV Import for student data
+ */
+function initCSVImport() {
+  // Create file input
+  const importBtn = document.createElement('button');
+  importBtn.className = 'btn-secondary btn-sm';
+  importBtn.innerHTML = '<span class="btn-icon">📁</span> Import CSV';
+  importBtn.onclick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = handleCSVImport;
+    input.click();
+  };
+
+  // Add to assessment view
+  const assessForm = document.querySelector('#view-assess .form-container');
+  if (assessForm) {
+    const btnContainer = document.createElement('div');
+    btnContainer.style.marginTop = '10px';
+    btnContainer.appendChild(importBtn);
+    assessForm.appendChild(btnContainer);
+  }
+}
+
+/**
+ * Handle CSV file import
+ */
+async function handleCSVImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const text = await file.text();
+  const lines = text.trim().split('\n');
+  
+  // Parse CSV (simple parser, assumes Name, Score format)
+  const data = lines.slice(1).map(line => {
+    const [name, score] = line.split(',').map(s => s.trim());
+    return `${name}, ${score}`;
+  }).join('\n');
+
+  // Populate the assessment data textarea
+  const textarea = document.getElementById('assess-data');
+  if (textarea) {
+    textarea.value = data;
+    showNotification('CSV imported successfully', 'success');
+  }
+}
+
+/**
+ * Search and filter functionality
+ */
+function initSearchAndFilter() {
+  // Add search box to TEKS browser (already exists, enhance it)
+  const searchInput = document.getElementById('teks-search');
+  if (searchInput) {
+    // Debounced search
+    let searchTimer = null;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        if (searchInput.value.trim()) {
+          searchTEKS();
+        }
+      }, 500);
+    });
+  }
+}
+
+/**
+ * Undo/Redo functionality
+ */
+let historyStack = [];
+let historyIndex = -1;
+const MAX_HISTORY = 50;
+
+function saveToHistory() {
+  const currentView = document.querySelector('.view.active');
+  if (!currentView) return;
+
+  const viewId = currentView.id.replace('view-', '');
+  const formData = gatherFormData(viewId);
+  
+  // Remove any history after current index
+  historyStack = historyStack.slice(0, historyIndex + 1);
+  
+  // Add new state
+  historyStack.push({
+    viewId,
+    data: formData,
+    timestamp: Date.now()
+  });
+  
+  // Limit history size
+  if (historyStack.length > MAX_HISTORY) {
+    historyStack.shift();
+  } else {
+    historyIndex++;
+  }
+}
+
+function undo() {
+  if (historyIndex <= 0) {
+    showNotification('Nothing to undo', 'info');
+    return;
+  }
+
+  historyIndex--;
+  restoreFromHistory(historyStack[historyIndex]);
+  showNotification('Undo successful', 'success');
+}
+
+function redo() {
+  if (historyIndex >= historyStack.length - 1) {
+    showNotification('Nothing to redo', 'info');
+    return;
+  }
+
+  historyIndex++;
+  restoreFromHistory(historyStack[historyIndex]);
+  showNotification('Redo successful', 'success');
+}
+
+function restoreFromHistory(state) {
+  // Switch to the view
+  const navItem = document.querySelector(`[data-view="${state.viewId}"]`);
+  if (navItem) navItem.click();
+
+  // Restore form data
+  setTimeout(() => {
+    Object.entries(state.data).forEach(([key, value]) => {
+      const input = document.querySelector(`[name="${key}"]`);
+      if (input) input.value = value;
+    });
+  }, 100);
+}
+
+// Add keyboard shortcuts for undo/redo
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault();
+    undo();
+  } else if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+    e.preventDefault();
+    redo();
+  }
+});
+
+/**
+ * Initialize all enhanced features
+ */
+function initEnhancedFeatures() {
+  initKeyboardNavigation();
+  setupAutoSave();
+  initCSVImport();
+  initSearchAndFilter();
+  
+  // Save to history on form changes
+  document.querySelectorAll('input, textarea, select').forEach(input => {
+    input.addEventListener('change', saveToHistory);
+  });
+
+  console.log('✅ Enhanced features initialized (January 2026)');
+  console.log('Keyboard shortcuts:');
+  console.log('  Alt+1-6: Switch views');
+  console.log('  Cmd/Ctrl+S: Save');
+  console.log('  Cmd/Ctrl+E: Export');
+  console.log('  Cmd/Ctrl+Z: Undo');
+  console.log('  Cmd/Ctrl+Y: Redo');
+}
+
+// Initialize enhanced features on load
+document.addEventListener('DOMContentLoaded', initEnhancedFeatures);

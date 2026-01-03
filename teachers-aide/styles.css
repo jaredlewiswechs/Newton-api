@@ -1380,3 +1380,230 @@ textarea {
     page-break-inside: avoid;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ENHANCED FEATURES - JANUARY 2026
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Auto-save indicator */
+.auto-save-indicator {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 0.5rem 1rem;
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.auto-save-indicator.saving {
+  opacity: 1;
+  color: var(--blue);
+}
+
+.auto-save-indicator.saved {
+  opacity: 1;
+  color: var(--verified);
+}
+
+.auto-save-indicator.idle {
+  opacity: 0;
+}
+
+/* Notification toast */
+.notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow-xl);
+  color: var(--white);
+  font-weight: 500;
+  z-index: 10000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification-success {
+  background: var(--verified);
+}
+
+.notification-error {
+  background: var(--danger);
+}
+
+.notification-warning {
+  background: var(--warning);
+}
+
+.notification-info {
+  background: var(--blue);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Keyboard shortcut hints */
+.kbd-hint {
+  display: inline-block;
+  padding: 0.2rem 0.4rem;
+  background: var(--light);
+  border: 1px solid #CBD5E0;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--slate);
+  margin-left: 0.5rem;
+}
+
+/* Enhanced form controls */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* CSV import button styles */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* Print-specific enhancements */
+@media print {
+  /* Force page breaks */
+  .lesson-phase {
+    page-break-after: auto;
+  }
+  
+  /* Ensure colors print properly */
+  .phase-header,
+  .phase-icon,
+  .teks-badge,
+  .stat-card {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Hide interactive elements */
+  button,
+  input[type="file"],
+  .auto-save-indicator,
+  .notification {
+    display: none !important;
+  }
+  
+  /* Better readability */
+  body {
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+  
+  h1 { font-size: 24pt; }
+  h2 { font-size: 18pt; }
+  h3 { font-size: 14pt; }
+  h4 { font-size: 12pt; }
+}
+
+/* Dark mode support (system preference) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --navy: #E2E8F0;
+    --navy-light: #CBD5E0;
+    --blue: #60A5FA;
+    --blue-light: #93C5FD;
+    --light: #1A202C;
+    --white: #2D3748;
+    --slate: #A0AEC0;
+  }
+  
+  body {
+    background: #0F172A;
+    color: #E2E8F0;
+  }
+  
+  .sidebar {
+    background: linear-gradient(180deg, #1A202C 0%, #2D3748 100%);
+  }
+  
+  input,
+  textarea,
+  select {
+    background: #2D3748;
+    color: #E2E8F0;
+    border-color: #4A5568;
+  }
+  
+  .nav-item:hover {
+    background: #374151;
+  }
+}
+
+/* Accessibility enhancements */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .btn-primary,
+  .btn-secondary {
+    border: 2px solid currentColor;
+  }
+  
+  .nav-item.active {
+    border: 2px solid var(--blue);
+  }
+}
+
