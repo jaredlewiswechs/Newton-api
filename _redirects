@@ -1,0 +1,17 @@
+# Newton Public Landing - Cloudflare Pages Redirects
+# Root serves the main landing page (index.html)
+
+# App routes - Newton Supercomputer Interface
+/app        /frontend/index.html    200
+/app/*      /frontend/index.html    200
+
+# Teachers Aide routes
+/teachers   /teachers-aide/index.html   200
+/teachers/* /teachers-aide/index.html   200
+
+# Interface Builder routes
+/builder    /interface-builder/index.html   200
+/builder/*  /interface-builder/index.html   200
+
+# All other routes serve their files directly
+/*          /:splat                 200
