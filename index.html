@@ -41,7 +41,7 @@
                 <a href="#for-investors">Investors</a>
                 <a href="#for-education">Education</a>
                 <a href="#for-business">Enterprise</a>
-                <a href="frontend/" class="nav-cta">Launch Newton</a>
+                <a href="/app" class="nav-cta">Launch Newton</a>
             </div>
             <button class="nav-toggle" aria-label="Menu">
                 <span></span>
@@ -63,7 +63,7 @@
                 What they couldn't. Here it is.
             </p>
             <div class="hero-cta">
-                <a href="frontend/" class="btn-primary">Experience Newton</a>
+                <a href="/app" class="btn-primary">Experience Newton</a>
                 <a href="#story" class="btn-secondary">Read the Story</a>
             </div>
         </div>
@@ -83,7 +83,7 @@
                 <p class="story-lead">
                     The pattern-finding. The accidental discoveries. The "I usually make really cool things on accident."
                 </p>
-                <p>It wasn't accident.</p>
+                <p>It wasn't an accident.</p>
                 <p>
                     Steeped in Apple's design philosophy for decades. The HyperCard "everything is an object" thinking.
                     The Newton PDA's vision. The Knowledge Navigator's conversational grounding.
@@ -369,7 +369,7 @@
         <div class="final-content">
             <h2>"Here's what Apple meant to build.<br>Here's what they couldn't.<br><em>Here it is.</em>"</h2>
             <div class="final-buttons">
-                <a href="frontend/" class="btn-primary large">Launch Newton</a>
+                <a href="/app" class="btn-primary large">Launch Newton</a>
                 <a href="https://github.com/jaredlewiswechs/Newton-api" class="btn-secondary large" target="_blank">View Source</a>
             </div>
         </div>
@@ -389,7 +389,7 @@
             <div class="footer-links">
                 <div class="footer-column">
                     <h4>Product</h4>
-                    <a href="frontend/">Launch Newton</a>
+                    <a href="/app">Launch Newton</a>
                     <a href="#capabilities">Capabilities</a>
                     <a href="https://github.com/jaredlewiswechs/Newton-api" target="_blank">Documentation</a>
                 </div>
@@ -425,10 +425,15 @@
 
     <script>
         // Mobile navigation toggle
-        document.querySelector('.nav-toggle').addEventListener('click', function() {
-            document.querySelector('.nav-links').classList.toggle('open');
-            this.classList.toggle('open');
-        });
+        const navToggle = document.querySelector('.nav-toggle');
+        const navLinks = document.querySelector('.nav-links');
+
+        if (navToggle && navLinks) {
+            navToggle.addEventListener('click', function() {
+                navLinks.classList.toggle('open');
+                this.classList.toggle('open');
+            });
+        }
 
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -437,21 +442,23 @@
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    document.querySelector('.nav-links').classList.remove('open');
-                    document.querySelector('.nav-toggle').classList.remove('open');
+                    if (navLinks) navLinks.classList.remove('open');
+                    if (navToggle) navToggle.classList.remove('open');
                 }
             });
         });
 
         // Navbar background on scroll
-        window.addEventListener('scroll', function() {
-            const nav = document.querySelector('.nav');
-            if (window.scrollY > 50) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
-            }
-        });
+        const nav = document.querySelector('.nav');
+        if (nav) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+            });
+        }
 
         // Intersection Observer for animations
         const observerOptions = {
