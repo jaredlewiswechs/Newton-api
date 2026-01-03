@@ -22,7 +22,7 @@
 [![Tests](https://img.shields.io/badge/tests-94%20passing-brightgreen.svg)](#testing)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
 
-**January 2, 2026** · **Jared Lewis Conglomerate** · **Ada Computing Company**
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ---
 
@@ -1147,6 +1147,6 @@ curl http://localhost:8000/teachers/classrooms/CLASS001/groups
 
 ---
 
-© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company · Houston, Texas
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *"finfr = f/g. The ratio IS the constraint. 1 == 1."*

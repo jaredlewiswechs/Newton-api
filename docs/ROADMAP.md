@@ -1,12 +1,14 @@
 # Newton Supercomputer Technical Roadmap
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 > Newton is not a verification layer for computers.
 > Newton IS the computer.
 > The constraint check IS the computation.
 
 **Version**: 1.0.0
-**Date**: January 1, 2026
-**Author**: Ada Computing Company
+**Date**: January 3, 2026
+**Author**: Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company
 
 ---
 

@@ -1,5 +1,7 @@
 # Configuration
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Newton OS is configured through environment variables.
 
 ## Environment Variables

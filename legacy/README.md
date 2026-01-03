@@ -1,6 +1,6 @@
 # Legacy Code
 
-**January 2, 2026** · **Jared Lewis Conglomerate**
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 Historical implementations preserved for reference.
 
@@ -54,6 +54,6 @@ Ratio operators: `ratio_lt`, `ratio_le`, `ratio_gt`, `ratio_ge`, `ratio_eq`, `ra
 
 ---
 
-© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *Preserved for historical reference. Not actively maintained. finfr = f/g.*

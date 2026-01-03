@@ -1,5 +1,7 @@
 # Audit & Security Endpoints
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Newton provides cryptographic signing and an immutable audit trail for all operations.
 
 ## /sign

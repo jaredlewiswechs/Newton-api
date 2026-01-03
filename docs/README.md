@@ -6,7 +6,7 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 
 **finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
 
-**Version**: 1.2.0 | **Date**: January 2, 2026 | **Jared Lewis Conglomerate**
+**Version**: 1.2.0 | **Date**: January 3, 2026 | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 ---
 
@@ -332,6 +332,6 @@ See [f/g Ratio Constraints](../README.md#fg-ratio-constraints-dimensional-analys
 
 ---
 
-© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company · Houston, Texas
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *"finfr = f/g. The ratio IS the constraint. 1 == 1."*

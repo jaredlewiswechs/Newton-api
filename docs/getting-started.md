@@ -1,5 +1,7 @@
 # Getting Started with Newton OS
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Get Newton running in under 5 minutes.
 
 ## Option 1: Hosted API (Recommended)

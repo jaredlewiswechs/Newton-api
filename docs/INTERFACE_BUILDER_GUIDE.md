@@ -1,5 +1,7 @@
 # Newton Interface Builder Guide
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 ## Complete Implementation Reference
 
 ---

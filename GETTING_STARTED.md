@@ -1,5 +1,7 @@
 # Getting Started with Newton
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 ```
                     ╭──────────────────────────────────────╮
                     │                                      │
@@ -544,5 +546,7 @@ The verification IS the computation.
 Welcome to Newton. 🍎
 
 ---
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *"1 == 1. The cloud is weather. We're building shelter."*

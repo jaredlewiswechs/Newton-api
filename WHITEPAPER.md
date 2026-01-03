@@ -2,7 +2,7 @@
 
 > **The constraint IS the instruction. The verification IS the computation.**
 
-**Version 1.0.0** | January 1, 2026
+**Version 1.0.0** | **January 3, 2026** | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 ---
 
@@ -451,6 +451,6 @@ Houston, Texas
 
 ---
 
-© 2025-2026 Ada Computing Company · Houston, Texas
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *"1 == 1. The cloud is weather. We're building shelter."*

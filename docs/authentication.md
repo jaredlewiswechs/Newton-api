@@ -1,5 +1,7 @@
 # Authentication
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Newton uses API key authentication to secure endpoints and enforce rate limits.
 
 ## API Key Header

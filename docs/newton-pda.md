@@ -1,5 +1,7 @@
 # Newton PDA
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Newton PDA is a Progressive Web App for personal data management, built on Newton's verification principles.
 
 ## Overview

@@ -1,6 +1,8 @@
 # Newton Verification Report
 ## Grounding Claims Against Codebase Reality
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 **Date:** January 3, 2026
 **Verified By:** Automated codebase analysis
 **Repository:** Newton-api
@@ -311,5 +313,7 @@ Every loop has bounds. Execution traces are generated. This is provably terminat
 The three documents (Whitepaper, fin/finfr formalization, model-checking mapping) are technically defensible. Minor language adjustments recommended for Newton OS terminology.
 
 ---
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *Report generated from automated codebase analysis. All file paths and line numbers verified against current repository state.*

@@ -1,5 +1,7 @@
 # Newton Cartridges
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Newton's constraint engine extends to any domain with definable bounds through Cartridges. Generate verified specifications for media content—all constraint-checked before generation.
 
 ## Overview

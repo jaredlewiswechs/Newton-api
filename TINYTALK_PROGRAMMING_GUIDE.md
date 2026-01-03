@@ -1,5 +1,7 @@
 # TinyTalk Programming Guide
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 <p align="center">
   <img src="https://img.shields.io/badge/tinyTalk-1.0-blue.svg" alt="TinyTalk 1.0">
   <img src="https://img.shields.io/badge/Newton-Supercomputer-green.svg" alt="Newton">
@@ -2152,6 +2154,6 @@ when(reality violates physics, finfr)
 ---
 
 <p align="center">
-  <em>© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company</em><br>
+  <em>© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas</em><br>
   <em>"1 == 1. The cloud is weather. We're building shelter."</em>
 </p>

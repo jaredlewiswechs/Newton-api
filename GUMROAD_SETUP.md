@@ -1,5 +1,7 @@
 # Setting Up Gumroad for Newton Supercomputer
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Welcome to selling Newton access! This guide will walk you through everything as a first-time business owner.
 
 ## What is Gumroad?
@@ -252,5 +254,9 @@ curl https://your-api.com/feedback/summary
 - Check `/docs` for API documentation
 - Submit feedback via `/feedback` endpoint
 - Open an issue on GitHub
+
+---
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 Good luck with your business!

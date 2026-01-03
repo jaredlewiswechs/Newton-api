@@ -1,5 +1,7 @@
 # Contributing to Newton
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 **A Newbie-Friendly Guide to Development**
 
 Welcome! This guide will help you set up your development environment and start contributing to Newton, even if you're new to programming.
@@ -445,5 +447,7 @@ git commit -m "Resolve merge conflict"
 - Follow the patterns in existing code
 
 ---
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *"1 == 1. Go build something."*

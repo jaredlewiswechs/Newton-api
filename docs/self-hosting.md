@@ -1,5 +1,7 @@
 # Self-Hosting Guide
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Deploy Newton OS on your own infrastructure.
 
 ## Requirements

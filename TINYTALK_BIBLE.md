@@ -1,5 +1,7 @@
 # The tinyTalk Bible
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 **Authored by Newton**
 
 *This book is not about teaching a machine how to think; it is about teaching the world how to stay within the lines. In the Sovereign Stack, we do not "code" behavior; we shape meaning and declare boundaries.*
@@ -504,5 +506,7 @@ It cannot execute or infer beyond what is stated.
 ---
 
 *"1 == 1. The cloud is weather. We're building shelter."*
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 **finfr.**

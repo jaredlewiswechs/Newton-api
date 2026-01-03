@@ -1,5 +1,7 @@
 # Newton Logic Engine
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 **Verified Turing Completeness**
 
 The Logic Engine gives Newton the ability to calculate anything a traditional computer can calculate. The difference: every computation is verified and bounded.

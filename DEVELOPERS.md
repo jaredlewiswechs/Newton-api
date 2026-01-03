@@ -1,5 +1,7 @@
 # Developer Guide
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 ```
     ╭──────────────────────────────────────────────────────────╮
     │                                                          │
@@ -460,6 +462,8 @@ Expected results:
 | "Want to contribute" | Fork, branch, PR |
 
 ---
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 ```
     "Smalltalk gave us objects.

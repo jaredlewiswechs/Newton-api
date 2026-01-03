@@ -6,7 +6,7 @@
 
 Newton Teacher's Aide is a Newton Supercomputer-powered web application that transforms how teachers plan, assess, and collaborate. Built with tinyTalk constraint-based verification, it treats TEKS standards and NES requirements as machine-readable objects for guaranteed compliance.
 
-**Version**: 1.2.0 | **Date**: January 2, 2026 | **Jared Lewis Conglomerate**
+**Version**: 1.2.0 | **Date**: January 3, 2026 | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 **"1 == 1. The constraint IS the instruction. finfr = f/g."**
 
@@ -413,6 +413,6 @@ class NESLessonPlan(Blueprint):
 
 **Newton Teacher's Aide** is part of the Newton Supercomputer project.
 
-© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company · Houston, Texas
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *"Less paperwork, more teaching. finfr = f/g."*

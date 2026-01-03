@@ -1,5 +1,7 @@
 # Changelog
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 All notable changes to Newton Supercomputer are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
@@ -207,4 +209,4 @@ Every version. Every commit. Every verification.
 
 ---
 
-© 2025-2026 Ada Computing Company · Houston, Texas
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas

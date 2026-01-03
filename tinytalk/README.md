@@ -16,7 +16,7 @@
 
 **The "No-First" constraint language. Define what cannot happen.**
 
-**January 2, 2026** · **Jared Lewis Conglomerate**
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 Available for **Python**, **Ruby**, and **R**.
 
@@ -289,7 +289,7 @@ tinyTalk continues the Smalltalk tradition:
 
 ---
 
-© 2025-2026 Jared Lewis Conglomerate · Ada Computing Company
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 *"Smalltalk gave us objects. tinyTalk gives us boundaries. finfr = f/g."*
 

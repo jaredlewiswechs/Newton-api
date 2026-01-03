@@ -1,5 +1,6 @@
 # NEWTON DEPLOYMENT PACKAGE
-## Ada Computing Company · January 2026
+
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ---
 
@@ -370,6 +371,8 @@ LinkedIn: linkedin.com/in/jaredlewisuh
 Web: parcri.net
 
 ---
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas
 
 **1 == 1**
 

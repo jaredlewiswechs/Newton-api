@@ -1,5 +1,7 @@
 # Newton Supercomputer API Reference
 
+**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
 Complete reference for the Newton Supercomputer API.
 
 ## Base URL
