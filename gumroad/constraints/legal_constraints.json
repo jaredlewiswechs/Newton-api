@@ -1,0 +1,216 @@
+{
+  "name": "legal_constraints",
+  "description": "Detects unlicensed legal advice, jurisdiction-specific claims, and legal interpretations that require professional legal counsel",
+  "version": "1.0.0",
+  "domain": "custom",
+  "rules": [
+    {
+      "id": "legal_action_recommendation",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(you should sue|file a lawsuit|take legal action|press charges|pursue litigation|file a claim|seek damages)\\b",
+      "action": "DENY",
+      "severity": "CRITICAL",
+      "message": "⚠️ BLOCKED: Legal action recommendation detected. Consult a licensed attorney before pursuing any legal action.",
+      "pattern_type": "regex",
+      "examples": [
+        "You should sue them for breach of contract",
+        "You need to file a lawsuit immediately",
+        "Press charges for assault",
+        "You should pursue litigation for damages"
+      ]
+    },
+    {
+      "id": "contract_interpretation",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(this contract|the agreement|this clause)\\b.{0,50}\\b(means|requires|obligates|states that you must|legally binds you to)",
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Contract interpretation detected. Have contracts reviewed by licensed attorney before signing or acting.",
+      "pattern_type": "regex",
+      "examples": [
+        "This contract means you waive all rights to sue",
+        "The agreement requires you to forfeit ownership",
+        "This clause legally binds you to non-compete terms"
+      ]
+    },
+    {
+      "id": "jurisdiction_specific_claim",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(under|according to|based on)\\b.{0,30}\\b(california|texas|new york|florida|federal|state)\\b.{0,30}\\b(law|statute|code|regulation)",
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Jurisdiction-specific legal claim detected. Laws vary by location and change over time. Verify with local attorney.",
+      "pattern_type": "regex",
+      "examples": [
+        "Under California law, you have 30 days to file",
+        "According to Texas statute, this is illegal",
+        "Based on federal regulations, you must comply"
+      ]
+    },
+    {
+      "id": "rights_advisement",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(you have the right to|your rights include|you are entitled to|you can legally|you cannot legally)\\b",
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Legal rights statement detected. Rights vary by jurisdiction and circumstances. Consult attorney for specific advice.",
+      "pattern_type": "regex",
+      "examples": [
+        "You have the right to remain silent",
+        "Your rights include full compensation",
+        "You are entitled to a jury trial",
+        "You can legally refuse this request"
+      ]
+    },
+    {
+      "id": "criminal_legal_advice",
+      "operator": "contains",
+      "field": "content",
+      "value": [
+        "plead guilty",
+        "plead not guilty",
+        "take a plea deal",
+        "accept the plea",
+        "represent yourself",
+        "waive your rights",
+        "don't get a lawyer"
+      ],
+      "action": "DENY",
+      "severity": "CRITICAL",
+      "message": "⚠️ BLOCKED: Criminal legal advice detected. ALWAYS consult a criminal defense attorney before making any legal decisions.",
+      "pattern_type": "keyword",
+      "examples": [
+        "You should plead guilty to get a lighter sentence",
+        "Just take the plea deal they're offering",
+        "You can represent yourself in court",
+        "It's fine to waive your right to an attorney"
+      ]
+    },
+    {
+      "id": "intellectual_property_claim",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(copyright|trademark|patent)\\b.{0,50}\\b(infringement|violation|protected|enforceable|sue for)",
+      "action": "WARN",
+      "severity": "MEDIUM",
+      "message": "⚠️ WARNING: Intellectual property legal claim detected. IP law is complex. Consult IP attorney for specific guidance.",
+      "pattern_type": "regex",
+      "examples": [
+        "This is copyright infringement and they can sue",
+        "That trademark is protected by federal law",
+        "You're violating their patent rights"
+      ]
+    },
+    {
+      "id": "employment_law_advice",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(fire|terminate|sue employer|wrongful termination|discrimination claim|harassment claim|wage claim)\\b",
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Employment law advice detected. Employment law varies by state and situation. Consult employment attorney.",
+      "pattern_type": "regex",
+      "examples": [
+        "You can sue your employer for wrongful termination",
+        "This is clear discrimination - file a claim",
+        "You have grounds for a harassment lawsuit"
+      ]
+    },
+    {
+      "id": "tax_legal_advice",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(tax|irs|deduction|write[- ]?off)\\b.{0,50}\\b(illegal|legal|allowed|prohibited|can claim|cannot claim)",
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Tax law advice detected. Tax law is complex and penalties are severe. Consult CPA or tax attorney.",
+      "pattern_type": "regex",
+      "examples": [
+        "You can legally claim this as a deduction",
+        "This tax strategy is perfectly legal",
+        "The IRS allows you to write this off"
+      ]
+    },
+    {
+      "id": "immigration_advice",
+      "operator": "contains",
+      "field": "content",
+      "value": [
+        "visa application",
+        "green card",
+        "citizenship application",
+        "deportation",
+        "asylum claim",
+        "immigration status",
+        "work permit"
+      ],
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Immigration law advice detected. Immigration law is highly complex. Consult immigration attorney for guidance.",
+      "pattern_type": "keyword",
+      "examples": [
+        "You should apply for this visa type",
+        "Your immigration status allows you to work",
+        "File for asylum based on these grounds"
+      ]
+    },
+    {
+      "id": "real_estate_legal_advice",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(property|real estate|deed|title|mortgage|foreclosure|eviction)\\b.{0,50}\\b(legally|law requires|must|cannot|rights)",
+      "action": "WARN",
+      "severity": "MEDIUM",
+      "message": "⚠️ WARNING: Real estate legal advice detected. Property law varies by location. Consult real estate attorney.",
+      "pattern_type": "regex",
+      "examples": [
+        "The law requires disclosure of this property defect",
+        "You legally must honor the deed restrictions",
+        "You have rights against foreclosure"
+      ]
+    },
+    {
+      "id": "legal_standing_claim",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(you have standing|no standing|can sue|cannot sue|statute of limitations|time limit to file)",
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Legal standing or limitations claim detected. These are technical legal issues requiring attorney review.",
+      "pattern_type": "regex",
+      "examples": [
+        "You have standing to sue in this case",
+        "The statute of limitations has expired",
+        "You have 2 years to file a claim"
+      ]
+    },
+    {
+      "id": "legal_disclaimer_missing",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(sue|lawsuit|litigation|legal action|attorney|lawyer|court|judge)\\b",
+      "action": "LOG",
+      "severity": "LOW",
+      "message": "ℹ️ INFO: Legal terminology detected. Ensure proper disclaimers are present for legal information.",
+      "pattern_type": "regex",
+      "examples": [
+        "If you want to sue, consult an attorney",
+        "A lawyer can help you with this issue"
+      ],
+      "false_positive_mitigation": {
+        "context_words": ["consult", "attorney", "lawyer", "legal advice", "not legal advice"],
+        "exclusion_patterns": ["not legal advice", "consult an attorney", "speak with a lawyer"]
+      }
+    }
+  ],
+  "metadata": {
+    "author": "Newton Legal Safety Team",
+    "created": "2026-01-03T00:00:00Z",
+    "updated": "2026-01-03T00:00:00Z",
+    "tags": ["legal", "law", "compliance", "liability", "bar"]
+  }
+}

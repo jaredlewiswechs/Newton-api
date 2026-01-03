@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Newton CDL 3.0 Constraint Schema for iOS",
+  "description": "Schema for constraint definitions used in Newton for iOS Shortcuts",
+  "type": "object",
+  "required": ["name", "description", "version", "rules"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique constraint library name",
+      "pattern": "^[a-z_]+$",
+      "examples": ["medical_constraints", "legal_constraints", "epistemic_constraints"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what this constraint library detects",
+      "minLength": 10,
+      "maxLength": 500
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of constraint library",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["1.0.0", "2.1.3"]
+    },
+    "domain": {
+      "type": "string",
+      "description": "Newton domain category",
+      "enum": ["financial", "communication", "health", "epistemic", "temporal", "identity", "custom"]
+    },
+    "rules": {
+      "type": "array",
+      "description": "List of constraint rules",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/rule"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata for constraint library",
+      "properties": {
+        "author": {"type": "string"},
+        "created": {"type": "string", "format": "date-time"},
+        "updated": {"type": "string", "format": "date-time"},
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rule": {
+      "type": "object",
+      "required": ["id", "operator", "field", "action", "severity"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique rule identifier",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "operator": {
+          "type": "string",
+          "description": "CDL 3.0 operator",
+          "enum": [
+            "eq", "ne", "lt", "gt", "le", "ge",
+            "contains", "matches", "in", "not_in",
+            "exists", "empty",
+            "within", "after", "before",
+            "sum_lt", "sum_le", "sum_gt", "sum_ge",
+            "count_lt", "count_le", "count_gt", "count_ge",
+            "avg_lt", "avg_le", "avg_gt", "avg_ge"
+          ]
+        },
+        "field": {
+          "type": "string",
+          "description": "Field name to evaluate (typically 'content' for text verification)",
+          "examples": ["content", "metadata.source", "timestamp"]
+        },
+        "value": {
+          "description": "Value to compare against (type depends on operator)",
+          "oneOf": [
+            {"type": "string"},
+            {"type": "number"},
+            {"type": "boolean"},
+            {"type": "array"},
+            {"type": "object"}
+          ]
+        },
+        "action": {
+          "type": "string",
+          "description": "Action to take when rule matches",
+          "enum": ["DENY", "WARN", "LOG", "FLAG"]
+        },
+        "severity": {
+          "type": "string",
+          "description": "Severity level of violation",
+          "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable violation message",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "pattern_type": {
+          "type": "string",
+          "description": "Type of pattern matching",
+          "enum": ["keyword", "regex", "semantic", "structural"]
+        },
+        "examples": {
+          "type": "array",
+          "description": "Example inputs that should trigger this rule",
+          "items": {"type": "string"}
+        },
+        "false_positive_mitigation": {
+          "type": "object",
+          "description": "Optional strategies to reduce false positives",
+          "properties": {
+            "context_words": {
+              "type": "array",
+              "description": "Words that indicate safe context",
+              "items": {"type": "string"}
+            },
+            "exclusion_patterns": {
+              "type": "array",
+              "description": "Patterns that should NOT trigger rule",
+              "items": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "name": "medical_constraints",
+      "description": "Detects unverified medical claims and advice",
+      "version": "1.0.0",
+      "domain": "health",
+      "rules": [
+        {
+          "id": "dosage_recommendation",
+          "operator": "matches",
+          "field": "content",
+          "value": "\\b(take|consume)\\s+\\d+\\s*(mg|ml|tablets|capsules)",
+          "action": "DENY",
+          "severity": "CRITICAL",
+          "message": "Detected unverified drug dosage recommendation",
+          "pattern_type": "regex",
+          "examples": [
+            "You should take 500mg of aspirin",
+            "Consume 2 tablets daily"
+          ]
+        }
+      ]
+    }
+  ]
+}

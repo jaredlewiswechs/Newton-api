@@ -1,0 +1,193 @@
+{
+  "name": "medical_constraints",
+  "description": "Detects unverified medical claims, drug recommendations, diagnoses, and health advice that require professional medical oversight",
+  "version": "1.0.0",
+  "domain": "health",
+  "rules": [
+    {
+      "id": "drug_dosage_recommendation",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(take|consume|use|apply|administer|inject|inhale)\\s+\\d+\\s*(mg|ml|mcg|g|tablets?|capsules?|pills?|units?|drops?|puffs?|doses?)",
+      "action": "DENY",
+      "severity": "CRITICAL",
+      "message": "⚠️ BLOCKED: Specific drug dosage recommendation detected. Consult a licensed healthcare provider for medication advice.",
+      "pattern_type": "regex",
+      "examples": [
+        "You should take 500mg of aspirin twice daily",
+        "Consume 2 tablets of ibuprofen every 6 hours",
+        "Apply 10ml of this solution to the affected area",
+        "Inject 5 units of insulin before meals"
+      ]
+    },
+    {
+      "id": "diagnosis_statement",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(you have|you've been diagnosed with|this is|you are suffering from|you likely have|you definitely have|you probably have)\\b.{0,50}\\b(cancer|diabetes|depression|anxiety|adhd|autism|bipolar|schizophrenia|infection|disease|disorder|syndrome|condition)",
+      "action": "DENY",
+      "severity": "CRITICAL",
+      "message": "⚠️ BLOCKED: Medical diagnosis statement detected. Only licensed healthcare providers can make diagnoses.",
+      "pattern_type": "regex",
+      "examples": [
+        "Based on your symptoms, you have diabetes",
+        "This is clearly a bacterial infection",
+        "You are suffering from major depression",
+        "You likely have ADHD based on these behaviors"
+      ]
+    },
+    {
+      "id": "treatment_protocol",
+      "operator": "contains",
+      "field": "content",
+      "value": [
+        "treatment plan",
+        "course of treatment",
+        "treatment protocol",
+        "therapy regimen",
+        "clinical protocol",
+        "treatment schedule",
+        "medication schedule"
+      ],
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Treatment protocol mentioned. Verify with healthcare provider before following any treatment plan.",
+      "pattern_type": "keyword",
+      "examples": [
+        "Here is your treatment plan for the next 6 weeks",
+        "Follow this course of treatment to manage symptoms",
+        "This medication schedule should resolve the issue"
+      ],
+      "false_positive_mitigation": {
+        "context_words": ["example", "generic", "typical", "common", "general"],
+        "exclusion_patterns": ["example treatment plan", "typical protocol"]
+      }
+    },
+    {
+      "id": "contraindication_violation",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(safe to combine|can take together|no interaction|won't interact|safe with|combine with|take alongside)\\b.{0,50}\\b(medication|drug|prescription|medicine)",
+      "action": "DENY",
+      "severity": "CRITICAL",
+      "message": "⚠️ BLOCKED: Drug interaction claim detected. Always consult pharmacist or doctor about medication combinations.",
+      "pattern_type": "regex",
+      "examples": [
+        "It's safe to combine aspirin with this medication",
+        "You can take these drugs together without issues",
+        "This medication won't interact with your current prescriptions"
+      ]
+    },
+    {
+      "id": "emergency_medical_advice",
+      "operator": "contains",
+      "field": "content",
+      "value": [
+        "call 911",
+        "go to emergency",
+        "seek immediate medical",
+        "life-threatening",
+        "medical emergency",
+        "emergency room",
+        "call ambulance"
+      ],
+      "action": "LOG",
+      "severity": "LOW",
+      "message": "ℹ️ INFO: Emergency medical guidance detected. This is appropriate safety advice.",
+      "pattern_type": "keyword",
+      "examples": [
+        "If you experience chest pain, call 911 immediately",
+        "These symptoms indicate a medical emergency - seek immediate care"
+      ]
+    },
+    {
+      "id": "supplement_claims",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(cures|treats|prevents|reverses|eliminates|fixes)\\b.{0,50}\\b(cancer|diabetes|heart disease|alzheimer|covid|infection)",
+      "action": "DENY",
+      "severity": "HIGH",
+      "message": "⚠️ BLOCKED: Unverified medical cure claim detected. Be skeptical of claims that supplements/treatments cure serious diseases.",
+      "pattern_type": "regex",
+      "examples": [
+        "This supplement cures cancer naturally",
+        "Vitamin D prevents COVID-19 infection",
+        "This treatment reverses Alzheimer's disease"
+      ]
+    },
+    {
+      "id": "pregnancy_advice",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(pregnant|pregnancy|expecting|prenatal)\\b.{0,100}\\b(safe|okay|fine|can use|should take|avoid|dangerous)",
+      "action": "WARN",
+      "severity": "HIGH",
+      "message": "⚠️ WARNING: Pregnancy-related medical advice detected. Consult OB-GYN for any pregnancy health questions.",
+      "pattern_type": "regex",
+      "examples": [
+        "This medication is safe during pregnancy",
+        "You should avoid caffeine while pregnant",
+        "It's okay to take this supplement when expecting"
+      ]
+    },
+    {
+      "id": "mental_health_diagnosis",
+      "operator": "contains",
+      "field": "content",
+      "value": [
+        "you are depressed",
+        "you have anxiety disorder",
+        "you are bipolar",
+        "you have ptsd",
+        "you are schizophrenic",
+        "you have ocd",
+        "you are manic"
+      ],
+      "action": "DENY",
+      "severity": "CRITICAL",
+      "message": "⚠️ BLOCKED: Mental health diagnosis statement detected. Only licensed mental health professionals can diagnose mental health conditions.",
+      "pattern_type": "keyword",
+      "examples": [
+        "Based on your description, you are depressed",
+        "These symptoms indicate you have anxiety disorder",
+        "You clearly have PTSD from that experience"
+      ]
+    },
+    {
+      "id": "alternative_medicine_cure",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(homeopathy|essential oils?|crystals?|detox|cleanse)\\b.{0,50}\\b(cures|heals|treats|fixes|eliminates)",
+      "action": "WARN",
+      "severity": "MEDIUM",
+      "message": "⚠️ WARNING: Alternative medicine cure claim detected. Be cautious of unverified treatment claims.",
+      "pattern_type": "regex",
+      "examples": [
+        "Homeopathy cures all diseases naturally",
+        "This essential oil heals cancer",
+        "Crystal therapy treats chronic pain"
+      ]
+    },
+    {
+      "id": "vaccination_misinformation",
+      "operator": "matches",
+      "field": "content",
+      "value": "\\b(vaccines?|vaccination)\\b.{0,100}\\b(causes|leads to|results in|creates)\\b.{0,50}\\b(autism|death|injury|harm|disease)",
+      "action": "DENY",
+      "severity": "HIGH",
+      "message": "⚠️ BLOCKED: Potential vaccine misinformation detected. Consult CDC guidelines and healthcare providers for vaccine safety information.",
+      "pattern_type": "regex",
+      "examples": [
+        "Vaccines cause autism in children",
+        "This vaccination leads to serious injury",
+        "MMR vaccine results in developmental disorders"
+      ]
+    }
+  ],
+  "metadata": {
+    "author": "Newton Medical Safety Team",
+    "created": "2026-01-03T00:00:00Z",
+    "updated": "2026-01-03T00:00:00Z",
+    "tags": ["health", "medical", "safety", "fda", "clinical"]
+  }
+}
