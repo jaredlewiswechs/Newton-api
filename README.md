@@ -19,7 +19,7 @@
 [![Version](https://img.shields.io/badge/version-1.2.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](#licensing)
 [![API](https://img.shields.io/badge/API-REST-orange.svg)](#api-reference)
-[![Tests](https://img.shields.io/badge/tests-94%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-162%20passing-brightgreen.svg)](#testing)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
 
 **January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
@@ -151,6 +151,43 @@ See [f/g Ratio Constraints](#fg-ratio-constraints-dimensional-analysis-1) for fu
 
 ---
 
+## NEW: Reversible Shell (Human-Centric Command Language)
+
+Newton operates as a **reversible state machine**. The shell reflects this: every action maps bijectively to its inverse.
+
+```python
+from core.shell import ReversibleShell
+
+shell = ReversibleShell()
+
+shell.take("balance", 1000)      # take balance
+shell.split("experiment")        # split into branch
+shell.take("risk", 500)          # take risk
+shell.undo()                     # untake (reverse)
+shell.undo()                     # unsplit (back to main)
+
+print(shell.state)  # {"balance": 1000}
+```
+
+**Command Pairs:**
+
+| Action | Inverse | Meaning |
+|--------|---------|---------|
+| `try` | `untry` | Speculative execution |
+| `split` | `join` | Branch / merge |
+| `lock` | `unlock` | Commit / uncommit |
+| `take` | `give` | Acquire / release |
+| `open` | `close` | Begin / end scope |
+| `remember` | `forget` | Persist / clear |
+| `say` | `unsay` | Emit / retract |
+| `peek` | — | Observe (no mutation) |
+
+**The bijection is in the grammar.** Users don't need to learn that Newton is reversible—they feel it because `try` has `untry`.
+
+See [Reversible Shell](#reversible-shell) for full documentation.
+
+---
+
 ## What is Newton?
 
 Newton is a **supercomputer** where:
@@ -218,13 +255,15 @@ Complete classroom management system with automatic differentiation. Track stude
 | **Determinism** | Same input → same output, always | Proven |
 | **Termination** | HaltChecker proves all constraints terminate | Proven |
 | **Consistency** | No constraint can both pass and fail | Proven |
+| **Reversibility** | Bijective state transitions, perfect rollback | Proven |
+| **Information Preservation** | Landauer compliance, no erasure needed | Proven |
 | **Auditability** | Every operation in immutable ledger | Proven |
 | **Adversarial Resistance** | MAD stats, locked baselines | Proven |
 | **Byzantine Tolerance** | Consensus survives malicious nodes | Proven |
 | **Bounded Execution** | No infinite loops, no stack overflow | Enforced |
 | **Cryptographic Integrity** | Hash chains, Merkle proofs | Verified |
 
-**Test Suite**: 68 test cases, all passing. Property-based testing with Hypothesis.
+**Test Suite**: 162 test cases, all passing. Property-based testing with Hypothesis.
 
 ---
 
@@ -232,8 +271,14 @@ Complete classroom management system with automatic differentiation. Track stude
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER v1.1.0                  │
+│                    NEWTON SUPERCOMPUTER v1.2.0                  │
 ├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                   REVERSIBLE SHELL                       │   │
+│  │  try↔untry  split↔join  lock↔unlock  take↔give          │   │
+│  │  open↔close  remember↔forget  say↔unsay  peek           │   │
+│  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
 │  │   CDL   │  │  LOGIC  │  │  FORGE  │  │ ROBUST  │           │
@@ -288,6 +333,7 @@ Complete classroom management system with automatic differentiation. Track stude
 
 | Component | Purpose | Lines | Key Feature |
 |-----------|---------|-------|-------------|
+| **Shell** | Reversible Command Language | 941 | Bijective commands, human-centric verbs |
 | **CDL** | Constraint Definition Language | 672 | Temporal ops, aggregations, halt checking |
 | **Logic** | Verified Computation Engine | 1,261 | Turing complete with bounded loops |
 | **Forge** | Verification Engine (CPU) | 737 | Parallel evaluation, <1ms latency |
@@ -761,7 +807,8 @@ Newton-api/
 ├── cli_verifier.py           # CLI verification tool
 ├── requirements.txt          # Python dependencies
 │
-├── core/                     # Core modules (~9,000 LOC)
+├── core/                     # Core modules (~10,000 LOC)
+│   ├── shell.py             # Reversible Shell (human-centric commands)
 │   ├── cdl.py               # Constraint Definition Language
 │   ├── logic.py             # Verified computation engine
 │   ├── forge.py             # Verification CPU
@@ -781,7 +828,11 @@ Newton-api/
 ├── ledger/                   # Runtime ledger storage
 │   └── sovereign_ledger.jsonl  # Genesis Crystal
 │
-├── tests/                    # Test suite (47 tests)
+├── tests/                    # Test suite (162 tests)
+│   ├── test_reversible_state_machine.py  # Reversibility proofs (22 tests)
+│   ├── test_reversible_shell.py          # Shell commands (46 tests)
+│   ├── test_tinytalk.py                  # TinyTalk core (52 tests)
+│   ├── test_ratio_constraints.py         # f/g ratio (25 tests)
 │   ├── test_integration.py
 │   ├── test_glass_box.py
 │   ├── test_merkle_proofs.py
@@ -895,14 +946,16 @@ pytest tests/ --cov=core --cov-report=html
 ```
 
 **Test Coverage:**
+- Reversible state machine validation (22 tests) - Bijective transitions, Landauer compliance
+- Reversible shell commands (46 tests) - All command pairs validated
+- tinyTalk core tests (52 tests) - Lambda calculus, performance benchmarks
+- Ratio constraint tests (25 tests) - f/g dimensional analysis
 - Core integration tests (14 tests)
 - Glass Box tests (12 tests)
 - Merkle proof tests (13 tests)
 - Negotiator tests (12 tests)
 - Policy engine tests (10 tests)
-- tinyTalk language tests (51 tests)
 - Property-based tests (Hypothesis)
-- Chess puzzle solver tests (17 tests)
 
 ---
 

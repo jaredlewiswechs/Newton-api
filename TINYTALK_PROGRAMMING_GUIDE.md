@@ -29,7 +29,8 @@
 10. [Matter Types](#matter-types)
 11. [The Kinetic Engine](#the-kinetic-engine)
 12. [Ratio Constraints (f/g)](#ratio-constraints-fg)
-13. [Basic Examples](#basic-examples)
+13. [Reversible Shell](#reversible-shell)
+14. [Basic Examples](#basic-examples)
 14. [Intermediate Examples](#intermediate-examples)
 15. [Advanced Examples](#advanced-examples)
 16. [Real-World Applications](#real-world-applications)
@@ -846,6 +847,76 @@ print(r_undef <= 1.0)     # False (never satisfies)
 | Healthcare | Seizure safety | flicker_rate | safe_limit | < 1.0 |
 | Education | Class size | students | capacity | ≤ 1.0 |
 | Manufacturing | Defect rate | defects | total | < 0.01 |
+
+---
+
+## Reversible Shell
+
+Newton operates as a **reversible state machine**. The shell reflects this through bijective command pairs—every action has an inverse.
+
+### Command Pairs
+
+| Action | Inverse | Meaning |
+|--------|---------|---------|
+| `try` | `untry` | Speculative execution with rollback |
+| `split` | `join` | Branch creation / merge |
+| `lock` | `unlock` | Commit / uncommit |
+| `take` | `give` | Acquire / release resource |
+| `open` | `close` | Begin / end scope |
+| `remember` | `forget` | Persist / clear memory |
+| `say` | `unsay` | Emit / retract signal |
+| `peek` | — | Observe (no mutation, no inverse needed) |
+
+### Basic Usage
+
+```python
+from core.shell import ReversibleShell
+
+# Create a shell with initial state
+shell = ReversibleShell({"balance": 1000})
+
+# Take a resource
+shell.take("user", "alice")          # → {"balance": 1000, "user": "alice"}
+
+# Split into experimental branch
+shell.split("experiment")            # Creates branch "experiment"
+
+# Try something risky
+shell.take("risk", 500)
+
+# Peek without mutation
+result = shell.peek()                # View current state
+
+# Undo everything (reverse order)
+shell.undo()                         # untake risk
+shell.undo()                         # unsplit (back to main)
+
+# State is exactly restored
+assert shell.state == {"balance": 1000, "user": "alice"}
+```
+
+### The Bijection Principle
+
+Users don't need to learn that Newton is reversible. They **feel** it because:
+- `try` naturally has `untry`
+- `split` naturally has `join`
+- `take` naturally has `give`
+
+The reversibility is in the grammar itself.
+
+### Integration with Blueprint/Forge
+
+The shell commands map to Blueprint operations:
+
+```python
+# Shell command        # Blueprint equivalent
+shell.try_action(fn)   # @forge with state save/restore
+shell.split("name")    # Create isolated branch
+shell.lock("msg")      # Commit state (similar to ledger entry)
+shell.remember(k, v)   # Persist to memory (vault-like)
+```
+
+See `core/shell.py` for the full implementation.
 
 ---
 

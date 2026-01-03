@@ -2,7 +2,7 @@
 
 > **The constraint IS the instruction. The verification IS the computation.**
 
-**Version 1.0.0** | **January 3, 2026** | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
+**Version 1.2.0** | **January 3, 2026** | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 ---
 
@@ -57,8 +57,14 @@ Newton is a distributed verification system with seven core components plus the 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER v1.0.0                  │
+│                    NEWTON SUPERCOMPUTER v1.2.0                  │
 ├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                   REVERSIBLE SHELL                       │   │
+│  │  try↔untry  split↔join  lock↔unlock  take↔give          │   │
+│  │  open↔close  remember↔forget  say↔unsay  peek           │   │
+│  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
 │  │   CDL   │  │  LOGIC  │  │  FORGE  │  │ ROBUST  │           │
@@ -420,7 +426,94 @@ python newton_supercomputer.py
 
 ---
 
-## 10. Conclusion
+## 10. Reversible Computing
+
+Newton operates as a **reversible state machine**—a computing model where every operation can be undone without information loss. This isn't just an implementation detail; it's a fundamental architectural property with profound implications.
+
+### 10.1 Theoretical Foundation
+
+**Charles Bennett (1973)** proved that any computation can be performed reversibly if we maintain a "history tape." **Rolf Landauer (1961)** showed that erasing information requires energy dissipation (kT·ln(2) per bit).
+
+Newton inverts this:
+
+| Traditional Computing | Newton Computing |
+|-----------------------|------------------|
+| Execute → detect invalid states → erase | Define constraints → prevent invalid states |
+| Many-to-one mappings (entropy) | Bijective transitions (no entropy) |
+| Information erasure required | No erasure needed |
+| Heat dissipation per erase | Minimal heat (theoretical) |
+
+### 10.2 The Bijection Principle
+
+Every Newton state transition is **bijective** (one-to-one):
+
+```
+State_n → Input → State_{n+1}    (forward: deterministic)
+State_{n+1} → Input → State_n    (reverse: deterministic)
+```
+
+The `@forge` decorator implements this through atomic save/restore:
+
+```python
+@forge
+def operation(self, args):
+    saved_state = self._save_state()      # 1. Save
+    try:
+        self.mutate(args)                  # 2. Execute
+        for law in self._laws:             # 3. Check
+            if law.violated(self):
+                self._restore_state(saved_state)  # 4. Rollback
+                raise LawViolation()
+        return result                      # 5. Commit
+    except:
+        self._restore_state(saved_state)   # Always rollback on error
+```
+
+### 10.3 f/g Ratio as Landauer's Principle
+
+The f/g ratio (`finfr`) is Landauer's principle applied **before execution**:
+
+```
+f = what you're trying to do (forge/fact)
+g = what reality allows (ground/goal)
+
+f/g > threshold → finfr (forbidden)
+f/g undefined (g=0) → finfr (ontological death)
+```
+
+By preventing invalid states from ever existing, no information needs to be erased. No erasure = minimal heat dissipation = theoretical thermodynamic efficiency.
+
+### 10.4 Reversible Shell
+
+Newton's command language reflects its reversibility. Every action has an inverse:
+
+| Action | Inverse | Meaning |
+|--------|---------|---------|
+| `try` | `untry` | Speculative execution |
+| `split` | `join` | Branch / merge |
+| `lock` | `unlock` | Commit / uncommit |
+| `take` | `give` | Acquire / release |
+| `open` | `close` | Begin / end scope |
+| `remember` | `forget` | Persist / clear |
+| `say` | `unsay` | Emit / retract |
+
+Users don't need to learn that Newton is reversible. They feel it because `try` has `untry`.
+
+### 10.5 Validation
+
+Newton's reversibility is formally validated by 22 property-based tests:
+
+- **Bijective Transitions**: No many-to-one mappings
+- **Perfect Reversibility**: Exact state restoration
+- **Landauer Compliance**: No information erasure needed
+- **Deterministic Automaton**: DFA properties
+- **Bijection Certification**: Mathematical inverses
+
+See `tests/test_reversible_state_machine.py` for the formal proofs.
+
+---
+
+## 11. Conclusion
 
 Newton represents a fundamental shift in computing architecture:
 
