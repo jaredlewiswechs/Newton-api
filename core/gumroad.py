@@ -1,13 +1,20 @@
 """
 ═══════════════════════════════════════════════════════════════════════════════
 GUMROAD INTEGRATION FOR NEWTON SUPERCOMPUTER
-Access to the Newton Supercomputer - $5 during testing
+Multi-Product Revenue Engine
+
+Products:
+1. Teacher's Aide Pro ($9/month) - AI lesson planning for K-8 teachers
+2. Newton API Access ($19-49 one-time) - Verified computation for developers
+3. AI Safety Shield ($29-99/month) - Real-time AI output verification
 
 This module handles:
 - License key verification via Gumroad API
-- Webhook processing for new purchases
-- API key generation for customers
-- Feedback collection from users
+- Multi-product tier management
+- Webhook processing for purchases/refunds
+- API key generation with tier-based permissions
+- Usage tracking and limits
+- Feedback collection
 
 © 2025-2026 Jared Lewis · Ada Computing Company · Houston, Texas
 ═══════════════════════════════════════════════════════════════════════════════
@@ -21,7 +28,235 @@ import time
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
+from enum import Enum
 import requests
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PRODUCT DEFINITIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class ProductTier(Enum):
+    """Product tiers with different capabilities."""
+    # Teacher's Aide
+    TEACHER_AIDE_PRO = "teacher_aide_pro"
+
+    # Newton API
+    API_STARTER = "api_starter"
+    API_PRO = "api_pro"
+
+    # AI Safety Shield
+    SAFETY_STARTUP = "safety_startup"
+    SAFETY_SCALE = "safety_scale"
+    SAFETY_ENTERPRISE = "safety_enterprise"
+
+    # Legacy/Test
+    LEGACY_BETA = "legacy_beta"
+    TEST = "test"
+
+
+@dataclass
+class ProductConfig:
+    """Configuration for a specific product tier."""
+    tier: ProductTier
+    name: str
+    price_cents: int
+    is_recurring: bool
+    monthly_verifications: int  # -1 = unlimited
+    features: List[str]
+    endpoints: List[str]  # Allowed API endpoint patterns
+
+
+# Product catalog - the money makers
+PRODUCT_CATALOG: Dict[str, ProductConfig] = {
+    # Teacher's Aide Pro - $9/month
+    "teacher_aide_pro": ProductConfig(
+        tier=ProductTier.TEACHER_AIDE_PRO,
+        name="Teacher's Aide Pro",
+        price_cents=900,
+        is_recurring=True,
+        monthly_verifications=50000,
+        features=[
+            "TEKS-aligned lesson generation",
+            "Auto-differentiation (4 tiers)",
+            "Assessment analysis with MAD",
+            "PLC report generation",
+            "Student grouping",
+            "50-minute NES lesson structure"
+        ],
+        endpoints=[
+            "/education/*",
+            "/teachers/*",
+            "/ask",
+            "/statistics"
+        ]
+    ),
+
+    # Newton API Starter - $19 one-time
+    "api_starter": ProductConfig(
+        tier=ProductTier.API_STARTER,
+        name="Newton API Starter",
+        price_cents=1900,
+        is_recurring=False,
+        monthly_verifications=10000,
+        features=[
+            "Full verification pipeline",
+            "Constraint evaluation (CDL 3.0)",
+            "Content safety checking",
+            "Basic audit trail",
+            "Personal/non-commercial use"
+        ],
+        endpoints=[
+            "/ask",
+            "/verify",
+            "/calculate",
+            "/constraint",
+            "/ground",
+            "/statistics"
+        ]
+    ),
+
+    # Newton API Pro - $49 one-time
+    "api_pro": ProductConfig(
+        tier=ProductTier.API_PRO,
+        name="Newton API Pro",
+        price_cents=4900,
+        is_recurring=False,
+        monthly_verifications=-1,  # Unlimited
+        features=[
+            "Everything in Starter",
+            "Unlimited verifications",
+            "Vault encrypted storage",
+            "Full Ledger access",
+            "Glass Box transparency",
+            "Commercial use license",
+            "Priority support"
+        ],
+        endpoints=[
+            "/ask",
+            "/verify",
+            "/verify/batch",
+            "/calculate",
+            "/constraint",
+            "/ground",
+            "/statistics",
+            "/vault/*",
+            "/ledger/*",
+            "/policy/*",
+            "/negotiator/*",
+            "/merkle/*",
+            "/cartridge/*"
+        ]
+    ),
+
+    # AI Safety Shield Startup - $29/month
+    "safety_startup": ProductConfig(
+        tier=ProductTier.SAFETY_STARTUP,
+        name="AI Safety Shield - Startup",
+        price_cents=2900,
+        is_recurring=True,
+        monthly_verifications=50000,
+        features=[
+            "Real-time content verification",
+            "Harm detection",
+            "Medical/legal/financial safety",
+            "Audit trail",
+            "Email support"
+        ],
+        endpoints=[
+            "/verify",
+            "/verify/batch",
+            "/ask",
+            "/ledger",
+            "/ledger/*"
+        ]
+    ),
+
+    # AI Safety Shield Scale - $99/month
+    "safety_scale": ProductConfig(
+        tier=ProductTier.SAFETY_SCALE,
+        name="AI Safety Shield - Scale",
+        price_cents=9900,
+        is_recurring=True,
+        monthly_verifications=500000,
+        features=[
+            "Everything in Startup",
+            "Custom policies",
+            "Webhook alerts",
+            "Priority support",
+            "SLA guarantee"
+        ],
+        endpoints=[
+            "/verify",
+            "/verify/batch",
+            "/ask",
+            "/ledger",
+            "/ledger/*",
+            "/policy/*",
+            "/negotiator/*"
+        ]
+    ),
+
+    # AI Safety Shield Enterprise - Custom
+    "safety_enterprise": ProductConfig(
+        tier=ProductTier.SAFETY_ENTERPRISE,
+        name="AI Safety Shield - Enterprise",
+        price_cents=49900,  # Starting price
+        is_recurring=True,
+        monthly_verifications=-1,  # Unlimited
+        features=[
+            "Everything in Scale",
+            "Unlimited verifications",
+            "On-premise deployment option",
+            "Dedicated support",
+            "Custom integration",
+            "Custom SLA"
+        ],
+        endpoints=["*"]  # All endpoints
+    ),
+
+    # Legacy beta tier (grandfather existing users)
+    "legacy_beta": ProductConfig(
+        tier=ProductTier.LEGACY_BETA,
+        name="Newton Beta Access",
+        price_cents=500,
+        is_recurring=False,
+        monthly_verifications=10000,
+        features=["Full API access (beta)"],
+        endpoints=["*"]
+    ),
+
+    # Test tier for development
+    "test": ProductConfig(
+        tier=ProductTier.TEST,
+        name="Test Access",
+        price_cents=0,
+        is_recurring=False,
+        monthly_verifications=1000,
+        features=["Development testing"],
+        endpoints=["*"]
+    )
+}
+
+
+def get_product_config(product_name: str) -> ProductConfig:
+    """Get product config by Gumroad product name."""
+    # Map Gumroad product names to our config keys
+    name_mapping = {
+        "Teacher's Aide Pro": "teacher_aide_pro",
+        "Newton API Starter": "api_starter",
+        "Newton API Pro": "api_pro",
+        "Newton API — Verified Computation for Developers": "api_starter",
+        "AI Safety Shield - Startup": "safety_startup",
+        "AI Safety Shield - Scale": "safety_scale",
+        "AI Safety Shield - Enterprise": "safety_enterprise",
+        "AI Safety Shield — Real-Time AI Output Verification": "safety_startup",
+        "Newton Supercomputer Access": "legacy_beta",
+        "Newton Supercomputer Access (TEST)": "test",
+    }
+
+    config_key = name_mapping.get(product_name, "legacy_beta")
+    return PRODUCT_CATALOG.get(config_key, PRODUCT_CATALOG["legacy_beta"])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -36,8 +271,12 @@ class GumroadConfig:
     access_token: str = field(default_factory=lambda: os.getenv("GUMROAD_ACCESS_TOKEN", ""))
     webhook_secret: str = field(default_factory=lambda: os.getenv("GUMROAD_WEBHOOK_SECRET", ""))
 
-    # Product pricing (in cents)
-    price_cents: int = 500  # $5.00 during testing
+    # Multiple products support
+    teacher_aide_product_id: str = field(default_factory=lambda: os.getenv("GUMROAD_TEACHER_AIDE_ID", ""))
+    api_starter_product_id: str = field(default_factory=lambda: os.getenv("GUMROAD_API_STARTER_ID", ""))
+    api_pro_product_id: str = field(default_factory=lambda: os.getenv("GUMROAD_API_PRO_ID", ""))
+    safety_startup_product_id: str = field(default_factory=lambda: os.getenv("GUMROAD_SAFETY_STARTUP_ID", ""))
+    safety_scale_product_id: str = field(default_factory=lambda: os.getenv("GUMROAD_SAFETY_SCALE_ID", ""))
 
     # API settings
     verify_url: str = "https://api.gumroad.com/v2/licenses/verify"
@@ -55,7 +294,7 @@ class GumroadConfig:
 
 @dataclass
 class Customer:
-    """A Newton customer."""
+    """A Newton customer with tier-based access."""
     email: str
     license_key: str
     api_key: str
@@ -64,8 +303,12 @@ class Customer:
     active: bool = True
     sale_id: Optional[str] = None
     product_name: Optional[str] = None
+    tier: str = "legacy_beta"  # Product tier key
+    monthly_usage: int = 0  # Current month's verification count
+    usage_reset_date: str = ""  # When to reset monthly usage
 
     def to_dict(self) -> Dict[str, Any]:
+        config = PRODUCT_CATALOG.get(self.tier, PRODUCT_CATALOG["legacy_beta"])
         return {
             "email": self.email,
             "license_key": self.license_key[-8:] + "...",  # Masked
@@ -73,8 +316,45 @@ class Customer:
             "purchase_date": self.purchase_date,
             "uses": self.uses,
             "active": self.active,
-            "product_name": self.product_name
+            "product_name": self.product_name,
+            "tier": self.tier,
+            "tier_name": config.name,
+            "monthly_limit": config.monthly_verifications,
+            "monthly_usage": self.monthly_usage,
+            "features": config.features
         }
+
+    def check_usage_limit(self) -> bool:
+        """Check if customer is within their usage limit."""
+        config = PRODUCT_CATALOG.get(self.tier, PRODUCT_CATALOG["legacy_beta"])
+        if config.monthly_verifications == -1:  # Unlimited
+            return True
+        return self.monthly_usage < config.monthly_verifications
+
+    def increment_usage(self) -> bool:
+        """Increment usage counter. Returns False if limit exceeded."""
+        # Reset monthly usage if needed
+        if self.usage_reset_date:
+            reset_date = datetime.fromisoformat(self.usage_reset_date)
+            if datetime.now() >= reset_date:
+                self.monthly_usage = 0
+                self.usage_reset_date = (datetime.now() + timedelta(days=30)).isoformat()
+
+        if not self.check_usage_limit():
+            return False
+
+        self.uses += 1
+        self.monthly_usage += 1
+        return True
+
+    def can_access_endpoint(self, endpoint: str) -> bool:
+        """Check if customer's tier allows access to an endpoint."""
+        import fnmatch
+        config = PRODUCT_CATALOG.get(self.tier, PRODUCT_CATALOG["legacy_beta"])
+        for pattern in config.endpoints:
+            if pattern == "*" or fnmatch.fnmatch(endpoint, pattern):
+                return True
+        return False
 
 
 @dataclass
@@ -282,13 +562,19 @@ class GumroadService:
         # Generate new API key
         api_key = self._generate_api_key()
 
+        # Determine tier from product name
+        product_config = get_product_config(product_name or "Newton Supercomputer Access")
+
         customer = Customer(
             email=email,
             license_key=license_key,
             api_key=api_key,
             purchase_date=datetime.now().isoformat(),
             sale_id=sale_id,
-            product_name=product_name or "Newton Supercomputer Access"
+            product_name=product_name or "Newton Supercomputer Access",
+            tier=product_config.tier.value,
+            monthly_usage=0,
+            usage_reset_date=(datetime.now() + timedelta(days=30)).isoformat()
         )
 
         # Store customer
@@ -565,24 +851,47 @@ class GumroadService:
         }
 
     def get_pricing_info(self) -> Dict[str, Any]:
-        """Get current pricing information."""
+        """Get current pricing information for all products."""
+        products = []
+        for key, config in PRODUCT_CATALOG.items():
+            if key in ["test", "legacy_beta"]:
+                continue  # Skip internal tiers
+            products.append({
+                "id": key,
+                "name": config.name,
+                "price": f"${config.price_cents / 100:.2f}",
+                "price_cents": config.price_cents,
+                "currency": "USD",
+                "type": "recurring" if config.is_recurring else "one-time",
+                "monthly_verifications": config.monthly_verifications if config.monthly_verifications > 0 else "unlimited",
+                "features": config.features,
+                "endpoints": config.endpoints
+            })
+
         return {
-            "product": "Newton Supercomputer Access",
-            "price": "$5.00",
-            "price_cents": self.config.price_cents,
-            "currency": "USD",
-            "type": "one-time",
-            "includes": [
-                "Full API access",
-                "Verified computation engine",
-                "Constraint evaluation (CDL 3.0)",
-                "Content safety verification (Forge)",
-                "Encrypted storage (Vault)",
-                "Immutable audit trail (Ledger)",
-                "Education module access",
-                "Priority support during testing"
-            ],
-            "note": "Testing price - will increase after beta"
+            "products": products,
+            "categories": {
+                "education": {
+                    "name": "Teacher's Aide Pro",
+                    "description": "AI lesson planning for K-8 teachers",
+                    "starting_price": "$9/month",
+                    "products": ["teacher_aide_pro"]
+                },
+                "developers": {
+                    "name": "Newton API",
+                    "description": "Verified computation for developers",
+                    "starting_price": "$19 one-time",
+                    "products": ["api_starter", "api_pro"]
+                },
+                "ai_safety": {
+                    "name": "AI Safety Shield",
+                    "description": "Real-time AI output verification",
+                    "starting_price": "$29/month",
+                    "products": ["safety_startup", "safety_scale", "safety_enterprise"]
+                }
+            },
+            "guarantee": "30-day money-back guarantee on all products",
+            "support": "Email support included with all tiers"
         }
 
 

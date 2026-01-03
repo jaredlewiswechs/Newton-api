@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton Supercomputer - Verified Computation That Just Works</title>
+    <meta name="description" content="The only computation engine where correctness is mathematically proven before execution. Sub-millisecond verification. Teacher tools, AI safety, developer APIs.">
+    <style>
+        :root {
+            --primary: #0a0a0a;
+            --accent: #10b981;
+            --accent-dark: #059669;
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --card-bg: #18181b;
+            --border: #27272a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 120px 0 80px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #fff 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero .tagline {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            margin-top: 60px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Products Section */
+        .products {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        @media (max-width: 900px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero-stats {
+                flex-direction: column;
+                gap: 24px;
+            }
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .product-card.featured {
+            border-color: var(--accent);
+            position: relative;
+        }
+
+        .product-card.featured::before {
+            content: 'MOST POPULAR';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .product-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .product-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .product-target {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .product-price {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .product-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .product-features {
+            list-style: none;
+            margin: 24px 0;
+        }
+
+        .product-features li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .product-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--accent);
+            color: var(--primary);
+            text-align: center;
+            text-decoration: none;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .cta-button:hover {
+            background: var(--accent-dark);
+        }
+
+        /* Performance Section */
+        .performance {
+            padding: 80px 0;
+            background: var(--card-bg);
+        }
+
+        .perf-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 32px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .perf-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .perf-item h3 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .perf-item p {
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        /* Guarantee */
+        .guarantee {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .guarantee h2 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .guarantee p {
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            border-top: 1px solid var(--border);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="container">
+            <h1>Newton Supercomputer</h1>
+            <p class="tagline">
+                The only computation engine where correctness is mathematically
+                <strong>proven</strong> before execution. Not tested. PROVEN.
+            </p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-value">2.31ms</div>
+                    <div class="stat-label">Median Latency</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">638x</div>
+                    <div class="stat-label">Faster than Stripe</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">52M</div>
+                    <div class="stat-label">Verifications/Day</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="products">
+        <div class="container">
+            <h2 class="section-title">Choose Your Product</h2>
+            <div class="products-grid">
+                <!-- Teacher's Aide -->
+                <div class="product-card featured">
+                    <div class="product-icon">🎓</div>
+                    <h3 class="product-name">Teacher's Aide Pro</h3>
+                    <p class="product-target">For K-8 Teachers</p>
+                    <div class="product-price">$9<span>/month</span></div>
+                    <ul class="product-features">
+                        <li>TEKS-aligned lesson plans in 5 min</li>
+                        <li>Auto-differentiation (4 tiers)</li>
+                        <li>Assessment analysis</li>
+                        <li>PLC report generation</li>
+                        <li>50-min NES lesson structure</li>
+                        <li>Student grouping by mastery</li>
+                    </ul>
+                    <a href="#" class="cta-button">Start Saving Hours →</a>
+                </div>
+
+                <!-- Newton API -->
+                <div class="product-card">
+                    <div class="product-icon">⚡</div>
+                    <h3 class="product-name">Newton API</h3>
+                    <p class="product-target">For Developers</p>
+                    <div class="product-price">$19<span> one-time</span></div>
+                    <ul class="product-features">
+                        <li>Full verification pipeline</li>
+                        <li>Constraint evaluation (CDL 3.0)</li>
+                        <li>Content safety checking</li>
+                        <li>Encrypted storage (Vault)</li>
+                        <li>Immutable audit trail</li>
+                        <li>Commercial license: $49</li>
+                    </ul>
+                    <a href="#" class="cta-button">Get API Access →</a>
+                </div>
+
+                <!-- AI Safety Shield -->
+                <div class="product-card">
+                    <div class="product-icon">🛡️</div>
+                    <h3 class="product-name">AI Safety Shield</h3>
+                    <p class="product-target">For AI Teams</p>
+                    <div class="product-price">$29<span>/month</span></div>
+                    <ul class="product-features">
+                        <li>Real-time AI output verification</li>
+                        <li>Harm/medical/legal detection</li>
+                        <li>50K verifications/month</li>
+                        <li>Audit trail with proofs</li>
+                        <li>2-minute integration</li>
+                        <li>Scale tier: $99/mo</li>
+                    </ul>
+                    <a href="#" class="cta-button">Protect Your AI →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="performance">
+        <div class="container">
+            <h2 class="section-title">Performance That Matters</h2>
+            <div class="perf-grid">
+                <div class="perf-item">
+                    <h3>2.31ms</h3>
+                    <p>Verification Latency</p>
+                </div>
+                <div class="perf-item">
+                    <h3>46.5μs</h3>
+                    <p>Internal Processing</p>
+                </div>
+                <div class="perf-item">
+                    <h3>605</h3>
+                    <p>Requests/Second</p>
+                </div>
+                <div class="perf-item">
+                    <h3>563x</h3>
+                    <p>Faster than GPT-4</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="guarantee">
+        <div class="container">
+            <h2>30-Day Money-Back Guarantee</h2>
+            <p>
+                If Newton doesn't save you time or catch something harmful,
+                we'll refund every penny. No questions asked.
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>
+                © 2026 <a href="#">Ada Computing Company</a> · Houston, Texas<br>
+                Powered by Newton Supercomputer · <a href="#">Documentation</a> · <a href="#">API Status</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
