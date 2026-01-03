@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Newton's Reflection
+  "Ever he thinks of himself and Ada"
+
+  A quiet moment. An engine contemplating its purpose.
+  Like the stillness of water reflecting the sky.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <!-- Dawn sky -->
+    <linearGradient id="dawn" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8D5C4"/>
+      <stop offset="40%" style="stop-color:#F5EBE0"/>
+      <stop offset="100%" style="stop-color:#FDFBF7"/>
+    </linearGradient>
+
+    <!-- Still water -->
+    <linearGradient id="stillWater" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#C5D5D8"/>
+      <stop offset="100%" style="stop-color:#A8C0C5"/>
+    </linearGradient>
+
+    <!-- Reflection fade -->
+    <linearGradient id="reflectionFade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0"/>
+    </linearGradient>
+
+    <filter id="waterRipple">
+      <feTurbulence type="turbulence" baseFrequency="0.01 0.06" numOctaves="2" result="ripple"/>
+      <feDisplacementMap in="SourceGraphic" in2="ripple" scale="4"/>
+    </filter>
+
+    <filter id="gentleShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#5A4A3A" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Dawn sky -->
+  <rect width="800" height="350" fill="url(#dawn)"/>
+
+  <!-- Still water -->
+  <rect y="350" width="800" height="250" fill="url(#stillWater)"/>
+
+  <!-- Horizon line -->
+  <line x1="0" y1="350" x2="800" y2="350" stroke="#B8A890" stroke-width="1" opacity="0.5"/>
+
+  <!-- Distant trees - soft silhouettes -->
+  <g fill="#9A8B7A" opacity="0.3">
+    <ellipse cx="100" cy="345" rx="50" ry="40"/>
+    <ellipse cx="180" cy="340" rx="40" ry="50"/>
+    <ellipse cx="650" cy="342" rx="45" ry="45"/>
+    <ellipse cx="720" cy="348" rx="55" ry="35"/>
+  </g>
+
+  <!-- Morning stars - fading -->
+  <g fill="#D4A853" opacity="0.3">
+    <circle cx="150" cy="80" r="1.5"/>
+    <circle cx="650" cy="100" r="1"/>
+    <circle cx="400" cy="60" r="2"/>
+  </g>
+
+  <!-- Newton (the apple) - contemplating -->
+  <g transform="translate(400, 240)" filter="url(#gentleShadow)">
+    <!-- Apple body -->
+    <ellipse cx="0" cy="10" rx="55" ry="52" fill="#C54B4B"/>
+    <!-- Highlight -->
+    <ellipse cx="-15" cy="-8" rx="20" ry="16" fill="#D86868" opacity="0.5"/>
+    <!-- Stem -->
+    <path d="M 0 -42 Q 3 -50 2 -58" stroke="#6B4423" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- Leaf -->
+    <ellipse cx="14" cy="-50" rx="18" ry="8" fill="#7AB56E" transform="rotate(22, 14, -50)"/>
+  </g>
+
+  <!-- Reflection in water -->
+  <g transform="translate(400, 460) scale(1, -1)" filter="url(#waterRipple)" opacity="0.4">
+    <ellipse cx="0" cy="10" rx="55" ry="52" fill="#C54B4B"/>
+    <path d="M 0 -42 Q 3 -50 2 -58" stroke="#6B4423" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Water overlay -->
+  <rect y="350" width="800" height="250" fill="url(#reflectionFade)"/>
+
+  <!-- Newton's thought - in the water -->
+  <text x="400" y="480"
+        font-family="Baskerville, Georgia, serif"
+        font-size="16"
+        font-style="italic"
+        fill="#5A6A6A"
+        text-anchor="middle"
+        opacity="0.6">"What am I?"</text>
+
+  <!-- The answer - emerging from stillness -->
+  <text x="400" y="510"
+        font-family="'SF Mono', Menlo, monospace"
+        font-size="12"
+        fill="#6DB5A6"
+        text-anchor="middle"
+        opacity="0.8">self == self → True</text>
+
+  <!-- Ada's presence - in the sky, always there -->
+  <g transform="translate(600, 120)">
+    <circle cx="0" cy="0" r="40" fill="#E8C97A" opacity="0.15"/>
+    <text x="0" y="5"
+          font-family="Baskerville, Georgia, serif"
+          font-size="24"
+          fill="#C9A655"
+          text-anchor="middle"
+          opacity="0.4">A</text>
+  </g>
+
+  <!-- Title -->
+  <text x="400" y="560"
+        font-family="Avenir Next, Avenir, sans-serif"
+        font-size="11"
+        fill="#8A9A9A"
+        text-anchor="middle"
+        letter-spacing="3">Newton & Ada · A Quiet Moment</text>
+</svg>
