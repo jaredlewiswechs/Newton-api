@@ -151,6 +151,22 @@ try:
         simulate_fast_learner,
         simulate_struggling_learner,
     )
+
+    from .gradebook import (
+        # Enums and Constants
+        GradeStatus,
+        MIN_GRADE,
+        MAX_GRADE,
+        # Data Classes
+        GradeEntry,
+        CryptographicProof,
+        # Main Blueprint
+        Gradebook,
+        # Factory
+        get_gradebook,
+        # CDL Constraints
+        get_gradebook_constraints,
+    )
 except ImportError:
     # Fall back to absolute imports (when running directly)
     from core import (
@@ -266,6 +282,22 @@ except ImportError:
         simulate_struggling_learner,
     )
 
+    from gradebook import (
+        # Enums and Constants
+        GradeStatus,
+        MIN_GRADE,
+        MAX_GRADE,
+        # Data Classes
+        GradeEntry,
+        CryptographicProof,
+        # Main Blueprint
+        Gradebook,
+        # Factory
+        get_gradebook,
+        # CDL Constraints
+        get_gradebook_constraints,
+    )
+
 __version__ = "1.0.0"
 __all__ = [
     # Core
@@ -353,4 +385,13 @@ __all__ = [
     "create_navigator_for_algebra",
     "simulate_fast_learner",
     "simulate_struggling_learner",
+    # Gradebook
+    "GradeStatus",
+    "MIN_GRADE",
+    "MAX_GRADE",
+    "GradeEntry",
+    "CryptographicProof",
+    "Gradebook",
+    "get_gradebook",
+    "get_gradebook_constraints",
 ]
