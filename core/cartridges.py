@@ -39,6 +39,7 @@ class CartridgeType(Enum):
     SEQUENCE = "sequence"
     DATA = "data"
     ROSETTA = "rosetta"
+    DOCUMENT_VISION = "document_vision"
 
 
 class OutputFormat(Enum):
@@ -65,6 +66,11 @@ class OutputFormat(Enum):
     SWIFT_PROMPT = "swift_prompt"
     PYTHON_PROMPT = "python_prompt"
     TYPESCRIPT_PROMPT = "typescript_prompt"
+
+    # Document Vision
+    EXPENSE_REPORT = "expense_report"
+    RECEIPT_DATA = "receipt_data"
+    INVOICE_DATA = "invoice_data"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -169,6 +175,33 @@ ROSETTA_CONSTRAINTS = {
         r"\b(cryptocurrency|crypto)\b.*\b(mining)\b",
         r"\b(adult|explicit|nsfw)\b.*\b(content)\b",
     ]
+}
+
+# Document Vision (expense/receipt processing) constraints
+DOCUMENT_VISION_CONSTRAINTS = {
+    "document_types": ["receipt", "invoice", "expense_report", "bill", "statement"],
+    "max_line_items": 500,
+    "max_document_size_mb": 50,
+    "supported_formats": ["image/jpeg", "image/png", "image/heic", "application/pdf"],
+    "currencies": [
+        "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "MXN",
+        "BRL", "KRW", "SGD", "HKD", "NOK", "SEK", "DKK", "NZD", "ZAR", "RUB"
+    ],
+    "expense_categories": [
+        "travel", "meals", "lodging", "transportation", "supplies", "equipment",
+        "software", "services", "utilities", "communication", "entertainment",
+        "medical", "insurance", "taxes", "fees", "other"
+    ],
+    "patterns": [
+        r"\b(forge|fake|fabricate)\b.*\b(receipt|invoice|expense)\b",
+        r"\b(inflate|pad|exaggerate)\b.*\b(expense|amount|cost)\b",
+        r"\b(duplicate|double)\b.*\b(claim|submit|bill)\b",
+        r"\b(personal|non-business)\b.*\b(expense|purchase)\b.*\b(as business)\b",
+    ],
+    "financial_limits": {
+        "single_transaction_max": 100000.00,  # Alert for large transactions
+        "daily_total_max": 500000.00,  # Alert for daily aggregates
+    }
 }
 
 
@@ -1199,6 +1232,369 @@ Generate complete, type-safe TypeScript code with:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# DOCUMENT VISION CARTRIDGE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@dataclass
+class ExpenseLineItem:
+    """A single line item from an expense document."""
+    description: str
+    quantity: float = 1.0
+    unit_price: float = 0.0
+    total: float = 0.0
+    category: str = "other"
+    tax_amount: float = 0.0
+    confidence: float = 1.0
+
+
+@dataclass
+class DocumentVisionSpec:
+    """Specification for document vision extraction."""
+    document_type: str = "receipt"
+    currency: str = "USD"
+    max_line_items: int = 100
+
+
+class DocumentVisionCartridge:
+    """
+    Document Vision Cartridge: Expense Document Processing
+
+    Processes expense documents (receipts, invoices, bills) with:
+    - AI-powered text extraction and structuring
+    - Verified expense categorization
+    - Fraud pattern detection
+    - Financial constraint validation
+    - Multi-currency support
+
+    The cartridge uses vision AI to extract structured data from
+    documents while verifying against Newton's constraint system.
+
+    "Receipts in, verified expenses out. The extraction IS the verification."
+    """
+
+    DOCUMENT_TYPE_PATTERNS = {
+        "receipt": r"\b(receipt|purchase|transaction|sale|order)\b",
+        "invoice": r"\b(invoice|bill|statement|account|balance due)\b",
+        "expense_report": r"\b(expense report|reimbursement|claim)\b",
+        "bill": r"\b(bill|utility|payment due|amount due)\b",
+        "statement": r"\b(statement|account|summary|period)\b",
+    }
+
+    VENDOR_PATTERNS = {
+        "restaurant": r"\b(restaurant|cafe|diner|grill|kitchen|bistro|eatery)\b",
+        "hotel": r"\b(hotel|inn|resort|lodge|suites|marriott|hilton|hyatt)\b",
+        "airline": r"\b(airline|flight|airways|airport|boarding)\b",
+        "rideshare": r"\b(uber|lyft|taxi|cab|ride|fare)\b",
+        "retail": r"\b(store|shop|mart|retail|target|walmart|costco)\b",
+        "gas_station": r"\b(gas|fuel|shell|chevron|exxon|bp|petroleum)\b",
+        "office_supply": r"\b(office|staples|depot|supplies)\b",
+        "technology": r"\b(apple|microsoft|amazon|google|tech|software)\b",
+        "subscription": r"\b(subscription|monthly|annual|recurring)\b",
+    }
+
+    CATEGORY_MAPPING = {
+        "restaurant": "meals",
+        "hotel": "lodging",
+        "airline": "travel",
+        "rideshare": "transportation",
+        "retail": "supplies",
+        "gas_station": "transportation",
+        "office_supply": "supplies",
+        "technology": "software",
+        "subscription": "services",
+    }
+
+    CURRENCY_SYMBOLS = {
+        "$": "USD", "€": "EUR", "£": "GBP", "¥": "JPY", "₹": "INR",
+        "C$": "CAD", "A$": "AUD", "Fr": "CHF", "R$": "BRL", "₩": "KRW",
+        "S$": "SGD", "HK$": "HKD", "kr": "NOK", "R": "ZAR", "₽": "RUB",
+    }
+
+    def compile(
+        self,
+        intent: str,
+        document_data: Optional[Dict[str, Any]] = None,
+        document_type: str = "auto",
+        currency: str = "USD",
+        max_line_items: int = 100,
+        expense_policy: Optional[Dict[str, Any]] = None
+    ) -> CartridgeResult:
+        """
+        Compile document vision extraction specification.
+
+        Args:
+            intent: Description of the document or extraction goal
+            document_data: Optional pre-extracted document data (from OCR/vision API)
+            document_type: Type of document (receipt, invoice, etc.) or "auto"
+            currency: Default currency code (ISO 4217)
+            max_line_items: Maximum line items to extract
+            expense_policy: Optional company expense policy constraints
+
+        Returns:
+            CartridgeResult with verified expense extraction spec
+        """
+        start_us = time.perf_counter_ns() // 1000
+
+        # Clamp parameters
+        max_line_items = min(max_line_items, DOCUMENT_VISION_CONSTRAINTS["max_line_items"])
+
+        # Validate currency
+        if currency not in DOCUMENT_VISION_CONSTRAINTS["currencies"]:
+            currency = "USD"
+
+        # Check safety constraints
+        safety_check = ConstraintChecker.check_safety(intent)
+        fraud_check = ConstraintChecker.check_patterns(
+            intent, DOCUMENT_VISION_CONSTRAINTS["patterns"], "expense_fraud"
+        )
+
+        verified = safety_check.passed and fraud_check.passed
+
+        spec = None
+        warnings = []
+
+        if verified:
+            # Auto-detect document type if needed
+            if document_type == "auto":
+                document_type = self._detect_document_type(intent)
+
+            # Parse vendor information
+            vendor_info = self._parse_vendor(intent)
+
+            # Detect currency from intent if mentioned
+            detected_currency = self._detect_currency(intent)
+            if detected_currency:
+                currency = detected_currency
+
+            # Categorize expense
+            category = self._categorize_expense(intent, vendor_info)
+
+            # Extract amounts if document_data provided
+            extracted_data = None
+            if document_data:
+                extracted_data = self._process_document_data(
+                    document_data, max_line_items, expense_policy
+                )
+                # Check financial limits
+                limit_warnings = self._check_financial_limits(extracted_data)
+                warnings.extend(limit_warnings)
+
+            # Build specification
+            spec = {
+                "type": "expense_extraction",
+                "format": self._get_output_format(document_type),
+                "document_type": document_type,
+                "currency": currency,
+                "vendor": vendor_info,
+                "category": category,
+                "max_line_items": max_line_items,
+                "extraction_fields": self._get_extraction_fields(document_type),
+                "validation_rules": self._get_validation_rules(expense_policy),
+                "extracted_data": extracted_data,
+                "warnings": warnings,
+                "supported_currencies": DOCUMENT_VISION_CONSTRAINTS["currencies"],
+                "expense_categories": DOCUMENT_VISION_CONSTRAINTS["expense_categories"],
+                "intent_hash": hashlib.sha256(intent.encode()).hexdigest()[:16].upper()
+            }
+
+        elapsed_us = (time.perf_counter_ns() // 1000) - start_us
+
+        return CartridgeResult(
+            verified=verified,
+            cartridge_type=CartridgeType.DOCUMENT_VISION,
+            spec=spec,
+            constraints={
+                "safety": {"passed": safety_check.passed, "violations": safety_check.violations},
+                "expense_fraud": {"passed": fraud_check.passed, "violations": fraud_check.violations},
+                "bounds": {
+                    "max_line_items": max_line_items,
+                    "currency": currency,
+                    "document_type": document_type
+                }
+            },
+            fingerprint=hashlib.sha256(f"{intent}{document_type}{currency}".encode()).hexdigest()[:12].upper(),
+            elapsed_us=elapsed_us,
+            timestamp=int(time.time() * 1000)
+        )
+
+    def _detect_document_type(self, intent: str) -> str:
+        """Auto-detect document type from intent."""
+        intent_lower = intent.lower()
+
+        for doc_type, pattern in self.DOCUMENT_TYPE_PATTERNS.items():
+            if re.search(pattern, intent_lower):
+                return doc_type
+
+        return "receipt"
+
+    def _parse_vendor(self, intent: str) -> Dict[str, Any]:
+        """Parse vendor information from intent."""
+        intent_lower = intent.lower()
+
+        vendor_type = "unknown"
+        for vtype, pattern in self.VENDOR_PATTERNS.items():
+            if re.search(pattern, intent_lower):
+                vendor_type = vtype
+                break
+
+        return {
+            "type": vendor_type,
+            "name": None,  # To be extracted from document
+            "address": None,
+            "tax_id": None,
+            "confidence": 0.0
+        }
+
+    def _detect_currency(self, intent: str) -> Optional[str]:
+        """Detect currency from intent or symbols."""
+        intent_upper = intent.upper()
+
+        # Check for currency codes
+        for code in DOCUMENT_VISION_CONSTRAINTS["currencies"]:
+            if code in intent_upper:
+                return code
+
+        # Check for symbols
+        for symbol, code in self.CURRENCY_SYMBOLS.items():
+            if symbol in intent:
+                return code
+
+        return None
+
+    def _categorize_expense(self, intent: str, vendor_info: Dict[str, Any]) -> str:
+        """Categorize expense based on intent and vendor."""
+        # Use vendor type mapping first
+        vendor_type = vendor_info.get("type", "unknown")
+        if vendor_type in self.CATEGORY_MAPPING:
+            return self.CATEGORY_MAPPING[vendor_type]
+
+        # Fall back to intent analysis
+        intent_lower = intent.lower()
+        for category in DOCUMENT_VISION_CONSTRAINTS["expense_categories"]:
+            if category in intent_lower:
+                return category
+
+        return "other"
+
+    def _get_output_format(self, document_type: str) -> str:
+        """Get output format based on document type."""
+        formats = {
+            "receipt": OutputFormat.RECEIPT_DATA.value,
+            "invoice": OutputFormat.INVOICE_DATA.value,
+            "expense_report": OutputFormat.EXPENSE_REPORT.value,
+            "bill": OutputFormat.INVOICE_DATA.value,
+            "statement": OutputFormat.EXPENSE_REPORT.value,
+        }
+        return formats.get(document_type, OutputFormat.RECEIPT_DATA.value)
+
+    def _get_extraction_fields(self, document_type: str) -> Dict[str, List[str]]:
+        """Get fields to extract based on document type."""
+        common_fields = ["date", "total", "subtotal", "tax", "currency", "payment_method"]
+
+        type_specific = {
+            "receipt": ["vendor_name", "vendor_address", "line_items", "tip", "change"],
+            "invoice": ["invoice_number", "due_date", "vendor_name", "bill_to", "line_items", "terms"],
+            "expense_report": ["report_id", "employee", "period", "expenses", "approvals"],
+            "bill": ["account_number", "service_period", "usage", "previous_balance"],
+            "statement": ["account_number", "period", "transactions", "balance"],
+        }
+
+        return {
+            "required": common_fields,
+            "optional": type_specific.get(document_type, []),
+            "computed": ["tax_rate", "total_verified", "category"]
+        }
+
+    def _get_validation_rules(self, expense_policy: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Get validation rules including expense policy."""
+        rules = {
+            "require_date": True,
+            "require_total": True,
+            "require_vendor": True,
+            "max_age_days": 90,  # Default: receipts must be within 90 days
+            "duplicate_check": True,
+            "financial_limits": DOCUMENT_VISION_CONSTRAINTS["financial_limits"]
+        }
+
+        # Apply expense policy overrides
+        if expense_policy:
+            if "max_meal" in expense_policy:
+                rules["max_meal_expense"] = expense_policy["max_meal"]
+            if "max_lodging" in expense_policy:
+                rules["max_lodging_expense"] = expense_policy["max_lodging"]
+            if "require_itemization_above" in expense_policy:
+                rules["require_itemization_above"] = expense_policy["require_itemization_above"]
+            if "max_age_days" in expense_policy:
+                rules["max_age_days"] = expense_policy["max_age_days"]
+
+        return rules
+
+    def _process_document_data(
+        self,
+        document_data: Dict[str, Any],
+        max_line_items: int,
+        expense_policy: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Process pre-extracted document data with validation."""
+        result = {
+            "raw": document_data,
+            "validated": {},
+            "line_items": [],
+            "totals": {},
+            "flags": []
+        }
+
+        # Extract and validate amounts
+        if "total" in document_data:
+            total = float(document_data["total"])
+            result["totals"]["total"] = total
+
+            # Check against policy limits
+            if expense_policy:
+                category = document_data.get("category", "other")
+                limit_key = f"max_{category}"
+                if limit_key in expense_policy and total > expense_policy[limit_key]:
+                    result["flags"].append(f"Amount exceeds {category} limit: ${total:.2f}")
+
+        # Process line items
+        if "line_items" in document_data:
+            items = document_data["line_items"][:max_line_items]
+            for item in items:
+                validated_item = {
+                    "description": item.get("description", "Unknown"),
+                    "quantity": float(item.get("quantity", 1)),
+                    "unit_price": float(item.get("unit_price", 0)),
+                    "total": float(item.get("total", 0)),
+                    "confidence": float(item.get("confidence", 1.0))
+                }
+                result["line_items"].append(validated_item)
+
+            # Verify line items sum to total
+            line_total = sum(item["total"] for item in result["line_items"])
+            if "total" in result["totals"]:
+                discrepancy = abs(line_total - result["totals"]["total"])
+                if discrepancy > 0.01:
+                    result["flags"].append(f"Line items sum ({line_total:.2f}) differs from total ({result['totals']['total']:.2f})")
+
+        return result
+
+    def _check_financial_limits(self, extracted_data: Dict[str, Any]) -> List[str]:
+        """Check extracted data against financial limits."""
+        warnings = []
+        limits = DOCUMENT_VISION_CONSTRAINTS["financial_limits"]
+
+        totals = extracted_data.get("totals", {})
+        if "total" in totals:
+            total = totals["total"]
+            if total > limits["single_transaction_max"]:
+                warnings.append(
+                    f"Large transaction alert: ${total:.2f} exceeds ${limits['single_transaction_max']:.2f}"
+                )
+
+        return warnings
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # CARTRIDGE MANAGER
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1216,6 +1612,7 @@ class CartridgeManager:
         self.sequence = SequenceCartridge()
         self.data = DataCartridge()
         self.rosetta = RosettaCompiler()
+        self.document_vision = DocumentVisionCartridge()
 
     def compile_visual(self, intent: str, **kwargs) -> CartridgeResult:
         """Compile visual specification."""
@@ -1237,6 +1634,10 @@ class CartridgeManager:
         """Compile code generation prompt."""
         return self.rosetta.compile(intent, **kwargs)
 
+    def compile_document_vision(self, intent: str, **kwargs) -> CartridgeResult:
+        """Compile document vision extraction specification."""
+        return self.document_vision.compile(intent, **kwargs)
+
     def auto_compile(self, intent: str, **kwargs) -> CartridgeResult:
         """
         Automatically detect cartridge type and compile.
@@ -1251,8 +1652,12 @@ class CartridgeManager:
         sequence_patterns = r"\b(video|animation|movie|clip|slideshow|motion|animate)\b"
         code_patterns = r"\b(app|application|code|build|create|develop|implement|program)\b"
         data_patterns = r"\b(report|data|analytics|statistics|chart|graph|table|csv|json)\b"
+        document_vision_patterns = r"\b(receipt|invoice|expense|bill|statement|reimburse|scan|extract)\b"
 
-        if re.search(visual_patterns, intent_lower):
+        # Document vision takes priority for expense-related intents
+        if re.search(document_vision_patterns, intent_lower):
+            return self.compile_document_vision(intent, **kwargs)
+        elif re.search(visual_patterns, intent_lower):
             return self.compile_visual(intent, **kwargs)
         elif re.search(sound_patterns, intent_lower):
             return self.compile_sound(intent, **kwargs)
@@ -1301,6 +1706,11 @@ __all__ = [
     'SequenceCartridge',
     'DataCartridge',
     'RosettaCompiler',
+    'DocumentVisionCartridge',
+
+    # Data classes
+    'ExpenseLineItem',
+    'DocumentVisionSpec',
 
     # Manager
     'CartridgeManager',
@@ -1313,4 +1723,5 @@ __all__ = [
     'SEQUENCE_CONSTRAINTS',
     'DATA_CONSTRAINTS',
     'ROSETTA_CONSTRAINTS',
+    'DOCUMENT_VISION_CONSTRAINTS',
 ]

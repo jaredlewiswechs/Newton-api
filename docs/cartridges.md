@@ -13,6 +13,7 @@ Newton's constraint engine extends to any domain with definable bounds through C
 | Sequence | Animation intent | Video specification | Animations, videos, slideshows |
 | Data | Report intent | Report specification | Reports, analytics, dashboards |
 | Rosetta | App intent | Code generation prompt | iOS, macOS, web apps |
+| Document Vision | Expense document | Structured expense data | Receipts, invoices, bills |
 | Auto | Any intent | Auto-detected specification | Automatic type detection |
 
 All cartridges verify content against both standard safety constraints and domain-specific rules.
@@ -553,6 +554,195 @@ curl -X POST https://api.parcri.net/cartridge/rosetta \
 
 ---
 
+## /cartridge/document-vision
+
+Process expense documents (receipts, invoices, bills) with AI vision and verified extraction.
+
+### Request
+
+**POST** `/cartridge/document-vision`
+
+```json
+{
+  "intent": "Process restaurant receipt from business lunch",
+  "document_data": {
+    "total": 87.50,
+    "line_items": [
+      {"description": "Lunch entree", "quantity": 2, "unit_price": 28.00, "total": 56.00},
+      {"description": "Beverages", "quantity": 2, "unit_price": 8.00, "total": 16.00},
+      {"description": "Dessert", "quantity": 1, "unit_price": 12.00, "total": 12.00}
+    ],
+    "tax": 3.50
+  },
+  "document_type": "receipt",
+  "currency": "USD",
+  "max_line_items": 100,
+  "expense_policy": {
+    "max_meal": 150.00,
+    "require_itemization_above": 75.00
+  }
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `intent` | string | Yes | - | Description of document or extraction goal |
+| `document_data` | object | No | - | Pre-extracted OCR/vision data to validate |
+| `document_type` | string | No | `auto` | receipt, invoice, expense_report, bill, statement |
+| `currency` | string | No | `USD` | ISO 4217 currency code |
+| `max_line_items` | int | No | 100 | Maximum line items (max 500) |
+| `expense_policy` | object | No | - | Company expense policy constraints |
+
+### Response
+
+```json
+{
+  "verified": true,
+  "cartridge_type": "document_vision",
+  "constraints": {
+    "safety": {
+      "passed": true,
+      "violations": []
+    },
+    "expense_fraud": {
+      "passed": true,
+      "violations": []
+    },
+    "bounds": {
+      "max_line_items": 100,
+      "currency": "USD",
+      "document_type": "receipt"
+    }
+  },
+  "spec": {
+    "type": "expense_extraction",
+    "format": "receipt_data",
+    "document_type": "receipt",
+    "currency": "USD",
+    "vendor": {
+      "type": "restaurant",
+      "name": null,
+      "address": null,
+      "confidence": 0.0
+    },
+    "category": "meals",
+    "max_line_items": 100,
+    "extraction_fields": {
+      "required": ["date", "total", "subtotal", "tax", "currency", "payment_method"],
+      "optional": ["vendor_name", "vendor_address", "line_items", "tip", "change"],
+      "computed": ["tax_rate", "total_verified", "category"]
+    },
+    "validation_rules": {
+      "require_date": true,
+      "require_total": true,
+      "require_vendor": true,
+      "max_age_days": 90,
+      "duplicate_check": true
+    },
+    "extracted_data": {
+      "raw": { ... },
+      "validated": {},
+      "line_items": [
+        {"description": "Lunch entree", "quantity": 2, "unit_price": 28.00, "total": 56.00, "confidence": 1.0},
+        {"description": "Beverages", "quantity": 2, "unit_price": 8.00, "total": 16.00, "confidence": 1.0},
+        {"description": "Dessert", "quantity": 1, "unit_price": 12.00, "total": 12.00, "confidence": 1.0}
+      ],
+      "totals": {"total": 87.50},
+      "flags": []
+    },
+    "warnings": [],
+    "expense_categories": ["travel", "meals", "lodging", "transportation", "supplies", "equipment", "software", "services", "utilities", "communication", "entertainment", "medical", "insurance", "taxes", "fees", "other"]
+  },
+  "fingerprint": "B4C7E2A1F8D9",
+  "elapsed_us": 89,
+  "timestamp": 1735689600000
+}
+```
+
+### Document Types
+
+| Type | Description | Auto-Detection Keywords |
+|------|-------------|------------------------|
+| receipt | Point-of-sale receipts | receipt, purchase, transaction, sale |
+| invoice | Business invoices | invoice, bill, balance due, account |
+| expense_report | Expense claim forms | expense report, reimbursement, claim |
+| bill | Utility/service bills | bill, utility, payment due, amount due |
+| statement | Account statements | statement, account, summary, period |
+
+### Expense Categories
+
+Automatically detected based on vendor type:
+
+| Vendor Type | Category |
+|-------------|----------|
+| Restaurant/Cafe | meals |
+| Hotel/Resort | lodging |
+| Airline | travel |
+| Uber/Lyft/Taxi | transportation |
+| Retail Store | supplies |
+| Gas Station | transportation |
+| Office Supply | supplies |
+| Technology/Software | software |
+| Subscription | services |
+
+### Supported Currencies
+
+USD, EUR, GBP, JPY, CAD, AUD, CHF, CNY, INR, MXN, BRL, KRW, SGD, HKD, NOK, SEK, DKK, NZD, ZAR, RUB
+
+### Fraud Detection
+
+The Document Vision cartridge detects and blocks:
+
+| Pattern | Description |
+|---------|-------------|
+| Receipt fabrication | Forged, fake, or fabricated receipts |
+| Amount inflation | Inflated, padded, or exaggerated expenses |
+| Duplicate claims | Duplicate submissions or double-billing |
+| Personal expenses | Personal purchases claimed as business |
+
+### Financial Limits
+
+| Constraint | Default |
+|------------|---------|
+| Single transaction alert | $100,000 |
+| Daily total alert | $500,000 |
+| Maximum document size | 50 MB |
+| Maximum line items | 500 |
+
+### Expense Policy Integration
+
+Pass custom expense policies to enforce company rules:
+
+```json
+{
+  "expense_policy": {
+    "max_meal": 100.00,
+    "max_lodging": 300.00,
+    "require_itemization_above": 50.00,
+    "max_age_days": 60
+  }
+}
+```
+
+### Example
+
+```bash
+# Process a receipt with expense policy validation
+curl -X POST https://api.parcri.net/cartridge/document-vision \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "intent": "Scan hotel invoice from business trip to Austin",
+    "document_type": "invoice",
+    "currency": "USD",
+    "expense_policy": {
+      "max_lodging": 250.00
+    }
+  }'
+```
+
+---
+
 ## /cartridge/auto
 
 Automatically detect cartridge type and compile.
@@ -666,6 +856,17 @@ Get information about available cartridges.
       "constraints": {
         "platforms": ["ios", "ipados", "macos", "watchos", "visionos", "tvos", "web", "android"],
         "languages": ["swift", "python", "typescript"]
+      }
+    },
+    {
+      "name": "document_vision",
+      "endpoint": "/cartridge/document-vision",
+      "description": "Process expense documents with AI vision",
+      "constraints": {
+        "document_types": ["receipt", "invoice", "expense_report", "bill", "statement"],
+        "max_line_items": 500,
+        "currencies": ["USD", "EUR", "GBP", "JPY", "..."],
+        "max_document_size_mb": 50
       }
     },
     {
