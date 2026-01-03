@@ -24,6 +24,7 @@ from typing import Any, Dict, List, Optional
 from enum import Enum
 from datetime import datetime
 import hashlib
+import json
 import time
 
 from .core import Blueprint, field, law, forge, when, finfr, LawViolation
@@ -63,8 +64,18 @@ class GradeEntry:
         self._generate_fingerprint()
     
     def _generate_fingerprint(self):
-        """Generate cryptographic fingerprint for this grade entry."""
-        data = f"{self.student_id}:{self.assignment_name}:{self.grade}:{self.status.value}:{self.submitted_at}"
+        """Generate cryptographic fingerprint for this grade entry.
+        
+        Uses JSON serialization to ensure robust, collision-resistant hashing.
+        """
+        # Use JSON for robust serialization to prevent delimiter collision attacks
+        data = json.dumps({
+            "student_id": self.student_id,
+            "assignment_name": self.assignment_name,
+            "grade": self.grade,
+            "status": self.status.value,
+            "submitted_at": self.submitted_at
+        }, sort_keys=True)
         self.fingerprint = hashlib.sha256(data.encode()).hexdigest()[:16].upper()
     
     def to_dict(self) -> Dict[str, Any]:
@@ -99,12 +110,16 @@ class CryptographicProof:
     merkle_root: Optional[str] = None
     
     def __post_init__(self):
-        """Generate merkle root from constraint checks."""
+        """Generate merkle root from constraint checks.
+        
+        Uses JSON serialization to ensure collision-resistant hashing.
+        """
         if self.constraint_checks:
-            combined = "".join(
-                c.get("constraint_id", "") + str(c.get("passed", False))
+            # Use JSON for robust serialization to prevent collision attacks
+            combined = json.dumps([
+                {"id": c.get("constraint_id", ""), "passed": c.get("passed", False)}
                 for c in self.constraint_checks
-            )
+            ], sort_keys=True)
             self.merkle_root = hashlib.sha256(combined.encode()).hexdigest()[:16].upper()
     
     def to_dict(self) -> Dict[str, Any]:
@@ -529,9 +544,14 @@ class Gradebook(Blueprint):
             else:
                 valid_count += 1
             
-            # Verify fingerprint
-            expected_data = f"{entry.student_id}:{entry.assignment_name}:{entry.grade}:{entry.status.value}:{entry.submitted_at}"
-            expected_fingerprint = hashlib.sha256(expected_data.encode()).hexdigest()[:16].upper()
+            # Verify fingerprint using the same method as GradeEntry._generate_fingerprint()
+            expected_fingerprint = self._compute_fingerprint(
+                entry.student_id,
+                entry.assignment_name,
+                entry.grade,
+                entry.status.value,
+                entry.submitted_at
+            )
             
             if entry.fingerprint != expected_fingerprint:
                 violations.append({
@@ -556,9 +576,34 @@ class Gradebook(Blueprint):
     # ─────────────────────────────────────────────────────────────────────────
     
     def _generate_entry_id(self, student_id: str, assignment_name: str) -> str:
-        """Generate a unique entry ID."""
-        data = f"{student_id}:{assignment_name}"
+        """Generate a unique entry ID.
+        
+        Uses JSON serialization to prevent delimiter collision attacks.
+        """
+        data = json.dumps({"student_id": student_id, "assignment": assignment_name}, sort_keys=True)
         return f"GRADE_{hashlib.sha256(data.encode()).hexdigest()[:12].upper()}"
+    
+    def _compute_fingerprint(
+        self,
+        student_id: str,
+        assignment_name: str,
+        grade: float,
+        status: str,
+        submitted_at: Optional[float]
+    ) -> str:
+        """Compute fingerprint using the same method as GradeEntry.
+        
+        This shared utility ensures consistency between fingerprint
+        generation and verification.
+        """
+        data = json.dumps({
+            "student_id": student_id,
+            "assignment_name": assignment_name,
+            "grade": grade,
+            "status": status,
+            "submitted_at": submitted_at
+        }, sort_keys=True)
+        return hashlib.sha256(data.encode()).hexdigest()[:16].upper()
     
     def _generate_proof(
         self,
@@ -567,9 +612,12 @@ class Gradebook(Blueprint):
         result_data: Dict[str, Any],
         elapsed_us: int
     ) -> CryptographicProof:
-        """Generate cryptographic proof for an operation."""
-        input_hash = hashlib.sha256(str(input_data).encode()).hexdigest()[:16].upper()
-        result_hash = hashlib.sha256(str(result_data).encode()).hexdigest()[:16].upper()
+        """Generate cryptographic proof for an operation.
+        
+        Uses JSON serialization for robust, collision-resistant hashing.
+        """
+        input_hash = hashlib.sha256(json.dumps(input_data, sort_keys=True).encode()).hexdigest()[:16].upper()
+        result_hash = hashlib.sha256(json.dumps(result_data, sort_keys=True, default=str).encode()).hexdigest()[:16].upper()
         
         constraint_checks = [
             {
