@@ -78,6 +78,19 @@ class DataSize(Matter):
     def unit(self) -> str:
         return self._unit
 
+    def __add__(self, other):
+        """Add preserving unit (converts to same unit first)."""
+        if type(self) != type(other):
+            raise TypeError(f"Cannot add {type(self).__name__} and {type(other).__name__}")
+        # Convert both to bytes, add, then convert back to self's unit
+        self_bytes = self.to_bytes().value
+        other_bytes = other.to_bytes().value
+        result_bytes = self_bytes + other_bytes
+        # Convert back to original unit
+        multipliers = {"B": 1, "KB": 1024, "MB": 1024**2, "GB": 1024**3, "TB": 1024**4}
+        result_value = result_bytes / multipliers.get(self._unit, 1)
+        return DataSize(result_value, self._unit)
+
     def to_bytes(self) -> 'DataSize':
         """Convert to bytes."""
         multipliers = {"B": 1, "KB": 1024, "MB": 1024**2, "GB": 1024**3, "TB": 1024**4}

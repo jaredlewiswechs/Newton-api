@@ -15,36 +15,36 @@ from newton import (
 class TradingDesk(Blueprint):
     """A trading desk with strict risk controls."""
 
-    # Current positions
-    long_position = field(float, default=0.0)   # Positive = bought
-    short_position = field(float, default=0.0)  # Positive = sold short
-    cash = field(float, default=1000000.0)      # Available cash
+    # Current positions (in DOLLAR VALUE, not share count)
+    long_value = field(float, default=0.0)    # Dollar value of long positions
+    short_value = field(float, default=0.0)   # Dollar value of short positions
+    cash = field(float, default=1000000.0)    # Available cash
 
-    # Risk limits
-    max_position = field(float, default=500000.0)    # Max single position
+    # Risk limits (in dollars)
+    max_position = field(float, default=500000.0)    # Max single position value
     max_gross = field(float, default=800000.0)       # Max total exposure
     max_leverage = field(float, default=3.0)         # Max leverage ratio
 
     @law
     def long_position_limit(self):
-        """Long position cannot exceed maximum."""
-        when(self.long_position > self.max_position, finfr)
+        """Long position value cannot exceed maximum."""
+        when(self.long_value > self.max_position, finfr)
 
     @law
     def short_position_limit(self):
-        """Short position cannot exceed maximum."""
-        when(self.short_position > self.max_position, finfr)
+        """Short position value cannot exceed maximum."""
+        when(self.short_value > self.max_position, finfr)
 
     @law
     def gross_exposure_limit(self):
         """Total exposure cannot exceed maximum."""
-        gross = self.long_position + self.short_position
+        gross = self.long_value + self.short_value
         when(gross > self.max_gross, finfr)
 
     @law
     def leverage_limit(self):
         """Leverage ratio must stay within limits."""
-        gross = self.long_position + self.short_position
+        gross = self.long_value + self.short_value
         when(ratio(gross, self.cash) > self.max_leverage, finfr)
 
     @law
@@ -53,45 +53,45 @@ class TradingDesk(Blueprint):
         when(self.cash < 0, finfr)
 
     @forge
-    def buy(self, amount: float, price: float):
+    def buy(self, shares: float, price: float):
         """Open or add to long position."""
-        cost = amount * price
-        self.long_position += amount
+        cost = shares * price
+        self.long_value += cost
         self.cash -= cost
-        return f"Bought {amount} @ ${price:.2f}. Long: {self.long_position}, Cash: ${self.cash:.2f}"
+        return f"Bought {shares:.0f} shares @ ${price:.2f}. Long: ${self.long_value:,.0f}, Cash: ${self.cash:,.0f}"
 
     @forge
-    def sell(self, amount: float, price: float):
+    def sell(self, shares: float, price: float):
         """Close long position or open short."""
-        proceeds = amount * price
-        if amount <= self.long_position:
+        value = shares * price
+        if value <= self.long_value:
             # Closing long
-            self.long_position -= amount
+            self.long_value -= value
         else:
             # Opening/adding to short
-            self.short_position += (amount - self.long_position)
-            self.long_position = 0
-        self.cash += proceeds
-        return f"Sold {amount} @ ${price:.2f}. Long: {self.long_position}, Short: {self.short_position}"
+            self.short_value += (value - self.long_value)
+            self.long_value = 0
+        self.cash += value
+        return f"Sold {shares:.0f} shares @ ${price:.2f}. Long: ${self.long_value:,.0f}, Short: ${self.short_value:,.0f}"
 
     @forge
-    def cover(self, amount: float, price: float):
+    def cover(self, shares: float, price: float):
         """Close short position."""
-        cost = amount * price
-        self.short_position -= amount
-        self.cash -= cost
-        return f"Covered {amount} @ ${price:.2f}. Short: {self.short_position}"
+        value = shares * price
+        self.short_value -= value
+        self.cash -= value
+        return f"Covered {shares:.0f} shares @ ${price:.2f}. Short: ${self.short_value:,.0f}"
 
     def status(self):
         """Print current status."""
-        gross = self.long_position + self.short_position
+        gross = self.long_value + self.short_value
         leverage = gross / self.cash if self.cash > 0 else 0
         return f"""
 Position Summary:
-  Long:  ${self.long_position:,.2f}
-  Short: ${self.short_position:,.2f}
-  Gross: ${gross:,.2f}
-  Cash:  ${self.cash:,.2f}
+  Long:  ${self.long_value:,.0f}
+  Short: ${self.short_value:,.0f}
+  Gross: ${gross:,.0f}
+  Cash:  ${self.cash:,.0f}
   Leverage: {leverage:.2f}x
 """
 
