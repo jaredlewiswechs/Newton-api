@@ -60,3 +60,8 @@ newton_storage/
 # Node (for frontend)
 node_modules/
 .wrangler/
+
+# Gumroad generated files
+gumroad/newton_ios.zip
+gumroad/newton_ios.zip.sha256
+gumroad/shortcuts/*.shortcut
