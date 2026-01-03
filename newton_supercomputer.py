@@ -472,6 +472,68 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# RATE LIMITING - Protect against abuse while allowing 1000s of iPhone users
+# ═══════════════════════════════════════════════════════════════════════════════
+from collections import defaultdict
+from threading import Lock
+
+class RateLimiter:
+    """Simple in-memory rate limiter. 100 requests/minute per IP."""
+    def __init__(self, requests_per_minute: int = 100):
+        self.requests_per_minute = requests_per_minute
+        self.requests: Dict[str, List[float]] = defaultdict(list)
+        self.lock = Lock()
+
+    def is_allowed(self, client_ip: str) -> bool:
+        now = time.time()
+        window_start = now - 60
+
+        with self.lock:
+            # Clean old requests
+            self.requests[client_ip] = [
+                t for t in self.requests[client_ip] if t > window_start
+            ]
+
+            if len(self.requests[client_ip]) >= self.requests_per_minute:
+                return False
+
+            self.requests[client_ip].append(now)
+            return True
+
+    def get_remaining(self, client_ip: str) -> int:
+        now = time.time()
+        window_start = now - 60
+        with self.lock:
+            recent = [t for t in self.requests.get(client_ip, []) if t > window_start]
+            return max(0, self.requests_per_minute - len(recent))
+
+rate_limiter = RateLimiter(requests_per_minute=100)
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    # Skip rate limiting for health checks
+    if request.url.path == "/health":
+        return await call_next(request)
+
+    client_ip = request.client.host if request.client else "unknown"
+
+    if not rate_limiter.is_allowed(client_ip):
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": "Rate limit exceeded",
+                "message": "Too many requests. Please wait a minute.",
+                "limit": "100 requests per minute"
+            },
+            headers={"Retry-After": "60"}
+        )
+
+    response = await call_next(request)
+    response.headers["X-RateLimit-Remaining"] = str(rate_limiter.get_remaining(client_ip))
+    response.headers["X-RateLimit-Limit"] = "100"
+    return response
+
 # Mount static files for frontend
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 if FRONTEND_DIR.exists():
