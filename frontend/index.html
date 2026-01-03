@@ -8,6 +8,17 @@
     <meta name="theme-color" content="#0d0d0d">
     <meta name="description" content="Newton Supercomputer - Verified Computation at Scale | Jared Lewis Conglomerate">
     <meta name="author" content="Jared Lewis">
+    <meta name="date" content="January 3, 2026">
+    
+    <!-- Enhanced SEO & Social Sharing -->
+    <meta property="og:title" content="Newton Supercomputer - Verified Computation">
+    <meta property="og:description" content="Verified computation with mathematical certainty. 563-638x faster than competitors. Every answer proven, every result verified.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://newton-api.onrender.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Newton Supercomputer - Verified Computation">
+    <meta name="twitter:description" content="The constraint IS the instruction. 1 == 1.">
+    <meta name="keywords" content="verified computation, constraint programming, TEKS, education, Newton, AI verification">
 
     <title>Newton | Jared Lewis Conglomerate</title>
 
@@ -37,6 +48,7 @@
 
                 <div class="nav-tabs">
                     <button class="nav-tab active" data-view="ask">Ask</button>
+                    <button class="nav-tab" data-view="voice">Voice</button>
                     <button class="nav-tab" data-view="calculate">Calculate</button>
                     <button class="nav-tab" data-view="orchestrate">Orchestrate</button>
                     <button class="nav-tab" data-view="ledger">Ledger</button>
@@ -127,6 +139,147 @@
                                     <li>Legal Review Gates</li>
                                     <li>Safety Constraints</li>
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Voice Interface View (MOAD - Mother Of All Demos) -->
+            <section class="view" id="view-voice">
+                <div class="view-container">
+                    <div class="hero-section">
+                        <h1 class="hero-title">Voice Interface</h1>
+                        <p class="hero-subtitle">Mother Of All Demos - Build verified apps by speaking. Experience constraint-verified AI in real-time.</p>
+                    </div>
+
+                    <!-- Performance Metrics Dashboard -->
+                    <div class="performance-dashboard">
+                        <div class="metric-card">
+                            <div class="metric-value" id="voice-latency">2.31ms</div>
+                            <div class="metric-label">Median Latency</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="voice-throughput">605</div>
+                            <div class="metric-label">Requests/Sec</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value speedup">563-638x</div>
+                            <div class="metric-label">Faster Than Competitors</div>
+                        </div>
+                    </div>
+
+                    <!-- Voice Input Card -->
+                    <div class="voice-card">
+                        <div class="voice-controls">
+                            <button class="btn-voice" id="voice-record">
+                                <span class="voice-icon">🎤</span>
+                                <span class="voice-text">Hold to Speak</span>
+                            </button>
+                            <div class="voice-status" id="voice-status">Ready</div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Or type your request:</label>
+                            <textarea
+                                id="voice-input"
+                                class="input-field"
+                                placeholder="Example: Create a lesson plan for 5th grade math on fractions..."
+                                rows="3"
+                            ></textarea>
+                        </div>
+
+                        <div class="action-row">
+                            <button class="btn primary" id="voice-submit">
+                                <span class="btn-icon">N</span>
+                                Process with Voice AI
+                            </button>
+                            <button class="btn secondary" id="voice-stream">
+                                <span class="btn-icon">⚡</span>
+                                Stream Response
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Voice Patterns Browser -->
+                    <div class="patterns-section">
+                        <h3 class="section-subtitle">Common Voice Patterns</h3>
+                        <div class="patterns-grid">
+                            <button class="pattern-card" onclick="loadVoicePattern('lesson')">
+                                <span class="pattern-icon">📚</span>
+                                <span class="pattern-title">Lesson Planning</span>
+                                <span class="pattern-desc">Create TEKS-aligned lessons</span>
+                            </button>
+                            <button class="pattern-card" onclick="loadVoicePattern('assess')">
+                                <span class="pattern-icon">✅</span>
+                                <span class="pattern-title">Assessment</span>
+                                <span class="pattern-desc">Grade and analyze results</span>
+                            </button>
+                            <button class="pattern-card" onclick="loadVoicePattern('slides')">
+                                <span class="pattern-icon">📊</span>
+                                <span class="pattern-title">Presentation</span>
+                                <span class="pattern-desc">Generate slide decks</span>
+                            </button>
+                            <button class="pattern-card" onclick="loadVoicePattern('constraint')">
+                                <span class="pattern-icon">🔒</span>
+                                <span class="pattern-title">Constraints</span>
+                                <span class="pattern-desc">Define verification rules</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Voice Result -->
+                    <div class="result-panel" id="voice-result" style="display: none;">
+                        <div class="result-header">
+                            <div class="result-status" id="voice-result-status">
+                                <div class="status-badge verified">VERIFIED</div>
+                            </div>
+                            <div class="result-meta">
+                                <span class="meta-item" id="voice-elapsed"></span>
+                            </div>
+                        </div>
+                        <div class="result-body">
+                            <pre class="result-output" id="voice-output"></pre>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn-secondary" onclick="exportVoiceResult('json')">
+                                <span class="btn-icon">📥</span>
+                                Export JSON
+                            </button>
+                            <button class="btn-secondary" onclick="exportVoiceResult('csv')">
+                                <span class="btn-icon">📊</span>
+                                Export CSV
+                            </button>
+                            <button class="btn-secondary" onclick="copyVoiceResult()">
+                                <span class="btn-icon">📋</span>
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- f/g Ratio Explanation -->
+                    <div class="ratio-explanation">
+                        <h3 class="section-subtitle">Understanding f/g Ratio</h3>
+                        <div class="ratio-card">
+                            <div class="ratio-visual">
+                                <div class="ratio-formula">
+                                    <span class="formula-part">f</span>
+                                    <span class="formula-divider">/</span>
+                                    <span class="formula-part">g</span>
+                                    <span class="formula-equals">=</span>
+                                    <span class="formula-result">finfr</span>
+                                </div>
+                                <div class="ratio-legend">
+                                    <div class="legend-item">
+                                        <strong>f:</strong> forge/fact/function <span class="dim">(what you're trying to do)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <strong>g:</strong> ground/goal/governance <span class="dim">(what reality allows)</span>
+                                    </div>
+                                    <div class="legend-item danger">
+                                        <strong>g=0:</strong> finfr (ontological death) <span class="dim">(infinite constraint violation)</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -259,6 +412,97 @@
                             <div class="flow-node result">
                                 <div class="node-icon success">1==1</div>
                                 <span>Execute</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- f/g Ratio Constraint Demonstrator -->
+                    <div class="ratio-demo-section">
+                        <h3 class="builder-title">f/g Ratio Constraint Demonstrator</h3>
+                        <p class="demo-description">Interactive demonstration of ratio constraints with real-world examples.</p>
+
+                        <div class="ratio-demo-grid">
+                            <!-- Overdraft Example -->
+                            <div class="ratio-demo-card">
+                                <h4>Bank Overdraft Protection</h4>
+                                <div class="demo-inputs">
+                                    <div class="demo-input-group">
+                                        <label>Balance (f):</label>
+                                        <input type="number" id="overdraft-balance" value="100" class="input-small">
+                                    </div>
+                                    <div class="demo-input-group">
+                                        <label>Withdrawal (g):</label>
+                                        <input type="number" id="overdraft-withdrawal" value="50" class="input-small">
+                                    </div>
+                                </div>
+                                <div class="demo-ratio">
+                                    <span class="ratio-value" id="overdraft-ratio">2.00</span>
+                                    <span class="ratio-constraint">Must be ≥ 0</span>
+                                </div>
+                                <div class="demo-status" id="overdraft-status">
+                                    <div class="status-badge verified">ALLOWED</div>
+                                </div>
+                                <button class="btn-small" onclick="checkOverdraft()">Check Constraint</button>
+                            </div>
+
+                            <!-- Leverage Example -->
+                            <div class="ratio-demo-card">
+                                <h4>Trading Leverage Limits</h4>
+                                <div class="demo-inputs">
+                                    <div class="demo-input-group">
+                                        <label>Position Size (f):</label>
+                                        <input type="number" id="leverage-position" value="10000" class="input-small">
+                                    </div>
+                                    <div class="demo-input-group">
+                                        <label>Account Balance (g):</label>
+                                        <input type="number" id="leverage-balance" value="5000" class="input-small">
+                                    </div>
+                                </div>
+                                <div class="demo-ratio">
+                                    <span class="ratio-value" id="leverage-ratio">2.00</span>
+                                    <span class="ratio-constraint">Must be ≤ 3.0</span>
+                                </div>
+                                <div class="demo-status" id="leverage-status">
+                                    <div class="status-badge verified">ALLOWED</div>
+                                </div>
+                                <button class="btn-small" onclick="checkLeverage()">Check Constraint</button>
+                            </div>
+
+                            <!-- Custom Ratio -->
+                            <div class="ratio-demo-card">
+                                <h4>Custom Ratio Constraint</h4>
+                                <div class="demo-inputs">
+                                    <div class="demo-input-group">
+                                        <label>Numerator (f):</label>
+                                        <input type="number" id="custom-f" value="100" class="input-small">
+                                    </div>
+                                    <div class="demo-input-group">
+                                        <label>Denominator (g):</label>
+                                        <input type="number" id="custom-g" value="50" class="input-small">
+                                    </div>
+                                    <div class="demo-input-group">
+                                        <label>Operator:</label>
+                                        <select id="custom-op" class="input-small">
+                                            <option value="ge">≥</option>
+                                            <option value="le">≤</option>
+                                            <option value="eq">==</option>
+                                            <option value="gt">&gt;</option>
+                                            <option value="lt">&lt;</option>
+                                        </select>
+                                    </div>
+                                    <div class="demo-input-group">
+                                        <label>Threshold:</label>
+                                        <input type="number" id="custom-threshold" value="2" step="0.1" class="input-small">
+                                    </div>
+                                </div>
+                                <div class="demo-ratio">
+                                    <span class="ratio-value" id="custom-ratio">2.00</span>
+                                    <span class="ratio-constraint" id="custom-constraint">Must be ≥ 2.0</span>
+                                </div>
+                                <div class="demo-status" id="custom-status">
+                                    <div class="status-badge verified">PASSED</div>
+                                </div>
+                                <button class="btn-small" onclick="checkCustomRatio()">Check Constraint</button>
                             </div>
                         </div>
                     </div>

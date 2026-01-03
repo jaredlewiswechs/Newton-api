@@ -1,6 +1,9 @@
 /**
  * Newton Supercomputer - Frontend Application
  * Verified Computation at Scale
+ * 
+ * © 2026 Jared Lewis Conglomerate
+ * Last Updated: January 3, 2026
  */
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -989,4 +992,377 @@ if (originalLoadLedger) {
         });
     };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VOICE INTERFACE (MOAD - Mother Of All Demos)
+// ═══════════════════════════════════════════════════════════════════════════
+
+let voiceRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+
+/**
+ * Initialize voice interface
+ */
+function initVoiceInterface() {
+    const voiceRecordBtn = document.getElementById('voice-record');
+    const voiceSubmitBtn = document.getElementById('voice-submit');
+    const voiceStreamBtn = document.getElementById('voice-stream');
+
+    if (voiceRecordBtn) {
+        voiceRecordBtn.addEventListener('mousedown', startVoiceRecording);
+        voiceRecordBtn.addEventListener('mouseup', stopVoiceRecording);
+        voiceRecordBtn.addEventListener('touchstart', startVoiceRecording);
+        voiceRecordBtn.addEventListener('touchend', stopVoiceRecording);
+    }
+
+    if (voiceSubmitBtn) {
+        voiceSubmitBtn.addEventListener('click', handleVoiceSubmit);
+    }
+
+    if (voiceStreamBtn) {
+        voiceStreamBtn.addEventListener('click', handleVoiceStream);
+    }
+
+    // Keyboard shortcut: Cmd+K or Ctrl+K
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            showView('voice');
+            document.getElementById('voice-input').focus();
+        }
+    });
+}
+
+/**
+ * Start voice recording
+ */
+async function startVoiceRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.start();
+        voiceRecording = true;
+
+        const btn = document.getElementById('voice-record');
+        const status = document.getElementById('voice-status');
+        btn.classList.add('recording');
+        btn.querySelector('.voice-text').textContent = 'Recording...';
+        status.textContent = 'Listening...';
+    } catch (error) {
+        showNotification('Microphone access denied', 'error');
+        console.error('Voice recording error:', error);
+    }
+}
+
+/**
+ * Stop voice recording
+ */
+function stopVoiceRecording() {
+    if (mediaRecorder && voiceRecording) {
+        mediaRecorder.stop();
+        voiceRecording = false;
+
+        const btn = document.getElementById('voice-record');
+        const status = document.getElementById('voice-status');
+        btn.classList.remove('recording');
+        btn.querySelector('.voice-text').textContent = 'Hold to Speak';
+        status.textContent = 'Processing...';
+
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            // In a real implementation, this would send to speech-to-text service
+            // For now, prompt user to type instead
+            showNotification('Speech-to-text coming soon! Please type your request.', 'info');
+            status.textContent = 'Ready';
+        };
+
+        // Stop all tracks
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+}
+
+/**
+ * Handle voice submit
+ */
+async function handleVoiceSubmit() {
+    const input = document.getElementById('voice-input').value.trim();
+    if (!input) {
+        showNotification('Please enter a request', 'error');
+        return;
+    }
+
+    showLoading();
+    const resultPanel = document.getElementById('voice-result');
+    resultPanel.style.display = 'none';
+
+    try {
+        const startTime = performance.now();
+        const result = await api.request('/voice/ask', {
+            method: 'POST',
+            body: JSON.stringify({ query: input })
+        });
+        const elapsed = performance.now() - startTime;
+
+        // Update performance metrics
+        document.getElementById('voice-latency').textContent = `${elapsed.toFixed(2)}ms`;
+
+        // Show result
+        resultPanel.style.display = 'block';
+        const verified = result.verified || result.success;
+        document.getElementById('voice-result-status').innerHTML = `
+            <div class="status-badge ${verified ? 'verified' : 'failed'}">
+                ${verified ? 'VERIFIED' : 'FAILED'}
+            </div>
+        `;
+        document.getElementById('voice-elapsed').textContent = formatElapsed(result.elapsed_us || elapsed * 1000);
+        document.getElementById('voice-output').textContent = JSON.stringify(result, null, 2);
+
+        // Store result for export
+        window.lastVoiceResult = result;
+    } catch (error) {
+        resultPanel.style.display = 'block';
+        document.getElementById('voice-result-status').innerHTML = `
+            <div class="status-badge failed">ERROR</div>
+        `;
+        document.getElementById('voice-output').textContent = error.message;
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Handle voice streaming
+ */
+async function handleVoiceStream() {
+    const input = document.getElementById('voice-input').value.trim();
+    if (!input) {
+        showNotification('Please enter a request', 'error');
+        return;
+    }
+
+    const resultPanel = document.getElementById('voice-result');
+    const outputEl = document.getElementById('voice-output');
+    resultPanel.style.display = 'block';
+    outputEl.textContent = 'Streaming response...\n\n';
+
+    try {
+        // Simulate streaming for demo
+        const response = await api.request('/voice/ask', {
+            method: 'POST',
+            body: JSON.stringify({ query: input, stream: true })
+        });
+
+        // In real implementation, this would be an SSE stream
+        const text = JSON.stringify(response, null, 2);
+        let currentText = '';
+        for (let i = 0; i < text.length; i++) {
+            currentText += text[i];
+            outputEl.textContent = currentText;
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+
+        window.lastVoiceResult = response;
+    } catch (error) {
+        outputEl.textContent = `Error: ${error.message}`;
+    }
+}
+
+/**
+ * Load voice pattern
+ */
+function loadVoicePattern(patternType) {
+    const patterns = {
+        lesson: 'Create a lesson plan for 5th grade math on adding fractions with unlike denominators, aligned to TEKS 5.3K',
+        assess: 'Analyze this assessment data and create student groupings for differentiation: Maria 85, James 72, Sofia 95, Alex 68',
+        slides: 'Generate a presentation slide deck for my lesson on the water cycle with visual examples',
+        constraint: 'Define a constraint that verifies bank account balance stays above $100 after any transaction'
+    };
+
+    document.getElementById('voice-input').value = patterns[patternType] || '';
+    showNotification('Pattern loaded! Click "Process with Voice AI" to continue.', 'success');
+}
+
+/**
+ * Export voice result
+ */
+function exportVoiceResult(format) {
+    if (!window.lastVoiceResult) {
+        showNotification('No result to export', 'error');
+        return;
+    }
+
+    const result = window.lastVoiceResult;
+    let content, mimeType, filename;
+
+    if (format === 'json') {
+        content = JSON.stringify(result, null, 2);
+        mimeType = 'application/json';
+        filename = 'newton-voice-result.json';
+    } else if (format === 'csv') {
+        // Simple CSV conversion
+        const rows = [['Key', 'Value']];
+        for (const [key, value] of Object.entries(result)) {
+            rows.push([key, typeof value === 'object' ? JSON.stringify(value) : value]);
+        }
+        content = rows.map(row => row.join(',')).join('\n');
+        mimeType = 'text/csv';
+        filename = 'newton-voice-result.csv';
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showNotification(`Exported as ${format.toUpperCase()}`, 'success');
+}
+
+/**
+ * Copy voice result
+ */
+function copyVoiceResult() {
+    if (!window.lastVoiceResult) {
+        showNotification('No result to copy', 'error');
+        return;
+    }
+
+    const text = JSON.stringify(window.lastVoiceResult, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('Copied to clipboard', 'success');
+    }).catch(() => {
+        showNotification('Failed to copy', 'error');
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// F/G RATIO CONSTRAINT DEMONSTRATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Check overdraft constraint
+ */
+function checkOverdraft() {
+    const balance = parseFloat(document.getElementById('overdraft-balance').value) || 0;
+    const withdrawal = parseFloat(document.getElementById('overdraft-withdrawal').value) || 0;
+    
+    const remaining = balance - withdrawal;
+    const ratio = remaining;
+    
+    document.getElementById('overdraft-ratio').textContent = ratio.toFixed(2);
+    
+    const statusEl = document.getElementById('overdraft-status');
+    if (ratio >= 0) {
+        statusEl.innerHTML = '<div class="status-badge verified">ALLOWED</div>';
+    } else {
+        statusEl.innerHTML = '<div class="status-badge failed">OVERDRAFT</div>';
+    }
+}
+
+/**
+ * Check leverage constraint
+ */
+function checkLeverage() {
+    const position = parseFloat(document.getElementById('leverage-position').value) || 0;
+    const balance = parseFloat(document.getElementById('leverage-balance').value) || 1;
+    
+    const ratio = position / balance;
+    
+    document.getElementById('leverage-ratio').textContent = ratio.toFixed(2);
+    
+    const statusEl = document.getElementById('leverage-status');
+    if (ratio <= 3.0) {
+        statusEl.innerHTML = '<div class="status-badge verified">ALLOWED</div>';
+    } else {
+        statusEl.innerHTML = '<div class="status-badge failed">EXCESSIVE LEVERAGE</div>';
+    }
+}
+
+/**
+ * Check custom ratio constraint
+ */
+function checkCustomRatio() {
+    const f = parseFloat(document.getElementById('custom-f').value) || 0;
+    const g = parseFloat(document.getElementById('custom-g').value) || 1;
+    const op = document.getElementById('custom-op').value;
+    const threshold = parseFloat(document.getElementById('custom-threshold').value) || 0;
+    
+    if (g === 0) {
+        document.getElementById('custom-ratio').textContent = '∞';
+        document.getElementById('custom-status').innerHTML = '<div class="status-badge failed">finfr (g=0)</div>';
+        return;
+    }
+    
+    const ratio = f / g;
+    document.getElementById('custom-ratio').textContent = ratio.toFixed(2);
+    
+    // Update constraint text
+    const opSymbols = { ge: '≥', le: '≤', eq: '==', gt: '>', lt: '<' };
+    document.getElementById('custom-constraint').textContent = `Must be ${opSymbols[op]} ${threshold}`;
+    
+    // Check constraint
+    let passed = false;
+    switch(op) {
+        case 'ge': passed = ratio >= threshold; break;
+        case 'le': passed = ratio <= threshold; break;
+        case 'eq': passed = Math.abs(ratio - threshold) < 0.01; break;
+        case 'gt': passed = ratio > threshold; break;
+        case 'lt': passed = ratio < threshold; break;
+    }
+    
+    const statusEl = document.getElementById('custom-status');
+    if (passed) {
+        statusEl.innerHTML = '<div class="status-badge verified">PASSED</div>';
+    } else {
+        statusEl.innerHTML = '<div class="status-badge failed">FAILED</div>';
+    }
+}
+
+// Auto-update ratio displays when inputs change
+document.addEventListener('DOMContentLoaded', () => {
+    // Overdraft inputs
+    ['overdraft-balance', 'overdraft-withdrawal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', checkOverdraft);
+    });
+    
+    // Leverage inputs
+    ['leverage-position', 'leverage-balance'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', checkLeverage);
+    });
+    
+    // Custom ratio inputs
+    ['custom-f', 'custom-g', 'custom-op', 'custom-threshold'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', checkCustomRatio);
+    });
+    
+    // Initialize voice interface
+    initVoiceInterface();
+    
+    // Initialize ratio demonstrations
+    checkOverdraft();
+    checkLeverage();
+    checkCustomRatio();
+});
+
+// Make functions globally available
+window.loadVoicePattern = loadVoicePattern;
+window.exportVoiceResult = exportVoiceResult;
+window.copyVoiceResult = copyVoiceResult;
+window.checkOverdraft = checkOverdraft;
+window.checkLeverage = checkLeverage;
+window.checkCustomRatio = checkCustomRatio;
 

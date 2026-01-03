@@ -1,7 +1,8 @@
 /**
  * Newton Teacher's Aide - Application
  * The Ultimate Teaching Assistant for HISD NES
- * © 2025-2026 Jared Lewis · Ada Computing Company
+ * © 2026 Jared Lewis · Ada Computing Company
+ * Last Updated: January 3, 2026
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
