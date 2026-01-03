@@ -128,6 +128,29 @@ try:
         # Factory
         get_interface_builder,
     )
+
+    from .knowledge import (
+        # Enums
+        NavigationResult,
+        MasteryLevel,
+        ContentType,
+        # Events and Ledger
+        KnowledgeEvent,
+        KnowledgeLedger,
+        # Content Structure
+        ContentItem,
+        KnowledgeNode,
+        KnowledgeGraph,
+        # State and Navigation
+        KnowledgeState,
+        KnowledgeNavigator,
+        # Example Domain
+        create_algebra_unit_2,
+        create_navigator_for_algebra,
+        # Simulations
+        simulate_fast_learner,
+        simulate_struggling_learner,
+    )
 except ImportError:
     # Fall back to absolute imports (when running directly)
     from core import (
@@ -220,6 +243,29 @@ except ImportError:
         get_interface_builder,
     )
 
+    from knowledge import (
+        # Enums
+        NavigationResult,
+        MasteryLevel,
+        ContentType,
+        # Events and Ledger
+        KnowledgeEvent,
+        KnowledgeLedger,
+        # Content Structure
+        ContentItem,
+        KnowledgeNode,
+        KnowledgeGraph,
+        # State and Navigation
+        KnowledgeState,
+        KnowledgeNavigator,
+        # Example Domain
+        create_algebra_unit_2,
+        create_navigator_for_algebra,
+        # Simulations
+        simulate_fast_learner,
+        simulate_struggling_learner,
+    )
+
 __version__ = "1.0.0"
 __all__ = [
     # Core
@@ -292,4 +338,19 @@ __all__ = [
     "InterfaceBuilder",
     "InterfaceBuilderCartridge",
     "get_interface_builder",
+    # Knowledge System
+    "NavigationResult",
+    "MasteryLevel",
+    "ContentType",
+    "KnowledgeEvent",
+    "KnowledgeLedger",
+    "ContentItem",
+    "KnowledgeNode",
+    "KnowledgeGraph",
+    "KnowledgeState",
+    "KnowledgeNavigator",
+    "create_algebra_unit_2",
+    "create_navigator_for_algebra",
+    "simulate_fast_learner",
+    "simulate_struggling_learner",
 ]
