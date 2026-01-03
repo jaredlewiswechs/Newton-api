@@ -68,15 +68,26 @@
                 <div class="view-container">
                     <div class="hero-section">
                         <h1 class="hero-title">Ask Newton</h1>
-                        <p class="hero-subtitle">Verified computation with mathematical certainty. Every answer proven, every result verified.</p>
+                        <p class="hero-subtitle">Type anything below and Newton will verify it instantly. Try the examples to get started!</p>
                     </div>
 
                     <div class="ask-card">
+                        <!-- Quick Examples for Beginners -->
+                        <div class="quick-examples">
+                            <span class="examples-label">Try these:</span>
+                            <div class="example-buttons">
+                                <button class="example-btn" onclick="setAskExample('What is 15% of 200?')">Calculate tip</button>
+                                <button class="example-btn" onclick="setAskExample('Is the sky blue?')">Verify a fact</button>
+                                <button class="example-btn" onclick="setAskExample('sqrt(144) + 10')">Do math</button>
+                                <button class="example-btn" onclick="setAskExample('Hello Newton!')">Say hello</button>
+                            </div>
+                        </div>
+
                         <div class="input-group">
                             <textarea
                                 id="ask-input"
                                 class="input-field large"
-                                placeholder="What do you want to verify?"
+                                placeholder="Type your question here... (e.g., 'What is 25 * 4?' or 'Is water wet?')"
                                 rows="3"
                             ></textarea>
                         </div>
@@ -103,41 +114,65 @@
                         </div>
                     </div>
 
-                    <!-- Capabilities Grid -->
+                    <!-- iPhone Shortcut CTA -->
+                    <div class="shortcut-cta">
+                        <div class="cta-icon">📱</div>
+                        <div class="cta-content">
+                            <h3>Use Newton from your iPhone!</h3>
+                            <p>Create a Siri Shortcut to ask Newton anything, anytime.</p>
+                            <details class="shortcut-instructions">
+                                <summary>How to set up (3 easy steps)</summary>
+                                <ol>
+                                    <li><strong>Ask for Input</strong> - Prompt: "Ask Newton:"</li>
+                                    <li><strong>Get Contents of URL</strong>
+                                        <ul>
+                                            <li>URL: <code>https://newton-api.onrender.com/ask</code></li>
+                                            <li>Method: POST</li>
+                                            <li>Headers: Content-Type = application/json</li>
+                                            <li>Body (JSON): key = <code>query</code>, value = Provided Input</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Show Result</strong> - Display the response</li>
+                                </ol>
+                            </details>
+                        </div>
+                    </div>
+
+                    <!-- What Can Newton Do? -->
                     <div class="capabilities-section">
-                        <h2 class="section-title">Newton Capabilities</h2>
+                        <h2 class="section-title">What can Newton do?</h2>
 
                         <div class="capability-grid">
-                            <div class="capability-card">
-                                <div class="capability-icon generate">G</div>
-                                <h3>Generate</h3>
+                            <div class="capability-card beginner">
+                                <div class="capability-icon generate">🧮</div>
+                                <h3>Math & Calculations</h3>
                                 <ul class="capability-list">
-                                    <li>Media & Templates</li>
-                                    <li>Documents & Contracts</li>
-                                    <li>Code (verified)</li>
-                                    <li>Data Transformations</li>
+                                    <li>Basic math (+, -, ×, ÷)</li>
+                                    <li>Percentages & tips</li>
+                                    <li>Square roots & powers</li>
+                                    <li>Unit conversions</li>
                                 </ul>
                             </div>
 
-                            <div class="capability-card">
-                                <div class="capability-icon orchestrate">O</div>
-                                <h3>Orchestrate</h3>
+                            <div class="capability-card beginner">
+                                <div class="capability-icon orchestrate">✅</div>
+                                <h3>Verify Facts</h3>
                                 <ul class="capability-list">
-                                    <li>Figma API (constrained)</li>
-                                    <li>Canva API (verified)</li>
-                                    <li>External Services</li>
-                                    <li>Creative Pipelines</li>
+                                    <li>Check if something is true</li>
+                                    <li>Validate information</li>
+                                    <li>Confirm calculations</li>
+                                    <li>Double-check answers</li>
                                 </ul>
                             </div>
 
-                            <div class="capability-card">
-                                <div class="capability-icon verify">V</div>
-                                <h3>Verify</h3>
+                            <div class="capability-card beginner">
+                                <div class="capability-icon verify">📚</div>
+                                <h3>For Teachers</h3>
                                 <ul class="capability-list">
-                                    <li>Design System Compliance</li>
-                                    <li>Brand Guidelines</li>
-                                    <li>Legal Review Gates</li>
-                                    <li>Safety Constraints</li>
+                                    <li>Lesson plan ideas</li>
+                                    <li>Grade calculations</li>
+                                    <li>TEKS standards lookup</li>
+                                    <li>Student grouping</li>
                                 </ul>
                             </div>
                         </div>

@@ -2397,3 +2397,156 @@ select.input-field {
         border-width: 2px;
     }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Beginner-Friendly Enhancements
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Quick Examples Section */
+.quick-examples {
+    margin-bottom: var(--space-4);
+    padding: var(--space-3);
+    background: rgba(78, 205, 196, 0.1);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(78, 205, 196, 0.2);
+}
+
+.examples-label {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+    font-weight: 500;
+}
+
+.example-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.example-btn {
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-full);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.example-btn:hover {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+.example-btn:active {
+    transform: translateY(0);
+}
+
+/* iPhone Shortcut CTA */
+.shortcut-cta {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    margin-top: var(--space-6);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.1) 0%, rgba(78, 205, 196, 0.05) 100%);
+    border: 1px solid rgba(78, 205, 196, 0.2);
+    border-radius: var(--radius-lg);
+}
+
+.cta-icon {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.cta-content h3 {
+    margin: 0 0 var(--space-2) 0;
+    font-size: var(--text-lg);
+    color: var(--text-primary);
+}
+
+.cta-content p {
+    margin: 0 0 var(--space-3) 0;
+    color: var(--text-secondary);
+}
+
+.shortcut-instructions {
+    font-size: var(--text-sm);
+}
+
+.shortcut-instructions summary {
+    cursor: pointer;
+    color: var(--accent-primary);
+    font-weight: 500;
+    padding: var(--space-2) 0;
+}
+
+.shortcut-instructions summary:hover {
+    text-decoration: underline;
+}
+
+.shortcut-instructions ol {
+    margin: var(--space-3) 0 0 0;
+    padding-left: var(--space-5);
+    color: var(--text-secondary);
+}
+
+.shortcut-instructions li {
+    margin-bottom: var(--space-2);
+    line-height: 1.6;
+}
+
+.shortcut-instructions ul {
+    margin: var(--space-2) 0;
+    padding-left: var(--space-4);
+    list-style-type: disc;
+}
+
+.shortcut-instructions code {
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+}
+
+/* Beginner-friendly capability cards */
+.capability-card.beginner {
+    text-align: center;
+}
+
+.capability-card.beginner .capability-icon {
+    font-size: 2.5rem;
+    background: none;
+    width: auto;
+    height: auto;
+    margin-bottom: var(--space-3);
+}
+
+.capability-card.beginner h3 {
+    margin-bottom: var(--space-3);
+}
+
+.capability-card.beginner .capability-list {
+    text-align: left;
+}
+
+/* Mobile responsive for shortcuts CTA */
+@media (max-width: 600px) {
+    .shortcut-cta {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .cta-icon {
+        font-size: 2.5rem;
+    }
+
+    .example-buttons {
+        justify-content: center;
+    }
+}
