@@ -1,0 +1,46 @@
+# Newton Supercomputer - Main Cloudflare Pages Configuration
+# This is the ROOT deployment that serves the unified Newton site
+#
+# Deploy command: npx wrangler pages deploy . --project-name=newton-api
+#
+# This deploys the entire repository with:
+# - Root index.html as the landing page
+# - /app -> frontend/index.html (Newton Supercomputer)
+# - /teachers -> teachers-aide/index.html (Teacher's Aide)
+# - /builder -> interface-builder/index.html (Interface Builder)
+#
+# Routing is handled by the _redirects file at root
+
+name = "newton-api"
+compatibility_date = "2024-01-01"
+
+[site]
+# Deploy from root directory - includes all static assets
+bucket = "./"
+# Exclude non-static files from deployment
+exclude = [
+    "*.py",
+    "*.pyc",
+    "__pycache__",
+    ".git",
+    ".github",
+    "*.md",
+    "*.yaml",
+    "*.yml",
+    "Dockerfile",
+    "docker-compose.yml",
+    "requirements.txt",
+    "pyproject.toml",
+    ".env*",
+    "core/",
+    "tinytalk_py/",
+    "newton_sdk/",
+    "tests/",
+    "ios/",
+    ".venv/",
+    "venv/",
+    "node_modules/"
+]
+
+[vars]
+ENVIRONMENT = "production"

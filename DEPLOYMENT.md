@@ -126,11 +126,74 @@ uvicorn newton_os_server:app --host 0.0.0.0 --port 8000
 
 ---
 
-## STEP 3: TEACHER'S AIDE (CLOUDFLARE PAGES)
+## STEP 3: CLOUDFLARE PAGES (UNIFIED FRONTEND)
 
-Newton Teacher's Aide is a Progressive Web App for HISD educators, providing TEKS-aligned lesson planning, slide deck generation, assessment analytics, and PLC reports.
+The Newton frontend is deployed as a unified static site on Cloudflare Pages. This includes:
+- **Root**: Landing page (marketing site)
+- **/app**: Newton Supercomputer (main app)
+- **/teachers**: Teacher's Aide (education tools)
+- **/builder**: Interface Builder (development tools)
 
-### 3.1 Deploy to Cloudflare Pages
+### 3.1 Automatic Deployment (Recommended)
+
+The repository includes a GitHub Actions workflow that automatically deploys to Cloudflare Pages on push to `main`.
+
+**Required GitHub Secrets:**
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Pages edit permissions
+- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
+
+**To get your Cloudflare credentials:**
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Click your profile → "My Profile" → "API Tokens"
+3. Create a token with "Cloudflare Pages:Edit" permission
+4. Copy your Account ID from the dashboard URL or Overview page
+
+### 3.2 Manual Deployment
+
+```bash
+# Install Wrangler CLI
+npm install -g wrangler
+
+# Authenticate
+wrangler login
+
+# Deploy unified site from repository root
+npx wrangler pages deploy . --project-name=newton-api
+```
+
+### 3.3 Cloudflare Pages Project Configuration
+
+If creating a new Cloudflare Pages project:
+1. Go to [Cloudflare Pages](https://pages.cloudflare.com)
+2. Click "Create a project" → "Connect to Git"
+3. Select the Newton-api repository
+4. Configure build settings:
+   - **Build command**: (leave empty - static site)
+   - **Build output directory**: `/` (root)
+5. Deploy
+
+### 3.4 Deployed Routes
+
+| Route | Content | Source Directory |
+|-------|---------|------------------|
+| `/` | Landing page | `index.html` (root) |
+| `/app` | Newton Supercomputer | `frontend/` |
+| `/teachers` | Teacher's Aide | `teachers-aide/` |
+| `/builder` | Interface Builder | `interface-builder/` |
+
+**Production URLs:**
+- Main site: `https://newton-api.pages.dev`
+- Newton App: `https://newton-api.pages.dev/app`
+- Teacher's Aide: `https://newton-api.pages.dev/teachers`
+- Interface Builder: `https://newton-api.pages.dev/builder`
+
+---
+
+## STEP 4: TEACHER'S AIDE (STANDALONE DEPLOYMENT)
+
+For standalone deployment of Teacher's Aide (separate from unified site):
+
+### 4.1 Deploy to Cloudflare Pages
 
 ```bash
 # Install Wrangler CLI
@@ -143,14 +206,14 @@ wrangler login
 npx wrangler pages deploy teachers-aide
 ```
 
-### 3.2 Manual Deployment
+### 4.2 Manual Deployment
 
 1. Go to [Cloudflare Pages](https://pages.cloudflare.com)
 2. Click "Create a project" → "Direct Upload"
 3. Upload the `teachers-aide/` folder
 4. Your site deploys at: `https://newton-teachers-aide.pages.dev`
 
-### 3.3 Features
+### 4.3 Features
 
 | Feature | Description |
 |---------|-------------|
@@ -161,7 +224,7 @@ npx wrangler pages deploy teachers-aide
 | **TEKS Browser** | Searchable Texas standards database |
 | **Accommodations** | ELL, 504, SPED, and GT support |
 
-### 3.4 Configuration
+### 4.4 Configuration
 
 Update `teachers-aide/app.js` to point to your Newton API:
 
@@ -174,7 +237,7 @@ const CONFIG = {
 
 ---
 
-## STEP 4: NEWTON PDA (PWA)
+## STEP 5: NEWTON PDA (PWA)
 
 Newton PDA is included in the `newton-pda/` folder. It's a standalone Progressive Web App that can be deployed to any static hosting.
 
@@ -206,11 +269,11 @@ python3 -m http.server 8000
 
 ---
 
-## STEP 5: OPTIONAL VENDOR ADAPTER (RUBY)
+## STEP 6: OPTIONAL VENDOR ADAPTER (RUBY)
 
 For local AI vendor integration, use the Ruby adapter.
 
-### 5.1 Set Environment Variables
+### 6.1 Set Environment Variables
 
 ```bash
 export NEWTON_HOST="https://newton-kernel-xxxx.onrender.com"
@@ -229,7 +292,7 @@ export VENDOR="local"
 # No key needed, but Ollama must be running
 ```
 
-### 5.2 Run the Adapter
+### 6.2 Run the Adapter
 
 ```bash
 bundle install

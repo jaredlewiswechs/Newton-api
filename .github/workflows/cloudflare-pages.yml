@@ -1,0 +1,113 @@
+# Newton - Cloudflare Pages Deployment
+#
+# This workflow deploys the Newton unified frontend to Cloudflare Pages.
+# Deploys the ENTIRE repository as a static site with routing via _redirects.
+#
+# Structure:
+#   - Root index.html: Landing page
+#   - /app: Newton Supercomputer (frontend/)
+#   - /teachers: Teacher's Aide (teachers-aide/)
+#   - /builder: Interface Builder (interface-builder/)
+#
+# Required Secrets:
+#   - CLOUDFLARE_API_TOKEN: Cloudflare API token with Pages edit permissions
+#   - CLOUDFLARE_ACCOUNT_ID: Your Cloudflare account ID
+#
+# Manual trigger also available via workflow_dispatch
+#
+# 2025-2026 Jared Lewis - Ada Computing Company
+
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - '_redirects'
+      - 'frontend/**'
+      - 'teachers-aide/**'
+      - 'interface-builder/**'
+      - '.github/workflows/cloudflare-pages.yml'
+      - 'wrangler.toml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+
+jobs:
+  deploy:
+    name: Deploy Newton Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Prepare static assets - exclude backend files
+      - name: Prepare deployment directory
+        run: |
+          mkdir -p deploy
+
+          # Copy root landing page and routing
+          cp index.html deploy/
+          cp _redirects deploy/
+
+          # Copy frontend app (Newton Supercomputer)
+          cp -r frontend deploy/
+
+          # Copy Teacher's Aide
+          cp -r teachers-aide deploy/
+
+          # Copy Interface Builder
+          cp -r interface-builder deploy/
+
+          # Remove any Python/backend files that might have slipped in
+          find deploy -name "*.py" -delete 2>/dev/null || true
+          find deploy -name "*.pyc" -delete 2>/dev/null || true
+          find deploy -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          find deploy -name "wrangler.toml" -delete 2>/dev/null || true
+
+          # Show deployment structure
+          echo "Deployment structure:"
+          find deploy -type f -name "*.html" | head -20
+          echo ""
+          echo "Total files to deploy:"
+          find deploy -type f | wc -l
+
+      # Deploy to Cloudflare Pages
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: newton-api
+          directory: deploy
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }}
+          wranglerVersion: '3'
+
+      - name: Deployment Summary
+        run: |
+          echo "## Newton Frontend Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployed Routes:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Landing**: https://newton-api.pages.dev/" >> $GITHUB_STEP_SUMMARY
+          echo "- **Newton App**: https://newton-api.pages.dev/app" >> $GITHUB_STEP_SUMMARY
+          echo "- **Teacher's Aide**: https://newton-api.pages.dev/teachers" >> $GITHUB_STEP_SUMMARY
+          echo "- **Interface Builder**: https://newton-api.pages.dev/builder" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Branch: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
