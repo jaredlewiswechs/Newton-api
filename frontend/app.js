@@ -594,6 +594,31 @@ async function checkApiStatus() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Beginner Helper Functions
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Set an example query in the Ask input field and optionally submit it
+ * Used by the "Try these" example buttons
+ */
+function setAskExample(exampleText) {
+    if (elements.askInput) {
+        elements.askInput.value = exampleText;
+        elements.askInput.focus();
+
+        // Add a subtle highlight animation
+        elements.askInput.style.transition = 'box-shadow 0.3s ease';
+        elements.askInput.style.boxShadow = '0 0 0 3px rgba(78, 205, 196, 0.3)';
+        setTimeout(() => {
+            elements.askInput.style.boxShadow = '';
+        }, 500);
+    }
+}
+
+// Make function globally available for onclick handlers
+window.setAskExample = setAskExample;
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Event Listeners
 // ═══════════════════════════════════════════════════════════════════════════
 
