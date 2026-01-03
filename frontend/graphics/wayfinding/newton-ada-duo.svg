@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Newton & Ada - The Partnership
+  Wayfinding-style dual identity graphic
+
+  Newton: The Verified Computation Engine (Teal)
+  Ada: Ada Computing Company - The Foundation (Gold/Amber)
+
+  Inspired by PANYNJ color-coded wayfinding system
+  "What Apple meant to build. Here it is."
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600">
+  <defs>
+    <!-- Newton Gradient (Teal) -->
+    <linearGradient id="newtonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00FFD4"/>
+      <stop offset="100%" style="stop-color:#00AA88"/>
+    </linearGradient>
+
+    <!-- Ada Gradient (Gold/Amber - historic, foundational) -->
+    <linearGradient id="adaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#FFA500"/>
+    </linearGradient>
+
+    <!-- Connection Gradient -->
+    <linearGradient id="connectionGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D4AA"/>
+      <stop offset="50%" style="stop-color:#88BB88"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+
+    <!-- Facet gradients -->
+    <linearGradient id="newtonFacet" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#008866"/>
+      <stop offset="100%" style="stop-color:#00AA88"/>
+    </linearGradient>
+
+    <linearGradient id="adaFacet" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#CC8800"/>
+      <stop offset="100%" style="stop-color:#FFB300"/>
+    </linearGradient>
+
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="shadow">
+      <feDropShadow dx="3" dy="6" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="600" fill="#0A0A0A"/>
+
+  <!-- Subtle pattern -->
+  <pattern id="dots" width="30" height="30" patternUnits="userSpaceOnUse">
+    <circle cx="15" cy="15" r="1" fill="#1A1A1A"/>
+  </pattern>
+  <rect width="1200" height="600" fill="url(#dots)"/>
+
+  <!-- Connection line between Newton and Ada -->
+  <line x1="380" y1="260" x2="820" y2="260"
+        stroke="url(#connectionGrad)"
+        stroke-width="8"
+        stroke-linecap="round"
+        opacity="0.8"/>
+
+  <!-- Pulse animation on connection -->
+  <circle cx="600" cy="260" r="12" fill="url(#connectionGrad)" opacity="0.8">
+    <animate attributeName="r" values="8;16;8" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- NEWTON SIGN (Left) -->
+  <g filter="url(#shadow)">
+    <!-- Left facet -->
+    <polygon points="80,100 110,120 110,360 80,380" fill="url(#newtonFacet)"/>
+    <!-- Main face -->
+    <rect x="110" y="120" width="240" height="240" fill="url(#newtonGrad)" rx="4"/>
+    <!-- Right facet -->
+    <polygon points="350,120 380,100 380,380 350,360" fill="#008866"/>
+    <!-- Top -->
+    <polygon points="110,120 80,100 380,100 350,120" fill="#00EEDD"/>
+  </g>
+
+  <!-- Newton N -->
+  <text x="230" y="280"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="140"
+        font-weight="900"
+        fill="#000"
+        text-anchor="middle"
+        opacity="0.85">N</text>
+
+  <!-- Newton label -->
+  <rect x="130" y="400" width="200" height="40" fill="#FFF" rx="4"/>
+  <text x="230" y="428"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="18"
+        font-weight="700"
+        fill="#0A0A0A"
+        text-anchor="middle"
+        letter-spacing="3">NEWTON</text>
+
+  <text x="230" y="470"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="11"
+        fill="#00D4AA"
+        text-anchor="middle"
+        letter-spacing="2">VERIFIED ENGINE</text>
+
+  <!-- Gate indicator Newton -->
+  <circle cx="380" cy="80" r="25" fill="#00D4AA"/>
+  <text x="380" y="88"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="18"
+        font-weight="700"
+        fill="#000"
+        text-anchor="middle">N</text>
+
+  <!-- ADA SIGN (Right) -->
+  <g filter="url(#shadow)">
+    <!-- Left facet -->
+    <polygon points="820,100 850,120 850,360 820,380" fill="url(#adaFacet)"/>
+    <!-- Main face -->
+    <rect x="850" y="120" width="240" height="240" fill="url(#adaGrad)" rx="4"/>
+    <!-- Right facet -->
+    <polygon points="1090,120 1120,100 1120,380 1090,360" fill="#CC8800"/>
+    <!-- Top -->
+    <polygon points="850,120 820,100 1120,100 1090,120" fill="#FFE066"/>
+  </g>
+
+  <!-- Ada A -->
+  <text x="970" y="280"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="140"
+        font-weight="900"
+        fill="#000"
+        text-anchor="middle"
+        opacity="0.85">A</text>
+
+  <!-- Ada label -->
+  <rect x="870" y="400" width="200" height="40" fill="#FFF" rx="4"/>
+  <text x="970" y="428"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="18"
+        font-weight="700"
+        fill="#0A0A0A"
+        text-anchor="middle"
+        letter-spacing="3">ADA</text>
+
+  <text x="970" y="470"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="11"
+        fill="#FFB300"
+        text-anchor="middle"
+        letter-spacing="2">COMPUTING COMPANY</text>
+
+  <!-- Gate indicator Ada -->
+  <circle cx="820" cy="80" r="25" fill="#FFD700"/>
+  <text x="820" y="88"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="18"
+        font-weight="700"
+        fill="#000"
+        text-anchor="middle">A</text>
+
+  <!-- CENTER - Combined Mark -->
+  <g filter="url(#glow)">
+    <circle cx="600" cy="260" r="60" fill="#0A0A0A" stroke="url(#connectionGrad)" stroke-width="4"/>
+    <text x="600" y="248"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="24"
+          font-weight="700"
+          fill="#00D4AA"
+          text-anchor="middle">1==1</text>
+    <text x="600" y="280"
+          font-family="Apple Color Emoji, Segoe UI Emoji"
+          font-size="24"
+          text-anchor="middle">🍎</text>
+  </g>
+
+  <!-- Tagline -->
+  <text x="600" y="540"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="16"
+        fill="#666"
+        text-anchor="middle"
+        letter-spacing="4">"WHAT APPLE MEANT TO BUILD. HERE IT IS."</text>
+
+  <!-- Houston, Texas marker -->
+  <text x="600" y="570"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="10"
+        fill="#444"
+        text-anchor="middle"
+        letter-spacing="2">HOUSTON, TEXAS</text>
+</svg>

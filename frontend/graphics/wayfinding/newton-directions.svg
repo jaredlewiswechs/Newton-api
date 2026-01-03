@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Newton Directional Signage
+  PANYNJ-inspired wayfinding for Newton features
+
+  Color-coded destination guide:
+  - Teal: Core verification
+  - Gold: Foundation/Infrastructure
+  - Blue: Data & Storage
+  - Orange: Processing
+  - Purple: AI/Intelligence
+
+  "Navigate the Computation Space"
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900">
+  <defs>
+    <filter id="shadow">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+
+    <linearGradient id="metallic" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A4A4A"/>
+      <stop offset="50%" style="stop-color:#2A2A2A"/>
+      <stop offset="100%" style="stop-color:#1A1A1A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="900" fill="#0D0D0D"/>
+
+  <!-- Pole -->
+  <rect x="285" y="80" width="30" height="800" fill="url(#metallic)" rx="2"/>
+
+  <!-- Main Sign Header -->
+  <g filter="url(#shadow)" transform="translate(50, 80)">
+    <rect width="500" height="70" fill="#00D4AA" rx="4"/>
+    <polygon points="500,0 530,35 500,70" fill="#008866"/>
+    <text x="250" y="48"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="32"
+          font-weight="900"
+          fill="#000"
+          text-anchor="middle"
+          letter-spacing="4">NEWTON</text>
+  </g>
+
+  <!-- Directional Signs -->
+
+  <!-- 1. Verification Engine - Teal -->
+  <g filter="url(#shadow)" transform="translate(50, 170)">
+    <rect width="500" height="55" fill="#00D4AA" rx="3"/>
+    <polygon points="500,0 530,27.5 500,55" fill="#008866"/>
+    <!-- Arrow -->
+    <polygon points="480,18 480,37 495,27.5" fill="#000" opacity="0.6"/>
+    <circle cx="35" cy="27.5" r="18" fill="#000" opacity="0.2"/>
+    <path d="M28 27 L33 32 L43 22" fill="none" stroke="#000" stroke-width="3" opacity="0.6"/>
+    <text x="70" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#000">Verification Engine</text>
+    <text x="420" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="400"
+          fill="#000"
+          opacity="0.7">→ CORE</text>
+  </g>
+
+  <!-- 2. tinyTalk Interpreter - Gold -->
+  <g filter="url(#shadow)" transform="translate(50, 240)">
+    <rect width="500" height="55" fill="#FFD700" rx="3"/>
+    <polygon points="500,0 530,27.5 500,55" fill="#CC8800"/>
+    <polygon points="480,18 480,37 495,27.5" fill="#000" opacity="0.6"/>
+    <circle cx="35" cy="27.5" r="18" fill="#000" opacity="0.2"/>
+    <rect x="23" y="15" width="24" height="24" fill="none" stroke="#000" stroke-width="2" opacity="0.5" rx="2"/>
+    <text x="70" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#000">tinyTalk Interpreter</text>
+    <text x="420" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="400"
+          fill="#000"
+          opacity="0.7">→ LANG</text>
+  </g>
+
+  <!-- 3. Glass Box - Blue -->
+  <g filter="url(#shadow)" transform="translate(50, 310)">
+    <rect width="500" height="55" fill="#4ECDC4" rx="3"/>
+    <polygon points="500,0 530,27.5 500,55" fill="#2E8B8B"/>
+    <polygon points="480,18 480,37 495,27.5" fill="#000" opacity="0.6"/>
+    <circle cx="35" cy="27.5" r="18" fill="#000" opacity="0.2"/>
+    <rect x="23" y="15" width="20" height="20" fill="none" stroke="#000" stroke-width="2" opacity="0.5"/>
+    <ellipse cx="35" cy="27" rx="6" ry="4" fill="#000" opacity="0.3"/>
+    <text x="70" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#000">Glass Box Layer</text>
+    <text x="400" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="400"
+          fill="#000"
+          opacity="0.7">→ SAFETY</text>
+  </g>
+
+  <!-- 4. Encrypted Vault - Indigo -->
+  <g filter="url(#shadow)" transform="translate(50, 380)">
+    <rect width="500" height="55" fill="#6366F1" rx="3"/>
+    <polygon points="500,0 530,27.5 500,55" fill="#4338CA"/>
+    <polygon points="480,18 480,37 495,27.5" fill="#FFF" opacity="0.6"/>
+    <circle cx="35" cy="27.5" r="18" fill="#000" opacity="0.2"/>
+    <circle cx="35" cy="27.5" r="12" fill="none" stroke="#FFF" stroke-width="2" opacity="0.6"/>
+    <rect x="42" y="22" width="8" height="10" fill="#FFF" opacity="0.5" rx="1"/>
+    <text x="70" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#FFF">Encrypted Vault</text>
+    <text x="400" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="400"
+          fill="#FFF"
+          opacity="0.7">→ STORE</text>
+  </g>
+
+  <!-- 5. Forge Execution - Orange -->
+  <g filter="url(#shadow)" transform="translate(50, 450)">
+    <rect width="500" height="55" fill="#FB923C" rx="3"/>
+    <polygon points="500,0 530,27.5 500,55" fill="#EA580C"/>
+    <polygon points="480,18 480,37 495,27.5" fill="#000" opacity="0.6"/>
+    <circle cx="35" cy="27.5" r="18" fill="#000" opacity="0.2"/>
+    <!-- Anvil icon -->
+    <rect x="25" y="30" width="20" height="6" fill="#000" opacity="0.5"/>
+    <rect x="30" y="24" width="10" height="8" fill="#000" opacity="0.4"/>
+    <text x="70" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#000">Forge Execution</text>
+    <text x="400" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="400"
+          fill="#000"
+          opacity="0.7">→ EXEC</text>
+  </g>
+
+  <!-- 6. Bridge Consensus - Pink -->
+  <g filter="url(#shadow)" transform="translate(50, 520)">
+    <rect width="500" height="55" fill="#EC4899" rx="3"/>
+    <polygon points="500,0 530,27.5 500,55" fill="#BE185D"/>
+    <polygon points="480,18 480,37 495,27.5" fill="#FFF" opacity="0.6"/>
+    <circle cx="35" cy="27.5" r="18" fill="#000" opacity="0.2"/>
+    <path d="M22 32 Q35 18 48 32" fill="none" stroke="#FFF" stroke-width="3" opacity="0.6"/>
+    <text x="70" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#FFF">Bridge Consensus</text>
+    <text x="385" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="400"
+          fill="#FFF"
+          opacity="0.7">→ DISTRIB</text>
+  </g>
+
+  <!-- 7. Teacher's Aide - Green -->
+  <g filter="url(#shadow)" transform="translate(50, 590)">
+    <rect width="500" height="55" fill="#10B981" rx="3"/>
+    <polygon points="500,0 530,27.5 500,55" fill="#047857"/>
+    <polygon points="480,18 480,37 495,27.5" fill="#000" opacity="0.6"/>
+    <circle cx="35" cy="27.5" r="18" fill="#000" opacity="0.2"/>
+    <!-- Book icon -->
+    <rect x="25" y="18" width="18" height="18" fill="#000" opacity="0.3" rx="2"/>
+    <line x1="34" y1="18" x2="34" y2="36" stroke="#000" stroke-width="2" opacity="0.5"/>
+    <text x="70" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#000">Teacher's Aide</text>
+    <text x="400" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="400"
+          fill="#000"
+          opacity="0.7">→ EDU</text>
+  </g>
+
+  <!-- 8. Cartridges - Amber -->
+  <g filter="url(#shadow)" transform="translate(50, 660)">
+    <rect width="500" height="55" fill="#F59E0B" rx="3"/>
+    <polygon points="500,0 530,27.5 500,55" fill="#D97706"/>
+    <polygon points="480,18 480,37 495,27.5" fill="#000" opacity="0.6"/>
+    <circle cx="35" cy="27.5" r="18" fill="#000" opacity="0.2"/>
+    <!-- Cartridge icon -->
+    <rect x="25" y="16" width="18" height="22" fill="#000" opacity="0.4" rx="2"/>
+    <rect x="28" y="35" width="4" height="4" fill="#000" opacity="0.5"/>
+    <rect x="34" y="35" width="4" height="4" fill="#000" opacity="0.5"/>
+    <text x="70" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#000">Media Cartridges</text>
+    <text x="400" y="36"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="400"
+          fill="#000"
+          opacity="0.7">→ MEDIA</text>
+  </g>
+
+  <!-- Footer info panel -->
+  <g transform="translate(50, 750)">
+    <rect width="500" height="100" fill="#1A1A1A" rx="4" stroke="#333" stroke-width="1"/>
+
+    <!-- Gate numbers legend -->
+    <text x="250" y="25"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="11"
+          fill="#666"
+          text-anchor="middle"
+          letter-spacing="3">NEWTON SUPERCOMPUTER NAVIGATION</text>
+
+    <g transform="translate(30, 45)">
+      <circle cx="0" cy="0" r="10" fill="#00D4AA"/>
+      <text x="0" y="4" font-family="Helvetica Neue" font-size="10" font-weight="700" fill="#000" text-anchor="middle">1</text>
+      <text x="20" y="4" font-family="Helvetica Neue" font-size="9" fill="#888">CORE</text>
+    </g>
+
+    <g transform="translate(100, 45)">
+      <circle cx="0" cy="0" r="10" fill="#FFD700"/>
+      <text x="0" y="4" font-family="Helvetica Neue" font-size="10" font-weight="700" fill="#000" text-anchor="middle">2</text>
+      <text x="20" y="4" font-family="Helvetica Neue" font-size="9" fill="#888">LANG</text>
+    </g>
+
+    <g transform="translate(170, 45)">
+      <circle cx="0" cy="0" r="10" fill="#4ECDC4"/>
+      <text x="0" y="4" font-family="Helvetica Neue" font-size="10" font-weight="700" fill="#000" text-anchor="middle">3</text>
+      <text x="20" y="4" font-family="Helvetica Neue" font-size="9" fill="#888">SAFETY</text>
+    </g>
+
+    <g transform="translate(250, 45)">
+      <circle cx="0" cy="0" r="10" fill="#6366F1"/>
+      <text x="0" y="4" font-family="Helvetica Neue" font-size="10" font-weight="700" fill="#FFF" text-anchor="middle">4</text>
+      <text x="20" y="4" font-family="Helvetica Neue" font-size="9" fill="#888">STORE</text>
+    </g>
+
+    <g transform="translate(325, 45)">
+      <circle cx="0" cy="0" r="10" fill="#FB923C"/>
+      <text x="0" y="4" font-family="Helvetica Neue" font-size="10" font-weight="700" fill="#000" text-anchor="middle">5</text>
+      <text x="20" y="4" font-family="Helvetica Neue" font-size="9" fill="#888">EXEC</text>
+    </g>
+
+    <g transform="translate(400, 45)">
+      <circle cx="0" cy="0" r="10" fill="#EC4899"/>
+      <text x="0" y="4" font-family="Helvetica Neue" font-size="10" font-weight="700" fill="#FFF" text-anchor="middle">6</text>
+      <text x="20" y="4" font-family="Helvetica Neue" font-size="9" fill="#888">DISTRIB</text>
+    </g>
+
+    <!-- Bottom tagline -->
+    <text x="250" y="75"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="10"
+          fill="#00D4AA"
+          text-anchor="middle"
+          letter-spacing="2">1 == 1 · THE CONSTRAINT IS THE INSTRUCTION</text>
+  </g>
+
+  <!-- Apple at bottom -->
+  <text x="300" y="875"
+        font-family="Apple Color Emoji, Segoe UI Emoji"
+        font-size="20"
+        text-anchor="middle">🍎</text>
+</svg>

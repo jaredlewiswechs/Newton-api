@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Newton Pictogram Set
+  Inspired by PANYNJ Wayfinding Pictogram Standards
+
+  Core Newton Concepts as Universal Symbols:
+  - Verify: The proof/confirmation
+  - Constrain: The boundary definition
+  - Forge: The execution engine
+  - finfr: The ontological halt
+  - Glass Box: Transparency layer
+  - Bijection: Reversible computation
+
+  Design principles: Simple, bold, instantly recognizable
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00D4AA"/>
+      <stop offset="100%" style="stop-color:#00AA88"/>
+    </linearGradient>
+
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#FFA500"/>
+    </linearGradient>
+
+    <linearGradient id="alertGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B"/>
+      <stop offset="100%" style="stop-color:#CC4444"/>
+    </linearGradient>
+
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ECDC4"/>
+      <stop offset="100%" style="stop-color:#2E8B8B"/>
+    </linearGradient>
+
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FB923C"/>
+      <stop offset="100%" style="stop-color:#EA580C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#0A0A0A"/>
+
+  <!-- Title -->
+  <text x="600" y="60"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="28"
+        font-weight="700"
+        fill="#FFF"
+        text-anchor="middle"
+        letter-spacing="8">NEWTON PICTOGRAM SYSTEM</text>
+  <line x1="200" y1="85" x2="1000" y2="85" stroke="#333" stroke-width="1"/>
+
+  <!-- ROW 1 -->
+
+  <!-- 1. VERIFY - Checkmark in shield -->
+  <g transform="translate(100, 120)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="url(#tealGrad)"/>
+    <!-- Shield shape -->
+    <path d="M80 45 L120 60 L120 95 Q120 120 80 135 Q40 120 40 95 L40 60 Z"
+          fill="#000" opacity="0.3"/>
+    <!-- Checkmark -->
+    <path d="M55 90 L72 107 L105 70"
+          fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#00D4AA"
+          text-anchor="middle"
+          letter-spacing="2">VERIFY</text>
+  </g>
+
+  <!-- 2. CONSTRAIN - Frame/boundary -->
+  <g transform="translate(300, 120)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="url(#goldGrad)"/>
+    <!-- Constraint frame -->
+    <rect x="45" y="55" width="70" height="70" fill="none" stroke="#000" stroke-width="6" rx="4"/>
+    <!-- Inner content contained -->
+    <circle cx="80" cy="90" r="15" fill="#000" opacity="0.4"/>
+    <!-- Corner brackets -->
+    <path d="M50 60 L50 55 L60 55" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M100 55 L110 55 L110 60" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M110 120 L110 125 L100 125" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M60 125 L50 125 L50 120" fill="none" stroke="#000" stroke-width="3"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#FFD700"
+          text-anchor="middle"
+          letter-spacing="2">CONSTRAIN</text>
+  </g>
+
+  <!-- 3. FORGE - Anvil/hammer (execution) -->
+  <g transform="translate(500, 120)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="url(#orangeGrad)"/>
+    <!-- Anvil -->
+    <path d="M50 105 L110 105 L115 115 L45 115 Z" fill="#000" opacity="0.5"/>
+    <rect x="55" y="95" width="50" height="12" fill="#000" opacity="0.3" rx="2"/>
+    <!-- Hammer -->
+    <rect x="72" y="55" width="16" height="35" fill="#000" opacity="0.4" rx="3"/>
+    <rect x="65" y="48" width="30" height="12" fill="#000" opacity="0.5" rx="2"/>
+    <!-- Spark lines -->
+    <line x1="50" y1="80" x2="40" y2="70" stroke="#000" stroke-width="3" opacity="0.3"/>
+    <line x1="110" y1="80" x2="120" y2="70" stroke="#000" stroke-width="3" opacity="0.3"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#FB923C"
+          text-anchor="middle"
+          letter-spacing="2">FORGE</text>
+  </g>
+
+  <!-- 4. FINFR - Stop/prohibition (ontological death) -->
+  <g transform="translate(700, 120)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="url(#alertGrad)"/>
+    <!-- Prohibition circle -->
+    <circle cx="80" cy="90" r="35" fill="none" stroke="#000" stroke-width="6"/>
+    <!-- Diagonal slash -->
+    <line x1="55" y1="65" x2="105" y2="115" stroke="#000" stroke-width="6"/>
+    <!-- Skull-like abstract (ontological death) -->
+    <circle cx="70" cy="85" r="5" fill="#000" opacity="0.3"/>
+    <circle cx="90" cy="85" r="5" fill="#000" opacity="0.3"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#FF6B6B"
+          text-anchor="middle"
+          letter-spacing="2">FINFR</text>
+  </g>
+
+  <!-- 5. GLASS BOX - Transparency -->
+  <g transform="translate(900, 120)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="url(#blueGrad)"/>
+    <!-- Glass box (transparent cube) -->
+    <rect x="50" y="60" width="50" height="50" fill="none" stroke="#000" stroke-width="3" opacity="0.6"/>
+    <!-- 3D perspective lines -->
+    <line x1="100" y1="60" x2="115" y2="50" stroke="#000" stroke-width="3" opacity="0.4"/>
+    <line x1="100" y1="110" x2="115" y2="100" stroke="#000" stroke-width="3" opacity="0.4"/>
+    <line x1="50" y1="60" x2="65" y2="50" stroke="#000" stroke-width="3" opacity="0.4"/>
+    <rect x="65" y="50" width="50" height="50" fill="none" stroke="#000" stroke-width="2" opacity="0.3"/>
+    <!-- Eye inside (transparency = visibility) -->
+    <ellipse cx="80" cy="90" rx="15" ry="10" fill="#000" opacity="0.4"/>
+    <circle cx="80" cy="90" r="5" fill="#000" opacity="0.5"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#4ECDC4"
+          text-anchor="middle"
+          letter-spacing="2">GLASS BOX</text>
+  </g>
+
+  <!-- 6. BIJECTION - Reversible arrows -->
+  <g transform="translate(1100, 120)">
+    <rect x="-40" width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="40" cy="90" r="55" fill="url(#purpleGrad)"/>
+    <!-- Bidirectional arrows -->
+    <path d="M15 80 L65 80" stroke="#000" stroke-width="5" fill="none"/>
+    <path d="M55 72 L65 80 L55 88" stroke="#000" stroke-width="5" fill="none" stroke-linejoin="round"/>
+    <path d="M65 100 L15 100" stroke="#000" stroke-width="5" fill="none"/>
+    <path d="M25 92 L15 100 L25 108" stroke="#000" stroke-width="5" fill="none" stroke-linejoin="round"/>
+    <text x="40" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#A855F7"
+          text-anchor="middle"
+          letter-spacing="2">BIJECTION</text>
+  </g>
+
+  <!-- ROW 2 - More concepts -->
+
+  <!-- 7. WHEN - Presence/condition -->
+  <g transform="translate(100, 360)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="#3B82F6"/>
+    <!-- Condition diamond -->
+    <polygon points="80,50 115,90 80,130 45,90" fill="none" stroke="#000" stroke-width="5"/>
+    <!-- Question to check -->
+    <text x="80" y="100"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="32"
+          font-weight="700"
+          fill="#000"
+          text-anchor="middle"
+          opacity="0.5">?</text>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#3B82F6"
+          text-anchor="middle"
+          letter-spacing="2">WHEN</text>
+  </g>
+
+  <!-- 8. LAW - Governance/scales -->
+  <g transform="translate(300, 360)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="#10B981"/>
+    <!-- Scales of justice -->
+    <line x1="80" y1="55" x2="80" y2="120" stroke="#000" stroke-width="4"/>
+    <line x1="50" y1="75" x2="110" y2="75" stroke="#000" stroke-width="4"/>
+    <!-- Pans -->
+    <path d="M45 80 Q40 90 50 95 Q60 90 55 80" fill="#000" opacity="0.4"/>
+    <path d="M105 80 Q100 90 110 95 Q120 90 115 80" fill="#000" opacity="0.4"/>
+    <!-- Top -->
+    <circle cx="80" cy="55" r="6" fill="#000" opacity="0.5"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#10B981"
+          text-anchor="middle"
+          letter-spacing="2">LAW</text>
+  </g>
+
+  <!-- 9. VAULT - Security/lock -->
+  <g transform="translate(500, 360)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="#6366F1"/>
+    <!-- Vault door -->
+    <circle cx="80" cy="90" r="35" fill="#000" opacity="0.3" stroke="#000" stroke-width="4"/>
+    <!-- Dial -->
+    <circle cx="80" cy="90" r="15" fill="#000" opacity="0.2"/>
+    <!-- Handle -->
+    <rect x="95" y="82" width="20" height="16" fill="#000" opacity="0.5" rx="2"/>
+    <!-- Lock lines -->
+    <line x1="80" y1="60" x2="80" y2="70" stroke="#000" stroke-width="3"/>
+    <line x1="80" y1="110" x2="80" y2="120" stroke="#000" stroke-width="3"/>
+    <line x1="55" y1="90" x2="65" y2="90" stroke="#000" stroke-width="3"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#6366F1"
+          text-anchor="middle"
+          letter-spacing="2">VAULT</text>
+  </g>
+
+  <!-- 10. BRIDGE - Connection/consensus -->
+  <g transform="translate(700, 360)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="#EC4899"/>
+    <!-- Bridge structure -->
+    <path d="M40 100 Q60 70 80 100 Q100 70 120 100" fill="none" stroke="#000" stroke-width="5"/>
+    <!-- Pillars -->
+    <rect x="38" y="100" width="8" height="20" fill="#000" opacity="0.4"/>
+    <rect x="114" y="100" width="8" height="20" fill="#000" opacity="0.4"/>
+    <!-- Road -->
+    <line x1="40" y1="100" x2="120" y2="100" stroke="#000" stroke-width="3"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#EC4899"
+          text-anchor="middle"
+          letter-spacing="2">BRIDGE</text>
+  </g>
+
+  <!-- 11. CARTRIDGE - Media/content -->
+  <g transform="translate(900, 360)">
+    <rect width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="80" cy="90" r="55" fill="#F59E0B"/>
+    <!-- Cartridge shape -->
+    <rect x="50" y="60" width="60" height="70" fill="#000" opacity="0.4" rx="4"/>
+    <!-- Label area -->
+    <rect x="55" y="65" width="50" height="25" fill="#000" opacity="0.2" rx="2"/>
+    <!-- Connector pins -->
+    <rect x="55" y="120" width="8" height="8" fill="#000" opacity="0.5"/>
+    <rect x="66" y="120" width="8" height="8" fill="#000" opacity="0.5"/>
+    <rect x="77" y="120" width="8" height="8" fill="#000" opacity="0.5"/>
+    <rect x="88" y="120" width="8" height="8" fill="#000" opacity="0.5"/>
+    <text x="80" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#F59E0B"
+          text-anchor="middle"
+          letter-spacing="2">CARTRIDGE</text>
+  </g>
+
+  <!-- 12. 1==1 - The Core Truth -->
+  <g transform="translate(1100, 360)">
+    <rect x="-40" width="160" height="200" fill="#111" rx="8"/>
+    <circle cx="40" cy="90" r="55" fill="url(#tealGrad)"/>
+    <!-- Equality symbol -->
+    <text x="40" y="100"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="36"
+          font-weight="900"
+          fill="#000"
+          text-anchor="middle"
+          opacity="0.7">1=1</text>
+    <text x="40" y="175"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          font-weight="700"
+          fill="#00D4AA"
+          text-anchor="middle"
+          letter-spacing="2">TRUTH</text>
+  </g>
+
+  <!-- Footer -->
+  <line x1="200" y1="600" x2="1000" y2="600" stroke="#333" stroke-width="1"/>
+  <text x="600" y="640"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="12"
+        fill="#666"
+        text-anchor="middle"
+        letter-spacing="4">NEWTON SUPERCOMPUTER · UNIVERSAL SYMBOLS FOR VERIFIED COMPUTATION</text>
+
+  <!-- Apple signature -->
+  <text x="600" y="680"
+        font-family="Apple Color Emoji, Segoe UI Emoji"
+        font-size="24"
+        text-anchor="middle">🍎</text>
+
+  <!-- Color legend -->
+  <g transform="translate(100, 720)">
+    <circle cx="0" cy="0" r="6" fill="#00D4AA"/>
+    <text x="15" y="5" font-family="Helvetica Neue" font-size="10" fill="#666">Verification</text>
+
+    <circle cx="120" cy="0" r="6" fill="#FFD700"/>
+    <text x="135" y="5" font-family="Helvetica Neue" font-size="10" fill="#666">Constraint</text>
+
+    <circle cx="240" cy="0" r="6" fill="#FB923C"/>
+    <text x="255" y="5" font-family="Helvetica Neue" font-size="10" fill="#666">Execution</text>
+
+    <circle cx="360" cy="0" r="6" fill="#FF6B6B"/>
+    <text x="375" y="5" font-family="Helvetica Neue" font-size="10" fill="#666">Halt/Prohibition</text>
+
+    <circle cx="520" cy="0" r="6" fill="#4ECDC4"/>
+    <text x="535" y="5" font-family="Helvetica Neue" font-size="10" fill="#666">Transparency</text>
+
+    <circle cx="660" cy="0" r="6" fill="#A855F7"/>
+    <text x="675" y="5" font-family="Helvetica Neue" font-size="10" fill="#666">Reversibility</text>
+
+    <circle cx="800" cy="0" r="6" fill="#3B82F6"/>
+    <text x="815" y="5" font-family="Helvetica Neue" font-size="10" fill="#666">Condition</text>
+
+    <circle cx="920" cy="0" r="6" fill="#10B981"/>
+    <text x="935" y="5" font-family="Helvetica Neue" font-size="10" fill="#666">Governance</text>
+  </g>
+</svg>
