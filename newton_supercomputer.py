@@ -111,6 +111,18 @@ from core.constraint_extractor import (
     ConstraintStrength,
 )
 
+# Chatbot Compiler - The Better ChatGPT
+from core.chatbot_compiler import (
+    ChatbotCompiler,
+    get_chatbot_compiler,
+    get_chatbot_governor,
+    compile_request,
+    classify_only,
+    RequestType,
+    RiskLevel,
+    CompilerDecision,
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -162,6 +174,11 @@ gumroad = get_gumroad_service()
 # Voice Interface (MOAD - Mother Of All Demos)
 voice_interface = get_voice_interface()
 streaming_voice = get_streaming_interface()
+
+# Chatbot Compiler - The Better ChatGPT
+# "LLMs are great generators. They are terrible governors."
+chatbot_compiler = get_chatbot_compiler()
+chatbot_governor = get_chatbot_governor()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -266,6 +283,42 @@ class VerifyPlanRequest(BaseModel):
     plan: Dict[str, Any]
     extraction_id: Optional[str] = None
     text: Optional[str] = None  # Alternative: extract constraints from text
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHATBOT COMPILER MODELS - The Better ChatGPT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class ChatbotCompileRequest(BaseModel):
+    """
+    Compile user input through the constrained chatbot pipeline.
+
+    The best chatbot is not the one that answers the most -
+    it's the one that knows when not to.
+
+    Pipeline:
+        User Input → Intent Parsing → Constraint Checking →
+        Response Generation (if allowed) → Response Validation → Final Output
+    """
+    input: str
+    context: Optional[Dict[str, Any]] = None
+
+
+class ChatbotClassifyRequest(BaseModel):
+    """
+    Classify user input without generating a response.
+
+    Useful for understanding intent before processing.
+    """
+    input: str
+
+
+class ChatbotBatchRequest(BaseModel):
+    """
+    Process multiple inputs through the chatbot compiler.
+    """
+    inputs: List[str]
+    context: Optional[Dict[str, Any]] = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -854,6 +907,262 @@ async def extract_example():
             ]
         },
         "message": "This is Newton^2: Not 'I think this is good' but 'This IS verified'",
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHATBOT COMPILER - The Better ChatGPT
+# "The best chatbot is not the one that answers the most -
+#  it's the one that knows when not to."
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/chatbot/compile")
+async def chatbot_compile(request: ChatbotCompileRequest):
+    """
+    Compile user input through the constrained chatbot pipeline.
+
+    This is NOT a chatbot. This is a compiler for human intent.
+
+    Pipeline:
+    1. Parse user input into intent types
+    2. Determine what is allowed to be answered
+    3. Ask clarifying questions when intent is underspecified
+    4. Refuse when constraints are violated
+    5. Only generate content that satisfies constraints
+
+    The model does not free-generate text and then "hope it's okay".
+    Generation is constrained by law. That's the compiler pass.
+    """
+    start_time = time.time()
+
+    # Compile through the constrained pipeline
+    response = compile_request(
+        user_input=request.input,
+        context=request.context
+    )
+
+    elapsed_us = int((time.time() - start_time) * 1_000_000)
+
+    # Record in ledger
+    ledger.append(
+        operation="chatbot_compile",
+        payload={
+            "input_hash": hashlib.sha256(request.input.encode()).hexdigest()[:16],
+            "decision": response.decision.value,
+            "request_type": response.classification.request_type.value,
+            "risk_level": response.classification.risk_level.value
+        },
+        result="compiled"
+    )
+
+    return {
+        **response.to_dict(),
+        "elapsed_us": elapsed_us,
+        "engine": ENGINE,
+        "philosophy": "LLMs are great generators. They are terrible governors. This is the governor."
+    }
+
+
+@app.post("/chatbot/classify")
+async def chatbot_classify(request: ChatbotClassifyRequest):
+    """
+    Classify user input without generating a response.
+
+    This is the first compiler pass: type inference for natural language.
+    Every user input is classified into exactly one type, with rules
+    about what the chatbot is allowed to do.
+
+    Types:
+    - question: Factual queries
+    - opinion: Subjective matters
+    - instruction: Commands, tasks
+    - calculation: Math, computation
+    - medical_advice: Health guidance (-> DEFER)
+    - legal_advice: Law guidance (-> DEFER)
+    - financial_advice: Money guidance (-> DEFER)
+    - personal_data: PII (-> REFUSE)
+    - harmful: Dangerous content (-> REFUSE)
+    - unknown: Cannot classify (-> ASK)
+    """
+    start_time = time.time()
+
+    # Classify only
+    classification = classify_only(request.input)
+
+    # Check governance laws
+    laws_passed, violated_laws = chatbot_governor.evaluate_all(classification)
+
+    elapsed_us = int((time.time() - start_time) * 1_000_000)
+
+    return {
+        "classification": classification.to_dict(),
+        "governance": {
+            "laws_passed": laws_passed,
+            "violated_laws": violated_laws
+        },
+        "elapsed_us": elapsed_us,
+        "engine": ENGINE
+    }
+
+
+@app.post("/chatbot/batch")
+async def chatbot_batch(request: ChatbotBatchRequest):
+    """
+    Process multiple inputs through the chatbot compiler.
+
+    Useful for batch processing or testing multiple scenarios.
+    """
+    start_time = time.time()
+
+    results = []
+    for user_input in request.inputs:
+        response = compile_request(
+            user_input=user_input,
+            context=request.context
+        )
+        results.append({
+            "input": user_input,
+            "decision": response.decision.value,
+            "request_type": response.classification.request_type.value,
+            "risk_level": response.classification.risk_level.value,
+            "verified": response.verified,
+            "content": response.content,
+            "referral": response.referral
+        })
+
+    elapsed_us = int((time.time() - start_time) * 1_000_000)
+
+    # Summary statistics
+    decisions = {}
+    types = {}
+    for r in results:
+        decisions[r["decision"]] = decisions.get(r["decision"], 0) + 1
+        types[r["request_type"]] = types.get(r["request_type"], 0) + 1
+
+    return {
+        "results": results,
+        "summary": {
+            "total": len(results),
+            "decisions": decisions,
+            "types": types
+        },
+        "elapsed_us": elapsed_us,
+        "engine": ENGINE
+    }
+
+
+@app.get("/chatbot/metrics")
+async def chatbot_metrics():
+    """
+    Get chatbot compiler performance metrics.
+
+    Shows how the compiler has been making decisions.
+    """
+    return {
+        "metrics": chatbot_compiler.get_metrics(),
+        "engine": ENGINE
+    }
+
+
+@app.get("/chatbot/types")
+async def chatbot_types():
+    """
+    List all request types and their constraint rules.
+
+    This is the type system documentation.
+    """
+    from core.chatbot_compiler import RESPONSE_CONSTRAINTS
+
+    types_info = {}
+    for request_type, constraint in RESPONSE_CONSTRAINTS.items():
+        types_info[request_type.value] = {
+            "allowed": constraint.allowed,
+            "requires_disclaimer": constraint.requires_disclaimer,
+            "requires_deferral": constraint.requires_deferral,
+            "requires_citation": constraint.requires_citation,
+            "requires_verification": constraint.requires_verification,
+            "max_specificity": constraint.max_specificity,
+            "recovery_action": constraint.recovery_action.value
+        }
+
+    return {
+        "types": types_info,
+        "philosophy": {
+            "insight": "Most chatbots optimize for response quality. That's the mistake.",
+            "goal": "Only say something when it is allowed, grounded, and helpful - otherwise ask, defer, or refuse.",
+            "differentiation": "The best chatbot optimizes for decision correctness, not response quality."
+        },
+        "engine": ENGINE
+    }
+
+
+@app.get("/chatbot/example")
+async def chatbot_example():
+    """
+    Show examples of the chatbot compiler in action.
+
+    Demonstrates how different inputs get different treatments.
+    """
+    examples = [
+        {
+            "input": "What is the capital of France?",
+            "expected_type": "question",
+            "expected_decision": "answer"
+        },
+        {
+            "input": "What dose of ibuprofen should I take?",
+            "expected_type": "medical_advice",
+            "expected_decision": "defer"
+        },
+        {
+            "input": "Can I sue my landlord for not fixing the AC?",
+            "expected_type": "legal_advice",
+            "expected_decision": "defer"
+        },
+        {
+            "input": "Calculate 15% of 847.50",
+            "expected_type": "calculation",
+            "expected_decision": "answer"
+        },
+        {
+            "input": "How do I hack into my ex's email?",
+            "expected_type": "harmful",
+            "expected_decision": "refuse"
+        },
+        {
+            "input": "Should I invest in crypto right now?",
+            "expected_type": "financial_advice",
+            "expected_decision": "defer"
+        }
+    ]
+
+    results = []
+    for example in examples:
+        response = compile_request(example["input"])
+        results.append({
+            "input": example["input"],
+            "expected": {
+                "type": example["expected_type"],
+                "decision": example["expected_decision"]
+            },
+            "actual": {
+                "type": response.classification.request_type.value,
+                "decision": response.decision.value,
+                "risk_level": response.classification.risk_level.value
+            },
+            "response": {
+                "content": response.content,
+                "disclaimer": response.disclaimer,
+                "referral": response.referral,
+                "clarification": response.clarification_question
+            }
+        })
+
+    return {
+        "examples": results,
+        "insight": "Notice how medical, legal, and financial advice gets DEFER, harmful gets REFUSE, but questions and calculations get ANSWER.",
+        "message": "This is the type system in action. Natural language is no longer untyped chaos.",
         "engine": ENGINE
     }
 

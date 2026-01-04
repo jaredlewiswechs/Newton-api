@@ -251,6 +251,32 @@ from .constraint_extractor import (
     ExtractionPatterns,
 )
 
+from .chatbot_compiler import (
+    # Core Compiler
+    ChatbotCompiler,
+    get_chatbot_compiler,
+    compile_request,
+    classify_only,
+
+    # Governance
+    ChatbotGovernor,
+    get_chatbot_governor,
+
+    # Type System
+    RequestType,
+    RiskLevel,
+    CompilerDecision,
+
+    # Data Classes
+    RequestClassification,
+    ResponseConstraint,
+    CompiledResponse,
+
+    # Constraint Rules
+    RESPONSE_CONSTRAINTS,
+    CLASSIFICATION_PATTERNS,
+)
+
 __all__ = [
     # CDL
     'CDLEvaluator', 'CDLParser', 'HaltChecker',
@@ -321,6 +347,13 @@ __all__ = [
     'ExtractionResult', 'ExtractedConstraint',
     'ConstraintCategory', 'ConstraintStrength', 'ConstraintPolarity',
     'ExtractionPatterns',
+
+    # Chatbot Compiler - The Better ChatGPT
+    'ChatbotCompiler', 'get_chatbot_compiler', 'compile_request', 'classify_only',
+    'ChatbotGovernor', 'get_chatbot_governor',
+    'RequestType', 'RiskLevel', 'CompilerDecision',
+    'RequestClassification', 'ResponseConstraint', 'CompiledResponse',
+    'RESPONSE_CONSTRAINTS', 'CLASSIFICATION_PATTERNS',
 ]
 
 __version__ = "1.0.0"
