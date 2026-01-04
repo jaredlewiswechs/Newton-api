@@ -64,6 +64,7 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 ### Advanced Features
 - [Cartridges](cartridges.md) - Visual, Sound, Sequence, Data, Rosetta, Auto
 - [Framework Verification](frameworks.md) - Apple, Web, ML framework constraints
+- [Swift & SwiftUI Guide](frameworks/SWIFT_SWIFTUI_GUIDE.md) - Native iOS/iPadOS development with Swift 6.2
 - [Claim Grounding](grounding.md) - Fact-checking against external sources
 - [Newton PDA](newton-pda.md) - Personal Data Assistant (PWA)
 - [Teacher's Aide](../teachers-aide/README.md) - HISD NES lesson planning, TEKS alignment, classroom management, and auto-differentiation

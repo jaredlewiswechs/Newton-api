@@ -116,4 +116,12 @@ Elapsed: 3.5ms
 
 ---
 
+---
+
+## Learning Resources
+
+For a comprehensive guide to Swift, SwiftUI, and Swift Playgrounds with Newton integration, see the [Swift & SwiftUI Combinatorial Guide](../docs/frameworks/SWIFT_SWIFTUI_GUIDE.md).
+
+---
+
 © 2025-2026 Jared Lewis · Ada Computing Company · Houston, Texas
