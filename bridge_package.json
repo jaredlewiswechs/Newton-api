@@ -1,0 +1,100 @@
+{
+  "manifest": "7A3F9B2C8E1D",
+  "version": "1.2.0",
+  "timestamp": "2026-01-04T20:03:02.943537",
+  "author": "Jared Nashon Lewis",
+  "sovereign": true,
+  "signature": "f003a21457617b32",
+
+  "the_fundamental_law": {
+    "code": "def newton(current, goal): return current == goal",
+    "meaning": "1 == 1 → execute. 1 != 1 → halt.",
+    "google_equivalent": "None. They guess. We prove."
+  },
+
+  "lineage": {
+    "1963_sketchpad": "Sutherland, MIT - Relaxation solver → Forge verification",
+    "1975_waltz": "MIT AI Lab - Arc consistency → CDL constraint eval",
+    "1979_thinglab": "Borning, Xerox PARC - Multi-way dataflow → @law/@forge",
+    "1980_propagators": "Steele & Sussman, MIT - Autonomous cells → Field cells + Laws",
+    "1987_clp": "Jaffar & Lassez - CLP formalization → Blueprint/Law/Forge DSL",
+    "2025_newton": "Jared Lewis - Cryptographic verification + Merkle audit trail"
+  },
+
+  "architecture": {
+    "CDL": "Constraint Definition Language - the instruction set",
+    "Logic": "Verified Turing-complete computation with bounded execution",
+    "Forge": "Verification Engine (CPU) - sub-millisecond latency",
+    "Vault": "AES-256-GCM encrypted storage with identity-derived keys",
+    "Ledger": "Merkle-proofed immutable history - hash-chained entries",
+    "Bridge": "PBFT Byzantine consensus - survives f=(n-1)/3 faulty nodes",
+    "Robust": "MAD statistics - adversarial resistant, locked baselines",
+    "GlassBox": "Policy-as-code + Human-in-the-loop + Merkle anchors"
+  },
+
+  "the_inversion": {
+    "traditional": "Compute first, verify later (maybe)",
+    "newton": "Verify first, compute only on pass",
+    "economic_model": {
+      "traditional": "Cost = f(operations) → grows with usage",
+      "newton": "Cost = f(constraints) → fixed at definition time"
+    }
+  },
+
+  "finfr_ratio": {
+    "formula": "f/g",
+    "f": "what you're trying to do (forge/fact)",
+    "g": "what reality allows (ground/goal)",
+    "threshold_exceeded": "finfr (forbidden)",
+    "g_equals_zero": "ontological death",
+    "principle": "Landauer's principle applied BEFORE execution"
+  },
+
+  "proof_of_work": {
+    "lines_of_verified_code": 7900,
+    "test_cases": 47,
+    "passing": 47,
+    "components": ["CDL", "Logic", "Forge", "Vault", "Ledger", "Bridge", "Robust", "GlassBox"]
+  },
+
+  "teachers_aide": {
+    "purpose": "NES-compliant lesson planning for HISD",
+    "features": [
+      "Lesson Planner - 5 NES phases, 50 min structure",
+      "TEKS Browser - 188 K-8 standards, machine-readable",
+      "Assessment Analyzer - MAD algorithm, adversarial resistant",
+      "Auto-Differentiation - 4 tiers based on f/g constraints"
+    ],
+    "differentiation_tiers": {
+      "tier_3_reteach": "<70% - Small group, manipulatives, prerequisites",
+      "tier_2_approaching": "70-79% - Guided practice, scaffolds, peer partners",
+      "tier_1_mastery": "80-89% - Standard instruction, independent practice",
+      "enrichment": "90%+ - Extension activities, leadership, peer tutoring"
+    },
+    "constraint_example": {
+      "class_size": "students/capacity ≤ 1.0",
+      "mastery_rate": "mastered/total ≥ 0.8",
+      "violation": "finfr - operation blocked"
+    }
+  },
+
+  "what_google_cannot_do": {
+    "deterministic_proof": true,
+    "immutable_audit_trail": true,
+    "pre_execution_verification": true,
+    "fixed_cost_verification": true,
+    "reversible_state_machine": true
+  },
+
+  "the_pitch": "Google builds snapshots of probabilistic state. Newton is a Geometric Closure where verification IS the computation.",
+
+  "contact": {
+    "author": "Jared Nashon Lewis",
+    "company": "Ada Computing Company",
+    "location": "Houston, Texas",
+    "email": "jn.lewis1@outlook.com",
+    "web": "parcri.net"
+  },
+
+  "closing": "1 == 1. The cloud is weather. We're building shelter."
+}
