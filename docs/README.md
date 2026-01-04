@@ -2,7 +2,9 @@
 
 **Verified Computation. Ask Newton. Go.**
 
-Welcome to the Newton Supercomputer documentation. Newton is a distributed verification system where the constraint IS the instruction and the verification IS the computation.
+Welcome to the Newton Supercomputer documentation. Newton is a **Cryptographically Verified Constraint Logic Programming (CLP) System**—a direct descendant of five decades of constraint programming research (Sketchpad 1963, Waltz 1975, ThingLab 1979, CLP 1987, Propagators 1980), synthesized into a modern Python implementation with cryptographic audit trails.
+
+The constraint IS the instruction. The verification IS the computation.
 
 **finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
 
@@ -18,6 +20,7 @@ Welcome to the Newton Supercomputer documentation. Newton is a distributed verif
 - [Configuration](configuration.md) - Environment variables and settings
 
 ### Core Concepts
+- **[CLP System Definition](NEWTON_CLP_SYSTEM_DEFINITION.md)** - Historical lineage and CS foundations (Sketchpad, Waltz, ThingLab, CLP)
 - [Whitepaper](../WHITEPAPER.md) - Architecture and philosophy
 - [Glass Box](../GLASS_BOX.md) - Policy enforcement, HITL, Merkle proofs
 - [Logic Engine](logic-engine.md) - Verified Turing complete computation

@@ -19,7 +19,7 @@ The market price of generated code is zero. The value is in the triggering, veri
 
 ## Abstract
 
-Newton is a supercomputer architecture where verification is the fundamental operation. Unlike traditional computing where correctness is checked after execution, Newton makes verification the execution itself. This architectural inversion enables verified computation at any scale with fixed-cost verification.
+Newton is a **Cryptographically Verified Constraint Logic Programming (CLP) System**—a supercomputer architecture where verification is the fundamental operation. Unlike traditional computing where correctness is checked after execution, Newton makes verification the execution itself. This architectural inversion enables verified computation at any scale with fixed-cost verification.
 
 ```
 El Capitan: 1.809 exaFLOPs, unverified.
@@ -27,6 +27,23 @@ Newton: Whatever speed you give it, verified.
 ```
 
 Newton isn't slower. Newton is the only one doing the actual job. El Capitan is just fast guessing.
+
+### Historical Context
+
+Newton stands in a lineage of constraint programming systems stretching back to 1963:
+
+| Year | System | Contribution | Newton Equivalent |
+|------|--------|--------------|-------------------|
+| 1963 | **Sketchpad** (Sutherland, MIT) | Relaxation solver for geometric constraints | Forge iterative verification |
+| 1975 | **Waltz Algorithm** (MIT AI Lab) | Arc consistency filtering, early pruning | CDL constraint evaluation |
+| 1979 | **ThingLab** (Borning, Xerox PARC) | Multi-way dataflow, bidirectional constraints | TinyTalk `@law`/`@forge` |
+| 1980 | **Propagator Networks** (Steele & Sussman, MIT) | Autonomous cells with local propagation | Field cells + Law watchers |
+| 1987 | **CLP(X) Scheme** (Jaffar & Lassez) | Constraint Logic Programming formalization | Blueprint/Law/Forge DSL |
+| 2025 | **Newton** | Cryptographic verification + Merkle audit trail | Ledger + MerkleAnchor |
+
+The novel contribution of Newton is the **cryptographic audit layer**: while classical constraint systems solved problems and forgot, Newton maintains an immutable, hash-chained, Merkle-proven record of every constraint check. This transforms a "constraint solver" into a "verification notary."
+
+See **[docs/NEWTON_CLP_SYSTEM_DEFINITION.md](docs/NEWTON_CLP_SYSTEM_DEFINITION.md)** for the complete technical definition with academic citations.
 
 ---
 

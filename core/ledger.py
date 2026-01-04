@@ -9,6 +9,31 @@ Every verification leaves a trace. Every trace is permanent.
 This is the audit trail that makes Newton legally defensible.
 
 ═══════════════════════════════════════════════════════════════════════════════
+
+NEWTON'S NOVEL CONTRIBUTION:
+
+The Ledger is what makes Newton different from its historical ancestors.
+Sutherland's Sketchpad (1963), Borning's ThingLab (1979), and Sussman's
+Propagator Networks (1980) were all brilliant constraint solvers—but they
+had no memory. They solved problems and forgot.
+
+Newton adds CRYPTOGRAPHIC VERIFICATION to constraint satisfaction:
+- Hash-Chained Entries: Each entry contains prev_hash, creating tamper-evident history
+- Merkle Tree Proofs: O(log n) membership verification for any constraint check
+- Verification Certificates: Exportable proofs for external auditors
+
+This transforms a "constraint solver" into a "verification notary"—you can
+prove mathematically what rules were enforced five years ago.
+
+The Ledger enables:
+- Regulatory Compliance (Finance, Healthcare, Legal)
+- Audit Trail for AI Safety decisions
+- Cryptographic proof of constraint enforcement
+
+No other constraint programming system has this capability.
+
+See: docs/NEWTON_CLP_SYSTEM_DEFINITION.md for full historical context.
+═══════════════════════════════════════════════════════════════════════════════
 """
 
 from dataclasses import dataclass, field

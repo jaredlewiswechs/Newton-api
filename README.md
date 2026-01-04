@@ -190,7 +190,8 @@ See [Reversible Shell](#reversible-shell) for full documentation.
 
 ## What is Newton?
 
-Newton is a **supercomputer** where:
+Newton is a **Cryptographically Verified Constraint Logic Programming (CLP) System**—a direct descendant of five decades of constraint programming research, synthesized into a modern Python implementation with cryptographic audit trails.
+
 - The **constraint** IS the instruction
 - The **verification** IS the computation
 - The **network** IS the processor
@@ -205,6 +206,29 @@ Newton: Whatever speed you give it, verified.
 
 Newton isn't slower. Newton is the only one doing the actual job.
 El Capitan is just fast guessing.
+
+---
+
+## Historical Lineage
+
+Newton stands on the shoulders of giants. This system independently reinvents and synthesizes techniques from constraint programming's foundational research:
+
+| Newton Component | Historical Antecedent | Origin |
+|-----------------|----------------------|--------|
+| **Forge** (iterative relaxation) | Sutherland's Relaxation Solver | Sketchpad, MIT 1963 |
+| **CDL Operators** (pruning) | Waltz Arc Consistency | MIT AI Lab 1975 |
+| **TinyTalk** (bidirectional dataflow) | ThingLab Multi-way Constraints | Xerox PARC 1979 |
+| **Blueprint/Law/Forge** | CLP(X) Scheme | Jaffar & Lassez 1987 |
+| **Field Cells + Laws** | Propagator Networks | Steele & Sussman, MIT 1980 |
+| **Ledger + Merkle Proofs** | *Newton's Novel Contribution* | 2025 |
+
+**The "Engine Shake" is Gauss-Seidel Relaxation.** When the Forge "loops until it works," it's finding a fixed-point—the same algorithm Sutherland used in Sketchpad (1963).
+
+**The 2.31ms speed comes from Arc Consistency.** Like Waltz's filtering algorithm (1975), Newton prunes impossible states *before* attempting computation. Invalid timelines are deleted, not calculated.
+
+**The Ledger is the Modern Twist.** Sutherland, Borning, and Sussman built brilliant constraint solvers, but they had no memory. Newton adds a cryptographic audit trail—turning a "calculator" into a "notary public" that can prove mathematically what rules were followed five years ago.
+
+See **[docs/NEWTON_CLP_SYSTEM_DEFINITION.md](docs/NEWTON_CLP_SYSTEM_DEFINITION.md)** for the complete technical definition with academic citations.
 
 ---
 

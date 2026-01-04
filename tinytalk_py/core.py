@@ -2,6 +2,28 @@
 ═══════════════════════════════════════════════════════════════════════════════
  tinyTalk Core - The Lexicon and Scaffolds
 ═══════════════════════════════════════════════════════════════════════════════
+
+HISTORICAL LINEAGE:
+
+TinyTalk is a constraint-first language inspired by Smalltalk (Kay, 1972) and
+ThingLab (Borning, Xerox PARC, 1979). Like ThingLab, TinyTalk implements
+multi-way dataflow constraints where relationships are bidirectional.
+
+The Blueprint/Law/Forge architecture follows the CLP(X) paradigm (Jaffar &
+Lassez, 1987), where:
+- Blueprint = Class with constraint-governed state
+- Law = Declarative constraint (what must be true)
+- Forge = Guarded mutation (what can change)
+
+The @forge decorator implements atomic state transitions with rollback—the same
+save/execute/verify/commit cycle that Sussman's Propagator Networks (1980) use.
+
+Key Insight from Alan Kay:
+  "Smalltalk is not about objects, it's about messaging."
+  TinyTalk is not about objects, it's about constraints.
+
+See: docs/NEWTON_CLP_SYSTEM_DEFINITION.md for full historical context.
+═══════════════════════════════════════════════════════════════════════════════
 """
 
 from enum import Enum

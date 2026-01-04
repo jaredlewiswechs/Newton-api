@@ -9,6 +9,27 @@ Every verification is a computation.
 The constraint check IS the work.
 
 ═══════════════════════════════════════════════════════════════════════════════
+
+HISTORICAL LINEAGE:
+
+CDL implements Arc Consistency algorithms descended from Waltz's filtering
+algorithm (1975). Waltz used constraint propagation to label 3D line drawings
+by pruning impossible interpretations before exhaustive search.
+
+Key CS Concepts Implemented:
+- Arc Consistency (Waltz, Mackworth): Binary constraint checks between variables
+- Constraint Satisfaction Problems (CSP): Domain + operators + evaluation
+- CLP(X) Scheme (Jaffar & Lassez, 1987): Domain-specialized constraint languages
+
+CDL's seven domains (Financial, Temporal, Health, etc.) follow the CLP(X)
+pattern of parameterizing constraint logic by domain-specific solvers.
+
+The RATIO operators (f/g analysis) extend classical CSP with dimensional
+analysis—constraints expressed as ratios between what you attempt (f) and
+what reality allows (g).
+
+See: docs/NEWTON_CLP_SYSTEM_DEFINITION.md for full historical context.
+═══════════════════════════════════════════════════════════════════════════════
 """
 
 from dataclasses import dataclass, field
