@@ -6,9 +6,36 @@
 
 Newton Teacher's Aide is a Newton Supercomputer-powered web application that transforms how teachers plan, assess, and collaborate. Built with tinyTalk constraint-based verification, it treats TEKS standards and NES requirements as machine-readable objects for guaranteed compliance.
 
-**Version**: 1.2.0 | **Date**: January 3, 2026 | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
+**Version**: 1.3.0 | **Date**: January 4, 2026 | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 **"1 == 1. The constraint IS the instruction. finfr = f/g."**
+
+---
+
+## NEW: Newton Crystallizations (January 4, 2026)
+
+The following crystallization documents have been added:
+
+| Document | Description |
+|----------|-------------|
+| **[Newton on Acid](../docs/NEWTON_ON_ACID.md)** | The complete Newton philosophy: constraints, verification, and the 4-hour meeting countdown |
+| **[Steve Jobs Crystallization](../docs/NEWTON_STEVE_JOBS_CRYSTALLIZATION.md)** | Newton as Steve Jobs analyzes the AI bubble and the beach protocol |
+| **[Hidden Road Market Analysis](../docs/HIDDEN_ROAD_MARKET_ANALYSIS.md)** | For the MIT cousin at Hidden Road - the $602B AI bubble and Newton's answer |
+| **[Generational Wealth](../docs/GENERATIONAL_WEALTH_CRYSTALLIZATION.md)** | The constraint-first path to permanent value creation |
+
+### The AI Bubble Context (2025-2026)
+
+Newton was crystallized at a specific moment in history:
+
+```
+2025 AI Investment:     $202.3 billion (+75% YoY)
+2026 Hyperscaler CapEx: $602 billion (+36% YoY)
+New Tech Debt (2025):   $121 billion (4x historical average)
+Projected Borrowing:    $1.5 trillion (Morgan Stanley/JPMorgan)
+
+The industry is spending $602 billion on probabilistic AI.
+Newton provides deterministic verification for compute cycles.
+```
 
 ---
 
