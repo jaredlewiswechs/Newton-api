@@ -1,17 +1,30 @@
-# Newton Public Landing - Cloudflare Pages Redirects
-# Root serves the main landing page (index.html)
+# Newton Phone - Cloudflare Pages Redirects
+# Root serves the home screen (index.html)
 
-# App routes - Newton Supercomputer Interface
-/app        /frontend/index.html    200
-/app/*      /frontend/index.html    200
+# Newton Supercomputer (main app)
+/app            /frontend/index.html        200
+/app/*          /frontend/index.html        200
+/newton         /frontend/index.html        200
+/newton/*       /frontend/index.html        200
 
-# Teachers Aide routes
-/teachers   /teachers-aide/index.html   200
-/teachers/* /teachers-aide/index.html   200
+# Teacher's Aide
+/teachers       /teachers-aide/index.html   200
+/teachers/*     /teachers-aide/index.html   200
 
-# Interface Builder routes
-/builder    /interface-builder/index.html   200
-/builder/*  /interface-builder/index.html   200
+# Interface Builder
+/builder        /interface-builder/index.html   200
+/builder/*      /interface-builder/index.html   200
+
+# TinyTalk (points to tinytalk directory if exists, or main app)
+/tinytalk       /tinytalk/index.html        200
+/tinytalk/*     /tinytalk/index.html        200
+
+# Docs
+/docs           /docs/README.md             200
+
+# Ledger
+/ledger         /ledger/index.html          200
+/ledger/*       /ledger/index.html          200
 
 # All other routes serve their files directly
-/*          /:splat                 200
+/*              /:splat                     200
