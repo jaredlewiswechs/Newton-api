@@ -6,7 +6,8 @@ services:
   - type: web
     name: newton-api
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    pythonVersion: "3.11.4"
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt --only-binary=pydantic-core
     startCommand: gunicorn newton_supercomputer:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 30 --keep-alive 5
     envVars:
       - key: PYTHONPATH
