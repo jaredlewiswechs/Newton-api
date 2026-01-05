@@ -4,6 +4,9 @@
 fastapi==0.109.0
 uvicorn==0.27.0
 gunicorn==21.2.0
+
+# Pydantic with pre-built core (MUST install pydantic-core FIRST to avoid Rust compile)
+pydantic-core==2.14.6
 pydantic==2.5.3
 
 # Cryptography (for Vault encryption)
