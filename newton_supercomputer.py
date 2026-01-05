@@ -587,10 +587,55 @@ async def rate_limit_middleware(request: Request, call_next):
     response.headers["X-RateLimit-Limit"] = "100"
     return response
 
-# Mount static files for frontend
-FRONTEND_DIR = Path(__file__).parent / "frontend"
+# Mount static files for all frontends
+ROOT_DIR = Path(__file__).parent
+FRONTEND_DIR = ROOT_DIR / "frontend"
+TEACHERS_DIR = ROOT_DIR / "teachers-aide"
+BUILDER_DIR = ROOT_DIR / "interface-builder"
+
+# Mount static directories
 if FRONTEND_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+    app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+if TEACHERS_DIR.exists():
+    app.mount("/teachers-aide", StaticFiles(directory=str(TEACHERS_DIR), html=True), name="teachers-aide")
+if BUILDER_DIR.exists():
+    app.mount("/interface-builder", StaticFiles(directory=str(BUILDER_DIR), html=True), name="interface-builder")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEWTON PHONE - Static Frontend Routes
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_home():
+    """Serve the Newton Phone home screen"""
+    index_file = ROOT_DIR / "index.html"
+    if index_file.exists():
+        return HTMLResponse(content=index_file.read_text(), status_code=200)
+    return HTMLResponse(content="<h1>Newton</h1><p>Home screen not found</p>", status_code=404)
+
+@app.get("/app", response_class=HTMLResponse)
+async def serve_newton_app():
+    """Serve the Newton Supercomputer app"""
+    index_file = FRONTEND_DIR / "index.html"
+    if index_file.exists():
+        return HTMLResponse(content=index_file.read_text(), status_code=200)
+    return HTMLResponse(content="<h1>Newton App</h1><p>Not found</p>", status_code=404)
+
+@app.get("/teachers", response_class=HTMLResponse)
+async def serve_teachers_aide():
+    """Serve Teacher's Aide app"""
+    index_file = TEACHERS_DIR / "index.html"
+    if index_file.exists():
+        return HTMLResponse(content=index_file.read_text(), status_code=200)
+    return HTMLResponse(content="<h1>Teacher's Aide</h1><p>Not found</p>", status_code=404)
+
+@app.get("/builder", response_class=HTMLResponse)
+async def serve_builder():
+    """Serve Interface Builder app"""
+    index_file = BUILDER_DIR / "index.html"
+    if index_file.exists():
+        return HTMLResponse(content=index_file.read_text(), status_code=200)
+    return HTMLResponse(content="<h1>Interface Builder</h1><p>Not found</p>", status_code=404)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
