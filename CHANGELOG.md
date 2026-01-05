@@ -1,10 +1,108 @@
 # Changelog
 
-**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 5, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 All notable changes to Newton Supercomputer are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [1.2.0] - 2026-01-05
+
+### Added
+
+#### Newton Setup Scripts - One-Command Installation
+- **`setup_newton.sh`** - Comprehensive setup script for local installation
+  - Creates Python virtual environment
+  - Installs all dependencies from requirements.txt
+  - Runs verification tests (TLM + core tests)
+  - Tests server startup and endpoint health
+  - Provides quick reference commands on completion
+
+- **`test_full_system.py`** - Full system integration test
+  - Tests all 10 major Newton subsystems
+  - Health check, Forge verification, CDL constraints
+  - Logic engine, Ledger, Cartridges (auto, rosetta, visual)
+  - Robust statistics, Ratio constraints (f/g)
+  - Colorized output with timing information
+  - Exit code indicates pass/fail for CI/CD
+
+#### Newton TLM - Topological Language Machine (#158)
+New symbolic computation kernel with ACID compliance:
+
+- **Phase System** (0→9→0)
+  - Phase 0: IDLE - Ready, no mutations
+  - Phase 1: INGEST - Accept input
+  - Phase 2: PARSE - Structure input
+  - Phase 3: CRYSTALLIZE - Form patterns
+  - Phase 4: DIFFUSE - Spread activation
+  - Phase 5: CONVERGE - Stabilize
+  - Phase 6: VERIFY - Check constraints (1==1)
+  - Phase 7: COMMIT - Apply changes
+  - Phase 8: REFLECT - Learn from results
+  - Phase 9: Return to IDLE
+
+- **ACID Compliance**
+  - Atomicity: Transactions complete fully or rollback
+  - Consistency: Deterministic execution
+  - Isolation: Independent instances
+  - Durability: Export/replay with ledger persistence
+
+- **Newton Compliance (N1-N7)**
+  - N1: Determinism - Same input → same output
+  - N2: Boundary enforcement - Phase limits respected
+  - N3: Diffability - Hash-chained ledger tracking
+  - N4: Reversibility - Snapshot/restore capability
+  - N5: Phase loop - 0→9→0 cycle guaranteed
+  - N6: 1==1 invariant - Goal registry verification
+  - N7: Ledger integrity - Cryptographic verification
+
+- **23 passing tests** proving all invariants
+
+#### Newton Geometry - Topological Constraint Framework (#163)
+Mathematical foundation for constraint systems:
+
+- **TopologicalSpace** - Base manifold for constraints
+- **ConstraintManifold** - Geometric constraint representation
+- **MorphismFunctor** - Structure-preserving transformations
+- **GeometricVerifier** - Topological invariant verification
+- **newton_geometry/tests/** - Comprehensive test coverage
+
+#### Newton TextGen - Constraint-Preserving Text Projection (#159)
+Text generation that cannot hallucinate:
+
+- **Core Guarantee**: `Expand . Reduce = Identity`
+- **Styles**: formal, technical, educational, minimal
+- **TextConstraint** class for structured constraints
+- If text cannot reduce to source constraint → REJECTED
+- Enables law-aware documentation without semantic drift
+
+### Fixed
+
+- **Test Import Path** - Fixed `tests/test_ratio_constraints.py` import
+  - Changed `from core import` to `from tinytalk_py.core import`
+  - Resolves module path conflict with core/ package
+
+- **Mobile Responsive CSS** (#162)
+  - Fixed Teacher's Aide dark mode
+  - Fixed Interface Builder mobile layout
+  - Improved touch targets and spacing
+
+### Changed
+
+- **Repository Cleanup** (#161)
+  - Consolidated codebase structure
+  - Improved module organization
+  - Updated import paths for consistency
+
+### Test Results
+
+| Test Suite | Results | Status |
+|------------|---------|--------|
+| Newton TLM (ACID) | 23/23 | ✓ 100% |
+| Main Test Suite | 558/586 | ✓ 95% |
+| Full System Test | 10/10 | ✓ 100% |
 
 ---
 

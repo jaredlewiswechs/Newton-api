@@ -1,6 +1,6 @@
 # Getting Started with Newton
 
-**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 5, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ```
                     ╭──────────────────────────────────────╮
@@ -16,6 +16,24 @@
 
 ## Installation
 
+### Option 1: One-Command Setup (Recommended)
+
+```bash
+# Clone and run the setup script
+git clone https://github.com/jaredlewiswechs/Newton-api.git
+cd Newton-api
+chmod +x setup_newton.sh
+./setup_newton.sh
+```
+
+This will:
+- Create a virtual environment
+- Install all dependencies
+- Run verification tests
+- Confirm the server works
+
+### Option 2: Manual Install
+
 ```bash
 # The easy way (like Homebrew!)
 pip install -e .
@@ -25,6 +43,16 @@ pip install -e ".[server]"
 
 # Everything
 pip install -e ".[all]"
+```
+
+### Verify Installation
+
+```bash
+# Run the full system test (requires server running)
+python newton_supercomputer.py &
+python test_full_system.py
+
+# Expected: 10/10 tests passed
 ```
 
 **That's it.** You're ready.
@@ -405,6 +433,10 @@ class GameEntity(Blueprint):
 
 ```
 Newton-api/
+├── setup_newton.sh       # One-command setup script
+├── test_full_system.py   # Full system integration test
+├── newton_supercomputer.py  # Main API server
+│
 ├── newton_sdk/           # The installable package
 │   ├── __init__.py      # Main exports
 │   ├── client.py        # Newton API client
@@ -415,12 +447,16 @@ Newton-api/
 │   ├── core.py          # Blueprint, Law, Forge, when, finfr
 │   ├── matter.py        # Typed values (Money, Temperature, etc.)
 │   ├── engine.py        # KineticEngine for motion/animation
-│   └── education.py     # Education module (TEKS, NES, PLC)
+│   ├── education.py     # Education module (TEKS, NES, PLC)
+│   └── jester.py        # Code constraint translator
 │
-├── teachers-aide/        # Teacher's Aide PWA
-│   ├── index.html       # Web application
-│   ├── app.js           # Frontend logic
-│   └── styles.css       # Newton theme
+├── newton_tlm/           # Topological Language Machine (NEW)
+│   ├── newton_tlm.py    # ACID-compliant symbolic kernel
+│   └── tests/           # 23 passing ACID compliance tests
+│
+├── newton_geometry/      # Topological Constraint Framework (NEW)
+│   ├── geometry.py      # Constraint manifolds
+│   └── tests/           # Geometric verification tests
 │
 ├── core/                 # Newton Supercomputer internals
 │   ├── cdl.py           # Constraint Definition Language
@@ -428,17 +464,33 @@ Newton-api/
 │   ├── forge.py         # Content verification
 │   ├── vault.py         # Encrypted storage
 │   ├── ledger.py        # Immutable audit trail
-│   └── ...
+│   ├── textgen.py       # Constraint-preserving text generation
+│   └── cartridges.py    # Media specification cartridges
 │
-├── tests/                # Test suite (47+ tests)
+├── teachers-aide/        # Teacher's Aide PWA
+│   ├── index.html       # Web application
+│   ├── app.js           # Frontend logic
+│   └── styles.css       # Newton theme
+│
+├── tests/                # Test suite (580+ tests)
 └── docs/                 # Documentation
 ```
 
 ### Running Tests
 
 ```bash
-# All tests
+# Full system test (visual, requires running server)
+python newton_supercomputer.py &
+python test_full_system.py
+
+# All unit tests
 pytest tests/ -v
+
+# Newton TLM tests (ACID compliance)
+pytest newton_tlm/tests/ -v
+
+# Newton Geometry tests
+pytest newton_geometry/tests/ -v
 
 # Specific module
 pytest tests/test_integration.py -v
@@ -446,6 +498,14 @@ pytest tests/test_integration.py -v
 # With coverage
 pytest tests/ --cov=core --cov-report=html
 ```
+
+### Test Results (January 2026)
+
+| Test Suite | Results | What It Proves |
+|------------|---------|----------------|
+| TLM Tests | 23/23 | ACID compliance, determinism |
+| Main Suite | 558/586 | Core functionality |
+| Full System | 10/10 | All components connected |
 
 ### Development Workflow
 

@@ -1,6 +1,6 @@
 # Developer Guide
 
-**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 5, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ```
     ╭──────────────────────────────────────────────────────────╮
@@ -33,18 +33,27 @@
 ## Install
 
 ```bash
+# One-command setup (recommended)
 git clone https://github.com/jaredlewiswechs/Newton-api.git
 cd Newton-api
+./setup_newton.sh
+
+# Or manual install
 pip install -e .
 ```
 
 ## Verify
 
 ```bash
+# Quick demo
 newton demo
+
+# Full system test (10/10 should pass)
+python newton_supercomputer.py &
+python test_full_system.py
 ```
 
-If you see the bank account demo, you're done. ✓
+If you see the bank account demo or 10/10 tests passing, you're done. ✓
 
 ## Use It
 
@@ -335,8 +344,18 @@ pytest tests/ -v
 ## Running Tests
 
 ```bash
-# All tests
-pytest tests/ -v
+# Full system test (visual, recommended)
+python newton_supercomputer.py &
+python test_full_system.py  # 10/10 should pass
+
+# All unit tests
+pytest tests/ -v  # 558/586 passing (95%)
+
+# Newton TLM tests (ACID compliance)
+pytest newton_tlm/tests/ -v  # 23/23 passing (100%)
+
+# Newton Geometry tests
+pytest newton_geometry/tests/ -v
 
 # Specific file
 pytest tests/test_integration.py -v
@@ -404,9 +423,18 @@ git push -u origin feature/my-feature
 ┌─────────────────────────────────────────────────────────────┐
 │                    tinytalk_py (Language)                   │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │    core     │  │   matter    │  │       engine        │ │
-│  │(Blueprint)  │  │  (Types)    │  │    (Kinetics)       │ │
+│  │    core     │  │   matter    │  │   jester/engine     │ │
+│  │(Blueprint)  │  │  (Types)    │  │  (Code/Kinetics)    │ │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                            │
+┌─────────────────────────────────────────────────────────────┐
+│                    Advanced Modules (NEW)                   │
+│  ┌──────────────────┐  ┌──────────────────────────────────┐│
+│  │   newton_tlm     │  │      newton_geometry             ││
+│  │(ACID Symbolic)   │  │  (Topological Constraints)       ││
+│  │  23/23 tests     │  │                                  ││
+│  └──────────────────┘  └──────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
                             │
 ┌─────────────────────────────────────────────────────────────┐
@@ -415,7 +443,7 @@ git push -u origin feature/my-feature
 │  │  CDL   │ │ Logic  │ │ Forge  │ │ Vault  │ │  Ledger  │  │
 │  └────────┘ └────────┘ └────────┘ └────────┘ └──────────┘  │
 │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────────────────┐   │
-│  │ Bridge │ │ Robust │ │Ground  │ │     Cartridges     │   │
+│  │ Bridge │ │ Robust │ │TextGen │ │     Cartridges     │   │
 │  └────────┘ └────────┘ └────────┘ └────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -430,6 +458,10 @@ git push -u origin feature/my-feature
 | Vault | `core/vault.py` | Encrypted storage |
 | Ledger | `core/ledger.py` | Immutable audit trail |
 | Bridge | `core/bridge.py` | Distributed consensus |
+| TextGen | `core/textgen.py` | Constraint-preserving text |
+| Newton TLM | `newton_tlm/` | ACID symbolic kernel |
+| Newton Geometry | `newton_geometry/` | Topological framework |
+| Jester | `tinytalk_py/jester.py` | Code constraint translator |
 
 ## Release Checklist
 
