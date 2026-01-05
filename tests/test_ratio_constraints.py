@@ -36,7 +36,7 @@ from cdl import (
 )
 
 # Import from tinytalk_py core directly
-from core import (
+from tinytalk_py.core import (
     Blueprint,
     Field as field_class,
     law,
