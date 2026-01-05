@@ -1,8 +1,8 @@
 # render.yaml
-# Newton Supercomputer - Render Deployment Configuration
+# Newton Supercomputer - Single Service Deployment
+# The API serves BOTH the backend AND the static frontend
 
 services:
-  # Newton API (Python backend)
   - type: web
     name: newton-api
     runtime: python
@@ -20,9 +20,11 @@ services:
     healthCheckPath: /health
     autoDeploy: true
 
-# NOTE: Newton Phone (static frontend) should be created manually in Render:
-# 1. New > Static Site
-# 2. Connect Newton-api repo
-# 3. Build Command: (leave empty)
-# 4. Publish Directory: . (just a dot)
-# 5. Add rewrite rules in Render dashboard for /app, /teachers, /builder
+# Routes served by newton-api:
+#   /           → Newton Phone (iPhone home screen)
+#   /app        → Newton Supercomputer
+#   /teachers   → Teacher's Aide
+#   /builder    → Interface Builder
+#   /ask        → Newton API
+#   /docs       → API Documentation
+#   /health     → Health check
