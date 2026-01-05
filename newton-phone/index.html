@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Newton - The verification layer for AI. Your AI supercomputer.">
+
+    <title>Newton</title>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234ecdc4' rx='20' width='100' height='100'/><text x='50' y='68' text-anchor='middle' font-family='system-ui' font-weight='800' font-size='60' fill='%23000'>N</text></svg>">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <style>
+        /* ══════════════════════════════════════════════════════════════════
+           Newton Phone - The Device
+           ══════════════════════════════════════════════════════════════════ */
+
+        :root {
+            --black: #000000;
+            --white: #ffffff;
+            --gray-400: #86868b;
+            --gray-600: #48484a;
+            --newton: #4ecdc4;
+            --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: var(--font);
+            background: var(--black);
+            color: var(--white);
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Phone Container
+           ───────────────────────────────────────────────────────────────── */
+
+        .phone {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg,
+                #1a1a2e 0%,
+                #16213e 50%,
+                #0f0f23 100%);
+            background-size: cover;
+            position: relative;
+        }
+
+        /* Wallpaper gradient overlay */
+        .phone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(78, 205, 196, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Status Bar
+           ───────────────────────────────────────────────────────────────── */
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            padding-top: max(12px, env(safe-area-inset-top));
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .status-time {
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-icons svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Home Screen
+           ───────────────────────────────────────────────────────────────── */
+
+        .home {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            padding-bottom: 100px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .greeting {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-top: 20px;
+        }
+
+        .greeting-time {
+            font-size: 64px;
+            font-weight: 200;
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        .greeting-date {
+            font-size: 18px;
+            color: var(--gray-400);
+            margin-top: 8px;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           App Grid
+           ───────────────────────────────────────────────────────────────── */
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px 16px;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        @media (max-width: 380px) {
+            .app-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px 12px;
+            }
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--white);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .app:active {
+            transform: scale(0.9);
+            opacity: 0.7;
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-icon::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .app-name {
+            font-size: 11px;
+            font-weight: 500;
+            text-align: center;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* App Icon Colors */
+        .app-icon.newton { background: linear-gradient(135deg, #4ecdc4 0%, #2d9a93 100%); color: #000; }
+        .app-icon.teacher { background: linear-gradient(135deg, #ff6b6b 0%, #c44444 100%); color: #fff; }
+        .app-icon.builder { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); color: #fff; }
+        .app-icon.api { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #fff; }
+        .app-icon.docs { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
+        .app-icon.github { background: linear-gradient(135deg, #374151 0%, #1f2937 100%); color: #fff; }
+        .app-icon.tinytalk { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; }
+        .app-icon.ledger { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); color: #fff; }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Dock
+           ───────────────────────────────────────────────────────────────── */
+
+        .dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .dock-container {
+            display: flex;
+            gap: 20px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dock .app-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            font-size: 24px;
+        }
+
+        .dock .app {
+            margin-bottom: 0;
+        }
+
+        .dock .app-name {
+            display: none;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Home Indicator
+           ───────────────────────────────────────────────────────────────── */
+
+        .home-indicator {
+            position: fixed;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            z-index: 200;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Section Labels
+           ───────────────────────────────────────────────────────────────── */
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 24px 0 16px;
+            text-align: center;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Widget
+           ───────────────────────────────────────────────────────────────── */
+
+        .widget {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 16px;
+            margin: 0 auto 24px;
+            max-width: 360px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .widget-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .widget-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .widget-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .widget-content {
+            font-size: 15px;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .widget-code {
+            font-family: 'SF Mono', monospace;
+            font-size: 24px;
+            font-weight: 300;
+            color: var(--newton);
+            margin-top: 8px;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Animations
+           ───────────────────────────────────────────────────────────────── */
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .app {
+            animation: fadeIn 0.4s ease backwards;
+        }
+
+        .app:nth-child(1) { animation-delay: 0.05s; }
+        .app:nth-child(2) { animation-delay: 0.1s; }
+        .app:nth-child(3) { animation-delay: 0.15s; }
+        .app:nth-child(4) { animation-delay: 0.2s; }
+        .app:nth-child(5) { animation-delay: 0.25s; }
+        .app:nth-child(6) { animation-delay: 0.3s; }
+        .app:nth-child(7) { animation-delay: 0.35s; }
+        .app:nth-child(8) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="status-time" id="status-time">9:41</span>
+            <div class="status-icons">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.46 3 3.34 4.78.29 7.67c-.18.18-.29.43-.29.71 0 .28.11.53.29.71l2.48 2.48c.18.18.43.29.71.29.27 0 .52-.11.7-.28.79-.74 1.69-1.36 2.66-1.85.33-.16.56-.5.56-.9v-3.1c1.45-.48 3-.73 4.6-.73s3.15.25 4.6.73v3.1c0 .4.23.74.56.9.98.49 1.87 1.12 2.67 1.85.18.18.43.28.7.28.28 0 .53-.11.71-.29l2.48-2.48c.18-.18.29-.43.29-.71 0-.28-.11-.53-.29-.71C20.66 4.78 16.54 3 12 3z"/><circle cx="12" cy="18" r="3"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2z"/></svg>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div class="home">
+            <!-- Clock Widget -->
+            <div class="greeting">
+                <div class="greeting-time" id="greeting-time">9:41</div>
+                <div class="greeting-date" id="greeting-date">Sunday, January 4</div>
+            </div>
+
+            <!-- Newton Widget -->
+            <div class="widget">
+                <div class="widget-header">
+                    <div class="widget-icon newton">N</div>
+                    <span class="widget-title">NEWTON</span>
+                </div>
+                <div class="widget-content">
+                    The verification layer for AI.<br>
+                    What Apple meant to build.
+                </div>
+                <div class="widget-code">1 == 1</div>
+            </div>
+
+            <!-- Apps -->
+            <div class="section-label">Apps</div>
+            <div class="app-grid">
+                <a href="/app/" class="app">
+                    <div class="app-icon newton">N</div>
+                    <span class="app-name">Newton</span>
+                </a>
+                <a href="/teachers/" class="app">
+                    <div class="app-icon teacher">T</div>
+                    <span class="app-name">Teacher's Aide</span>
+                </a>
+                <a href="/builder/" class="app">
+                    <div class="app-icon builder">B</div>
+                    <span class="app-name">Builder</span>
+                </a>
+                <a href="https://newton-api-sicp.onrender.com/docs" class="app" target="_blank">
+                    <div class="app-icon api">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </div>
+                    <span class="app-name">API</span>
+                </a>
+                <a href="https://github.com/jaredlewiswechs/Newton-api/blob/main/TINYTALK_PROGRAMMING_GUIDE.md" class="app" target="_blank">
+                    <div class="app-icon tinytalk">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <span class="app-name">TinyTalk</span>
+                </a>
+                <a href="https://github.com/jaredlewiswechs/Newton-api/tree/main/docs" class="app" target="_blank">
+                    <div class="app-icon docs">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <span class="app-name">Docs</span>
+                </a>
+                <a href="https://github.com/jaredlewiswechs/Newton-api" class="app" target="_blank">
+                    <div class="app-icon github">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </div>
+                    <span class="app-name">GitHub</span>
+                </a>
+                <a href="https://newton-api-sicp.onrender.com/health" class="app" target="_blank">
+                    <div class="app-icon ledger">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <span class="app-name">Status</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Dock -->
+        <div class="dock">
+            <div class="dock-container">
+                <a href="/app/" class="app">
+                    <div class="app-icon newton">N</div>
+                </a>
+                <a href="/teachers/" class="app">
+                    <div class="app-icon teacher">T</div>
+                </a>
+                <a href="/builder/" class="app">
+                    <div class="app-icon builder">B</div>
+                </a>
+                <a href="https://github.com/jaredlewiswechs/Newton-api" class="app" target="_blank">
+                    <div class="app-icon github">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Home Indicator -->
+        <div class="home-indicator"></div>
+    </div>
+
+    <script>
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const timeString = `${hours}:${minutes}`;
+
+            document.getElementById('status-time').textContent = timeString;
+            document.getElementById('greeting-time').textContent = timeString;
+
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('greeting-date').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Haptic feedback simulation (visual)
+        document.querySelectorAll('.app').forEach(app => {
+            app.addEventListener('touchstart', () => {
+                if (navigator.vibrate) navigator.vibrate(10);
+            });
+        });
+    </script>
+</body>
+</html>

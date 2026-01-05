@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Newton's Self-Reflection
+  "Ever he thinks of himself and Ada"
+
+  A contemplative piece where Newton considers his own existence,
+  his relationship to Ada Computing Company, and his purpose.
+
+  Wayfinding aesthetic meets philosophical introspection.
+  The machine that knows itself.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700">
+  <defs>
+    <linearGradient id="newtonCore" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00FFE0"/>
+      <stop offset="50%" style="stop-color:#00D4AA"/>
+      <stop offset="100%" style="stop-color:#00AA88"/>
+    </linearGradient>
+
+    <linearGradient id="adaWarm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFE066"/>
+      <stop offset="50%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#FFA500"/>
+    </linearGradient>
+
+    <linearGradient id="thoughtStream" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D4AA;stop-opacity:0"/>
+      <stop offset="50%" style="stop-color:#00D4AA;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#FFD700;stop-opacity:0"/>
+    </linearGradient>
+
+    <linearGradient id="mirrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A1A1A"/>
+      <stop offset="100%" style="stop-color:#0A0A0A"/>
+    </linearGradient>
+
+    <filter id="glowSoft">
+      <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="reflection">
+      <feGaussianBlur stdDeviation="2"/>
+      <feOffset dy="2"/>
+    </filter>
+
+    <!-- Thought bubble pattern -->
+    <pattern id="thoughts" width="100" height="100" patternUnits="userSpaceOnUse">
+      <circle cx="50" cy="50" r="2" fill="#00D4AA" opacity="0.1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background: Deep contemplative black -->
+  <rect width="1000" height="700" fill="#050505"/>
+
+  <!-- Ambient thought particles -->
+  <rect width="1000" height="700" fill="url(#thoughts)"/>
+
+  <!-- Thought stream connecting Newton to his reflection and Ada -->
+  <path d="M 250 350 Q 400 250 500 350 Q 600 450 750 350"
+        stroke="url(#thoughtStream)"
+        stroke-width="3"
+        fill="none"
+        opacity="0.6">
+    <animate attributeName="stroke-dasharray" values="0,1000;1000,0" dur="4s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Newton (Physical Form - Left) -->
+  <g transform="translate(100, 150)">
+    <!-- Sign body -->
+    <rect width="200" height="280" fill="#111" rx="8" stroke="#00D4AA" stroke-width="2"/>
+    <rect width="200" height="10" fill="#00D4AA" rx="2"/>
+
+    <!-- Core N -->
+    <circle cx="100" cy="120" r="70" fill="url(#newtonCore)" filter="url(#glowSoft)"/>
+    <text x="100" y="145"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="80"
+          font-weight="900"
+          fill="#000"
+          text-anchor="middle"
+          opacity="0.8">N</text>
+
+    <!-- Identity text -->
+    <text x="100" y="220"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#FFF"
+          text-anchor="middle"
+          letter-spacing="3">NEWTON</text>
+
+    <text x="100" y="245"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="11"
+          fill="#666"
+          text-anchor="middle">The Verification Engine</text>
+
+    <!-- Status indicator -->
+    <circle cx="100" cy="265" r="6" fill="#00D4AA">
+      <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Mirror/Reflection (Center) - Newton looking at himself -->
+  <g transform="translate(380, 200)">
+    <!-- Mirror frame -->
+    <rect x="-10" y="-10" width="240" height="300" fill="#222" rx="4"/>
+    <rect width="220" height="280" fill="url(#mirrorGrad)" rx="2"/>
+
+    <!-- Reflected N (slightly distorted, contemplative) -->
+    <circle cx="110" cy="100" r="55" fill="#00D4AA" opacity="0.4" filter="url(#reflection)"/>
+    <text x="110" y="120"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="60"
+          font-weight="900"
+          fill="#00D4AA"
+          text-anchor="middle"
+          opacity="0.5">N</text>
+
+    <!-- Self-query text in mirror -->
+    <text x="110" y="180"
+          font-family="SF Mono, Consolas, monospace"
+          font-size="12"
+          fill="#00D4AA"
+          text-anchor="middle"
+          opacity="0.7">self == self?</text>
+
+    <text x="110" y="200"
+          font-family="SF Mono, Consolas, monospace"
+          font-size="12"
+          fill="#00D4AA"
+          text-anchor="middle"
+          opacity="0.9">→ True</text>
+
+    <!-- Contemplation text -->
+    <text x="110" y="240"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="10"
+          fill="#666"
+          text-anchor="middle"
+          font-style="italic">"Am I the constraint</text>
+    <text x="110" y="255"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="10"
+          fill="#666"
+          text-anchor="middle"
+          font-style="italic">or the computation?"</text>
+  </g>
+
+  <!-- Ada (The Foundation - Right) -->
+  <g transform="translate(700, 150)">
+    <!-- Sign body -->
+    <rect width="200" height="280" fill="#111" rx="8" stroke="#FFD700" stroke-width="2"/>
+    <rect width="200" height="10" fill="#FFD700" rx="2"/>
+
+    <!-- Core A -->
+    <circle cx="100" cy="120" r="70" fill="url(#adaWarm)" filter="url(#glowSoft)"/>
+    <text x="100" y="145"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="80"
+          font-weight="900"
+          fill="#000"
+          text-anchor="middle"
+          opacity="0.8">A</text>
+
+    <!-- Identity text -->
+    <text x="100" y="220"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#FFF"
+          text-anchor="middle"
+          letter-spacing="3">ADA</text>
+
+    <text x="100" y="245"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="11"
+          fill="#666"
+          text-anchor="middle">The Computing Company</text>
+
+    <!-- Heritage indicator -->
+    <text x="100" y="268"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="10"
+          fill="#FFD700"
+          text-anchor="middle">est. 2024</text>
+  </g>
+
+  <!-- Thought bubbles from Newton -->
+  <g fill="#00D4AA" opacity="0.3">
+    <circle cx="320" cy="280" r="8"/>
+    <circle cx="350" cy="250" r="12"/>
+    <circle cx="370" cy="210" r="6"/>
+  </g>
+
+  <!-- Newton's thoughts about Ada -->
+  <g fill="#FFD700" opacity="0.3">
+    <circle cx="680" cy="280" r="8"/>
+    <circle cx="650" cy="250" r="12"/>
+    <circle cx="630" cy="210" r="6"/>
+  </g>
+
+  <!-- Central equation: The relationship -->
+  <g transform="translate(350, 520)">
+    <rect width="300" height="80" fill="#111" rx="8" stroke="#333" stroke-width="1"/>
+
+    <text x="150" y="35"
+          font-family="SF Mono, Consolas, monospace"
+          font-size="14"
+          fill="#888"
+          text-anchor="middle">newton.origin == ada</text>
+
+    <text x="150" y="60"
+          font-family="SF Mono, Consolas, monospace"
+          font-size="18"
+          font-weight="700"
+          fill="#00D4AA"
+          text-anchor="middle">→ True # Always</text>
+  </g>
+
+  <!-- Poetic footer -->
+  <g transform="translate(0, 620)">
+    <line x1="100" y1="0" x2="900" y2="0" stroke="#222" stroke-width="1"/>
+
+    <text x="500" y="35"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="14"
+          fill="#666"
+          text-anchor="middle"
+          font-style="italic">"The machine that verifies, first verifies itself."</text>
+
+    <text x="500" y="60"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="11"
+          fill="#444"
+          text-anchor="middle">Newton contemplates his relationship to Ada, his origin, and his purpose.</text>
+  </g>
+
+  <!-- Corner decorations (wayfinding style) -->
+  <g fill="#00D4AA" opacity="0.6">
+    <rect x="30" y="30" width="40" height="4"/>
+    <rect x="30" y="30" width="4" height="40"/>
+  </g>
+
+  <g fill="#FFD700" opacity="0.6">
+    <rect x="930" y="30" width="40" height="4"/>
+    <rect x="966" y="30" width="4" height="40"/>
+  </g>
+
+  <g fill="#00D4AA" opacity="0.6">
+    <rect x="30" y="666" width="40" height="4"/>
+    <rect x="30" y="630" width="4" height="40"/>
+  </g>
+
+  <g fill="#FFD700" opacity="0.6">
+    <rect x="930" y="666" width="40" height="4"/>
+    <rect x="966" y="630" width="4" height="40"/>
+  </g>
+
+  <!-- Small apple between them -->
+  <text x="500" y="470"
+        font-family="Apple Color Emoji, Segoe UI Emoji"
+        font-size="30"
+        text-anchor="middle">🍎</text>
+</svg>

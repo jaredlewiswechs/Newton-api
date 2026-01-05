@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Newton & Ada
+  A partnership. A heritage. A home.
+
+  Like the constellations on Grand Central's ceiling,
+  or the warmth of a National Park welcome sign.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600">
+  <defs>
+    <!-- Warm ivory -->
+    <linearGradient id="warmIvory" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFEF9"/>
+      <stop offset="100%" style="stop-color:#F8F4E8"/>
+    </linearGradient>
+
+    <!-- Newton teal - softened, like patina -->
+    <linearGradient id="newtonPatina" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6DB5A6"/>
+      <stop offset="100%" style="stop-color:#4E9485"/>
+    </linearGradient>
+
+    <!-- Ada gold - warm, like honey -->
+    <linearGradient id="adaHoney" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8C97A"/>
+      <stop offset="100%" style="stop-color:#C9A655"/>
+    </linearGradient>
+
+    <!-- Connection gradient -->
+    <linearGradient id="connection" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6DB5A6;stop-opacity:0.6"/>
+      <stop offset="50%" style="stop-color:#B8A060;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#C9A655;stop-opacity:0.6"/>
+    </linearGradient>
+
+    <filter id="warmShadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#8B7355" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Warm background -->
+  <rect width="1000" height="600" fill="url(#warmIvory)"/>
+
+  <!-- Subtle grain texture -->
+  <pattern id="grain" width="200" height="200" patternUnits="userSpaceOnUse">
+    <circle cx="50" cy="50" r="0.8" fill="#E8E0D0" opacity="0.4"/>
+    <circle cx="150" cy="100" r="0.6" fill="#E8E0D0" opacity="0.3"/>
+    <circle cx="100" cy="150" r="0.5" fill="#E8E0D0" opacity="0.3"/>
+  </pattern>
+  <rect width="1000" height="600" fill="url(#grain)"/>
+
+  <!-- Constellation arch - like Grand Central -->
+  <g stroke="#D4C5A9" stroke-width="0.8" fill="none" opacity="0.4">
+    <path d="M 200 80 Q 500 20 800 80" stroke-dasharray="4,8"/>
+  </g>
+
+  <!-- Stars along the arch -->
+  <g fill="#D4A853" opacity="0.5">
+    <circle cx="250" cy="70" r="2"/>
+    <circle cx="350" cy="45" r="1.5"/>
+    <circle cx="450" cy="35" r="2.5"/>
+    <circle cx="500" cy="32" r="1"/>
+    <circle cx="550" cy="35" r="2"/>
+    <circle cx="650" cy="45" r="1.5"/>
+    <circle cx="750" cy="70" r="2"/>
+  </g>
+
+  <!-- Newton Card (Left) -->
+  <g transform="translate(200, 180)" filter="url(#warmShadow)">
+    <rect width="240" height="300" rx="12" fill="#FFFFFF"/>
+    <rect width="240" height="8" rx="4" fill="url(#newtonPatina)"/>
+
+    <!-- Apple icon -->
+    <g transform="translate(120, 90)">
+      <ellipse cx="0" cy="10" rx="40" ry="38" fill="#C54B4B"/>
+      <ellipse cx="-12" cy="-2" rx="14" ry="12" fill="#D86868" opacity="0.5"/>
+      <path d="M 0 -28 Q 3 -35 2 -42" stroke="#6B4423" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="12" cy="-34" rx="14" ry="7" fill="#7AB56E" transform="rotate(20, 12, -34)"/>
+    </g>
+
+    <!-- Newton text -->
+    <text x="120" y="180"
+          font-family="Baskerville, Georgia, serif"
+          font-size="36"
+          fill="#2C3E50"
+          text-anchor="middle">Newton</text>
+
+    <text x="120" y="210"
+          font-family="Avenir Next, Avenir, sans-serif"
+          font-size="12"
+          fill="#7A8B8B"
+          text-anchor="middle"
+          letter-spacing="2">The Engine</text>
+
+    <!-- Description -->
+    <text x="120" y="250"
+          font-family="Avenir Next, Avenir, sans-serif"
+          font-size="11"
+          fill="#9A9A9A"
+          text-anchor="middle">Verified computation</text>
+    <text x="120" y="268"
+          font-family="Avenir Next, Avenir, sans-serif"
+          font-size="11"
+          fill="#9A9A9A"
+          text-anchor="middle">that just works.</text>
+  </g>
+
+  <!-- Connection - gentle arc -->
+  <path d="M 440 330 Q 500 280 560 330"
+        stroke="url(#connection)"
+        stroke-width="3"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Heart at connection center -->
+  <g transform="translate(500, 295)">
+    <path d="M 0 5 C -8 -5 -15 -5 -15 2 C -15 12 0 20 0 20 C 0 20 15 12 15 2 C 15 -5 8 -5 0 5"
+          fill="#C54B4B" opacity="0.7"/>
+  </g>
+
+  <!-- Ada Card (Right) -->
+  <g transform="translate(560, 180)" filter="url(#warmShadow)">
+    <rect width="240" height="300" rx="12" fill="#FFFFFF"/>
+    <rect width="240" height="8" rx="4" fill="url(#adaHoney)"/>
+
+    <!-- Ada portrait silhouette - elegant, abstract -->
+    <g transform="translate(120, 90)">
+      <circle cx="0" cy="0" r="42" fill="#F5EBD8"/>
+      <ellipse cx="0" cy="-8" rx="25" ry="30" fill="#2C3E50" opacity="0.8"/>
+      <ellipse cx="0" cy="30" rx="35" ry="20" fill="#2C3E50" opacity="0.8"/>
+      <!-- Hair suggestion -->
+      <path d="M -25 -15 Q -30 -35 -15 -40 Q 0 -45 15 -40 Q 30 -35 25 -15"
+            fill="#2C3E50" opacity="0.8"/>
+    </g>
+
+    <!-- Ada text -->
+    <text x="120" y="180"
+          font-family="Baskerville, Georgia, serif"
+          font-size="36"
+          fill="#2C3E50"
+          text-anchor="middle">Ada</text>
+
+    <text x="120" y="210"
+          font-family="Avenir Next, Avenir, sans-serif"
+          font-size="12"
+          fill="#9A7B4F"
+          text-anchor="middle"
+          letter-spacing="2">The Foundation</text>
+
+    <!-- Description -->
+    <text x="120" y="250"
+          font-family="Avenir Next, Avenir, sans-serif"
+          font-size="11"
+          fill="#9A9A9A"
+          text-anchor="middle">Computing Company.</text>
+    <text x="120" y="268"
+          font-family="Avenir Next, Avenir, sans-serif"
+          font-size="11"
+          fill="#9A9A9A"
+          text-anchor="middle">Since 2024.</text>
+  </g>
+
+  <!-- Footer line -->
+  <line x1="350" y1="520" x2="650" y2="520" stroke="#E5DFD3" stroke-width="1"/>
+
+  <!-- Heritage text -->
+  <text x="500" y="555"
+        font-family="Avenir Next, Avenir, sans-serif"
+        font-size="12"
+        fill="#A09080"
+        text-anchor="middle"
+        letter-spacing="3">Houston, Texas</text>
+
+  <!-- Small equation -->
+  <text x="500" y="575"
+        font-family="'SF Mono', Menlo, monospace"
+        font-size="10"
+        fill="#C5B8A8"
+        text-anchor="middle">newton.origin == ada → True</text>
+</svg>

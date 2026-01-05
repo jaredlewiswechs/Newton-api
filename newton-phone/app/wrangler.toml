@@ -1,0 +1,14 @@
+# Cloudflare Pages configuration for Newton Supercomputer
+
+name = "newton"
+compatibility_date = "2024-01-01"
+
+# For Cloudflare Pages, deploy the frontend directory
+# Run: npx wrangler pages deploy frontend --project-name=newton
+
+[site]
+bucket = "./"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"

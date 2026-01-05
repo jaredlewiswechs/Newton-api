@@ -1,0 +1,50 @@
+# render.yaml
+# Newton Phone - Static Site Deployment
+# Separate deployable frontend for Newton Phone + Apps
+
+services:
+  - type: web
+    name: newton-phone
+    runtime: static
+    buildCommand: echo "Static site ready"
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
+    routes:
+      - type: rewrite
+        source: /app
+        destination: /app/index.html
+      - type: rewrite
+        source: /app/*
+        destination: /app/index.html
+      - type: rewrite
+        source: /teachers
+        destination: /teachers/index.html
+      - type: rewrite
+        source: /teachers/*
+        destination: /teachers/index.html
+      - type: rewrite
+        source: /builder
+        destination: /builder/index.html
+      - type: rewrite
+        source: /builder/*
+        destination: /builder/index.html
+
+# This static site connects to the Newton API at:
+# https://newton-api-sicp.onrender.com
+#
+# Routes served:
+#   /              → Newton Phone home screen
+#   /app/          → Newton Supercomputer app
+#   /teachers/     → Teacher's Aide app
+#   /builder/      → Interface Builder app
+#
+# API calls are made to the separate newton-api service

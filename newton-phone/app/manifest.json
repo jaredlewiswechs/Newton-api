@@ -1,0 +1,27 @@
+{
+  "name": "Newton | Jared Lewis Conglomerate",
+  "short_name": "Newton",
+  "description": "Verified Computation at Scale - Jared Lewis Conglomerate",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#4ecdc4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "developer tools"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
