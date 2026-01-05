@@ -1294,44 +1294,74 @@ textarea {
 }
 
 @media (max-width: 768px) {
+  /* Mobile bottom navigation bar */
   .sidebar {
-    width: 100%;
-    position: fixed;
-    bottom: 0;
-    top: auto;
-    height: auto;
-    flex-direction: row;
+    width: 100% !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: auto !important;
+    min-height: 60px;
+    flex-direction: row !important;
     overflow-x: auto;
-    padding: 0;
+    padding: 0 !important;
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy-light) 100%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: none;
+    z-index: 1000;
   }
 
+  /* Hide non-essential sidebar elements on mobile */
   .sidebar-header,
   .sidebar-footer,
   .nav-label {
-    display: none;
+    display: none !important;
   }
 
+  /* Make nav sections horizontal */
   .nav-section {
-    display: flex;
-    padding: 0.5rem;
-    gap: 0.25rem;
+    display: flex !important;
+    flex-direction: row !important;
+    padding: 0.5rem !important;
+    gap: 0.25rem !important;
+    flex: 1;
+    justify-content: center;
   }
 
+  /* Mobile nav items - icon only */
   .nav-item {
-    flex-direction: column;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.7rem;
-    gap: 0.25rem;
+    flex-direction: column !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.65rem !important;
+    gap: 0.25rem !important;
+    min-width: 50px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    background: transparent !important;
   }
 
+  .nav-item.active {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px;
+  }
+
+  .nav-icon {
+    font-size: 1.25rem !important;
+  }
+
+  /* Hide nav text labels on mobile */
   .nav-text {
-    display: none;
+    display: none !important;
   }
 
+  /* Adjust main content for bottom nav */
   .content {
-    margin-left: 0;
-    margin-bottom: 70px;
-    padding: 1rem;
+    margin-left: 0 !important;
+    margin-bottom: 70px !important;
+    padding: 1rem !important;
   }
 
   .view-header h1 {
@@ -1341,7 +1371,8 @@ textarea {
   .form-container,
   .result-container,
   .guide-section {
-    padding: 1.5rem;
+    padding: 1.25rem;
+    border-radius: 12px;
   }
 
   .result-actions {
@@ -1350,6 +1381,18 @@ textarea {
 
   .result-actions .btn-secondary {
     width: 100%;
+  }
+
+  /* Better touch targets */
+  .btn-primary,
+  .btn-secondary {
+    min-height: 48px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Prevent iOS zoom on focus */
   }
 }
 
@@ -1534,34 +1577,102 @@ select:focus {
 /* Dark mode support (system preference) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --navy: #E2E8F0;
-    --navy-light: #CBD5E0;
-    --blue: #60A5FA;
-    --blue-light: #93C5FD;
-    --light: #1A202C;
-    --white: #2D3748;
-    --slate: #A0AEC0;
+    /* Dark mode colors - keep semantic meaning */
+    --bg-primary: #0F172A;
+    --bg-secondary: #1A202C;
+    --bg-tertiary: #2D3748;
+    --text-primary-dark: #E2E8F0;
+    --text-secondary-dark: #A0AEC0;
+    --border-dark: #4A5568;
   }
-  
+
   body {
-    background: #0F172A;
-    color: #E2E8F0;
+    background: var(--bg-primary);
+    color: var(--text-primary-dark);
   }
-  
+
+  /* Sidebar keeps dark gradient in dark mode */
   .sidebar {
-    background: linear-gradient(180deg, #1A202C 0%, #2D3748 100%);
+    background: linear-gradient(180deg, #0A1628 0%, #1A2744 100%);
   }
-  
+
+  /* Content areas get dark backgrounds */
+  .content {
+    background: var(--bg-primary);
+  }
+
+  .form-container,
+  .result-container,
+  .guide-section,
+  .search-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-dark);
+  }
+
+  .view-header h1,
+  .form-group label,
+  .lesson-title,
+  .phase-title h4,
+  .group-title,
+  .plc-section h3,
+  .guide-section h2 {
+    color: var(--text-primary-dark);
+  }
+
+  .view-description,
+  .label-hint,
+  .phase-title span,
+  .stat-label,
+  .group-count,
+  .guide-section p {
+    color: var(--text-secondary-dark);
+  }
+
   input,
   textarea,
   select {
-    background: #2D3748;
-    color: #E2E8F0;
-    border-color: #4A5568;
+    background: var(--bg-tertiary);
+    color: var(--text-primary-dark);
+    border-color: var(--border-dark);
   }
-  
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-secondary-dark);
+  }
+
+  .lesson-phase,
+  .plc-section,
+  .stat-card,
+  .group-card,
+  .step,
+  .feature-card {
+    background: var(--bg-tertiary);
+  }
+
+  .phase-section,
+  .insight-card,
+  .action-item {
+    background: var(--bg-secondary);
+  }
+
+  .teks-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-dark);
+  }
+
   .nav-item:hover {
-    background: #374151;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary-dark);
+    border-color: var(--border-dark);
+  }
+
+  .btn-secondary:hover {
+    background: var(--bg-secondary);
   }
 }
 

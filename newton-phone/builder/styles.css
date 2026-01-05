@@ -1012,15 +1012,116 @@ body::before {
 }
 
 @media (max-width: 768px) {
+    /* Mobile bottom navigation bar */
     .sidebar {
-        display: none;
+        width: 100% !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: auto !important;
+        min-height: 56px;
+        flex-direction: row !important;
+        overflow-x: auto;
+        padding: 0 !important;
+        border-top: 1px solid var(--border-primary);
+        border-right: none;
+        z-index: 1000;
     }
 
+    /* Hide non-essential sidebar elements */
+    .sidebar-header,
+    .sidebar-footer,
+    .sidebar-section-label {
+        display: none !important;
+    }
+
+    .sidebar-content {
+        display: flex !important;
+        flex-direction: row !important;
+        padding: var(--space-2) !important;
+        gap: var(--space-1) !important;
+        width: 100%;
+        justify-content: center;
+        overflow-x: auto;
+    }
+
+    .sidebar-section {
+        display: flex !important;
+        flex-direction: row !important;
+        margin-bottom: 0 !important;
+        gap: var(--space-1);
+    }
+
+    .sidebar-nav {
+        flex-direction: row !important;
+        gap: var(--space-1) !important;
+    }
+
+    /* Mobile nav items */
+    .nav-item {
+        flex-direction: column !important;
+        padding: var(--space-2) var(--space-3) !important;
+        font-size: 10px !important;
+        gap: var(--space-1) !important;
+        min-width: 56px;
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .nav-icon {
+        font-size: 20px !important;
+        width: auto !important;
+    }
+
+    .nav-item span:not(.nav-icon) {
+        font-size: 10px;
+    }
+
+    /* Adjust main content for bottom nav */
     .main-content {
-        margin-left: 0;
+        margin-left: 0 !important;
+        margin-bottom: 70px !important;
+    }
+
+    .content-header {
+        flex-direction: column;
+        gap: var(--space-3);
+        align-items: flex-start;
+    }
+
+    .content-header > div {
+        width: 100%;
+        flex-direction: column !important;
+    }
+
+    .content-header input,
+    .content-header select {
+        width: 100% !important;
     }
 
     .templates-grid {
         grid-template-columns: 1fr;
+    }
+
+    .builder-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .builder-panel {
+        min-height: 300px;
+    }
+
+    /* Better touch targets */
+    .btn {
+        min-height: 44px;
+    }
+
+    .input,
+    .select {
+        font-size: 16px; /* Prevent iOS zoom */
     }
 }
