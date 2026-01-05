@@ -83,6 +83,23 @@ class ExtractedConstraint:
 
 
 @dataclass
+class UnreachableState:
+    """An unreachable state detected via control flow analysis."""
+    description: str
+    line_number: int
+    reason: str
+    category: str  # "dead_code", "impossible_condition", "contradictory_guards"
+
+    def to_dict(self) -> dict:
+        return {
+            "description": self.description,
+            "line_number": self.line_number,
+            "reason": self.reason,
+            "category": self.category
+        }
+
+
+@dataclass
 class NewtonCartridge:
     """A Newton cartridge representation of extracted code constraints."""
     source_language: str
@@ -91,6 +108,7 @@ class NewtonCartridge:
     functions_analyzed: list[str] = field(default_factory=list)
     forbidden_states: list[str] = field(default_factory=list)
     required_invariants: list[str] = field(default_factory=list)
+    unreachable_states: list = field(default_factory=list)  # list[UnreachableState]
     warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -101,9 +119,11 @@ class NewtonCartridge:
             "functions_analyzed": self.functions_analyzed,
             "forbidden_states": self.forbidden_states,
             "required_invariants": self.required_invariants,
+            "unreachable_states": [u.to_dict() if hasattr(u, 'to_dict') else u for u in self.unreachable_states],
             "warnings": self.warnings,
             "summary": {
                 "total_constraints": len(self.constraints),
+                "unreachable_count": len(self.unreachable_states),
                 "by_kind": self._count_by_kind()
             }
         }
@@ -142,6 +162,16 @@ class NewtonCartridge:
             lines.append("  // Required invariants")
             for inv in self.required_invariants:
                 lines.append(f"  invariant: {inv};")
+            lines.append("")
+
+        # Add unreachable states (CFG analysis)
+        if self.unreachable_states:
+            lines.append("  // Unreachable states (CFG analysis)")
+            for u in self.unreachable_states:
+                if hasattr(u, 'description'):
+                    lines.append(f"  unreachable @{u.line_number}: {u.description};")
+                else:
+                    lines.append(f"  unreachable: {u};")
 
         lines.append("}")
         return "\n".join(lines)
@@ -263,6 +293,242 @@ class LanguageDetector:
         return SourceLanguage.UNKNOWN
 
 
+class ControlFlowAnalyzer:
+    """
+    Simple CFG-based unreachable state detection.
+
+    Detects:
+    - Dead code after unconditional returns/raises
+    - Tautological conditions (always true/false)
+    - Contradictory guard sequences
+    - Impossible branches
+    """
+
+    # Patterns for unconditional exits
+    EXIT_PATTERNS = {
+        SourceLanguage.PYTHON: [
+            r"^\s*return\b",
+            r"^\s*raise\b",
+            r"^\s*sys\.exit\s*\(",
+            r"^\s*exit\s*\(",
+        ],
+        SourceLanguage.JAVASCRIPT: [
+            r"^\s*return\b",
+            r"^\s*throw\b",
+            r"^\s*process\.exit\s*\(",
+        ],
+        SourceLanguage.SWIFT: [
+            r"^\s*return\b",
+            r"^\s*fatalError\s*\(",
+            r"^\s*preconditionFailure\s*\(",
+        ],
+        SourceLanguage.C: [
+            r"^\s*return\b",
+            r"^\s*exit\s*\(",
+            r"^\s*abort\s*\(",
+        ],
+    }
+
+    # Patterns for always-true/false conditions
+    TAUTOLOGY_PATTERNS = [
+        (r"\btrue\b", True),
+        (r"\bTrue\b", True),
+        (r"\bfalse\b", False),
+        (r"\bFalse\b", False),
+        (r"\b1\s*==\s*1\b", True),
+        (r"\b0\s*==\s*0\b", True),
+        (r"\b1\s*!=\s*1\b", False),
+        (r"\b0\s*!=\s*0\b", False),
+        (r"\bnil\s*==\s*nil\b", True),
+        (r"\bnull\s*===\s*null\b", True),
+    ]
+
+    @classmethod
+    def analyze(cls, code: str, language: SourceLanguage) -> list:
+        """Analyze code for unreachable states."""
+        unreachable = []
+        lines = code.split('\n')
+
+        # Track state
+        in_unconditional_exit = False
+        exit_line = -1
+        guard_stack = []  # Track nested guards for contradiction detection
+
+        for i, line in enumerate(lines):
+            line_num = i + 1
+
+            # Skip empty lines and comments
+            stripped = line.strip()
+            if not stripped or stripped.startswith('#') or stripped.startswith('//'):
+                continue
+
+            # Check for dead code after unconditional exit
+            if in_unconditional_exit:
+                # Check if we're still at same or deeper indentation
+                if cls._is_dead_code(line, lines, i):
+                    unreachable.append(UnreachableState(
+                        description=f"Code after unconditional exit",
+                        line_number=line_num,
+                        reason=f"Unreachable: follows return/raise at line {exit_line}",
+                        category="dead_code"
+                    ))
+                else:
+                    in_unconditional_exit = False
+
+            # Check for unconditional exits
+            if cls._is_unconditional_exit(stripped, language):
+                in_unconditional_exit = True
+                exit_line = line_num
+
+            # Check for tautological conditions
+            tautology = cls._check_tautology(stripped)
+            if tautology is not None:
+                if tautology:
+                    unreachable.append(UnreachableState(
+                        description=f"Condition is always true",
+                        line_number=line_num,
+                        reason="Tautological condition - else branch unreachable",
+                        category="impossible_condition"
+                    ))
+                else:
+                    unreachable.append(UnreachableState(
+                        description=f"Condition is always false",
+                        line_number=line_num,
+                        reason="Contradictory condition - then branch unreachable",
+                        category="impossible_condition"
+                    ))
+
+            # Track guards for contradiction detection
+            guard = cls._extract_guard(stripped, language)
+            if guard:
+                contradiction = cls._check_contradiction(guard, guard_stack)
+                if contradiction:
+                    unreachable.append(UnreachableState(
+                        description=f"Guard contradicts earlier guard",
+                        line_number=line_num,
+                        reason=f"Contradicts: {contradiction}",
+                        category="contradictory_guards"
+                    ))
+                guard_stack.append((guard, line_num))
+
+        return unreachable
+
+    @classmethod
+    def _is_unconditional_exit(cls, line: str, language: SourceLanguage) -> bool:
+        """Check if line is an unconditional exit statement."""
+        patterns = cls.EXIT_PATTERNS.get(language, cls.EXIT_PATTERNS[SourceLanguage.PYTHON])
+        for pattern in patterns:
+            if re.search(pattern, line, re.IGNORECASE):
+                return True
+        return False
+
+    @classmethod
+    def _is_dead_code(cls, line: str, all_lines: list[str], current_idx: int) -> bool:
+        """Check if current line is dead code based on indentation."""
+        if not line.strip():
+            return False
+
+        # Get indentation of current line
+        current_indent = len(line) - len(line.lstrip())
+
+        # Look back for the exit statement
+        for j in range(current_idx - 1, -1, -1):
+            prev_line = all_lines[j]
+            if not prev_line.strip():
+                continue
+            prev_indent = len(prev_line) - len(prev_line.lstrip())
+
+            # If we found a line at same or less indentation, we're in a new block
+            if prev_indent <= current_indent:
+                # Check if it's the exit line or after it
+                if 'return' in prev_line or 'raise' in prev_line or 'throw' in prev_line:
+                    return True
+                break
+
+        return False
+
+    @classmethod
+    def _check_tautology(cls, line: str) -> Optional[bool]:
+        """Check if a condition is tautological. Returns True/False/None."""
+        # Look for if/while/guard conditions
+        cond_match = re.search(r'(?:if|while|guard)\s*[(\s](.+?)(?:[):\{]|$)', line)
+        if not cond_match:
+            return None
+
+        condition = cond_match.group(1).strip()
+
+        for pattern, value in cls.TAUTOLOGY_PATTERNS:
+            if re.search(pattern, condition, re.IGNORECASE):
+                return value
+
+        return None
+
+    @classmethod
+    def _extract_guard(cls, line: str, language: SourceLanguage) -> Optional[str]:
+        """Extract guard condition from line."""
+        patterns = [
+            r'if\s*\((.+?)\)',
+            r'if\s+(.+?):',
+            r'guard\s+(.+?)\s+else',
+            r'while\s*\((.+?)\)',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, line)
+            if match:
+                return match.group(1).strip()
+
+        return None
+
+    @classmethod
+    def _check_contradiction(cls, new_guard: str, existing_guards: list) -> Optional[str]:
+        """Check if new guard contradicts existing guards."""
+        # Simple contradiction detection based on negation
+        for existing, line_num in existing_guards:
+            # Check for direct negation patterns
+            if cls._is_negation(new_guard, existing):
+                return f"{existing} (line {line_num})"
+
+        return None
+
+    @classmethod
+    def _is_negation(cls, a: str, b: str) -> bool:
+        """Check if a is the negation of b."""
+        # Normalize both
+        a = a.strip().lower()
+        b = b.strip().lower()
+
+        # Simple negation patterns - check if the operators are negations of each other
+        negation_ops = [
+            ('>', '<='),
+            ('<', '>='),
+            ('==', '!='),
+        ]
+
+        for op1, op2 in negation_ops:
+            # Check if a has op1 and b has op2 (or vice versa) with same operands
+            for pattern_op in [op1, op2]:
+                other_op = op2 if pattern_op == op1 else op1
+                pattern = rf"(\w+)\s*{re.escape(pattern_op)}\s*(\w+)"
+                other_pattern = rf"(\w+)\s*{re.escape(other_op)}\s*(\w+)"
+                
+                match_a = re.match(pattern, a)
+                match_b = re.match(other_pattern, b)
+                
+                if match_a and match_b:
+                    # Check if the operands are the same
+                    if match_a.groups() == match_b.groups():
+                        return True
+
+        # Check for explicit not
+        if a == f"not {b}" or b == f"not {a}":
+            return True
+        if a == f"!{b}" or b == f"!{a}":
+            return True
+
+        return False
+
+
 class ConstraintNormalizer:
     """Normalizes code conditions into Newton constraint format."""
 
@@ -310,12 +576,25 @@ class ConstraintNormalizer:
         for pattern, replacement in null_patterns:
             normalized = re.sub(pattern, replacement, normalized, flags=re.IGNORECASE)
 
-        # Handle comparison operators
-        for code_op, newton_op in cls.COMPARISON_OPS.items():
-            normalized = normalized.replace(code_op, f" {newton_op} ")
+        # Handle comparison operators using regex to avoid partial replacements
+        # Build a regex pattern that matches all operators (longest first)
+        ops_sorted = sorted(cls.COMPARISON_OPS.keys(), key=len, reverse=True)
+        ops_pattern = '|'.join(re.escape(op) for op in ops_sorted)
+        
+        def replace_op(match):
+            code_op = match.group(0)
+            newton_op = cls.COMPARISON_OPS[code_op]
+            return f" {newton_op} "
+        
+        normalized = re.sub(ops_pattern, replace_op, normalized)
 
-        # Handle logical operators
-        for code_op, newton_op in cls.LOGICAL_OPS.items():
+        # Handle logical operators with proper precedence
+        # Wrap NOT targets in parentheses for precedence clarity (Python 'not' keyword only)
+        # Note: C-style '!x' is already handled above as 'IS FALSY' for truthiness checks
+        normalized = re.sub(r"\bnot\s+(\w+)", r"NOT(\1)", normalized, flags=re.IGNORECASE)
+
+        # Then handle binary logical operators
+        for code_op, newton_op in [("&&", "AND"), ("||", "OR"), ("and", "AND"), ("or", "OR")]:
             normalized = re.sub(rf"\b{re.escape(code_op)}\b", f" {newton_op} ", normalized, flags=re.IGNORECASE)
 
         # Clean up whitespace
@@ -334,15 +613,23 @@ class ConstraintNormalizer:
         if ratio_match:
             left, op, right = ratio_match.groups()
 
-            # Convert to ratio form when appropriate
-            if op == "<=" and right.isalnum():
-                return f"{left} / {right} <= 1.0"
-            elif op == ">=" and right.isalnum():
-                return f"{left} / {right} >= 1.0"
-            elif op == "<" and right.isalnum():
-                return f"{left} / {right} < 1.0"
-            elif op == ">" and right.isalnum():
-                return f"{left} / {right} > 1.0"
+            # Only convert to ratio form when RHS is a variable (not a numeric literal)
+            # This prevents division by zero (e.g., "balance >= 0" should NOT become "balance / 0 >= 1.0")
+            is_variable = right.isidentifier() and not right.isdigit() and not right.replace('.', '').isdigit()
+
+            if is_variable:
+                # Convert to ratio form when appropriate
+                if op == "<=":
+                    return f"{left} / {right} <= 1.0"
+                elif op == ">=":
+                    return f"{left} / {right} >= 1.0"
+                elif op == "<":
+                    return f"{left} / {right} < 1.0"
+                elif op == ">":
+                    return f"{left} / {right} > 1.0"
+            else:
+                # Keep as direct comparison for numeric literals
+                return f"{left} {op} {right}"
 
         # Handle null checks
         if "IS NULL" in normalized:
@@ -701,6 +988,7 @@ class Jester:
         self.language = language or LanguageDetector.detect(code)
         self._constraints: list[ExtractedConstraint] = []
         self._functions: list[str] = []
+        self._unreachable: list[UnreachableState] = []
         self._analyzed = False
 
     def analyze(self) -> "Jester":
@@ -720,6 +1008,9 @@ class Jester:
 
         # Extract function names
         self._functions = RegexExtractor.extract_functions(self.code, self.language)
+
+        # Run CFG analysis for unreachable state detection
+        self._unreachable = ControlFlowAnalyzer.analyze(self.code, self.language)
 
         self._analyzed = True
         return self
@@ -741,6 +1032,12 @@ class Jester:
     def get_early_exits(self) -> list[ExtractedConstraint]:
         """Get only early exit constraints."""
         return [c for c in self.get_constraints() if c.kind == ConstraintKind.EARLY_EXIT]
+
+    def get_unreachable(self) -> list[UnreachableState]:
+        """Get unreachable states detected via CFG analysis."""
+        if not self._analyzed:
+            self.analyze()
+        return self._unreachable
 
     def to_cartridge(self) -> NewtonCartridge:
         """
@@ -768,6 +1065,8 @@ class Jester:
             warnings.append("No constraints could be extracted from this code")
         if self.language == SourceLanguage.UNKNOWN:
             warnings.append("Language could not be detected; analysis may be incomplete")
+        if self._unreachable:
+            warnings.append(f"Detected {len(self._unreachable)} unreachable state(s)")
 
         return NewtonCartridge(
             source_language=self.language.value,
@@ -776,6 +1075,7 @@ class Jester:
             functions_analyzed=self._functions,
             forbidden_states=forbidden_states[:10],  # Limit to top 10
             required_invariants=invariants[:10],
+            unreachable_states=self._unreachable,
             warnings=warnings
         )
 
@@ -855,8 +1155,8 @@ def analyze_file(filepath: str) -> dict:
 # Module info
 JESTER_INFO = {
     "name": "Jester",
-    "version": "1.0.0",
-    "description": "Newton Code Constraint Translator - extracts guards, invariants, and constraints from source code",
+    "version": "1.1.0",
+    "description": "Newton Code Constraint Compiler - extracts guards, invariants, constraints, and unreachable states from source code",
     "supported_languages": [lang.value for lang in SourceLanguage if lang != SourceLanguage.UNKNOWN],
     "constraint_kinds": [kind.value for kind in ConstraintKind],
     "features": [
@@ -865,6 +1165,10 @@ JESTER_INFO = {
         "Early exit detection",
         "Null/nil check recognition",
         "Exception/error path analysis",
+        "CFG-based unreachable state detection",
+        "Dead code detection",
+        "Contradictory guard detection",
+        "Tautological condition detection",
         "Newton cartridge generation",
         "CDL output format",
         "Multi-language support"
