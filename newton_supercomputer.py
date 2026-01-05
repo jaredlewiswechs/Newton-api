@@ -608,10 +608,35 @@ if BUILDER_DIR.exists():
 @app.get("/", response_class=HTMLResponse)
 async def serve_home():
     """Serve the Newton Phone home screen"""
-    index_file = ROOT_DIR / "index.html"
-    if index_file.exists():
-        return HTMLResponse(content=index_file.read_text(), status_code=200)
-    return HTMLResponse(content="<h1>Newton</h1><p>Home screen not found</p>", status_code=404)
+    import os
+    # Try multiple paths to find index.html
+    possible_paths = [
+        ROOT_DIR / "index.html",
+        Path(os.getcwd()) / "index.html",
+        Path("/opt/render/project/src/index.html"),
+    ]
+
+    for index_file in possible_paths:
+        if index_file.exists():
+            return HTMLResponse(content=index_file.read_text(), status_code=200)
+
+    # Debug info if not found
+    debug_info = f"""
+    <h1>Newton</h1>
+    <p>Home screen not found - Debug info:</p>
+    <pre>
+ROOT_DIR: {ROOT_DIR}
+CWD: {os.getcwd()}
+__file__: {__file__}
+
+Checked paths:
+{chr(10).join(f'  - {p} (exists: {p.exists()})' for p in possible_paths)}
+
+Files in ROOT_DIR:
+{chr(10).join(f'  - {f.name}' for f in list(ROOT_DIR.iterdir())[:20]) if ROOT_DIR.exists() else 'DIR NOT FOUND'}
+    </pre>
+    """
+    return HTMLResponse(content=debug_info, status_code=404)
 
 @app.get("/app", response_class=HTMLResponse)
 async def serve_newton_app():
