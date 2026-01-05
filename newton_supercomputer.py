@@ -593,6 +593,20 @@ FRONTEND_DIR = ROOT_DIR / "frontend"
 TEACHERS_DIR = ROOT_DIR / "teachers-aide"
 BUILDER_DIR = ROOT_DIR / "interface-builder"
 
+# Helper: Find file across multiple possible paths (handles Render's environment)
+def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]:
+    """Find a file, trying multiple path resolutions for Render compatibility."""
+    import os
+    possible_paths = [
+        app_dir / filename,
+        Path(os.getcwd()) / app_dir.name / filename,
+        Path("/opt/render/project/src") / app_dir.name / filename,
+    ]
+    for path in possible_paths:
+        if path.exists():
+            return path
+    return None
+
 # Mount static directories
 if FRONTEND_DIR.exists():
     app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
@@ -711,24 +725,24 @@ async def serve_home():
 @app.get("/app", response_class=HTMLResponse)
 async def serve_newton_app():
     """Serve the Newton Supercomputer app"""
-    index_file = FRONTEND_DIR / "index.html"
-    if index_file.exists():
+    index_file = find_app_file(FRONTEND_DIR)
+    if index_file:
         return HTMLResponse(content=index_file.read_text(), status_code=200)
     return HTMLResponse(content="<h1>Newton App</h1><p>Not found</p>", status_code=404)
 
 @app.get("/teachers", response_class=HTMLResponse)
 async def serve_teachers_aide():
     """Serve Teacher's Aide app"""
-    index_file = TEACHERS_DIR / "index.html"
-    if index_file.exists():
+    index_file = find_app_file(TEACHERS_DIR)
+    if index_file:
         return HTMLResponse(content=index_file.read_text(), status_code=200)
     return HTMLResponse(content="<h1>Teacher's Aide</h1><p>Not found</p>", status_code=404)
 
 @app.get("/builder", response_class=HTMLResponse)
 async def serve_builder():
     """Serve Interface Builder app"""
-    index_file = BUILDER_DIR / "index.html"
-    if index_file.exists():
+    index_file = find_app_file(BUILDER_DIR)
+    if index_file:
         return HTMLResponse(content=index_file.read_text(), status_code=200)
     return HTMLResponse(content="<h1>Interface Builder</h1><p>Not found</p>", status_code=404)
 
