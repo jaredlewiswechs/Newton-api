@@ -611,9 +611,9 @@ def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]
 if FRONTEND_DIR.exists():
     app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 if TEACHERS_DIR.exists():
-    app.mount("/teachers-aide", StaticFiles(directory=str(TEACHERS_DIR), html=True), name="teachers-aide")
+    app.mount("/teachers", StaticFiles(directory=str(TEACHERS_DIR), html=True), name="teachers")
 if BUILDER_DIR.exists():
-    app.mount("/interface-builder", StaticFiles(directory=str(BUILDER_DIR), html=True), name="interface-builder")
+    app.mount("/builder", StaticFiles(directory=str(BUILDER_DIR), html=True), name="builder")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NEWTON PHONE - Static Frontend Routes
