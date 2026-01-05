@@ -1,8 +1,8 @@
 # render.yaml
 # Newton Supercomputer - Render Deployment Configuration
-# Optimized for 1000s of concurrent iPhone Shortcut users
 
 services:
+  # Newton API (Python backend)
   - type: web
     name: newton-api
     runtime: python
@@ -18,4 +18,35 @@ services:
       - key: WEB_CONCURRENCY
         value: "4"
     healthCheckPath: /health
+    autoDeploy: true
+
+  # Newton Phone (static frontend - the iPhone home screen)
+  - type: web
+    name: newton-phone
+    runtime: static
+    buildCommand: echo "No build needed"
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
+    routes:
+      - type: rewrite
+        source: /app
+        destination: /frontend/index.html
+      - type: rewrite
+        source: /app/*
+        destination: /frontend/index.html
+      - type: rewrite
+        source: /teachers
+        destination: /teachers-aide/index.html
+      - type: rewrite
+        source: /teachers/*
+        destination: /teachers-aide/index.html
+      - type: rewrite
+        source: /builder
+        destination: /interface-builder/index.html
+      - type: rewrite
+        source: /builder/*
+        destination: /interface-builder/index.html
     autoDeploy: true
