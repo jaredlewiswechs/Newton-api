@@ -690,6 +690,7 @@ TEACHERS_DIR = ROOT_DIR / "teachers-aide"
 BUILDER_DIR = ROOT_DIR / "interface-builder"
 PARCCLOUD_DIR = ROOT_DIR / "parccloud"
 JESTER_DIR = ROOT_DIR / "jester-analyzer"
+DEMO_DIR = ROOT_DIR / "newton-demo"
 
 # Helper: Find file across multiple possible paths (handles Render's environment)
 def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]:
@@ -728,6 +729,8 @@ if BUILDER_DIR.exists():
     app.mount("/builder", StaticFiles(directory=str(BUILDER_DIR), html=True), name="builder")
 if JESTER_DIR.exists():
     app.mount("/jester", StaticFiles(directory=str(JESTER_DIR), html=True), name="jester")
+if DEMO_DIR.exists():
+    app.mount("/demo", StaticFiles(directory=str(DEMO_DIR), html=True), name="demo")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NEWTON PHONE - Static Frontend Routes

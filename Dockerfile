@@ -16,6 +16,7 @@ COPY frontend/ ./frontend/
 COPY interface-builder/ ./interface-builder/
 COPY teachers-aide/ ./teachers-aide/
 COPY jester-analyzer/ ./jester-analyzer/
+COPY newton-demo/ ./newton-demo/
 
 ENV PYTHONPATH=/app
 
