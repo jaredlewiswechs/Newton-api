@@ -20,33 +20,9 @@ services:
     healthCheckPath: /health
     autoDeploy: true
 
-  # Newton Phone (static frontend - the iPhone home screen)
-  - type: web
-    name: newton-phone
-    runtime: static
-    buildCommand: echo "No build needed"
-    staticPublishPath: .
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: public, max-age=3600
-    routes:
-      - type: rewrite
-        source: /app
-        destination: /frontend/index.html
-      - type: rewrite
-        source: /app/*
-        destination: /frontend/index.html
-      - type: rewrite
-        source: /teachers
-        destination: /teachers-aide/index.html
-      - type: rewrite
-        source: /teachers/*
-        destination: /teachers-aide/index.html
-      - type: rewrite
-        source: /builder
-        destination: /interface-builder/index.html
-      - type: rewrite
-        source: /builder/*
-        destination: /interface-builder/index.html
-    autoDeploy: true
+# NOTE: Newton Phone (static frontend) should be created manually in Render:
+# 1. New > Static Site
+# 2. Connect Newton-api repo
+# 3. Build Command: (leave empty)
+# 4. Publish Directory: . (just a dot)
+# 5. Add rewrite rules in Render dashboard for /app, /teachers, /builder
