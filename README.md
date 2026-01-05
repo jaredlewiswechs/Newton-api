@@ -270,6 +270,12 @@ HISD NES-compliant lesson planning with TEKS as machine-readable objects. Genera
 ### Teacher's Aide Database (NEW)
 Complete classroom management system with automatic differentiation. Track students, classrooms, assessments, and interventions. Students are automatically grouped into 4 tiers (Needs Reteach, Approaching, Mastery, Advanced) based on assessment performance. Includes 188 TEKS standards (K-8) and easy score entry by student name.
 
+### Code Analysis (Jester)
+Deterministic constraint extraction from source code. Jester parses AST to extract guards, assertions, null checks, range checks, and early exits—then translates them to Newton cartridges. Supports Python, JavaScript, TypeScript, Swift, Objective-C, C/C++, Java, Go, Rust, and Ruby.
+
+### Games (Gravity Wars)
+Newton's first constraint-verified physics game. A roguelike arena brawler where cheating is mathematically impossible—every movement and attack is verified before execution. Deploy gravity bombs to manipulate physics and defeat waves of enemies.
+
 ---
 
 ## What Has Newton Proven?
@@ -559,6 +565,16 @@ curl -X POST http://localhost:8000/education/lesson \
 | `/teachers/db/save` | POST | Save database to JSON |
 | `/teachers/db/load` | POST | Load database from JSON |
 | `/teachers/info` | GET | Teacher's Aide API documentation |
+
+### Jester (Code Analysis)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/jester/analyze` | POST | Analyze source code to extract constraints |
+| `/jester/cdl` | POST | Generate CDL (Constraint Definition Language) output |
+| `/jester/info` | GET | Get analyzer capabilities and documentation |
+| `/jester/languages` | GET | List supported programming languages |
+| `/jester/constraint-kinds` | GET | List constraint types that can be extracted |
 
 ### System
 
@@ -912,6 +928,18 @@ Newton-api/
 │   ├── _headers            # Security headers
 │   ├── _redirects          # SPA routing
 │   └── README.md           # Teacher's Aide documentation
+│
+├── jester-analyzer/         # Code Constraint Analyzer
+│   ├── index.html          # Web UI for code analysis
+│   ├── app.js              # Frontend logic
+│   ├── styles.css          # Newton-themed design
+│   └── README.md           # Jester documentation
+│
+├── games/                   # Newton-verified games
+│   └── gravity_wars/       # Physics roguelike arena brawler
+│       ├── index.html      # Web version (playable)
+│       ├── gravity_wars.py # Python implementation
+│       └── README.md       # Game documentation
 ```
 
 ---
