@@ -609,6 +609,7 @@ if BUILDER_DIR.exists():
 async def serve_home():
     """Serve the Newton Phone home screen"""
     import os
+
     # Try multiple paths to find index.html
     possible_paths = [
         ROOT_DIR / "index.html",
@@ -620,23 +621,92 @@ async def serve_home():
         if index_file.exists():
             return HTMLResponse(content=index_file.read_text(), status_code=200)
 
-    # Debug info if not found
-    debug_info = f"""
+    # Log debug info if not found
+    print(f"[Newton] index.html not found. ROOT_DIR={ROOT_DIR}, CWD={os.getcwd()}")
+    if ROOT_DIR.exists():
+        print(f"[Newton] Files in ROOT_DIR: {[f.name for f in list(ROOT_DIR.iterdir())[:20]]}")
+
+    # Fallback: Minimal home screen that still works
+    fallback_html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        h1 { color: #4ecdc4; font-size: 48px; margin-bottom: 20px; }
+        .tagline { color: #86868b; margin-bottom: 40px; }
+        .apps {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 400px;
+        }
+        a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 16px;
+            text-decoration: none;
+            color: #fff;
+            transition: transform 0.2s;
+        }
+        a:hover { transform: scale(1.05); }
+        .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .newton { background: #4ecdc4; color: #000; }
+        .teachers { background: #ff3b30; }
+        .builder { background: #af52de; }
+        .docs { background: #007aff; }
+    </style>
+</head>
+<body>
     <h1>Newton</h1>
-    <p>Home screen not found - Debug info:</p>
-    <pre>
-ROOT_DIR: {ROOT_DIR}
-CWD: {os.getcwd()}
-__file__: {__file__}
-
-Checked paths:
-{chr(10).join(f'  - {p} (exists: {p.exists()})' for p in possible_paths)}
-
-Files in ROOT_DIR:
-{chr(10).join(f'  - {f.name}' for f in list(ROOT_DIR.iterdir())[:20]) if ROOT_DIR.exists() else 'DIR NOT FOUND'}
-    </pre>
-    """
-    return HTMLResponse(content=debug_info, status_code=404)
+    <p class="tagline">The verification layer for AI</p>
+    <div class="apps">
+        <a href="/app">
+            <div class="icon newton">N</div>
+            <span>Newton</span>
+        </a>
+        <a href="/teachers">
+            <div class="icon teachers">T</div>
+            <span>Teacher's Aide</span>
+        </a>
+        <a href="/builder">
+            <div class="icon builder">B</div>
+            <span>Builder</span>
+        </a>
+        <a href="/docs">
+            <div class="icon docs">API</div>
+            <span>Docs</span>
+        </a>
+    </div>
+</body>
+</html>"""
+    return HTMLResponse(content=fallback_html, status_code=200)
 
 @app.get("/app", response_class=HTMLResponse)
 async def serve_newton_app():
@@ -3315,8 +3385,21 @@ async def gumroad_stats():
 @app.get("/health")
 async def health():
     """System health check."""
+    import os
     chain_valid, _ = ledger.verify_chain()
     gumroad_stats = gumroad.stats()
+
+    # Debug: Check file system for static files
+    static_files = {
+        "root_dir": str(ROOT_DIR),
+        "cwd": os.getcwd(),
+        "index_html_exists": (ROOT_DIR / "index.html").exists(),
+        "frontend_exists": FRONTEND_DIR.exists(),
+        "teachers_exists": TEACHERS_DIR.exists(),
+        "builder_exists": BUILDER_DIR.exists(),
+    }
+    if ROOT_DIR.exists():
+        static_files["root_files"] = [f.name for f in list(ROOT_DIR.iterdir())[:10]]
 
     return {
         "status": "ok",
@@ -3344,7 +3427,8 @@ async def health():
         "gumroad": {
             "active_customers": gumroad_stats.get("active_customers", 0),
             "total_feedback": gumroad_stats.get("feedback_count", 0)
-        }
+        },
+        "static_files": static_files
     }
 
 
