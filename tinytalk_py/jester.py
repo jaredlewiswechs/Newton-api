@@ -278,13 +278,12 @@ class ConstraintNormalizer:
         "!==": "!=",
     }
 
+    # Logical operators - note: NOT is handled separately with parentheses for precedence
     LOGICAL_OPS = {
         "&&": "AND",
         "||": "OR",
         "and": "AND",
         "or": "OR",
-        "!": "NOT",
-        "not": "NOT",
     }
 
     @classmethod
@@ -314,8 +313,13 @@ class ConstraintNormalizer:
         for code_op, newton_op in cls.COMPARISON_OPS.items():
             normalized = normalized.replace(code_op, f" {newton_op} ")
 
-        # Handle logical operators
-        for code_op, newton_op in cls.LOGICAL_OPS.items():
+        # Handle logical operators with proper precedence
+        # Wrap NOT targets in parentheses for precedence clarity (Python 'not' keyword only)
+        # Note: C-style '!x' is already handled above as 'IS FALSY' for truthiness checks
+        normalized = re.sub(r"\bnot\s+(\w+)", r"NOT(\1)", normalized, flags=re.IGNORECASE)
+
+        # Then handle binary logical operators
+        for code_op, newton_op in [("&&", "AND"), ("||", "OR"), ("and", "AND"), ("or", "OR")]:
             normalized = re.sub(rf"\b{re.escape(code_op)}\b", f" {newton_op} ", normalized, flags=re.IGNORECASE)
 
         # Clean up whitespace
@@ -334,15 +338,23 @@ class ConstraintNormalizer:
         if ratio_match:
             left, op, right = ratio_match.groups()
 
-            # Convert to ratio form when appropriate
-            if op == "<=" and right.isalnum():
-                return f"{left} / {right} <= 1.0"
-            elif op == ">=" and right.isalnum():
-                return f"{left} / {right} >= 1.0"
-            elif op == "<" and right.isalnum():
-                return f"{left} / {right} < 1.0"
-            elif op == ">" and right.isalnum():
-                return f"{left} / {right} > 1.0"
+            # Only convert to ratio form when RHS is a variable (not a numeric literal)
+            # This prevents division by zero (e.g., "balance >= 0" should NOT become "balance / 0 >= 1.0")
+            is_variable = right.isidentifier() and not right.isdigit() and not right.replace('.', '').isdigit()
+
+            if is_variable:
+                # Convert to ratio form when appropriate
+                if op == "<=":
+                    return f"{left} / {right} <= 1.0"
+                elif op == ">=":
+                    return f"{left} / {right} >= 1.0"
+                elif op == "<":
+                    return f"{left} / {right} < 1.0"
+                elif op == ">":
+                    return f"{left} / {right} > 1.0"
+            else:
+                # Keep as direct comparison for numeric literals
+                return f"{left} {op} {right}"
 
         # Handle null checks
         if "IS NULL" in normalized:
