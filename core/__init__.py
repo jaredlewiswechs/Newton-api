@@ -277,6 +277,33 @@ from .chatbot_compiler import (
     CLASSIFICATION_PATTERNS,
 )
 
+from .textgen import (
+    # Core Classes
+    TextStyle,
+    TextConstraint,
+    ProjectionResult,
+    TextDocument,
+    NewtonTextProjector,
+
+    # Convenience Functions
+    project,
+    project_cdl,
+    explain_constraints,
+    generate_document,
+    text_fingerprint,
+    reduce_text,
+    register_reduction,
+
+    # JESTER Integration
+    project_jester_constraints,
+
+    # Ledger Integration
+    create_text_ledger_entry,
+
+    # Templates
+    TEMPLATES,
+)
+
 __all__ = [
     # CDL
     'CDLEvaluator', 'CDLParser', 'HaltChecker',
@@ -354,6 +381,12 @@ __all__ = [
     'RequestType', 'RiskLevel', 'CompilerDecision',
     'RequestClassification', 'ResponseConstraint', 'CompiledResponse',
     'RESPONSE_CONSTRAINTS', 'CLASSIFICATION_PATTERNS',
+
+    # Text Generation - Constraint-Preserving Text Projection
+    'TextStyle', 'TextConstraint', 'ProjectionResult', 'TextDocument', 'NewtonTextProjector',
+    'project', 'project_cdl', 'explain_constraints', 'generate_document',
+    'text_fingerprint', 'reduce_text', 'register_reduction',
+    'project_jester_constraints', 'create_text_ledger_entry', 'TEMPLATES',
 ]
 
 __version__ = "1.0.0"

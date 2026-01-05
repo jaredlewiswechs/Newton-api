@@ -89,6 +89,7 @@ python examples/nes_helper_demo.py --live # Against running Newton server
 | **[GLASS_BOX.md](GLASS_BOX.md)** | Policy, HITL, and Merkle proofs |
 | **[PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md)** | Verified benchmark data |
 | **[DEVELOPERS.md](DEVELOPERS.md)** | Developer guide |
+| **[docs/textgen.md](docs/textgen.md)** | Text generation guide (NEW) |
 
 ---
 
@@ -276,6 +277,9 @@ Deterministic constraint extraction from source code. Jester parses AST to extra
 ### Games (Gravity Wars)
 Newton's first constraint-verified physics game. A roguelike arena brawler where cheating is mathematically impossible—every movement and attack is verified before execution. Deploy gravity bombs to manipulate physics and defeat waves of enemies.
 
+### Text Generation (TextGen) - NEW
+Constraint-preserving text projection. Unlike LLMs which generate probabilistically and may hallucinate, Newton TextGen generates ONLY text that can be reduced back to the original constraints. The core guarantee: `Expand . Reduce = Identity`. If the text cannot be reduced to the source constraint, it is rejected. Supports formal, technical, educational, and minimal styles. Enables law-aware documentation, student-safe explanations, and contracts without legal drift.
+
 ---
 
 ## What Has Newton Proven?
@@ -372,6 +376,7 @@ Newton's first constraint-verified physics game. A roguelike arena brawler where
 | **Bridge** | Distributed Protocol (Bus) | 542 | PBFT consensus, Byzantine tolerant |
 | **Robust** | Adversarial Statistics | 597 | MAD, locked baselines, source tracking |
 | **Grounding** | Claim Verification | 214 | External sources, confidence scoring |
+| **TextGen** | Text Projection | 650 | Constraint-preserving, hallucination-impossible |
 
 ### Glass Box Layer
 
@@ -862,6 +867,7 @@ Newton-api/
 │   ├── merkle_anchor.py     # Proof export
 │   ├── vault_client.py      # Provenance logging
 │   ├── cartridges.py        # Media specification cartridges
+│   ├── textgen.py           # Constraint-preserving text generation (NEW)
 │   ├── newton_os.rb         # Tahoe Kernel - Knowledge Base
 │   └── newton_tahoe.rb      # Tahoe Kernel - PixelEngine
 │
