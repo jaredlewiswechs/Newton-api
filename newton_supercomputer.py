@@ -123,6 +123,19 @@ from core.chatbot_compiler import (
     CompilerDecision,
 )
 
+# parcCloud Authentication Gateway
+from parccloud.auth import (
+    signup as parccloud_signup,
+    signin as parccloud_signin,
+    admin_auth as parccloud_admin,
+    verify_token as parccloud_verify_token,
+    logout as parccloud_logout,
+    get_user_count as parccloud_user_count,
+    SignUpRequest,
+    SignInRequest,
+    AdminAuthRequest,
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -587,11 +600,86 @@ async def rate_limit_middleware(request: Request, call_next):
     response.headers["X-RateLimit-Limit"] = "100"
     return response
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# PARCCLOUD GATEWAY - Optional authentication gate for all routes
+# Enable with: PARCCLOUD_GATEWAY_ENABLED=true
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PARCCLOUD_GATEWAY_ENABLED = os.environ.get("PARCCLOUD_GATEWAY_ENABLED", "false").lower() == "true"
+
+# Paths that don't require authentication (even when gateway is enabled)
+PARCCLOUD_PUBLIC_PATHS = {
+    "/login",
+    "/health",
+    "/docs",
+    "/redoc",
+    "/openapi.json",
+    "/favicon.ico",
+}
+
+# Path prefixes that don't require authentication
+PARCCLOUD_PUBLIC_PREFIXES = (
+    "/parccloud/",
+    "/static/",
+)
+
+@app.middleware("http")
+async def parccloud_gateway_middleware(request: Request, call_next):
+    """
+    Optional gateway middleware - when enabled, requires parcCloud authentication
+    for all protected routes. Unauthenticated requests are redirected to /login.
+    """
+    # Skip if gateway is disabled
+    if not PARCCLOUD_GATEWAY_ENABLED:
+        return await call_next(request)
+
+    path = request.url.path
+
+    # Allow public paths
+    if path in PARCCLOUD_PUBLIC_PATHS:
+        return await call_next(request)
+
+    # Allow public prefixes
+    if path.startswith(PARCCLOUD_PUBLIC_PREFIXES):
+        return await call_next(request)
+
+    # Check for valid token
+    auth_header = request.headers.get("Authorization", "")
+    token = None
+
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    else:
+        # Also check cookies for browser sessions
+        token = request.cookies.get("parccloud_token")
+
+    if token:
+        user = parccloud_verify_token(token)
+        if user:
+            # Valid token - allow request
+            return await call_next(request)
+
+    # No valid token - redirect to login for HTML requests, 401 for API
+    accept = request.headers.get("Accept", "")
+    if "text/html" in accept:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+    else:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "error": "Authentication required",
+                "message": "Please sign in at /login to access this resource",
+                "login_url": "/login"
+            }
+        )
+
 # Mount static files for all frontends
 ROOT_DIR = Path(__file__).parent
 FRONTEND_DIR = ROOT_DIR / "frontend"
 TEACHERS_DIR = ROOT_DIR / "teachers-aide"
 BUILDER_DIR = ROOT_DIR / "interface-builder"
+PARCCLOUD_DIR = ROOT_DIR / "parccloud"
 
 # Helper: Find file across multiple possible paths (handles Render's environment)
 def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]:
@@ -745,6 +833,87 @@ async def serve_builder():
     if index_file:
         return HTMLResponse(content=index_file.read_text(), status_code=200)
     return HTMLResponse(content="<h1>Interface Builder</h1><p>Not found</p>", status_code=404)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PARCCLOUD - Authentication Gateway
+# "Like iCloud, but for Newton. The beach before the API."
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/login", response_class=HTMLResponse)
+async def serve_parccloud_login():
+    """Serve parcCloud login page"""
+    index_file = find_app_file(PARCCLOUD_DIR)
+    if index_file:
+        return HTMLResponse(content=index_file.read_text(), status_code=200)
+    return HTMLResponse(content="<h1>parcCloud</h1><p>Login page not found</p>", status_code=404)
+
+
+@app.post("/parccloud/signup")
+async def parccloud_signup_route(request: SignUpRequest):
+    """Create a free parcCloud account"""
+    result = parccloud_signup(request.name, request.email, request.password)
+    if not result.success:
+        raise HTTPException(status_code=400, detail=result.message)
+    return result.model_dump()
+
+
+@app.post("/parccloud/signin")
+async def parccloud_signin_route(request: SignInRequest):
+    """Sign in to parcCloud"""
+    result = parccloud_signin(request.email, request.password)
+    if not result.success:
+        raise HTTPException(status_code=401, detail=result.message)
+    return result.model_dump()
+
+
+@app.post("/parccloud/admin")
+async def parccloud_admin_route(request: AdminAuthRequest):
+    """Admin access to parcCloud"""
+    result = parccloud_admin(request.adminKey, request.adminSecret)
+    if not result.success:
+        raise HTTPException(status_code=403, detail=result.message)
+    return result.model_dump()
+
+
+@app.get("/parccloud/verify")
+async def parccloud_verify_route(request: Request):
+    """Verify a parcCloud session token"""
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else None
+
+    if not token:
+        token = request.query_params.get("token")
+
+    if not token:
+        raise HTTPException(status_code=401, detail="No token provided")
+
+    user = parccloud_verify_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return {"valid": True, "user": user}
+
+
+@app.post("/parccloud/logout")
+async def parccloud_logout_route(request: Request):
+    """Logout from parcCloud (invalidate token)"""
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else None
+
+    if token and parccloud_logout(token):
+        return {"success": True, "message": "Logged out successfully"}
+    return {"success": False, "message": "No active session"}
+
+
+@app.get("/parccloud/stats")
+async def parccloud_stats_route():
+    """Get parcCloud statistics (public)"""
+    return {
+        "total_users": parccloud_user_count(),
+        "tier": "free",
+        "status": "operational"
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
