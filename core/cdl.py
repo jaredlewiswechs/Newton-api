@@ -799,6 +799,106 @@ class CDLParser:
 
         return constraint
 
+    def import_code(self, code: str, language: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Import constraints from source code using Jester.
+
+        This is the @import_code primitive - it runs Jester on the provided
+        source code and returns a Newton cartridge with extracted constraints.
+
+        Args:
+            code: Source code to analyze
+            language: Optional language hint (auto-detected if not provided)
+
+        Returns:
+            Newton cartridge dict with constraints, forbidden states, etc.
+
+        Example:
+            parser = CDLParser()
+            cartridge = parser.import_code('''
+                def withdraw(amount, balance):
+                    if amount <= 0:
+                        raise ValueError("Invalid")
+                    if amount > balance:
+                        return None
+            ''')
+            # cartridge contains extracted constraints
+        """
+        try:
+            from tinytalk_py.jester import Jester, SourceLanguage
+
+            lang = None
+            if language:
+                try:
+                    lang = SourceLanguage(language.lower())
+                except ValueError:
+                    pass
+
+            jester = Jester(code, lang)
+            return jester.analyze().to_dict()
+        except ImportError:
+            return {
+                "error": "Jester module not available",
+                "constraints": [],
+                "message": "Install tinytalk_py.jester for @import_code support"
+            }
+
+    def parse_with_imports(self, definition: Dict[str, Any], check_halts: bool = True) -> Dict[str, Any]:
+        """
+        Parse a CDL definition that may include @import_code directives.
+
+        The definition can include:
+        - "@import_code": {"code": "...", "language": "python"}
+        - Regular constraint definitions
+
+        Returns a dict with parsed constraints and any imported cartridges.
+        """
+        result = {
+            "constraints": [],
+            "imported_cartridges": []
+        }
+
+        # Check for @import_code directive
+        if "@import_code" in definition:
+            import_def = definition["@import_code"]
+            if isinstance(import_def, str):
+                # Direct code string
+                cartridge = self.import_code(import_def)
+            elif isinstance(import_def, dict):
+                # Code with options
+                cartridge = self.import_code(
+                    import_def.get("code", ""),
+                    import_def.get("language")
+                )
+            elif isinstance(import_def, list):
+                # Multiple imports
+                for imp in import_def:
+                    if isinstance(imp, str):
+                        result["imported_cartridges"].append(self.import_code(imp))
+                    elif isinstance(imp, dict):
+                        result["imported_cartridges"].append(
+                            self.import_code(imp.get("code", ""), imp.get("language"))
+                        )
+                cartridge = None
+            else:
+                cartridge = None
+
+            if cartridge:
+                result["imported_cartridges"].append(cartridge)
+
+        # Parse regular constraints
+        if any(key not in ["@import_code"] for key in definition.keys()):
+            clean_def = {k: v for k, v in definition.items() if k != "@import_code"}
+            if clean_def:
+                constraint = self._parse_internal(clean_def)
+                if check_halts:
+                    halts, reason = self.halt_checker.check(constraint)
+                    if not halts:
+                        raise ValueError(f"Constraint may not terminate: {reason}")
+                result["constraints"].append(constraint)
+
+        return result
+
     def _parse_internal(self, d: Dict[str, Any]) -> Constraint:
         """Internal parsing logic."""
         # Check for conditional
@@ -976,6 +1076,40 @@ def newton(current: Any, goal: Any) -> bool:
     Everything else follows.
     """
     return current == goal
+
+
+def import_code(code: str, language: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Import constraints from source code using Jester.
+
+    This is the @import_code primitive - converts imperative code
+    into Newton constraints.
+
+    Args:
+        code: Source code to analyze (Python, Swift, JS, etc.)
+        language: Optional language hint (auto-detected if not provided)
+
+    Returns:
+        Newton cartridge dict with:
+        - constraints: Extracted guard conditions, assertions, etc.
+        - forbidden_states: States that cannot exist
+        - unreachable_states: Dead code and impossible branches
+        - required_invariants: Conditions that must always hold
+
+    Example:
+        >>> cartridge = import_code('''
+        ...     def withdraw(amount, balance):
+        ...         if amount <= 0:
+        ...             raise ValueError("Invalid")
+        ...         if amount > balance:
+        ...             return None
+        ...         return balance - amount
+        ... ''')
+        >>> cartridge['constraints']
+        [{'kind': 'guard', 'newton_constraint': 'amount <= 0', ...}, ...]
+    """
+    parser = CDLParser()
+    return parser.import_code(code, language)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

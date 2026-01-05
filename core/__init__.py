@@ -45,6 +45,7 @@ from .cdl import (
     verify_and,
     verify_or,
     newton,
+    import_code,  # @import_code primitive - Jester integration
 
     # State
     AggregationState,

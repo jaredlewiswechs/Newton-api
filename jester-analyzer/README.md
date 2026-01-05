@@ -1,54 +1,189 @@
-# Jester - Newton Code Constraint Translator
+# Jester
 
-**Jester** is a deterministic code analyzer that extracts constraints, guard conditions, and invariants from source code and produces Newton cartridge representations.
+## Newton Code Constraint Compiler
+
+Jester is the **constraint extraction front-end** for the Newton Supercomputer. It translates imperative source code into formal constraint specifications.
+
+This is not an analyzer. This is a **compiler pass** that converts procedural guards into declarative laws.
+
+---
 
 ## What Jester Does
 
-Unlike AI-powered code analysis that "guesses" intent, Jester performs **rule-based extraction** using Abstract Syntax Tree (AST) parsing. It translates structural conditions into a formal constraint model.
+```
+Source Code → AST → Constraint Extraction → Newton Cartridge → CDL
+```
 
-### Extracts:
-- **Guard Conditions** - `if` statements that protect against invalid states
-- **Assertions** - Explicit requirements that must be true
-- **Early Exits** - Return statements that prevent further execution
-- **Null Checks** - Validation against null/nil/None values
-- **Range Checks** - Bounds validation for numeric values
-- **Exception Paths** - Conditions that lead to thrown errors
+| Stage | Input | Output |
+|-------|-------|--------|
+| **Parse** | Source code (any language) | Abstract Syntax Tree |
+| **Extract** | AST nodes | Raw guard conditions |
+| **Normalize** | Raw conditions | Standardized constraint form |
+| **Translate** | Normalized form | Newton ratio constraints |
+| **Analyze** | Control flow | Unreachable states |
+| **Emit** | All of the above | Newton Cartridge (JSON) or CDL |
 
-### Produces:
-- **Newton Cartridge (JSON)** - Structured constraint representation
-- **CDL Output** - Constraint Definition Language for verification
-- **Forbidden States** - What states are not allowed
-- **Required Invariants** - What must always be true
+---
+
+## Core Concept
+
+Every `if` statement is a law waiting to be extracted.
+
+```python
+# This code:
+if amount > balance:
+    return None
+
+# Contains this law:
+# LAW: amount / balance <= 1.0
+
+# Which forbids this state:
+# FORBIDDEN: amount > balance
+```
+
+Jester makes the implicit explicit.
+
+---
+
+## Installation
+
+Jester is built into Newton. No separate installation required.
+
+```python
+from tinytalk_py.jester import Jester, analyze_code
+from core import import_code  # CDL integration
+```
+
+---
+
+## API
+
+### Direct Analysis
+
+```python
+from tinytalk_py.jester import Jester
+
+code = """
+def withdraw(amount, balance):
+    if amount <= 0:
+        raise ValueError("Invalid")
+    if amount > balance:
+        return None
+    return balance - amount
+"""
+
+jester = Jester(code)
+cartridge = jester.analyze().to_dict()
+
+# cartridge contains:
+# - constraints: [{kind: "guard", newton_constraint: "amount <= 0", ...}]
+# - forbidden_states: ["NOT (amount <= 0)", "NOT (amount > balance)"]
+# - unreachable_states: [...]  # CFG analysis results
+# - required_invariants: [...]
+```
+
+### CDL Integration (@import_code)
+
+```python
+from core import import_code
+
+# Import constraints from any source code
+cartridge = import_code("""
+    guard let user = user else { return nil }
+    precondition(user.age >= 18)
+""", language="swift")
+
+# Use in CDL definitions
+from core import CDLParser
+
+parser = CDLParser()
+result = parser.parse_with_imports({
+    "@import_code": {"code": source_code, "language": "python"},
+    "field": "amount",
+    "operator": "lt",
+    "value": 1000
+})
+```
+
+### HTTP API
+
+```bash
+# Analyze code
+curl -X POST http://localhost:8000/jester/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"code": "def f(x):\n  if x < 0: return\n  return x*2"}'
+
+# Get CDL output
+curl -X POST http://localhost:8000/jester/cdl \
+  -H "Content-Type: application/json" \
+  -d '{"code": "...", "language": "python"}'
+```
+
+---
+
+## Constraint Kinds
+
+| Kind | Pattern | Example |
+|------|---------|---------|
+| `guard` | `if condition:` | `if x < 0: return` |
+| `assertion` | `assert condition` | `assert balance >= 0` |
+| `early_exit` | `if cond: return` | `if not valid: return None` |
+| `null_check` | `if x is None` | `guard let x = x else` |
+| `precondition` | `precondition(...)` | `precondition(x > 0)` |
+| `exception` | `raise/throw` | `raise ValueError(...)` |
+
+---
+
+## CFG Analysis (v1.1)
+
+Jester performs control flow analysis to detect:
+
+### Dead Code
+```python
+def f():
+    return 1
+    x = 2  # UNREACHABLE: follows return at line 2
+```
+
+### Tautological Conditions
+```python
+if True:      # UNREACHABLE: else branch can never execute
+    do_thing()
+else:
+    never_runs()
+```
+
+### Contradictory Guards
+```python
+if x > 10:
+    if x < 5:  # UNREACHABLE: contradicts x > 10
+        impossible()
+```
+
+---
 
 ## Supported Languages
 
-| Language | Extensions | Status |
-|----------|------------|--------|
-| Python | `.py` | Full |
-| JavaScript | `.js`, `.mjs` | Full |
-| TypeScript | `.ts`, `.tsx` | Full |
-| Swift | `.swift` | Full |
-| Objective-C | `.m`, `.mm` | Full |
-| C | `.c`, `.h` | Full |
-| C++ | `.cpp`, `.cc`, `.hpp` | Full |
-| Java | `.java` | Full |
-| Go | `.go` | Full |
-| Rust | `.rs` | Full |
-| Ruby | `.rb` | Full |
+| Language | Detection | Extraction | CFG |
+|----------|-----------|------------|-----|
+| Python | Yes | Yes | Yes |
+| JavaScript | Yes | Yes | Yes |
+| TypeScript | Yes | Yes | Yes |
+| Swift | Yes | Yes | Yes |
+| Objective-C | Yes | Yes | Yes |
+| C | Yes | Yes | Yes |
+| C++ | Yes | Yes | Yes |
+| Java | Yes | Yes | Yes |
+| Go | Yes | Yes | Yes |
+| Rust | Yes | Yes | Yes |
+| Ruby | Yes | Yes | Yes |
 
-## API Endpoints
+---
 
-### `POST /jester/analyze`
-Analyze source code to extract constraints.
+## Output Formats
 
-```json
-{
-  "code": "def withdraw(amount, balance):\n    if amount <= 0:\n        raise ValueError('Invalid')\n    if amount > balance:\n        return None",
-  "language": "python"
-}
-```
+### Newton Cartridge (JSON)
 
-**Response:**
 ```json
 {
   "source_language": "python",
@@ -57,89 +192,159 @@ Analyze source code to extract constraints.
       "kind": "guard",
       "raw_condition": "amount <= 0",
       "normalized_form": "amount <= 0",
-      "newton_constraint": "amount / 0 <= 1.0",
-      "line_number": 2,
+      "newton_constraint": "amount <= 0",
+      "line_number": 3,
       "context": "Conditional check"
     }
   ],
   "forbidden_states": ["NOT (amount <= 0)"],
+  "unreachable_states": [],
   "required_invariants": [],
-  "summary": {"total_constraints": 2, "by_kind": {"guard": 2}}
+  "summary": {
+    "total_constraints": 2,
+    "unreachable_count": 0
+  }
 }
 ```
 
-### `POST /jester/cdl`
-Generate CDL (Constraint Definition Language) output.
+### CDL (Constraint Definition Language)
 
-```json
-{
-  "code": "...",
-  "language": "python"
+```
+// Newton Cartridge - Generated from python
+// Extracted 2 constraints
+
+cartridge JesterAnalysis {
+  // guard: amount <= 0
+  constraint c0: amount <= 0;
+
+  // guard: amount > balance
+  constraint c1: amount / balance > 1.0;
+
+  // Forbidden states
+  forbidden: NOT (amount <= 0);
+  forbidden: NOT (amount > balance);
 }
 ```
 
-**Response:**
-```json
-{
-  "cdl": "// Newton Cartridge - Generated from python\n...",
-  "constraint_count": 2
-}
-```
-
-### `GET /jester/info`
-Get analyzer capabilities and documentation.
-
-### `GET /jester/languages`
-List supported programming languages.
-
-### `GET /jester/constraint-kinds`
-List constraint types that can be extracted.
+---
 
 ## Architecture
 
 ```
-Code Input
-    |
-    v
-Language Detector (auto-detect from patterns)
-    |
-    v
-AST Parser (tree-sitter or regex fallback)
-    |
-    v
-Constraint Extractor (guards, assertions, early exits)
-    |
-    v
-Constraint Normalizer (standardize to Newton format)
-    |
-    v
-Newton Cartridge Generator
-    |
-    v
-JSON / CDL Output
++----------------------------------------------------------+
+|                        JESTER                            |
++----------------------------------------------------------+
+|                                                          |
+|  +--------------+   +--------------+   +---------------+ |
+|  |   Language   | > |    Regex     | > |  Constraint   | |
+|  |   Detector   |   |   Extractor  |   |   Normalizer  | |
+|  +--------------+   +--------------+   +---------------+ |
+|         |                 |                   |          |
+|         |           +-----+-----+             |          |
+|         |           |Tree-Sitter|             |          |
+|         |           | (optional)|             |          |
+|         |           +-----------+             |          |
+|         |                                     |          |
+|         v                                     v          |
+|  +--------------+                    +---------------+   |
+|  |     CFG      |                    |    Newton     |   |
+|  |   Analyzer   |                    |  Translator   |   |
+|  +--------------+                    +---------------+   |
+|         |                                     |          |
+|         v                                     v          |
+|  +--------------+                    +---------------+   |
+|  | Unreachable  |                    |   Cartridge   |   |
+|  |    States    |                    |   Generator   |   |
+|  +--------------+                    +---------------+   |
+|                                              |           |
++----------------------------------------------+-----------+
+                                               v
+                                    +------------------+
+                                    | Newton Cartridge |
+                                    |   (JSON / CDL)   |
+                                    +------------------+
 ```
+
+---
+
+## The Compiler Perspective
+
+Jester is the **lexer/parser** of constraint extraction:
+
+| Traditional Compiler | Jester |
+|---------------------|--------|
+| Lexer -> Tokens | Language Detector -> Source Lang |
+| Parser -> AST | Regex/Tree-Sitter -> Conditions |
+| Semantic Analysis | Constraint Normalizer |
+| Code Generation | CDL/Cartridge Emission |
+| Optimization | CFG Unreachable Detection |
+
+The output is not machine code. The output is **verified truth**.
+
+---
 
 ## Why This Matters
 
-Instead of saying "AI analyzed this code", Jester explicitly articulates:
+### Before Jester
 
-- **What states are forbidden** (red)
-- **What must always be true** (green)
-- **What the function legally expects** (blue)
+```
+Developer writes code with guards
+  -> Guards are implicit assumptions
+  -> Assumptions are not verified
+  -> Bugs happen at runtime
+```
 
-This is what Newton means by **correctness** - explicit, verifiable constraints.
+### After Jester
 
-No hallucination. No guessing. Just deterministic extraction of the rules your code already implies.
+```
+Developer writes code with guards
+  -> Jester extracts guards as constraints
+  -> Newton verifies constraints at compile time
+  -> Invalid states cannot be constructed
+```
 
-## Local Development
+---
 
-Access at: `http://localhost:8000/jester/`
+## Integration Points
 
-## Deployment
+### Newton CDL
+```python
+from core import import_code
+cartridge = import_code(source_code)
+```
 
-Jester is deployed as part of the Newton Supercomputer API:
-- Frontend: `/jester/`
-- API: `/jester/analyze`, `/jester/cdl`, `/jester/info`
+### Newton API
+```
+POST /jester/analyze
+POST /jester/cdl
+GET  /jester/info
+```
+
+### Web UI
+```
+/jester/  - Interactive code analyzer
+```
+
+---
+
+## Version History
+
+| Version | Features |
+|---------|----------|
+| 1.0.0 | Guard extraction, multi-language, CDL output |
+| 1.1.0 | CFG analysis, unreachable state detection, @import_code |
+
+---
+
+## Credits
+
+Jester implements concepts from:
+- Waltz's constraint propagation (1975)
+- Abstract interpretation (Cousot & Cousot, 1977)
+- Design by Contract (Meyer, 1986)
+- Dependent type theory
+
+Built for the Newton Supercomputer.
 
 ---
 
