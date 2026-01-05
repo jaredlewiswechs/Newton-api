@@ -695,6 +695,20 @@ def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]
             return path
     return None
 
+# Helper: Find file across multiple possible paths (handles Render's environment)
+def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]:
+    """Find a file, trying multiple path resolutions for Render compatibility."""
+    import os
+    possible_paths = [
+        app_dir / filename,
+        Path(os.getcwd()) / app_dir.name / filename,
+        Path("/opt/render/project/src") / app_dir.name / filename,
+    ]
+    for path in possible_paths:
+        if path.exists():
+            return path
+    return None
+
 # Mount static directories
 if FRONTEND_DIR.exists():
     app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
