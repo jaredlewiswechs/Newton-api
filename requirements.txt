@@ -17,6 +17,9 @@ requests==2.31.0
 # External Search (for grounding)
 googlesearch-python==1.2.5
 
+# Graph operations (for TLM)
+networkx==3.1
+
 # Testing
 pytest==7.4.4
 hypothesis==6.92.1
