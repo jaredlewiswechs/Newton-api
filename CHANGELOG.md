@@ -1,6 +1,6 @@
 # Changelog
 
-**January 5, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 All notable changes to Newton Supercomputer are documented here.
 
@@ -8,9 +8,53 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.2.0] - 2026-01-05
+## [1.2.0] - 2026-01-06
 
 ### Added
+
+#### Newton API Intro Course - 5-Level PDA Tutorial (#173)
+Complete educational course for building a Personal Digital Assistant:
+
+- **`docs/INTRO_COURSE.md`** - 5-level progressive tutorial (752 lines)
+  - Level 1: Basic Blueprint - State and structure
+  - Level 2: Laws - Constraints that cannot be broken
+  - Level 3: Forges - Actions that respect laws
+  - Level 4: Task Management - Multi-object coordination
+  - Level 5: Full PDA - Complete personal assistant
+
+- **New Example Files** (5 runnable demos)
+  - `examples/pda_level1.py` - Basic Blueprint demo
+  - `examples/pda_level2.py` - Laws demo
+  - `examples/pda_level3.py` - Forges demo
+  - `examples/pda_level4.py` - Task Management demo
+  - `examples/pda_level5.py` - Full PDA demo
+
+#### R/RStudio Quickstart Guide (#172)
+Integration guide for R users:
+
+- **`RSTUDIO_QUICKSTART.md`** - Complete R integration guide (298 lines)
+  - Local mode using tinyTalk
+  - Remote mode using Newton API client
+  - Trading risk management demo
+  - Type safety with Matter types (Money, Mass, Distance)
+  - Runnable examples for R/RStudio
+
+#### Newton Typed Dictionary - Words Become Laws (#170)
+Constraint-aware dictionary system:
+
+- **`core/typed_dictionary.py`** - Typed dictionary implementation (43KB)
+  - Every word carries semantic constraints
+  - Algebraic properties and type constraints
+  - Legal implications for vocabulary
+  - Type-safe vocabulary with mathematical guarantees
+
+#### PARADOX Detection Phase (#168)
+Contradiction detection in Newton TLM:
+
+- Added PARADOX phase to phase system (0→9→0)
+- Detects when two constraints create impossible state (1 == 0)
+- Halts at PARADOX phase rather than computing invalid results
+- Newton's answer to the halting problem
 
 #### Newton Setup Scripts - One-Command Installation
 - **`setup_newton.sh`** - Comprehensive setup script for local installation
@@ -79,6 +123,11 @@ Text generation that cannot hallucinate:
 - Enables law-aware documentation without semantic drift
 
 ### Fixed
+
+- **27 Failing Tests Resolved** (#171)
+  - Fixed chatbot, constraints, and dictionary test failures
+  - Updated test references for new module structure
+  - All affected tests now passing
 
 - **Test Import Path** - Fixed `tests/test_ratio_constraints.py` import
   - Changed `from core import` to `from tinytalk_py.core import`

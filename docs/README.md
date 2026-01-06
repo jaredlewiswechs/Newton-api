@@ -8,7 +8,7 @@ The constraint IS the instruction. The verification IS the computation.
 
 **finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
 
-**Version**: 1.2.0 | **Date**: January 5, 2026 | **Tests**: 580+ passing | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
+**Version**: 1.2.0 | **Date**: January 6, 2026 | **Tests**: 580+ passing | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 ---
 
@@ -16,6 +16,8 @@ The constraint IS the instruction. The verification IS the computation.
 
 ### Getting Started
 - [Quick Start Guide](getting-started.md) - Get up and running in 5 minutes
+- **[Newton API Intro Course](INTRO_COURSE.md)** - 5-level PDA tutorial with runnable examples (NEW)
+- **[R/RStudio Quickstart](../RSTUDIO_QUICKSTART.md)** - Local and remote R integration (NEW)
 - [Authentication](authentication.md) - API keys, rate limits, and security
 - [Configuration](configuration.md) - Environment variables and settings
 
@@ -70,9 +72,10 @@ The constraint IS the instruction. The verification IS the computation.
 
 | Component | Documentation | Purpose | Tests |
 |-----------|---------------|---------|-------|
-| **Newton TLM** | [newton_tlm/README.md](../newton_tlm/README.md) | ACID-compliant symbolic kernel | 23/23 |
+| **Newton TLM** | [newton_tlm/README.md](../newton_tlm/README.md) | ACID-compliant symbolic kernel with PARADOX detection | 23/23 |
 | **Newton Geometry** | [newton_geometry/README.md](../newton_geometry/README.md) | Topological constraint framework | ✓ |
 | **TextGen** | [textgen.md](textgen.md) | Constraint-preserving text generation | ✓ |
+| **Typed Dictionary** | [core/typed_dictionary.py](../core/typed_dictionary.py) | Words become laws through math + types (NEW) | ✓ |
 | **Jester** | [jester-analyzer/README.md](../jester-analyzer/README.md) | Code constraint translator | ✓ |
 
 ### Advanced Features

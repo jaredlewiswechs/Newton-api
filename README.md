@@ -23,7 +23,7 @@
 [![ACID](https://img.shields.io/badge/ACID-compliant-green.svg)](#newton-tlm)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
 
-**January 5, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ---
 
@@ -87,6 +87,16 @@ python examples/nes_helper_demo.py        # See NES lesson planning in action
 python examples/nes_helper_demo.py --live # Against running Newton server
 ```
 
+**Try the PDA (Personal Digital Assistant) Course:** (NEW)
+```bash
+python examples/pda_level1.py  # Level 1: Basic Blueprint
+python examples/pda_level2.py  # Level 2: Laws (constraints)
+python examples/pda_level3.py  # Level 3: Forges (actions)
+python examples/pda_level4.py  # Level 4: Task Management
+python examples/pda_level5.py  # Level 5: Full PDA App
+```
+See [docs/INTRO_COURSE.md](docs/INTRO_COURSE.md) for the complete tutorial.
+
 ---
 
 ## Documentation
@@ -94,12 +104,14 @@ python examples/nes_helper_demo.py --live # Against running Newton server
 | Document | Description |
 |----------|-------------|
 | **[TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md)** | **Complete TinyTalk programming guide** (start here!) |
+| **[docs/INTRO_COURSE.md](docs/INTRO_COURSE.md)** | **Newton API Intro Course** - 5-level PDA app tutorial (NEW) |
+| **[RSTUDIO_QUICKSTART.md](RSTUDIO_QUICKSTART.md)** | R/RStudio integration guide (NEW) |
 | **[WHITEPAPER.md](WHITEPAPER.md)** | Technical architecture and guarantees |
 | **[TINYTALK_BIBLE.md](TINYTALK_BIBLE.md)** | The "No-First" philosophy |
 | **[GLASS_BOX.md](GLASS_BOX.md)** | Policy, HITL, and Merkle proofs |
 | **[PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md)** | Verified benchmark data |
 | **[DEVELOPERS.md](DEVELOPERS.md)** | Developer guide |
-| **[docs/textgen.md](docs/textgen.md)** | Text generation guide (NEW) |
+| **[docs/textgen.md](docs/textgen.md)** | Text generation guide |
 
 ---
 
@@ -295,6 +307,12 @@ ACID-compliant symbolic computation kernel. A deterministic phase-driven system 
 
 ### Topological Constraint Framework (Newton Geometry) - NEW
 Mathematical foundation for constraint systems using topological spaces and manifolds. Provides TopologicalSpace, ConstraintManifold, MorphismFunctor, and GeometricVerifier for reasoning about constraint geometry and structure-preserving transformations.
+
+### Newton Typed Dictionary - NEW
+"Words become laws through math + types." A constraint-aware dictionary system where every word carries semantic constraints. When you look up a word, you get not just its definition but its algebraic properties, type constraints, and legal implications. Enables type-safe vocabulary with mathematical guarantees.
+
+### PARADOX Detection - NEW
+Newton TLM includes a PARADOX phase for detecting contradictions before they propagate. When the system detects that two constraints would create an impossible state (1 == 0), it halts at the PARADOX phase rather than proceeding with invalid computation. This is Newton's answer to the halting problem: contradictions are caught, not computed.
 
 ---
 
@@ -894,7 +912,8 @@ Newton-api/
 │   ├── merkle_anchor.py     # Proof export
 │   ├── vault_client.py      # Provenance logging
 │   ├── cartridges.py        # Media specification cartridges
-│   ├── textgen.py           # Constraint-preserving text generation (NEW)
+│   ├── textgen.py           # Constraint-preserving text generation
+│   ├── typed_dictionary.py  # Newton Typed Dictionary (NEW)
 │   ├── newton_os.rb         # Tahoe Kernel - Knowledge Base
 │   └── newton_tahoe.rb      # Tahoe Kernel - PixelEngine
 │
@@ -921,6 +940,7 @@ Newton-api/
 │
 ├── docs/                     # Documentation
 │   ├── README.md            # Docs index
+│   ├── INTRO_COURSE.md      # Newton API Intro Course (NEW)
 │   ├── api-reference.md
 │   ├── logic-engine.md
 │   └── ...
@@ -932,6 +952,7 @@ Newton-api/
 ├── WHITEPAPER.md            # Technical architecture
 ├── TINYTALK_BIBLE.md        # tinyTalk philosophy
 ├── GLASS_BOX.md             # Glass Box implementation
+├── RSTUDIO_QUICKSTART.md    # R/RStudio integration guide (NEW)
 ├── CONTRIBUTING.md          # Developer guide (newbie-friendly)
 ├── DEPLOYMENT.md            # Deployment guide
 ├── CHANGELOG.md             # Version history
@@ -940,7 +961,12 @@ Newton-api/
 │
 ├── examples/                # Working demos
 │   ├── tinytalk_demo.py    # tinyTalk concepts in action
-│   └── nes_helper_demo.py  # NES Teacher's Aide demo (NEW)
+│   ├── nes_helper_demo.py  # NES Teacher's Aide demo
+│   ├── pda_level1.py       # PDA Course Level 1: Basic Blueprint (NEW)
+│   ├── pda_level2.py       # PDA Course Level 2: Laws (NEW)
+│   ├── pda_level3.py       # PDA Course Level 3: Forges (NEW)
+│   ├── pda_level4.py       # PDA Course Level 4: Task Management (NEW)
+│   └── pda_level5.py       # PDA Course Level 5: Full PDA (NEW)
 │
 ├── tinytalk/                # tinyTalk documentation
 │   ├── ruby/               # Ruby module
@@ -1308,4 +1334,4 @@ curl http://localhost:8000/teachers/classrooms/CLASS001/groups
 
 ---
 
-**Last Updated:** January 5, 2026 | **Version:** 1.2.0 | **Tests:** 580+ passing
+**Last Updated:** January 6, 2026 | **Version:** 1.2.0 | **Tests:** 580+ passing
