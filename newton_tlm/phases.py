@@ -12,21 +12,22 @@ from typing import Optional
 
 class Phase(Enum):
     """
-    The 10 phases of Newton TLM computation cycle.
-    
+    The 11 phases of Newton TLM computation cycle.
+
     Every cycle begins at IDLE (0) and returns to IDLE (0).
     No phase can be skipped. No state mutation occurs in IDLE.
-    
-    0. IDLE      - Rest state, ready for new input
-    1. INGEST    - Accept new input/data
-    2. PARSE     - Parse and structure the input
+
+    0. IDLE       - Rest state, ready for new input
+    1. INGEST     - Accept new input/data
+    2. PARSE      - Parse and structure the input
     3. CRYSTALLIZE - Form patterns and structures
-    4. DIFFUSE   - Spread activation across graph
-    5. CONVERGE  - Consolidate and stabilize
-    6. VERIFY    - Check constraints and invariants
-    7. COMMIT    - Apply changes to state
-    8. REFLECT   - Analyze results and learn
-    9. IDLE      - Return to rest (cycle complete)
+    4. DIFFUSE    - Spread activation across graph
+    5. CONVERGE   - Consolidate and stabilize
+    6. VERIFY     - Check constraints and invariants
+    7. PARADOX    - Detect contradictions (guardrail)
+    8. COMMIT     - Apply changes to state
+    9. REFLECT    - Analyze results and learn
+    10. IDLE      - Return to rest (cycle complete)
     """
     IDLE = 0
     INGEST = 1
@@ -35,8 +36,9 @@ class Phase(Enum):
     DIFFUSE = 4
     CONVERGE = 5
     VERIFY = 6
-    COMMIT = 7
-    REFLECT = 8
+    PARADOX = 7
+    COMMIT = 8
+    REFLECT = 9
 
 
 class PhaseMachine:
@@ -138,8 +140,8 @@ class PhaseMachine:
     def get_phase_number(self) -> int:
         """
         Get the numeric value of the current phase.
-        
+
         Returns:
-            Phase number (0-8)
+            Phase number (0-9)
         """
         return self.current.value
