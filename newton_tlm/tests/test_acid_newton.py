@@ -251,20 +251,21 @@ class TestNewtonCompliance:
         N2: Boundary - Must return to IDLE after cycle.
         """
         pm = PhaseMachine()
-        
+
         # Start at IDLE
         assert pm.current == Phase.IDLE
-        
-        # Go through cycle
+
+        # Go through cycle (including PARADOX phase)
         pm.transition(Phase.INGEST)
         pm.transition(Phase.PARSE)
         pm.transition(Phase.CRYSTALLIZE)
         pm.transition(Phase.DIFFUSE)
         pm.transition(Phase.CONVERGE)
         pm.transition(Phase.VERIFY)
+        pm.transition(Phase.PARADOX)
         pm.transition(Phase.COMMIT)
         pm.transition(Phase.REFLECT)
-        
+
         # Must return to IDLE
         pm.transition(Phase.IDLE)
         assert pm.current == Phase.IDLE

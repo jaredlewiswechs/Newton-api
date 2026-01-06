@@ -16,6 +16,7 @@ from .ledger_entry import LedgerEntry
 from .phases import Phase, PhaseMachine
 from .invariant import canonical_hash, one_equals_one, GoalRegistry
 from .reversibility import Snapshot, SnapshotManager
+from .paradox import ParadoxDetector, ParadoxError, ParadoxResult
 
 
 class NewtonTLM:
@@ -138,18 +139,58 @@ class NewtonTLM:
     def abort_transaction(self) -> None:
         """
         Abort current transaction.
-        
+
         Discards all buffered changes.
         """
         if self.transaction is not None:
             self.transaction.abort()
             self.transaction = None
-    
+
+    def detect_paradox(self, tx: Transaction) -> ParadoxResult:
+        """
+        Detect logical contradictions in a transaction.
+
+        Checks for both internal contradictions (within the transaction)
+        and external contradictions (against the immutable graph ledger).
+
+        This method is called during the PARADOX phase (phase 7) to ensure
+        no contradictory knowledge enters the ledger.
+
+        Args:
+            tx: Transaction to validate
+
+        Returns:
+            ParadoxResult with detection outcome
+
+        Example:
+            Existing Truth: Node A has relation 'is_safe' to Node B.
+            New Transaction: Attempts to assert Node A 'is_unsafe' to Node B.
+            Result: ParadoxResult.has_paradox = True
+        """
+        detector = ParadoxDetector(self.graph)
+        return detector.detect(tx)
+
+    def validate_paradox(self, tx: Transaction) -> None:
+        """
+        Validate a transaction, raising ParadoxError if contradictions found.
+
+        This is a convenience method for external validation.
+
+        Args:
+            tx: Transaction to validate
+
+        Raises:
+            ParadoxError: If any paradox is detected
+        """
+        detector = ParadoxDetector(self.graph)
+        detector.validate(tx)
+
     def ingest(self, data: Any) -> bool:
         """
         Full phase-driven ingest cycle.
-        
-        Executes complete 0→9→0 phase cycle to ingest data.
+
+        Executes complete 0→10→0 phase cycle to ingest data.
+        Includes PARADOX phase (7) for contradiction detection.
         
         Args:
             data: Data to ingest
@@ -192,16 +233,26 @@ class NewtonTLM:
             
             # CONVERGE → VERIFY
             self.phase_machine.transition(Phase.VERIFY)
-            
+
             # Verify transaction not empty
             if tx.is_empty():
                 self.abort_transaction()
                 self.phase_machine.reset()
                 return False
-            
-            # VERIFY → COMMIT
+
+            # VERIFY → PARADOX
+            self.phase_machine.transition(Phase.PARADOX)
+
+            # Run paradox detection - halt if contradictions found
+            paradox_result = self.detect_paradox(tx)
+            if paradox_result.has_paradox:
+                self.abort_transaction()
+                self.phase_machine.reset()
+                return False
+
+            # PARADOX → COMMIT
             self.phase_machine.transition(Phase.COMMIT)
-            
+
             # Commit transaction
             self.commit_transaction()
             
