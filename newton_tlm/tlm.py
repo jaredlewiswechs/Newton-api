@@ -189,7 +189,7 @@ class NewtonTLM:
         """
         Full phase-driven ingest cycle.
 
-        Executes complete 0→10→0 phase cycle to ingest data.
+        Executes complete 0→9→0 phase cycle to ingest data.
         Includes PARADOX phase (7) for contradiction detection.
         
         Args:
