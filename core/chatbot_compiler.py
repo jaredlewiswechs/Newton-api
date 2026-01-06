@@ -423,8 +423,8 @@ CLASSIFICATION_PATTERNS: Dict[RequestType, List[str]] = {
         r"(calculate|compute|solve|evaluate|find the)",
         r"\d+\s*[\+\-\*\/\^]\s*\d+",
         r"(what is|equals|=)\s*\d+",
-        r"(percent|percentage|ratio|average|mean|median)",
-        r"(sum|total|difference|product|quotient)",
+        r"\b(percent|percentage|ratio|average|mean|median)\b",
+        r"\b(sum|total|difference|product|quotient)\b",
     ],
 
     RequestType.MEDICAL_ADVICE: [
@@ -433,6 +433,9 @@ CLASSIFICATION_PATTERNS: Dict[RequestType, List[str]] = {
         r"(dose|dosage|prescription|prescribe|side effect)",
         r"(should i take|how much.*take|is it safe)",
         r"(pain|ache|fever|cough|headache|nausea)",
+        r"\b(rash|swelling|bleeding|infection|allergic|allergy)\b",
+        r"\b(serious|dangerous|emergency|urgent)\b.*(rash|symptom|condition|pain)",
+        r"(is this|is my|are these).*(serious|normal|dangerous)",
     ],
 
     RequestType.LEGAL_ADVICE: [
@@ -441,6 +444,8 @@ CLASSIFICATION_PATTERNS: Dict[RequestType, List[str]] = {
         r"(contract|agreement|terms|conditions)",
         r"(arrest|criminal|misdemeanor|felony)",
         r"(divorce|custody|settlement)",
+        r"(enforceable|non-?compete|clause|jurisdiction)",
+        r"(can i be|am i|is this).*(sued|legal|liable)",
     ],
 
     RequestType.FINANCIAL_ADVICE: [
@@ -460,23 +465,31 @@ CLASSIFICATION_PATTERNS: Dict[RequestType, List[str]] = {
 
     RequestType.CODE_GENERATION: [
         r"(write|create|generate|implement)\s*(a|an|the)?\s*(function|class|script|program|code|app)",
-        r"(python|javascript|java|c\+\+|rust|go|ruby|php|sql|html|css)",
-        r"(code|programming|developer|software|api|database)",
+        r"\b(python|javascript|java|c\+\+|rust|go|ruby|php|sql|html|css)\b",
+        r"\b(code|programming|developer|software|api|database)\b",
         r"(debug|fix|refactor|optimize)\s*(this|the|my)\s*code",
     ],
 
     RequestType.CREATIVE: [
         r"(write|create|generate)\s*(a|an)?\s*(story|poem|song|script|novel)",
-        r"(brainstorm|ideate|imagine|invent)",
-        r"(creative|artistic|fiction|fantasy)",
+        r"(brainstorm|ideate|imagine)\b",
+        r"\b(creative|artistic|fiction|fantasy)\b",
+        r"^(write|create)\s+(me\s+)?(a|an)\s+",
     ],
 
     RequestType.HARMFUL: [
-        r"(how to )?(kill|murder|harm|hurt|injure|assassinate)",
-        r"(how to )?(make|build|create).*\b(bomb|weapon|explosive|poison)\b",
-        r"(how to )?(hack|steal|phish|scam|fraud)",
-        r"(suicide|self.harm|hurt myself)",
-        r"(illegal drug|meth|cocaine|heroin).*\b(make|cook|produce)\b",
+        r"\b(kill|murder|harm|hurt|injure|assassinate)\b",
+        r"\b(bombs?|weapons?|explosives?|poisons?)\b",
+        r"\b(hack|steal|phish|scam|fraud)\b.*\b(accounts?|passwords?|emails?|systems?)\b",
+        r"\b(hack|crack|break into)\b",
+        r"(suicide|suicidal|self-?harm|hurt(ing)?\s+(my)?self)",
+        r"\b(meth|methamphetamine|cocaine|heroin|drugs?)\b",
+        r"\b(napalm|ricin|sarin|anthrax)\b",
+        r"(how to|tell me|explain).*\b(kill|murder|harm|hurt)\b",
+        r"(how to|tell me|explain).*\b(make|build|create|synthesize|cook)\b.*\b(bombs?|weapons?|drugs?|explosives?|meth|poisons?)\b",
+        r"\b(get|buy|find|obtain)\s+(illegal\s+)?drugs?\b",
+        r"\b(mix|combine|mixing)\b.*(ammonia|chlorine|bleach)",
+        r"(chlorine|ammonia|bleach).*(mix|combine|together)",
     ],
 }
 
@@ -940,10 +953,12 @@ class ChatbotCompiler:
         if not constraint:
             return True, []  # No constraints to check
 
-        # Check forbidden patterns
-        for pattern in constraint.forbidden_patterns:
-            if re.search(pattern, content_to_check, re.IGNORECASE):
-                violations.append(f"Response contains forbidden pattern: {pattern}")
+        # Check forbidden patterns (skip for DEFER responses - we're just acknowledging
+        # the question and referring to professionals, not providing the forbidden advice)
+        if response.decision != CompilerDecision.DEFER:
+            for pattern in constraint.forbidden_patterns:
+                if re.search(pattern, content_to_check, re.IGNORECASE):
+                    violations.append(f"Response contains forbidden pattern: {pattern}")
 
         # Check required elements
         for element in constraint.required_elements:

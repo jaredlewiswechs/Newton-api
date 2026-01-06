@@ -188,7 +188,13 @@ class TypedConcept:
         for key, value in bindings.items():
             template = template.replace(f"{{{key}}}", str(value))
 
-        # Apply defaults
+        # Apply defaults - replace placeholders matching default names with values
+        if self.default_field:
+            template = template.replace(f"{{{self.default_field}}}", self.default_field)
+        if self.default_reference:
+            template = template.replace(f"{{{self.default_reference}}}", self.default_reference)
+
+        # Also support generic {field} and {reference} placeholders
         if self.default_field:
             template = template.replace("{field}", self.default_field)
         if self.default_reference:

@@ -361,6 +361,12 @@ class ExtractionPatterns:
             Operator.GT,
             ConstraintPolarity.REQUIRE
         ),
+        # "need/require/want X items" - basic numeric extraction
+        "basic_count": (
+            r'\b(?:need|require|want|have)\s+(\d+(?:\.\d+)?)\s+(\w+)',
+            Operator.GE,
+            ConstraintPolarity.REQUIRE
+        ),
     }
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -637,8 +643,9 @@ class ConstraintExtractor:
 
     def _split_sentences(self, text: str) -> List[str]:
         """Split text into sentences for processing."""
-        # Split on sentence boundaries
-        sentences = re.split(r'[.!?]+', text)
+        # Split on sentence boundaries (but not decimal points like 4.5)
+        # Look for period followed by space and capital letter, or end of string
+        sentences = re.split(r'(?<!\d)\.(?!\d)|\?|!', text)
         # Also split on semicolons and significant conjunctions
         expanded = []
         for s in sentences:
