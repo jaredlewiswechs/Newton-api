@@ -85,6 +85,24 @@ try:
         motion,
     )
 
+    from .sovereign import (
+        # Core Engine
+        SovereignEngine,
+        Intent,
+        AuditResult,
+        # Boundaries
+        Boundary,
+        BoundaryType,
+        BoundaryRegistry,
+        # Presence Management
+        PresenceState,
+        PresenceManager,
+        # Functions
+        project_future,
+        calculate_fg_ratio,
+        create_sovereign_engine,
+    )
+
     from .education import (
         # Enums
         Subject,
@@ -215,6 +233,24 @@ except ImportError:
         motion,
     )
 
+    from sovereign import (
+        # Core Engine
+        SovereignEngine,
+        Intent,
+        AuditResult,
+        # Boundaries
+        Boundary,
+        BoundaryType,
+        BoundaryRegistry,
+        # Presence Management
+        PresenceState,
+        PresenceManager,
+        # Functions
+        project_future,
+        calculate_fg_ratio,
+        create_sovereign_engine,
+    )
+
     from education import (
         # Enums
         Subject,
@@ -340,6 +376,18 @@ __all__ = [
     "Presence",
     "Delta",
     "motion",
+    # Sovereign Engine
+    "SovereignEngine",
+    "Intent",
+    "AuditResult",
+    "Boundary",
+    "BoundaryType",
+    "BoundaryRegistry",
+    "PresenceState",
+    "PresenceManager",
+    "project_future",
+    "calculate_fg_ratio",
+    "create_sovereign_engine",
     # Education
     "Subject",
     "GradeLevel",
