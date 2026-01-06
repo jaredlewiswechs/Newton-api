@@ -16,7 +16,7 @@ from .ledger_entry import LedgerEntry
 from .phases import Phase, PhaseMachine
 from .invariant import canonical_hash, one_equals_one, GoalRegistry
 from .reversibility import Snapshot, SnapshotManager
-from .paradox import ParadoxDetector, ParadoxError, ParadoxResult
+from .paradox import ParadoxDetector, ParadoxResult
 
 
 class NewtonTLM:
