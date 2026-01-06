@@ -260,6 +260,56 @@ summary = hypergraph.topology_summary()
 print(summary["is_connected"])  # True
 ```
 
+## Geometric Constraint Linting
+
+Human constraint verification happens geometrically before semantically. The `geometric_lint` module validates that constraint names align with their semantic intent.
+
+```python
+from newton_geometry.geometric_lint import (
+    lint_constraint_name,
+    lint_cartridge,
+    SemanticType,
+    analyze_glyphs,
+)
+
+# Analyze a single constraint
+report = lint_constraint_name("finfr", SemanticType.TERMINAL)
+print(report.passed)  # True - excellent geometric alignment
+
+# finfr breakdown:
+# f: hook (action)
+# i: point (identity)
+# n: bridge (continuation attempt)
+# f: hook (action again)
+# r: terminal curve (turn back)
+# Shape encodes: "tried to continue, hit wall, turned back"
+
+# Lint an entire cartridge
+constraints = [
+    ("when_valid_token", SemanticType.SEQUENTIAL),
+    ("finfr_error", SemanticType.TERMINAL),
+    ("user_quota", SemanticType.CONTAINMENT),
+]
+result = lint_cartridge(constraints)
+print(result["summary"])  # {'total': 3, 'passed': 3, 'warnings': 0, 'errors': 0}
+```
+
+### Seven Geometric Primitives
+
+| Primitive | Characters | Semantic Use |
+|-----------|------------|--------------|
+| **Closed Forms** | o, O, Q, @, d, b | Containment, completeness, invariants |
+| **Open Curves** | c, C, s, (, ) | Transitions, partial states, ranges |
+| **Straight Lines** | l, I, 1, \|, - | Thresholds, equality, atomicity |
+| **Intersections** | x, X, +, *, t | Choice points, AND/OR, branching |
+| **Hooks/Terminals** | f, r, j, g, y | Actions, finality, state capture |
+| **Bridges** | n, m, h, u, w | Sequential flow, continuation |
+| **Points** | i, j, !, ?, . | Atomic facts, identity, emphasis |
+
+See [Geometric Constraint Semantics](/docs/foundation/GEOMETRIC_CONSTRAINT_SEMANTICS.md) for complete documentation.
+
+---
+
 ## The Complete Topology
 
 Combine all structures into a unified view:

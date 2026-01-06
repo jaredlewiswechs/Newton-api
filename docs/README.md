@@ -21,6 +21,8 @@ The constraint IS the instruction. The verification IS the computation.
 
 ### Core Concepts
 - **[CLP System Definition](NEWTON_CLP_SYSTEM_DEFINITION.md)** - Historical lineage and CS foundations (Sketchpad, Waltz, ThingLab, CLP)
+- **[Geometric Constraint Semantics](foundation/GEOMETRIC_CONSTRAINT_SEMANTICS.md)** - Symbol geometry → constraint verification (NEW)
+- [f/g Visual Language](product-architecture/FG_VISUAL_LANGUAGE.md) - The Newton ratio made visible
 - [Whitepaper](../WHITEPAPER.md) - Architecture and philosophy
 - [Glass Box](../GLASS_BOX.md) - Policy enforcement, HITL, Merkle proofs
 - [Logic Engine](logic-engine.md) - Verified Turing complete computation

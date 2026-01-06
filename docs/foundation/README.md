@@ -52,6 +52,20 @@ Covers each module:
 
 Plus: Data flow diagrams, module interdependencies, file organization.
 
+### 4. [Geometric Constraint Semantics](./GEOMETRIC_CONSTRAINT_SEMANTICS.md) *(NEW)*
+
+**Human constraint verification happens geometrically before semantically.**
+
+The canonical document formalizing the relationship between symbol shapes and constraint meanings:
+- **Geometric Primitives** - Seven glyph categories (closed forms, open curves, straight lines, intersections, hooks/terminals, bridges, points)
+- **Newton Keyword Analysis** - Why `finfr` is the perfect geometric-semantic alignment
+- **Constraint Naming Guidelines** - Match shape to semantic structure
+- **Visual Density Rules** - Light words for guards, heavy words for terminals
+- **Font/Typography Requirements** - Design choices that affect verification accuracy
+- **Geometric Linting** - Automated validation of constraint name alignment
+
+**Core Thesis**: The shape of a constraint name carries cognitive load before the meaning is parsed. Notation design is part of system correctness.
+
 ---
 
 ## How These Documents Relate
@@ -70,16 +84,18 @@ Plus: Data flow diagrams, module interdependencies, file organization.
 │  BRE → Shape Theory → PHONON → CMFK → BILL → TMR → Newton  │
 └─────────────────────────────────────────────────────────────┘
                                 │
-                                ↓
-                    ┌─────────────────────────┐
-                    │   UNIFIED ARCHITECTURE  │
-                    │   (How it all works)    │
-                    └─────────────────────────┘
+                    ┌───────────┴───────────┐
+                    ↓                       ↓
+    ┌─────────────────────────┐  ┌─────────────────────────────┐
+    │   UNIFIED ARCHITECTURE  │  │  GEOMETRIC CONSTRAINT       │
+    │   (How it all works)    │  │  SEMANTICS (How it's read)  │
+    └─────────────────────────┘  └─────────────────────────────┘
 ```
 
 **IP Architecture** explains WHY Newton is defensible.
 **BRE to Newton** explains the THEORY behind Newton.
 **Unified Architecture** explains HOW Newton is implemented.
+**Geometric Constraint Semantics** explains HOW notation carries meaning.
 
 ---
 
