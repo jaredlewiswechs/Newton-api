@@ -11,25 +11,14 @@
 //
 //  "Combos, not permutations. State what can exist. Newton handles the rest."
 //
-//  ═══════════════════════════════════════════════════════════════════════════════
-//  HISTORICAL LINEAGE:
-//
-//  TinyTalk descends from Smalltalk (Kay, 1972) and ThingLab (Borning, 1979).
-//  The Blueprint/Law/Forge pattern implements CLP(X) (Jaffar & Lassez, 1987).
-//  The f/g ratio extends CSP with dimensional analysis for verified computation.
-//
-//  Key Insight from Alan Kay:
-//    "Smalltalk is not about objects, it's about messaging."
-//    TinyTalk is not about objects, it's about constraints.
-//  ═══════════════════════════════════════════════════════════════════════════════
 
 import Foundation
 import SwiftUI
 import Combine
+import CryptoKit
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
 // BOOK I: THE LEXICON
-// The fundamental words that define what can and cannot exist.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /// The result of evaluating a law against state.
@@ -92,63 +81,43 @@ public struct Fin: Error, CustomStringConvertible, Sendable {
 }
 
 // MARK: - The `when` Function
-// Declares a fact. The present state.
 
-/// Declares a constraint check. If condition is true and result is finfr, throws.
+/// Declares a constraint check. If condition is true and result is fin/finfr, throws.
 /// - Parameters:
 ///   - condition: The boolean condition to evaluate
 ///   - then: What happens if condition is true (fin or finfr)
 /// - Returns: The condition result for chaining
-/// - Throws: Finfr if condition is true and result is finfr
 @discardableResult
 public func when(_ condition: Bool, then result: LawResult = .allowed) throws -> Bool {
-    if condition {
-        switch result {
-        case .finfr(let reason):
-            throw Finfr(reason)
-        case .fin(let reason):
-            throw Fin(reason)
-        case .allowed:
-            break
-        }
+    guard condition else { return false }
+
+    switch result {
+    case .finfr(let reason):
+        throw Finfr(reason)
+    case .fin(let reason):
+        throw Fin(reason)
+    case .allowed:
+        return true
     }
-    return condition
 }
 
 /// Convenience for finfr declaration
-public func finfr(_ reason: String = "State cannot exist") -> LawResult {
-    .finfr(reason)
-}
+public func finfr(_ reason: String = "State cannot exist") -> LawResult { .finfr(reason) }
 
 /// Convenience for fin declaration
-public func fin(_ reason: String = "Closure reached") -> LawResult {
-    .fin(reason)
-}
+public func fin(_ reason: String = "Closure reached") -> LawResult { .fin(reason) }
 
-// MARK: - The Ratio Type
-// f/g dimensional analysis - the core of Newton's verification
+// MARK: - The Ratio Type (f/g)
 
-/// The result of an f/g ratio calculation.
-/// f = forge/fact/function (what you're trying to do)
-/// g = ground/goal/governance (what reality allows)
 public struct Ratio: Sendable, CustomStringConvertible {
-    /// The numerator - what you're attempting (forge/fact/function)
     public let f: Double
-    /// The denominator - what reality allows (ground/goal/governance)
     public let g: Double
-    /// Tolerance for zero comparison
     public let epsilon: Double
 
-    /// Whether the ratio is undefined (g ≈ 0)
-    public var isUndefined: Bool {
-        abs(g) < epsilon
-    }
+    public var isUndefined: Bool { abs(g) < epsilon }
 
-    /// The computed ratio value. Returns infinity if undefined.
     public var value: Double {
-        if isUndefined {
-            return f >= 0 ? .infinity : -.infinity
-        }
+        guard !isUndefined else { return f >= 0 ? .infinity : -.infinity }
         return f / g
     }
 
@@ -159,25 +128,23 @@ public struct Ratio: Sendable, CustomStringConvertible {
     }
 
     public var description: String {
-        if isUndefined {
-            return "Ratio(f=\(f), g=\(g), undefined)"
-        }
+        if isUndefined { return "Ratio(f=\(f), g=\(g), undefined)" }
         return "Ratio(f=\(f), g=\(g), value=\(String(format: "%.4f", value)))"
     }
 
-    // MARK: Comparison Operators
-
+    // Comparisons against thresholds (Double)
     public static func < (lhs: Ratio, rhs: Double) -> Bool {
-        if lhs.isUndefined { return false }
+        guard !lhs.isUndefined else { return false }
         return lhs.value < rhs
     }
 
     public static func <= (lhs: Ratio, rhs: Double) -> Bool {
-        if lhs.isUndefined { return false }
+        guard !lhs.isUndefined else { return false }
         return lhs.value <= rhs
     }
 
     public static func > (lhs: Ratio, rhs: Double) -> Bool {
+        // Undefined ratio is treated as "fails safe" (too large)
         if lhs.isUndefined { return true }
         return lhs.value > rhs
     }
@@ -188,25 +155,13 @@ public struct Ratio: Sendable, CustomStringConvertible {
     }
 
     public static func == (lhs: Ratio, rhs: Double) -> Bool {
-        if lhs.isUndefined { return false }
+        guard !lhs.isUndefined else { return false }
         return abs(lhs.value - rhs) < lhs.epsilon
     }
 }
 
-/// Create a ratio for f/g dimensional analysis.
-/// - Parameters:
-///   - f: The numerator (forge/fact/function) - what you're trying to do
-///   - g: The denominator (ground/goal/governance) - what reality allows
-/// - Returns: A Ratio that can be compared against thresholds
-public func ratio(_ f: Double, _ g: Double) -> Ratio {
-    Ratio(f: f, g: g)
-}
+public func ratio(_ f: Double, _ g: Double) -> Ratio { Ratio(f: f, g: g) }
 
-/// Throws finfr if the ratio is undefined (g ≈ 0).
-/// - Parameters:
-///   - f: The numerator
-///   - g: The denominator
-/// - Throws: Finfr if g ≈ 0
 public func finfrIfUndefined(_ f: Double, _ g: Double) throws {
     let r = ratio(f, g)
     if r.isUndefined {
@@ -216,11 +171,8 @@ public func finfrIfUndefined(_ f: Double, _ g: Double) throws {
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
 // BOOK II: THE BLUEPRINT
-// The foundation for constraint-governed types.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// A law is a constraint that must hold for a state to be valid.
-/// Laws are evaluated before any forge executes.
 public struct Law<State>: Identifiable, Sendable where State: Sendable {
     public let id: String
     public let name: String
@@ -237,22 +189,37 @@ public struct Law<State>: Identifiable, Sendable where State: Sendable {
     }
 }
 
-/// Result of checking all laws against a state.
+/// Result of checking laws against a state.
 public struct LawCheckResult: Sendable {
     public let passed: Bool
     public let violations: [String]
     public let firstViolation: LawResult?
+    public let firstLawName: String?
 
-    public static let success = LawCheckResult(passed: true, violations: [], firstViolation: nil)
+    public static let success = LawCheckResult(
+        passed: true,
+        violations: [],
+        firstViolation: nil,
+        firstLawName: nil
+    )
 
-    public static func failure(_ violations: [String], first: LawResult) -> LawCheckResult {
-        LawCheckResult(passed: false, violations: violations, firstViolation: first)
+    public static func failure(
+        violations: [String],
+        first: LawResult,
+        firstLawName: String
+    ) -> LawCheckResult {
+        LawCheckResult(
+            passed: false,
+            violations: violations,
+            firstViolation: first,
+            firstLawName: firstLawName
+        )
     }
 }
 
-/// A Blueprint is a type that defines constraint-governed state.
-/// Think of it as a class with built-in verification.
-public protocol Blueprint: AnyObject, Observable {
+/// A Blueprint defines constraint-governed state.
+/// NOTE: Use ObservableObject for SwiftUI integration.
+public protocol Blueprint: AnyObject, ObservableObject {
     associatedtype State: Sendable
 
     /// The current state
@@ -272,6 +239,10 @@ public protocol Blueprint: AnyObject, Observable {
 }
 
 extension Blueprint {
+    /// Default save/restore for value-type state (structs).
+    public func saveState() -> State { state }
+    public func restoreState(_ saved: State) { state = saved }
+
     /// Check all laws against current state.
     public func checkLaws() -> LawCheckResult {
         var violations: [String] = []
@@ -279,14 +250,14 @@ extension Blueprint {
         for law in laws {
             let result = law.evaluate(state)
             switch result {
-            case .finfr(let reason):
-                violations.append("\(law.name): \(reason)")
-                return .failure(violations, first: result)
-            case .fin(let reason):
-                violations.append("\(law.name): \(reason)")
-                return .failure(violations, first: result)
             case .allowed:
                 continue
+            case .fin(let reason):
+                violations.append("\(law.name): \(reason)")
+                return .failure(violations: violations, first: result, firstLawName: law.name)
+            case .finfr(let reason):
+                violations.append("\(law.name): \(reason)")
+                return .failure(violations: violations, first: result, firstLawName: law.name)
             }
         }
 
@@ -296,7 +267,6 @@ extension Blueprint {
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
 // BOOK III: THE FORGE
-// Atomic state mutations with automatic rollback.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /// A Forge is an atomic operation that mutates state with verification.
@@ -305,47 +275,53 @@ extension Blueprint {
 public struct Forge<B: Blueprint> {
     public let blueprint: B
 
-    public init(_ blueprint: B) {
-        self.blueprint = blueprint
-    }
+    public init(_ blueprint: B) { self.blueprint = blueprint }
 
     /// Execute an operation with automatic rollback on law violation.
-    /// - Parameter operation: The mutation to perform
-    /// - Returns: Success with new state, or failure with violation
     @discardableResult
     public func execute<T>(
         _ operation: @escaping (inout B.State) throws -> T
     ) -> Result<T, Finfr> {
-        // Save current state
         let savedState = blueprint.saveState()
 
         do {
-            // Execute the operation
-            let result = try operation(&blueprint.state)
+            // Mutate locally (avoids inout-to-protocol-property pitfalls)
+            var next = blueprint.state
+            let result = try operation(&next)
+            blueprint.state = next
 
-            // Check all laws
+            // Verify
             let check = blueprint.checkLaws()
-
             if !check.passed {
-                // Rollback
                 blueprint.restoreState(savedState)
 
-                if let violation = check.firstViolation, case .finfr(let reason) = violation {
-                    return .failure(Finfr(reason, law: check.violations.first ?? "unknown"))
+                let lawName = check.firstLawName ?? "unknown"
+                let reason = check.violations.joined(separator: "; ")
+
+                if let v = check.firstViolation {
+                    switch v {
+                    case .finfr(let msg):
+                        return .failure(Finfr(msg, law: lawName))
+                    case .fin(let msg):
+                        return .failure(Finfr("fin: \(msg)", law: lawName))
+                    case .allowed:
+                        break
+                    }
                 }
-                return .failure(Finfr(check.violations.joined(separator: "; ")))
+                return .failure(Finfr(reason, law: lawName))
             }
 
             return .success(result)
 
         } catch let error as Finfr {
-            // Rollback on explicit finfr
             blueprint.restoreState(savedState)
             return .failure(error)
-        } catch {
-            // Rollback on any error
+        } catch let error as Fin {
             blueprint.restoreState(savedState)
-            return .failure(Finfr(error.localizedDescription))
+            return .failure(Finfr("fin: \(error.reason)", law: error.lawName))
+        } catch {
+            blueprint.restoreState(savedState)
+            return .failure(Finfr(error.localizedDescription, law: "unknown"))
         }
     }
 
@@ -357,35 +333,49 @@ public struct Forge<B: Blueprint> {
         let savedState = blueprint.saveState()
 
         do {
-            let result = try await operation(&blueprint.state)
-            let check = blueprint.checkLaws()
+            var next = blueprint.state
+            let result = try await operation(&next)
+            blueprint.state = next
 
+            let check = blueprint.checkLaws()
             if !check.passed {
                 blueprint.restoreState(savedState)
-                if let violation = check.firstViolation, case .finfr(let reason) = violation {
-                    return .failure(Finfr(reason, law: check.violations.first ?? "unknown"))
+
+                let lawName = check.firstLawName ?? "unknown"
+                let reason = check.violations.joined(separator: "; ")
+
+                if let v = check.firstViolation {
+                    switch v {
+                    case .finfr(let msg):
+                        return .failure(Finfr(msg, law: lawName))
+                    case .fin(let msg):
+                        return .failure(Finfr("fin: \(msg)", law: lawName))
+                    case .allowed:
+                        break
+                    }
                 }
-                return .failure(Finfr(check.violations.joined(separator: "; ")))
+                return .failure(Finfr(reason, law: lawName))
             }
 
             return .success(result)
+
         } catch let error as Finfr {
             blueprint.restoreState(savedState)
             return .failure(error)
+        } catch let error as Fin {
+            blueprint.restoreState(savedState)
+            return .failure(Finfr("fin: \(error.reason)", law: error.lawName))
         } catch {
             blueprint.restoreState(savedState)
-            return .failure(Finfr(error.localizedDescription))
+            return .failure(Finfr(error.localizedDescription, law: "unknown"))
         }
     }
 }
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
-// BOOK IV: COMBOS - The Core Pattern
-// Think in combinations of valid states, not permutations of all possible states.
+// BOOK IV: COMBOS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// A Combo defines a valid combination of constraints.
-/// Instead of checking all permutations, you define what CAN exist.
 public struct Combo<Input, Output>: Identifiable, Sendable where Input: Sendable, Output: Sendable {
     public let id: String
     public let name: String
@@ -404,12 +394,10 @@ public struct Combo<Input, Output>: Identifiable, Sendable where Input: Sendable
         self.transform = transform
     }
 
-    /// Check if all preconditions are met
     public func canExecute(_ input: Input) -> Bool {
         preconditions.allSatisfy { $0(input) }
     }
 
-    /// Execute if preconditions are met
     public func execute(_ input: Input) -> Result<Output, Finfr> {
         guard canExecute(input) else {
             return .failure(Finfr("Preconditions not met", law: name))
@@ -420,14 +408,14 @@ public struct Combo<Input, Output>: Identifiable, Sendable where Input: Sendable
             return .success(output)
         } catch let error as Finfr {
             return .failure(error)
+        } catch let error as Fin {
+            return .failure(Finfr("fin: \(error.reason)", law: error.lawName))
         } catch {
             return .failure(Finfr(error.localizedDescription, law: name))
         }
     }
 }
 
-/// A ComboSet is a collection of mutually exclusive combos.
-/// The first matching combo executes. No ambiguity.
 public struct ComboSet<Input, Output>: Sendable where Input: Sendable, Output: Sendable {
     public let combos: [Combo<Input, Output>]
 
@@ -435,12 +423,10 @@ public struct ComboSet<Input, Output>: Sendable where Input: Sendable, Output: S
         self.combos = combos
     }
 
-    /// Find the first combo whose preconditions match
     public func match(_ input: Input) -> Combo<Input, Output>? {
         combos.first { $0.canExecute(input) }
     }
 
-    /// Execute the first matching combo
     public func execute(_ input: Input) -> Result<Output, Finfr> {
         guard let combo = match(input) else {
             return .failure(Finfr("No matching combo", law: "combo_set"))
@@ -451,10 +437,8 @@ public struct ComboSet<Input, Output>: Sendable where Input: Sendable, Output: S
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
 // BOOK V: SWIFTUI INTEGRATION
-// Verified views that only render valid states.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// A view modifier that prevents rendering if laws are violated.
 public struct VerifiedViewModifier<B: Blueprint>: ViewModifier {
     @ObservedObject private var blueprint: B
     let fallback: AnyView
@@ -466,17 +450,14 @@ public struct VerifiedViewModifier<B: Blueprint>: ViewModifier {
 
     public func body(content: Content) -> some View {
         let check = blueprint.checkLaws()
-
-        if check.passed {
-            content
-        } else {
-            fallback
+        return Group {
+            if check.passed { content }
+            else { fallback }
         }
     }
 }
 
 extension View {
-    /// Only render this view if the blueprint's laws are satisfied.
     public func verified<B: Blueprint>(
         by blueprint: B,
         fallback: some View = EmptyView()
@@ -485,7 +466,6 @@ extension View {
     }
 }
 
-/// A property wrapper for verified state in SwiftUI.
 @MainActor
 @propertyWrapper
 public struct Verified<Value: Sendable>: DynamicProperty {
@@ -499,7 +479,6 @@ public struct Verified<Value: Sendable>: DynamicProperty {
             if result.isAllowed {
                 value = newValue
             }
-            // Silently reject invalid values
         }
     }
 
@@ -521,7 +500,6 @@ public struct Verified<Value: Sendable>: DynamicProperty {
     }
 }
 
-/// A view that displays f/g ratio status.
 public struct RatioIndicator: View {
     public let f: Double
     public let g: Double
@@ -570,7 +548,6 @@ public struct RatioIndicator: View {
     }
 }
 
-/// Newton verification badge
 public struct NewtonBadge: View {
     public let verified: Bool
     public let fingerprint: String?
@@ -601,53 +578,27 @@ public struct NewtonBadge: View {
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
 // BOOK VI: CONSTRAINT BUILDERS
-// DSL syntax for declaring constraints.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Result builder for composing multiple laws.
 @resultBuilder
 public struct LawBuilder<State: Sendable> {
-    public static func buildBlock(_ laws: Law<State>...) -> [Law<State>] {
-        laws
-    }
-
-    public static func buildOptional(_ law: [Law<State>]?) -> [Law<State>] {
-        law ?? []
-    }
-
-    public static func buildEither(first law: [Law<State>]) -> [Law<State>] {
-        law
-    }
-
-    public static func buildEither(second law: [Law<State>]) -> [Law<State>] {
-        law
-    }
-
-    public static func buildArray(_ laws: [[Law<State>]]) -> [Law<State>] {
-        laws.flatMap { $0 }
-    }
+    public static func buildBlock(_ laws: Law<State>...) -> [Law<State>] { laws }
+    public static func buildOptional(_ law: [Law<State>]?) -> [Law<State>] { law ?? [] }
+    public static func buildEither(first law: [Law<State>]) -> [Law<State>] { law }
+    public static func buildEither(second law: [Law<State>]) -> [Law<State>] { law }
+    public static func buildArray(_ laws: [[Law<State>]]) -> [Law<State>] { laws.flatMap { $0 } }
 }
 
-/// Result builder for composing combos.
 @resultBuilder
 public struct ComboBuilder<Input: Sendable, Output: Sendable> {
-    public static func buildBlock(_ combos: Combo<Input, Output>...) -> [Combo<Input, Output>] {
-        combos
-    }
-
-    public static func buildArray(_ combos: [[Combo<Input, Output>]]) -> [Combo<Input, Output>] {
-        combos.flatMap { $0 }
-    }
+    public static func buildBlock(_ combos: Combo<Input, Output>...) -> [Combo<Input, Output>] { combos }
+    public static func buildArray(_ combos: [[Combo<Input, Output>]]) -> [Combo<Input, Output>] { combos.flatMap { $0 } }
 }
 
-/// Build a set of laws using DSL syntax.
-public func laws<State: Sendable>(
-    @LawBuilder<State> _ builder: () -> [Law<State>]
-) -> [Law<State>] {
+public func laws<State: Sendable>(@LawBuilder<State> _ builder: () -> [Law<State>]) -> [Law<State>] {
     builder()
 }
 
-/// Build a combo set using DSL syntax.
 public func combos<Input: Sendable, Output: Sendable>(
     @ComboBuilder<Input, Output> _ builder: () -> [Combo<Input, Output>]
 ) -> ComboSet<Input, Output> {
@@ -656,10 +607,7 @@ public func combos<Input: Sendable, Output: Sendable>(
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
 // BOOK VII: VERIFICATION PROOF
-// Cryptographic proof of constraint satisfaction.
 // ═══════════════════════════════════════════════════════════════════════════════
-
-import CryptoKit
 
 /// A verification proof that can be independently validated.
 public struct VerificationProof: Codable, Sendable, Identifiable {
@@ -674,19 +622,16 @@ public struct VerificationProof: Codable, Sendable, Identifiable {
         self.timestamp = Date()
         self.constraintsSatisfied = constraintsSatisfied
 
-        // Generate fingerprint
         let data = "\(id):\(timestamp.timeIntervalSince1970):\(constraintsSatisfied)"
         let hash = SHA256.hash(data: Data(data.utf8))
         self.fingerprint = hash.prefix(8).map { String(format: "%02x", $0) }.joined().uppercased()
 
-        // Generate signature
         let sigData = "\(fingerprint):\(constraintsSatisfied)"
         let sigHash = SHA256.hash(data: Data(sigData.utf8))
         self.signature = "N2_" + sigHash.prefix(16).map { String(format: "%02x", $0) }.joined().uppercased()
     }
 }
 
-/// Generate a verification proof for a blueprint.
 public func prove<B: Blueprint>(_ blueprint: B) -> VerificationProof {
     let check = blueprint.checkLaws()
     return VerificationProof(constraintsSatisfied: check.passed ? blueprint.laws.count : 0)
@@ -694,11 +639,9 @@ public func prove<B: Blueprint>(_ blueprint: B) -> VerificationProof {
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
 // BOOK VIII: CONVENIENCE EXTENSIONS
-// Making TinyTalk feel natural in Swift.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 extension Numeric where Self: Comparable {
-    /// Check if value is within range, returning LawResult.
     public func mustBe(lessThan max: Self) -> LawResult {
         self < max ? .allowed : .finfr("Value \(self) must be less than \(max)")
     }
@@ -717,19 +660,14 @@ extension Numeric where Self: Comparable {
 }
 
 extension Double {
-    /// Create a ratio with this value as numerator.
-    public func over(_ denominator: Double) -> Ratio {
-        ratio(self, denominator)
-    }
+    public func over(_ denominator: Double) -> Ratio { ratio(self, denominator) }
 }
 
 extension String {
-    /// Check if string is non-empty.
     public var mustNotBeEmpty: LawResult {
         isEmpty ? .finfr("String must not be empty") : .allowed
     }
 
-    /// Check if string matches pattern.
     public func mustMatch(_ pattern: String) -> LawResult {
         if let regex = try? NSRegularExpression(pattern: pattern),
            regex.firstMatch(in: self, range: NSRange(startIndex..., in: self)) != nil {
@@ -740,19 +678,13 @@ extension String {
 }
 
 extension Optional {
-    /// Check if optional has a value.
     public var mustExist: LawResult {
         self != nil ? .allowed : .finfr("Value must exist")
     }
 }
 
-// MARK: - ═══════════════════════════════════════════════════════════════════════
-// THE CLOSURE CONDITION
-// ═══════════════════════════════════════════════════════════════════════════════
+// MARK: - THE CLOSURE CONDITION
 
-/// The fundamental law of Newton.
-/// 1 == 1.
-/// Everything else follows.
 @inlinable
 public func newton<T: Equatable>(_ current: T, _ goal: T) -> Bool {
     current == goal
@@ -774,8 +706,14 @@ public func newton<T: Equatable>(_ current: T, _ goal: T) -> Bool {
 // fin tinytalk_verified
 //
 // f/g ratio: 1.0 (all constraints satisfied)
-// Fingerprint: TINYTALK_SWIFT_DSL_V1
-// Generated: 2026-01-04
+// Fingerprint: TINYTALK_SWIFT_DSL_V2
+// Generated: 2026-01-07
+//
+// FIXES IN V2 (2026):
+// - Observable → ObservableObject (no Observable protocol exists)
+// - import CryptoKit moved to top
+// - Forge.execute uses local var copy to avoid exclusivity issues
+// - LawCheckResult tracks firstLawName separately
 //
 // © 2026 Jared Lewis Conglomerate
 // ═══════════════════════════════════════════════════════════════════════════════

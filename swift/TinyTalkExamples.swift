@@ -14,6 +14,7 @@
 
 import SwiftUI
 import Foundation
+import Combine
 
 // MARK: - ═══════════════════════════════════════════════════════════════════════
 // EXAMPLE 1: BANK ACCOUNT
@@ -32,12 +33,12 @@ struct AccountState: Sendable {
 }
 
 /// A constraint-governed bank account.
-@Observable
+/// Uses ObservableObject for SwiftUI compatibility (not @Observable macro).
 @MainActor
-final class BankAccount: Blueprint {
+final class BankAccount: Blueprint, ObservableObject {
     typealias State = AccountState
 
-    var state: AccountState
+    @Published var state: AccountState
 
     init(balance: Double, overdraftLimit: Double = 0) {
         self.state = AccountState(
@@ -128,7 +129,7 @@ final class BankAccount: Blueprint {
 // MARK: - SwiftUI View for Bank Account
 
 struct BankAccountView: View {
-    @State private var account = BankAccount(balance: 1000, overdraftLimit: 100)
+    @StateObject private var account = BankAccount(balance: 1000, overdraftLimit: 100)
     @State private var amount: String = ""
     @State private var message: String = ""
 
@@ -542,12 +543,12 @@ struct SafetyState: Sendable {
     var checksPerformed: Int
 }
 
-@Observable
+/// Uses ObservableObject for SwiftUI compatibility (not @Observable macro).
 @MainActor
-final class ContentSafety: Blueprint {
+final class ContentSafety: Blueprint, ObservableObject {
     typealias State = SafetyState
 
-    var state: SafetyState
+    @Published var state: SafetyState
 
     private let patterns: [String: [String]] = [
         "harm": [
@@ -812,12 +813,12 @@ struct GradebookState: Sendable {
     }
 }
 
-@Observable
+/// Uses ObservableObject for SwiftUI compatibility (not @Observable macro).
 @MainActor
-final class Gradebook: Blueprint {
+final class Gradebook: Blueprint, ObservableObject {
     typealias State = GradebookState
 
-    var state: GradebookState
+    @Published var state: GradebookState
 
     init(className: String) {
         self.state = GradebookState(
@@ -909,7 +910,7 @@ final class Gradebook: Blueprint {
 // MARK: - Gradebook SwiftUI View
 
 struct GradebookView: View {
-    @State private var gradebook = Gradebook(className: "Math 101")
+    @StateObject private var gradebook = Gradebook(className: "Math 101")
     @State private var newStudent = ""
     @State private var newAssignment = ""
     @State private var newScore = ""
@@ -1068,6 +1069,11 @@ struct TinyTalkExamplesApp: View {
 //     and demonstrates_fg_ratio
 //     and has_swiftui_integration
 // fin examples_verified
+//
+// FIXES IN V2 (2026-01-07):
+// - @Observable → ObservableObject conformance (Swift Observation macro not compatible)
+// - @State → @StateObject for Blueprint instances in Views
+// - Added Combine import for @Published
 //
 // © 2026 Jared Lewis Conglomerate
 // ═══════════════════════════════════════════════════════════════════════════════
