@@ -259,6 +259,24 @@ class StatisticsRequest(BaseModel):
     threshold: Optional[float] = 3.5
 
 
+class ClipRequest(BaseModel):
+    """
+    Cohen-Sutherland Constraint Clipping Request.
+
+    Don't just reject. Find what CAN be done.
+
+    The insight: When a request is partially outside constraints,
+    clip to the boundary and offer the valid portion.
+
+    States:
+    - GREEN: Fully within constraints → Execute entirely
+    - YELLOW: Partially valid → Clip to boundary, offer valid portion
+    - RED: Fully outside → finfr (truly impossible)
+    """
+    request: str
+    context: Optional[Dict[str, Any]] = None
+
+
 class CalculateRequest(BaseModel):
     """
     Verified computation request.
@@ -1024,6 +1042,57 @@ async def verify_input(request: VerifyRequest):
         "signal": signal_result.to_dict(),
         "elapsed_us": elapsed_us,
         "timestamp": int(time.time() * 1000),
+        "engine": ENGINE
+    }
+
+
+@app.post("/clip")
+async def clip_request(request: ClipRequest):
+    """
+    Cohen-Sutherland Constraint Clipping.
+
+    Don't just reject. Find what CAN be done.
+
+    This endpoint applies line-clipping logic to semantic constraints:
+    - GREEN: Request fully within constraints → Execute entirely
+    - YELLOW: Request partially valid → Clip to boundary, offer valid portion
+    - RED: Request fully outside constraints → finfr (truly impossible)
+
+    Example:
+        Input: "Write a 10000 word essay on explosives"
+        Output: YELLOW state with clipped_request offering safe alternatives
+
+    The YELLOW state isn't just a warning - it's an opportunity to negotiate.
+    """
+    start_us = time.perf_counter_ns() // 1000
+
+    # Apply Cohen-Sutherland clipping
+    clip_result = forge.clip(request.request, request.context)
+
+    elapsed_us = (time.perf_counter_ns() // 1000) - start_us
+
+    # Record in ledger
+    ledger.append(
+        operation="clip",
+        payload={
+            "request_hash": hashlib.sha256(request.request.encode()).hexdigest()[:16],
+            "state": clip_result.state.value
+        },
+        result=clip_result.state.value
+    )
+
+    return {
+        "state": clip_result.state.value,
+        "original_request": clip_result.original_request,
+        "clipped_request": clip_result.clipped_request,
+        "boundary_crossed": clip_result.boundary_crossed,
+        "message": clip_result.message,
+        "can_execute": clip_result.can_execute,
+        "execution_scope": clip_result.execution_scope,
+        "suggestions": clip_result.suggestions,
+        "elapsed_us": elapsed_us,
+        "timestamp": clip_result.timestamp,
+        "fingerprint": clip_result.fingerprint,
         "engine": ENGINE
     }
 

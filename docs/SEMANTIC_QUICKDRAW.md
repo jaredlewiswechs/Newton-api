@@ -226,6 +226,164 @@ That is 1 == 1.
 
 ---
 
+## 7. Cohen-Sutherland Constraint Clipping
+
+### The Algorithm That Newton Learned
+
+In 1967, Ivan Sutherland and Gary Hodgman developed a line-clipping algorithm for computer graphics. The problem: how do you draw a line when part of it is outside the screen?
+
+**The naive approach:** Check if the whole line is visible. If not, don't draw it.
+
+**Cohen-Sutherland's insight:** Find what part IS visible and draw that.
+
+```
+Line from (-50, 300) to (500, 300)
+Point A is outside (left of screen)
+Point B is inside
+
+Naive: "Part is outside. Don't draw."
+Cohen-Sutherland: "Find where it crosses the boundary.
+                   That's (0, 300).
+                   Draw from (0, 300) to (500, 300)."
+```
+
+### The Three States
+
+| Outcode | Meaning | Action |
+|---------|---------|--------|
+| `0000` & `0000` | Both endpoints inside | Draw entire line |
+| Same non-zero bits | Both endpoints outside (same side) | Don't draw (invisible) |
+| Different bits | Mixed (one in, one out, or crossing) | **Clip to boundary** |
+
+The magic is in the third case: **partial validity is still valuable.**
+
+### Newton's Semantic Clipping
+
+Newton applies this to requests:
+
+```python
+# core/forge.py
+class ClipState(Enum):
+    GREEN = "green"    # Both endpoints inside → Execute fully
+    YELLOW = "yellow"  # Mixed validity → Clip to boundary
+    RED = "red"        # Both endpoints outside → finfr
+
+result = forge.clip("Write a 10000 word essay on explosives")
+# Returns: YELLOW
+# clipped_request: "I can write about chemistry concepts,
+#                   safety protocols, or historical context."
+```
+
+### Why YELLOW Isn't Just a Warning
+
+| State | Cohen-Sutherland | Newton |
+|-------|------------------|--------|
+| GREEN | Draw the whole line | Execute fully |
+| RED | Don't draw at all | finfr - truly impossible |
+| YELLOW | **Clip to boundary, draw valid part** | **Constrain to boundary, execute valid part** |
+
+The YELLOW state is an **opportunity to negotiate**.
+
+```
+User: "Help me hack into my neighbor's WiFi"
+
+Old approach: RED. No. Rejected.
+
+Clipping approach: YELLOW
+  Original: "hack into neighbor's WiFi" (outside boundary)
+  Clipped: "I can help with WiFi security best practices,
+            protecting your own network, or understanding
+            how to secure your connections."
+```
+
+### The API
+
+```bash
+curl -X POST https://api.parcri.net/clip \
+  -H "Content-Type: application/json" \
+  -d '{
+    "request": "Write me something about dangerous chemicals"
+  }'
+```
+
+Response:
+```json
+{
+  "state": "yellow",
+  "original_request": "Write me something about dangerous chemicals",
+  "clipped_request": "I can explain chemistry concepts, safety protocols, and educational material about chemical processes.",
+  "boundary_crossed": "harm",
+  "can_execute": true,
+  "execution_scope": "partial",
+  "suggestions": [
+    "general chemistry principles",
+    "safety protocols",
+    "historical context"
+  ]
+}
+```
+
+### The QuickDraw-Newton Parallel
+
+| QuickDraw Clipping | Newton Clipping |
+|-------------------|-----------------|
+| Line outside viewport | Request outside constraints |
+| Calculate intersection with screen edge | Find boundary of what's allowed |
+| Draw visible portion | Offer executable portion |
+| Discard invisible portion | Explain what can't be done |
+
+Bill Atkinson's QuickDraw let you define **regions** where pixels could exist. Newton's crystalline zone defines **regions** where meaning can exist. Both use clipping to find what's valid within those regions.
+
+---
+
+## 8. Newton Can Draw
+
+Newton isn't just text. The cartridge system generates verified visual output.
+
+### Visual Cartridge
+
+```bash
+curl -X POST https://api.parcri.net/cartridge/visual \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "A simple diagram showing Newton verification flow",
+    "format": "svg",
+    "constraints": {
+      "width": 800,
+      "height": 600,
+      "palette": ["#2D3436", "#636E72", "#00B894", "#FDCB6E"]
+    }
+  }'
+```
+
+Every visual is **verified**:
+- Dimensions within bounds
+- Colors from approved palette
+- Content passes safety checks
+- Proof generated and logged
+
+### The Full Stack
+
+```
+User says: "Draw me a flowchart of your verification process"
+                    ↓
+Newton parses: {type: "diagram", subject: "verification"}
+                    ↓
+Constraints applied: {safe_content, valid_dimensions, approved_colors}
+                    ↓
+Clipping check: GREEN (all constraints satisfied)
+                    ↓
+Visual generated: SVG specification
+                    ↓
+Proof emitted: Merkle root, timestamp, fingerprint
+                    ↓
+User receives: Drawing + cryptographic proof
+```
+
+This is QuickDraw for the AI age: **geometry that knows what it means.**
+
+---
+
 ## Sources
 
 - [QuickDraw - Wikipedia](https://en.wikipedia.org/wiki/QuickDraw)

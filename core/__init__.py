@@ -60,6 +60,12 @@ from .forge import (
     verify_signal,
     verify_full,
     SAFETY_PATTERNS,
+
+    # Cohen-Sutherland Constraint Clipping
+    ClipState,
+    ClipResult,
+    ConstraintClipper,
+    CLIP_PATTERNS,
 )
 
 from .vault import (
@@ -315,6 +321,8 @@ __all__ = [
     'Forge', 'ForgeConfig', 'ForgeMetrics', 'VerificationResult',
     'get_forge', 'verify_content', 'verify_signal', 'verify_full',
     'SAFETY_PATTERNS',
+    # Cohen-Sutherland Constraint Clipping
+    'ClipState', 'ClipResult', 'ConstraintClipper', 'CLIP_PATTERNS',
 
     # Vault
     'Vault', 'VaultConfig', 'VaultEntry',

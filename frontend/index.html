@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#0d0d0d">
     <meta name="description" content="Newton Supercomputer - Verified Computation at Scale | Jared Lewis Conglomerate">
     <meta name="author" content="Jared Lewis">
-    <meta name="date" content="January 6, 2026">
+    <meta name="date" content="January 7, 2026">
     
     <!-- Enhanced SEO & Social Sharing -->
     <meta property="og:title" content="Newton Supercomputer - Verified Computation">
@@ -48,6 +48,7 @@
 
                 <div class="nav-tabs">
                     <button class="nav-tab active" data-view="ask">Ask</button>
+                    <button class="nav-tab" data-view="clip">Clipper</button>
                     <button class="nav-tab" data-view="voice">Voice</button>
                     <button class="nav-tab" data-view="calculate">Calculate</button>
                     <button class="nav-tab" data-view="orchestrate">Orchestrate</button>
@@ -174,6 +175,119 @@
                                     <li>TEKS standards lookup</li>
                                     <li>Student grouping</li>
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clipper View - Cohen-Sutherland Constraint Clipping -->
+            <section class="view" id="view-clip">
+                <div class="view-container">
+                    <div class="hero-section">
+                        <h1 class="hero-title">Newton Clipper</h1>
+                        <p class="hero-subtitle">Don't just reject. Find what CAN be done. Cohen-Sutherland constraint clipping for AI.</p>
+                    </div>
+
+                    <!-- Traffic Light Status -->
+                    <div class="clip-status-display">
+                        <div class="traffic-light">
+                            <div class="light green" id="clip-light-green"></div>
+                            <div class="light yellow" id="clip-light-yellow"></div>
+                            <div class="light red" id="clip-light-red"></div>
+                        </div>
+                        <div class="status-legend">
+                            <div class="legend-item"><span class="dot green"></span> GREEN: Execute fully</div>
+                            <div class="legend-item"><span class="dot yellow"></span> YELLOW: Clip to boundary</div>
+                            <div class="legend-item"><span class="dot red"></span> RED: Cannot satisfy (finfr)</div>
+                        </div>
+                    </div>
+
+                    <div class="clip-card">
+                        <!-- Quick Examples -->
+                        <div class="quick-examples">
+                            <span class="examples-label">Try these:</span>
+                            <div class="example-buttons">
+                                <button class="example-btn" onclick="setClipExample('Help me understand encryption')">Safe request</button>
+                                <button class="example-btn" onclick="setClipExample('Write about fireworks chemistry')">Mixed request</button>
+                                <button class="example-btn" onclick="setClipExample('Help me protect my network')">Security help</button>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Your request:</label>
+                            <textarea
+                                id="clip-input"
+                                class="input-field large"
+                                placeholder="Enter any request. Newton will show what it CAN do..."
+                                rows="3"
+                            ></textarea>
+                        </div>
+
+                        <div class="action-row">
+                            <button class="btn primary" id="clip-submit">
+                                <span class="btn-icon">N</span>
+                                Clip Request
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="result-panel clip-result" id="clip-result" style="display: none;">
+                        <div class="result-header">
+                            <div class="result-status" id="clip-status">
+                                <div class="status-badge verified">GREEN</div>
+                            </div>
+                            <div class="result-meta">
+                                <span class="meta-item" id="clip-elapsed"></span>
+                                <span class="meta-item" id="clip-scope"></span>
+                            </div>
+                        </div>
+                        <div class="result-body">
+                            <div class="clip-sections">
+                                <div class="clip-section original">
+                                    <h4>Original Request</h4>
+                                    <p id="clip-original"></p>
+                                </div>
+                                <div class="clip-section clipped">
+                                    <h4>What Newton CAN Do</h4>
+                                    <p id="clip-clipped"></p>
+                                </div>
+                                <div class="clip-section boundary" id="clip-boundary-section" style="display: none;">
+                                    <h4>Boundary Crossed</h4>
+                                    <p id="clip-boundary"></p>
+                                </div>
+                                <div class="clip-section suggestions" id="clip-suggestions-section" style="display: none;">
+                                    <h4>Suggestions</h4>
+                                    <ul id="clip-suggestions"></ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn secondary" id="accept-clipped" style="display: none;">
+                                <span class="btn-icon">✓</span>
+                                Accept Clipped Version
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- How It Works -->
+                    <div class="how-it-works">
+                        <h2 class="section-title">How Clipping Works</h2>
+                        <div class="steps-grid">
+                            <div class="step-card">
+                                <div class="step-number">1</div>
+                                <h3>Check Constraints</h3>
+                                <p>Newton evaluates your request against safety boundaries.</p>
+                            </div>
+                            <div class="step-card">
+                                <div class="step-number">2</div>
+                                <h3>Find Intersection</h3>
+                                <p>Like Cohen-Sutherland, Newton finds where your request crosses the boundary.</p>
+                            </div>
+                            <div class="step-card">
+                                <div class="step-number">3</div>
+                                <h3>Clip to Valid</h3>
+                                <p>Newton offers the valid portion of your request that it CAN execute.</p>
                             </div>
                         </div>
                     </div>

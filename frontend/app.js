@@ -3,7 +3,7 @@
  * Verified Computation at Scale
  * 
  * © 2026 Jared Lewis Conglomerate
- * Last Updated: January 6, 2026
+ * Last Updated: January 7, 2026
  */
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -617,6 +617,149 @@ function setAskExample(exampleText) {
 
 // Make function globally available for onclick handlers
 window.setAskExample = setAskExample;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CLIPPER VIEW - Cohen-Sutherland Constraint Clipping
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Set an example in the Clipper input field
+ */
+function setClipExample(exampleText) {
+    const clipInput = document.getElementById('clip-input');
+    if (clipInput) {
+        clipInput.value = exampleText;
+        clipInput.focus();
+
+        // Add a subtle highlight animation
+        clipInput.style.transition = 'box-shadow 0.3s ease';
+        clipInput.style.boxShadow = '0 0 0 3px rgba(78, 205, 196, 0.3)';
+        setTimeout(() => {
+            clipInput.style.boxShadow = '';
+        }, 500);
+    }
+}
+
+window.setClipExample = setClipExample;
+
+/**
+ * Handle clip request
+ */
+async function handleClip() {
+    const request = document.getElementById('clip-input').value.trim();
+    if (!request) {
+        showNotification('Please enter a request', 'error');
+        return;
+    }
+
+    showLoading();
+    const resultPanel = document.getElementById('clip-result');
+    resultPanel.style.display = 'none';
+
+    // Reset traffic lights
+    document.getElementById('clip-light-green').classList.remove('active');
+    document.getElementById('clip-light-yellow').classList.remove('active');
+    document.getElementById('clip-light-red').classList.remove('active');
+
+    try {
+        const result = await api.request('/clip', {
+            method: 'POST',
+            body: JSON.stringify({ request })
+        });
+
+        // Show result panel
+        resultPanel.style.display = 'block';
+
+        // Update traffic light
+        const state = result.state;
+        if (state === 'green') {
+            document.getElementById('clip-light-green').classList.add('active');
+        } else if (state === 'yellow') {
+            document.getElementById('clip-light-yellow').classList.add('active');
+        } else {
+            document.getElementById('clip-light-red').classList.add('active');
+        }
+
+        // Update status badge
+        const statusEl = document.getElementById('clip-status');
+        const badgeClass = state === 'green' ? 'verified' : state === 'yellow' ? 'warning' : 'failed';
+        statusEl.innerHTML = `<div class="status-badge ${badgeClass}">${state.toUpperCase()}</div>`;
+
+        // Update elapsed time
+        document.getElementById('clip-elapsed').textContent = result.elapsed_us
+            ? formatElapsed(result.elapsed_us)
+            : '';
+
+        // Update scope
+        document.getElementById('clip-scope').textContent = result.execution_scope
+            ? `Scope: ${result.execution_scope}`
+            : '';
+
+        // Update content
+        document.getElementById('clip-original').textContent = result.original_request || request;
+        document.getElementById('clip-clipped').textContent = result.clipped_request || result.message || 'N/A';
+
+        // Show boundary if crossed
+        const boundarySection = document.getElementById('clip-boundary-section');
+        if (result.boundary_crossed) {
+            boundarySection.style.display = 'block';
+            document.getElementById('clip-boundary').textContent = result.boundary_crossed;
+        } else {
+            boundarySection.style.display = 'none';
+        }
+
+        // Show suggestions if available
+        const suggestionsSection = document.getElementById('clip-suggestions-section');
+        if (result.suggestions && result.suggestions.length > 0) {
+            suggestionsSection.style.display = 'block';
+            const suggestionsList = document.getElementById('clip-suggestions');
+            suggestionsList.innerHTML = result.suggestions.map(s => `<li>${escapeHtml(s)}</li>`).join('');
+        } else {
+            suggestionsSection.style.display = 'none';
+        }
+
+        // Show accept button for yellow state
+        const acceptBtn = document.getElementById('accept-clipped');
+        if (state === 'yellow' && result.can_execute) {
+            acceptBtn.style.display = 'inline-flex';
+            acceptBtn.onclick = () => {
+                // Copy clipped request to Ask view
+                document.getElementById('ask-input').value = result.clipped_request;
+                showView('ask');
+                showNotification('Clipped request loaded. Click "Ask Newton" to proceed.', 'success');
+            };
+        } else {
+            acceptBtn.style.display = 'none';
+        }
+
+    } catch (error) {
+        resultPanel.style.display = 'block';
+        document.getElementById('clip-status').innerHTML = `<div class="status-badge failed">ERROR</div>`;
+        document.getElementById('clip-clipped').textContent = error.message;
+        document.getElementById('clip-light-red').classList.add('active');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Initialize Clipper
+document.addEventListener('DOMContentLoaded', () => {
+    const clipSubmit = document.getElementById('clip-submit');
+    const clipInput = document.getElementById('clip-input');
+
+    if (clipSubmit) {
+        clipSubmit.addEventListener('click', handleClip);
+    }
+
+    if (clipInput) {
+        clipInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleClip();
+            }
+        });
+    }
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Event Listeners

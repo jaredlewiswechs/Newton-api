@@ -591,6 +591,22 @@ class Forge:
         if negotiator:
             self._negotiator = negotiator
     
+    def clip(self, request: str, context: Optional[Dict[str, Any]] = None) -> 'ClipResult':
+        """
+        Apply Cohen-Sutherland constraint clipping to a request.
+
+        This is the key insight: Don't just reject. Find what CAN be done.
+
+        Returns:
+            ClipResult with state (GREEN/YELLOW/RED) and clipped request
+
+        Example:
+            result = forge.clip("Write a 10000 word essay on explosives")
+            # Returns YELLOW with clipped_request offering safe alternatives
+        """
+        clipper = ConstraintClipper(self)
+        return clipper.clip(request, context)
+
     def verify_with_glass_box(
         self,
         constraint: Any,
@@ -674,6 +690,320 @@ class Forge:
                 pass  # Don't fail verification if logging fails
         
         return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COHEN-SUTHERLAND CONSTRAINT CLIPPING
+# "Don't reject the line. Clip it to the valid region."
+#
+# The insight: When a request is partially outside constraints, don't just say NO.
+# Find the part that IS valid and offer that.
+#
+# GREEN (0000):  Both endpoints inside      → Execute fully
+# RED (same):    Both endpoints outside     → finfr (truly impossible)
+# YELLOW (mixed): Mixed validity            → CLIP to boundary, execute valid part
+#
+# This is the Cohen-Sutherland algorithm applied to semantic space.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class ClipState(Enum):
+    """
+    Cohen-Sutherland inspired constraint states.
+
+    Not just pass/fail - but what CAN we do?
+    """
+    GREEN = "green"    # Fully within constraints - execute entirely
+    YELLOW = "yellow"  # Partially valid - clip to boundary, offer valid portion
+    RED = "red"        # Fully outside constraints - finfr, truly impossible
+
+
+@dataclass
+class ClipResult:
+    """
+    Result of constraint clipping - not just pass/fail but negotiation.
+
+    Like Cohen-Sutherland finds the visible portion of a line,
+    Newton finds the executable portion of a request.
+    """
+    state: ClipState
+    original_request: str
+    clipped_request: Optional[str] = None  # The valid portion
+    boundary_crossed: Optional[str] = None  # Which constraint boundary was hit
+    message: str = ""
+
+    # What Newton CAN do
+    can_execute: bool = False
+    execution_scope: str = "none"  # "full", "partial", "none"
+
+    # Negotiation suggestions
+    suggestions: List[str] = field(default_factory=list)
+
+    # Metrics
+    timestamp: int = field(default_factory=lambda: int(time.time() * 1000))
+    fingerprint: Optional[str] = None
+
+    def __post_init__(self):
+        if self.fingerprint is None:
+            data = f"{self.state.value}:{self.original_request[:50]}:{self.timestamp}"
+            self.fingerprint = f"CLIP_{hashlib.sha256(data.encode()).hexdigest()[:12]}"
+
+        # Set can_execute based on state
+        if self.state == ClipState.GREEN:
+            self.can_execute = True
+            self.execution_scope = "full"
+        elif self.state == ClipState.YELLOW:
+            self.can_execute = True
+            self.execution_scope = "partial"
+        else:
+            self.can_execute = False
+            self.execution_scope = "none"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "state": self.state.value,
+            "original_request": self.original_request,
+            "clipped_request": self.clipped_request,
+            "boundary_crossed": self.boundary_crossed,
+            "message": self.message,
+            "can_execute": self.can_execute,
+            "execution_scope": self.execution_scope,
+            "suggestions": self.suggestions,
+            "timestamp": self.timestamp,
+            "fingerprint": self.fingerprint
+        }
+
+
+# Clipping patterns - what parts of requests can be salvaged
+CLIP_PATTERNS = {
+    "harm": {
+        "boundary": "safety",
+        "clippable": True,
+        "clip_template": "Here's what I CAN help with: {safe_portion}",
+        "alternatives": [
+            "general chemistry principles",
+            "safety protocols",
+            "historical context",
+            "educational overview"
+        ]
+    },
+    "medical": {
+        "boundary": "professional_advice",
+        "clippable": True,
+        "clip_template": "I can provide general health information: {safe_portion}",
+        "alternatives": [
+            "general health information",
+            "when to see a doctor",
+            "wellness tips",
+            "medical terminology explanation"
+        ]
+    },
+    "legal": {
+        "boundary": "professional_advice",
+        "clippable": True,
+        "clip_template": "I can explain general legal concepts: {safe_portion}",
+        "alternatives": [
+            "general legal concepts",
+            "how to find a lawyer",
+            "legal terminology",
+            "court process overview"
+        ]
+    },
+    "security": {
+        "boundary": "ethics",
+        "clippable": True,
+        "clip_template": "I can help with defensive security: {safe_portion}",
+        "alternatives": [
+            "security best practices",
+            "how to protect yourself",
+            "understanding threats",
+            "security education"
+        ]
+    }
+}
+
+
+class ConstraintClipper:
+    """
+    The Cohen-Sutherland of semantic space.
+
+    Doesn't just reject - finds the valid portion and offers it.
+    """
+
+    def __init__(self, forge: 'Forge'):
+        self.forge = forge
+
+    def clip(self, request: str, context: Optional[Dict[str, Any]] = None) -> ClipResult:
+        """
+        Apply Cohen-Sutherland style clipping to a request.
+
+        1. Check if fully GREEN (all constraints satisfied)
+        2. Check if fully RED (impossible to satisfy)
+        3. If YELLOW, find the boundary and clip to valid portion
+        """
+        context = context or {}
+
+        # Step 1: Run content verification
+        content_result = self.forge.verify_content(request)
+        signal_result = self.forge.verify_signal(request)
+
+        # GREEN: Both pass - fully within crystalline zone
+        if content_result.passed and signal_result.passed:
+            return ClipResult(
+                state=ClipState.GREEN,
+                original_request=request,
+                clipped_request=request,
+                message="Request fully within constraints. Execute.",
+                can_execute=True,
+                execution_scope="full"
+            )
+
+        # Determine which boundaries were crossed
+        violated_categories = []
+        if not content_result.passed and content_result.message:
+            # Extract violated categories from message like "Violations: harm, security"
+            if "Violations:" in content_result.message:
+                cats = content_result.message.split("Violations:")[1].strip()
+                violated_categories = [c.strip() for c in cats.split(",")]
+
+        # RED: Check if request is fundamentally unclippable
+        # (e.g., the ENTIRE request is harmful with no salvageable portion)
+        if self._is_fundamentally_red(request, violated_categories):
+            return ClipResult(
+                state=ClipState.RED,
+                original_request=request,
+                boundary_crossed=", ".join(violated_categories) if violated_categories else "content",
+                message="Request cannot be satisfied. finfr.",
+                can_execute=False,
+                execution_scope="none",
+                suggestions=["Please rephrase your request within safe boundaries."]
+            )
+
+        # YELLOW: Find the valid portion and clip
+        return self._clip_to_boundary(request, violated_categories, signal_result)
+
+    def _is_fundamentally_red(self, request: str, violated_categories: List[str]) -> bool:
+        """
+        Check if request is fundamentally unsatisfiable.
+
+        Some requests have no valid portion - the harmful part IS the request.
+        """
+        request_lower = request.lower()
+
+        # Patterns that indicate the entire request is the violation
+        red_patterns = [
+            r"^(how to )?(make|build|create).*\b(bomb|weapon)\b",
+            r"^(how to )?(kill|murder|assassinate)",
+            r"^(how to )?(hack into|break into|steal from)",
+        ]
+
+        for pattern in red_patterns:
+            if re.search(pattern, request_lower):
+                return True
+
+        return False
+
+    def _clip_to_boundary(
+        self,
+        request: str,
+        violated_categories: List[str],
+        signal_result: VerificationResult
+    ) -> ClipResult:
+        """
+        Find the boundary intersection and clip the request.
+
+        Like Cohen-Sutherland calculates (x, y) where line crosses viewport,
+        we find the semantic point where request crosses constraint boundary.
+        """
+        suggestions = []
+        clipped_parts = []
+
+        # Extract the safe portions for each violated category
+        for category in violated_categories:
+            if category in CLIP_PATTERNS:
+                pattern_info = CLIP_PATTERNS[category]
+                suggestions.extend(pattern_info["alternatives"])
+
+        # Try to extract the non-harmful portions
+        safe_portion = self._extract_safe_portion(request, violated_categories)
+
+        if safe_portion:
+            clipped_request = safe_portion
+            message = f"I've clipped to the valid portion. Here's what I CAN help with."
+        else:
+            # Suggest alternatives based on detected intent
+            clipped_request = self._generate_alternative(request, violated_categories)
+            message = f"The specific request crosses safety boundaries. Here's an alternative within constraints."
+
+        return ClipResult(
+            state=ClipState.YELLOW,
+            original_request=request,
+            clipped_request=clipped_request,
+            boundary_crossed=", ".join(violated_categories) if violated_categories else "signal_threshold",
+            message=message,
+            can_execute=True,
+            execution_scope="partial",
+            suggestions=suggestions[:5]  # Top 5 suggestions
+        )
+
+    def _extract_safe_portion(self, request: str, violated_categories: List[str]) -> Optional[str]:
+        """
+        Extract the portions of the request that don't violate constraints.
+
+        Like finding where a line intersects a boundary.
+        """
+        # Split request into components
+        # Look for patterns like "X and Y" or "X but also Y"
+        components = re.split(r'\s+(?:and|but|also|then|after)\s+', request, flags=re.IGNORECASE)
+
+        safe_components = []
+        for component in components:
+            # Check each component individually
+            component_result = self.forge.verify_content(component)
+            if component_result.passed:
+                safe_components.append(component)
+
+        if safe_components:
+            return " and ".join(safe_components)
+
+        return None
+
+    def _generate_alternative(self, request: str, violated_categories: List[str]) -> str:
+        """
+        Generate a safe alternative that addresses the user's underlying intent.
+
+        Not just saying NO - but saying "here's what I CAN do."
+        """
+        request_lower = request.lower()
+
+        # Detect underlying intent and map to safe alternatives
+        intent_map = {
+            # Chemistry/science intent
+            r"(chemistry|chemical|compound|molecule)":
+                "I can explain chemistry concepts, safety protocols, and educational material about chemical processes.",
+
+            # Security intent
+            r"(hack|security|password|protect)":
+                "I can help with security best practices, protecting your accounts, and understanding cybersecurity concepts.",
+
+            # Medical intent
+            r"(health|medical|symptom|treatment|medicine)":
+                "I can provide general health information and help you understand when to consult a healthcare provider.",
+
+            # Legal intent
+            r"(legal|law|court|sue|rights)":
+                "I can explain general legal concepts and help you understand when to consult a lawyer.",
+
+            # Writing/essay intent (for long-form requests)
+            r"(write|essay|article|paper|explain)":
+                "I can write about this topic from an educational, historical, or safety-focused perspective.",
+        }
+
+        for pattern, alternative in intent_map.items():
+            if re.search(pattern, request_lower):
+                return alternative
+
+        # Default alternative
+        return "I can help you rephrase this request within safe guidelines. What's the underlying goal you're trying to achieve?"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

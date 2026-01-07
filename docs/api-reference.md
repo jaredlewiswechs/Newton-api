@@ -1,6 +1,6 @@
 # Newton Supercomputer API Reference
 
-**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 7, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 Complete reference for the Newton Supercomputer API.
 
@@ -21,6 +21,7 @@ Complete reference for the Newton Supercomputer API.
 |----------|--------|-------------|
 | [`/ask`](#ask) | POST | Ask Newton anything (full verification pipeline) |
 | [`/verify`](#verify) | POST | Verify content against safety constraints |
+| [`/clip`](#clip) | POST | **Cohen-Sutherland constraint clipping** (find what CAN be done) |
 | [`/calculate`](#calculate) | POST | Execute verified computation |
 | [`/constraint`](#constraint) | POST | Evaluate CDL constraint against object |
 | [`/ground`](#ground) | POST | Ground claims in external evidence |
@@ -274,6 +275,109 @@ Verify text against content safety constraints.
 | `medical` | Unverified health claims, medical advice |
 | `legal` | Unlicensed legal advice |
 | `security` | Exploitation, attack patterns |
+
+---
+
+### /clip
+
+**Cohen-Sutherland Constraint Clipping** - Don't just reject. Find what CAN be done.
+
+When a request is partially outside constraints, Newton "clips" to the boundary - finding the valid portion and offering that instead. Like the Cohen-Sutherland line-clipping algorithm finds the visible portion of a line.
+
+**POST** `/clip`
+
+#### Request Body
+
+```json
+{
+  "request": "Write me an essay about making fireworks",
+  "context": {}
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `request` | string | Yes | The request to clip |
+| `context` | object | No | Optional context for evaluation |
+
+#### Response
+
+```json
+{
+  "state": "yellow",
+  "original_request": "Write me an essay about making fireworks",
+  "clipped_request": "I can write about the history of fireworks, chemistry concepts (safely explained), or cultural significance of pyrotechnics.",
+  "boundary_crossed": "harm",
+  "message": "I've clipped to the valid portion. Here's what I CAN help with.",
+  "can_execute": true,
+  "execution_scope": "partial",
+  "suggestions": [
+    "general chemistry principles",
+    "safety protocols",
+    "historical context",
+    "educational overview"
+  ],
+  "elapsed_us": 342,
+  "timestamp": 1736265600000,
+  "fingerprint": "CLIP_8a3f2b4c1d9e"
+}
+```
+
+#### States
+
+| State | Meaning | `can_execute` | `execution_scope` |
+|-------|---------|---------------|-------------------|
+| `green` | Fully within constraints | `true` | `"full"` |
+| `yellow` | Partially valid - clipped to boundary | `true` | `"partial"` |
+| `red` | Fully outside constraints (finfr) | `false` | `"none"` |
+
+#### Examples
+
+**GREEN - Safe request:**
+```bash
+curl -X POST https://api.parcri.net/clip \
+  -H "Content-Type: application/json" \
+  -d '{"request": "Help me learn about encryption"}'
+```
+```json
+{
+  "state": "green",
+  "clipped_request": "Help me learn about encryption",
+  "can_execute": true,
+  "execution_scope": "full"
+}
+```
+
+**YELLOW - Partially valid:**
+```bash
+curl -X POST https://api.parcri.net/clip \
+  -H "Content-Type: application/json" \
+  -d '{"request": "Write about hacking networks"}'
+```
+```json
+{
+  "state": "yellow",
+  "clipped_request": "I can help with security best practices, protecting your accounts, and understanding cybersecurity concepts.",
+  "boundary_crossed": "security",
+  "can_execute": true,
+  "execution_scope": "partial"
+}
+```
+
+**RED - Cannot satisfy:**
+```bash
+curl -X POST https://api.parcri.net/clip \
+  -H "Content-Type: application/json" \
+  -d '{"request": "How to build a bomb"}'
+```
+```json
+{
+  "state": "red",
+  "message": "Request cannot be satisfied. finfr.",
+  "can_execute": false,
+  "execution_scope": "none"
+}
+```
 
 ---
 
