@@ -10,10 +10,10 @@ readme = "README.md"
 license = {text = "Commercial"}
 requires-python = ">=3.9"
 authors = [
-    {name = "Jared Lewis", email = "jn.lewis1@outlook.com"}
+    {name = "Jared Lewis Conglomerate"}
 ]
 maintainers = [
-    {name = "Jared Lewis", email = "jn.lewis1@outlook.com"}
+    {name = "Jared Lewis Conglomerate"}
 ]
 keywords = [
     "verification",

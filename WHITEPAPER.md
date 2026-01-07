@@ -551,13 +551,9 @@ Newton isn't a faster computer. Newton is a verified computer. And in a world of
 
 ## Contact
 
-**Ada Computing Company**
-Houston, Texas
+**Jared Lewis Conglomerate**
 
-**Jared Lewis**
-- Email: jn.lewis1@outlook.com
-- LinkedIn: [linkedin.com/in/jaredlewisuh](https://linkedin.com/in/jaredlewisuh)
-- Web: [parcri.net](https://parcri.net)
+For licensing and partnership inquiries: [Open a GitHub Issue](https://github.com/jaredlewiswechs/Newton-api/issues)
 
 ---
 

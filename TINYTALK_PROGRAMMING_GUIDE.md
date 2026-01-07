@@ -2200,7 +2200,7 @@ def set_b(self, v): self.b = v
 - **Examples**: `examples/tinytalk_demo.py`
 - **Tests**: `tests/test_tinytalk.py`
 - **Issues**: GitHub issues
-- **Contact**: jn.lewis1@outlook.com
+- **Contact**: Open a GitHub Issue at https://github.com/jaredlewiswechs/Newton-api/issues
 
 ---
 

@@ -425,13 +425,10 @@ See [full documentation](docs/) for request/response details.
 
 ## CONTACT
 
-**Jared Lewis**
-Ada Computing Company
-Houston, Texas
+**Jared Lewis Conglomerate**
 
-Email: Jn.Lewis1@outlook.com
-LinkedIn: linkedin.com/in/jaredlewisuh
-Web: parcri.net
+For licensing and partnership inquiries: Open a GitHub Issue
+https://github.com/jaredlewiswechs/Newton-api/issues
 
 ---
 

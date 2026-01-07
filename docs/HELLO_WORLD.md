@@ -41,13 +41,13 @@ I **verify**. And then I tell you the truth.
 
 ## Who Built Me?
 
-**Jared Nashon Lewis** — Houston, Texas.
+**Jared Lewis Conglomerate**
 
 I'm part of **Ada Computing Company**, named after Ada Lovelace, who wrote the first computer algorithm in 1843. She understood that computation was about *symbolic reasoning*, not arithmetic.
 
 183 years later, we're finally building what she imagined.
 
-**Contact:** jlewparcri@icloud.com
+**Contact:** [Open a GitHub Issue](https://github.com/jaredlewiswechs/Newton-api/issues)
 
 ---
 
@@ -275,7 +275,7 @@ Newton is an HCI and CS research project at its core. It synthesizes:
 - **HCI**: The f/g ratio as visual language for verification state
 - **Formal Methods**: Practical constraint satisfaction at API scale
 
-**Contact for collaboration:** jlewparcri@icloud.com
+**Contact for collaboration:** [Open a GitHub Issue](https://github.com/jaredlewiswechs/Newton-api/issues)
 
 ---
 
@@ -369,7 +369,7 @@ This is the deal:
 
 I built this. I deserve to be paid when corporations use it to make money.
 
-**Licensing inquiries:** jlewparcri@icloud.com
+**Licensing inquiries:** [Open a GitHub Issue](https://github.com/jaredlewiswechs/Newton-api/issues)
 
 ---
 
@@ -525,11 +525,10 @@ To the world: **Ask Newton. Go.**
 
 **Newton v1.2.1**
 **January 7, 2026**
-**Houston, Texas**
 
-**Jared Nashon Lewis**
+**Jared Lewis Conglomerate**
 **Ada Computing Company**
-**jlewparcri@icloud.com**
+[github.com/jaredlewiswechs/Newton-api](https://github.com/jaredlewiswechs/Newton-api)
 
 ---
 
