@@ -358,9 +358,36 @@ This agreement may be updated periodically. Changes will be:
 
 **A:** No. Forking without permission to relicense is not allowed. You can contribute to the main project instead.
 
+### Q: My open source project receives donations or sponsorships. Do I need a commercial license?
+
+**A:** If donations are voluntary and go to infrastructure/hosting costs only, the free license applies. If sponsorships involve deliverables, paid features, or revenue exceeds $1,000/month, you need a commercial license.
+
+### Q: I'm a researcher at a for-profit company. Can I use the free license?
+
+**A:** No. Research conducted at or funded by for-profit companies requires a commercial license. The free research license is for academic institutions and independent researchers only.
+
+### Q: I'm a student doing freelance work. Which license applies?
+
+**A:** Freelance work is commercial activity. You need a commercial license for any paid work, regardless of your student status. Your coursework and personal learning remain free.
+
 ### Q: What if I'm not sure about my use case?
 
 **A:** When in doubt, open a GitHub Issue and ask. We're happy to clarify.
+
+---
+
+## Newton Verification
+
+This licensing structure has been verified for logical consistency using Newton's paradox detection system:
+
+| Potential Edge Case | Resolution | Section |
+|---------------------|------------|---------|
+| Non-profit with revenue | Fee-generating programs require commercial license | 2.3, FAQ |
+| Open source with donations | Threshold-based: <$1K/mo free, >$1K/mo commercial | FAQ |
+| Student doing freelance | Freelance = commercial, coursework = free | 1.1, FAQ |
+| Researcher at for-profit | Company research = commercial, academic = free | 1.3, FAQ |
+
+**Verification Status:** CONSISTENT (no paradoxes remain)
 
 ---
 
