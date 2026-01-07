@@ -51,6 +51,20 @@ The core workflow documentation:
 - User experience
 - Implementation pseudocode
 
+### 6. [MORPHIC_TO_NEWTON_EVOLUTION.md](./MORPHIC_TO_NEWTON_EVOLUTION.md)
+The intellectual lineage from Morphic to Newton:
+- Morphic's direct manipulation paradigm (Self/Squeak, 1990s)
+- The evolution from "manipulate visible objects" to "manipulate verified objects"
+- Generation mapping: Smalltalk → Morphic → Squeak → Scratch → Newton
+- How Newton solves Morphic's "corruption problem"
+- The Dynabook with proof
+
+### 7. [BILL_ATKINSON_EXPLAINS_DRAWING.md](./BILL_ATKINSON_EXPLAINS_DRAWING.md)
+Bill Atkinson's philosophy of verified strokes:
+- The stroke IS the verification
+- Touch as truth
+- MacPaint to Newton
+
 ---
 
 ## The Core Insight
