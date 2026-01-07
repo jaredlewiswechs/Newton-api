@@ -1,6 +1,6 @@
 # TinyTalk Programming Guide
 
-**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 <p align="center">
   <img src="https://img.shields.io/badge/tinyTalk-1.0-blue.svg" alt="TinyTalk 1.0">

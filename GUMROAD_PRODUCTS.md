@@ -1,6 +1,6 @@
 # Newton Gumroad Products - Ready to Launch
 
-**Launch Date**: January 3, 2026
+**Launch Date**: January 6, 2026
 **Goal**: Generate revenue TODAY
 
 ---

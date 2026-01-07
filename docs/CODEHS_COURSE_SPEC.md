@@ -1,7 +1,7 @@
 # tinyTalk for CodeHS: Course Specification
 
 **Version**: 1.0
-**Date**: January 3, 2026
+**Date**: January 6, 2026
 **Author**: Newton Education Team
 **Target Platform**: CodeHS
 **Grade Level**: 9-12 (with AP track)

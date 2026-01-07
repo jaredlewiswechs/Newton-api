@@ -1,6 +1,6 @@
 # Newton: The Semantic QuickDraw
 
-**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 > *"Bill didn't write MacPaint first. He wrote QuickDraw. He figured out the math of pixels before he ever let anyone paint."*
 

@@ -1,6 +1,6 @@
 # Framework Verification
 
-**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 Newton v3.0 includes safety constraints for 10+ frameworks across Apple, Web, and ML ecosystems.
 

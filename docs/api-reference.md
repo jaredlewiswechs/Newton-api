@@ -1,6 +1,6 @@
 # Newton Supercomputer API Reference
 
-**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 Complete reference for the Newton Supercomputer API.
 
@@ -86,13 +86,105 @@ Complete reference for the Newton Supercomputer API.
 | [`/teachers/db/load`](#teachers-db-load) | POST | Load database from file |
 | [`/teachers/info`](#teachers-info) | GET | Teacher's Aide API docs |
 
+### Constraint Extraction
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/extract`](#extract) | POST | Extract formal constraints from natural language |
+| [`/extract/verify`](#extract-verify) | POST | Verify a plan against extracted constraints |
+| [`/extract/example`](#extract-example) | GET | Show constraint extraction example |
+
+### Chatbot Compiler
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/chatbot/compile`](#chatbot-compile) | POST | Compile user input through constrained pipeline |
+| [`/chatbot/classify`](#chatbot-classify) | POST | Classify input without generating response |
+| [`/chatbot/batch`](#chatbot-batch) | POST | Process multiple inputs |
+| [`/chatbot/metrics`](#chatbot-metrics) | GET | Get chatbot compiler metrics |
+| [`/chatbot/types`](#chatbot-types) | GET | List request types and constraint rules |
+| [`/chatbot/example`](#chatbot-example) | GET | Show chatbot compiler examples |
+
+### Policy & Glass Box
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/policy`](#policy-get) | GET | Get all policies |
+| [`/policy`](#policy-post) | POST | Create/update a policy |
+| [`/policy/{id}`](#policy-delete) | DELETE | Remove a policy |
+| [`/negotiator/pending`](#negotiator-pending) | GET | Get pending approval requests |
+| [`/negotiator/request`](#negotiator-request) | POST | Create approval request |
+| [`/negotiator/approve/{id}`](#negotiator-approve) | POST | Approve a request |
+| [`/negotiator/reject/{id}`](#negotiator-reject) | POST | Reject a request |
+
+### Merkle Anchoring
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/merkle/anchors`](#merkle-anchors) | GET | Get all anchor records |
+| [`/merkle/anchor`](#merkle-anchor-post) | POST | Create manual anchor |
+| [`/merkle/anchor/{id}`](#merkle-anchor-get) | GET | Get specific anchor |
+| [`/merkle/proof/{index}`](#merkle-proof) | GET | Get Merkle proof for entry |
+| [`/merkle/latest`](#merkle-latest) | GET | Get latest anchor |
+
+### Interface Builder
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/interface/templates`](#interface-templates) | GET | List available templates |
+| [`/interface/templates/{id}`](#interface-template) | GET | Get specific template |
+| [`/interface/build`](#interface-build) | POST | Build interface from intent |
+| [`/interface/components`](#interface-components) | GET | List available components |
+| [`/interface/info`](#interface-info) | GET | Interface Builder documentation |
+
+### Jester Analyzer
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/jester/analyze`](#jester-analyze) | POST | Analyze code for constraints |
+| [`/jester/cdl`](#jester-cdl) | POST | Generate CDL from code |
+| [`/jester/info`](#jester-info) | GET | Jester analyzer info |
+| [`/jester/languages`](#jester-languages) | GET | Supported languages |
+| [`/jester/constraint-kinds`](#jester-constraint-kinds) | GET | Available constraint types |
+
+### Voice Interface
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/voice/ask`](#voice-ask) | POST | Process voice query |
+| [`/voice/stream`](#voice-stream) | POST | Streaming voice interface |
+| [`/voice/intent`](#voice-intent) | POST | Parse intent from text |
+| [`/voice/patterns`](#voice-patterns) | GET | List voice patterns |
+| [`/voice/patterns/search`](#voice-patterns-search) | POST | Search patterns |
+| [`/voice/session/{id}`](#voice-session) | GET | Get voice session |
+| [`/voice/demo`](#voice-demo) | GET | Voice interface demo |
+
+### Authentication (parcCloud)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/parccloud/signup`](#parccloud-signup) | POST | Register new user |
+| [`/parccloud/signin`](#parccloud-signin) | POST | Sign in user |
+| [`/parccloud/verify`](#parccloud-verify) | GET | Verify session token |
+| [`/parccloud/logout`](#parccloud-logout) | POST | Logout user |
+| [`/parccloud/stats`](#parccloud-stats) | GET | Get user statistics |
+
+### Licensing
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| [`/license/verify`](#license-verify) | POST | Verify license key |
+| [`/license/info`](#license-info) | GET | Get license information |
+| [`/webhooks/gumroad`](#webhooks-gumroad) | POST | Gumroad payment webhook |
+
 ### System
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | [`/health`](#health) | GET | System status |
 | [`/metrics`](#metrics) | GET | Performance metrics |
-| [`/calculate/examples`](#calculate-examples) | POST | Get example expressions |
+| [`/feedback`](#feedback) | POST | Submit feedback |
+| [`/feedback/summary`](#feedback-summary) | GET | Feedback summary |
 
 ---
 

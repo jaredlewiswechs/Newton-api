@@ -1,6 +1,6 @@
 # Setting Up Gumroad for Newton Supercomputer
 
-**January 3, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 Welcome to selling Newton access! This guide will walk you through everything as a first-time business owner.
 
