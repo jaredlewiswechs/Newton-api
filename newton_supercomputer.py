@@ -63,6 +63,9 @@ from core import (
 
     # Gumroad (Payments)
     get_gumroad_service, GumroadConfig,
+
+    # Marketplace (P2P Exchange)
+    get_marketplace,
 )
 
 # Education Module
@@ -192,6 +195,9 @@ interface_builder = get_interface_builder()
 
 # Gumroad - Payment & License Management
 gumroad = get_gumroad_service()
+
+# Marketplace - P2P Newton Exchange
+marketplace = get_marketplace()
 
 # Voice Interface (MOAD - Mother Of All Demos)
 voice_interface = get_voice_interface()
@@ -3732,6 +3738,38 @@ class ApiKeyRequest(BaseModel):
     license_key: str
 
 
+# Marketplace Models
+class CreateListingRequest(BaseModel):
+    """Create a marketplace listing to sell Newton credits."""
+    seller_email: str
+    seller_api_key: str
+    listing_type: str = "credits"  # credits, api_access, tier_upgrade
+    quantity: int
+    price_cents: int  # Price in USD cents
+    description: Optional[str] = ""
+    expires_hours: int = 72
+
+
+class BuyListingRequest(BaseModel):
+    """Buy a listing from the marketplace."""
+    listing_id: str
+    buyer_email: str
+    buyer_api_key: str
+
+
+class ConfirmSaleRequest(BaseModel):
+    """Confirm a sale (seller confirms payment)."""
+    listing_id: str
+    seller_api_key: str
+    payment_confirmed: bool = True
+
+
+class CancelListingRequest(BaseModel):
+    """Cancel a marketplace listing."""
+    listing_id: str
+    seller_api_key: str
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # LICENSE & API KEY ENDPOINTS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3925,6 +3963,207 @@ async def gumroad_stats():
         **gumroad.stats(),
         "engine": ENGINE
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MARKETPLACE - P2P NEWTON EXCHANGE
+# "Bored with Newton? Sell it. Want Newton? Buy it."
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/marketplace/sell")
+async def create_listing(request: CreateListingRequest):
+    """
+    List your Newton credits for sale.
+
+    Bored with Newton? Need cash? Sell your credits to other users.
+
+    Example:
+        POST /marketplace/sell
+        {
+            "seller_email": "you@example.com",
+            "seller_api_key": "newton_xxx",
+            "listing_type": "credits",
+            "quantity": 5000,
+            "price_cents": 1500,
+            "description": "Selling 5000 credits, barely used!"
+        }
+
+    Listing types: credits, api_access, tier_upgrade
+    """
+    result = marketplace.create_listing(
+        seller_email=request.seller_email,
+        seller_api_key=request.seller_api_key,
+        listing_type=request.listing_type,
+        quantity=request.quantity,
+        price_cents=request.price_cents,
+        description=request.description or "",
+        expires_hours=request.expires_hours,
+    )
+
+    if result.get("success"):
+        ledger.append(
+            operation="marketplace_listing_created",
+            payload={"listing_type": request.listing_type, "quantity": request.quantity},
+            result="pass"
+        )
+
+    return {**result, "engine": ENGINE}
+
+
+@app.get("/marketplace")
+async def browse_marketplace(
+    listing_type: Optional[str] = None,
+    max_price_cents: Optional[int] = None,
+    min_quantity: Optional[int] = None,
+    sort_by: str = "price",
+    limit: int = 50,
+):
+    """
+    Browse available Newton listings.
+
+    Find the best deals on Newton credits from other users.
+
+    Query parameters:
+        - listing_type: Filter by type (credits, api_access, tier_upgrade)
+        - max_price_cents: Maximum price in cents
+        - min_quantity: Minimum quantity
+        - sort_by: price (best value), quantity (most first), newest
+        - limit: Max results (default 50)
+
+    Example: GET /marketplace?listing_type=credits&sort_by=price
+    """
+    return {
+        **marketplace.browse_listings(
+            listing_type=listing_type,
+            max_price_cents=max_price_cents,
+            min_quantity=min_quantity,
+            sort_by=sort_by,
+            limit=limit,
+        ),
+        "engine": ENGINE
+    }
+
+
+@app.get("/marketplace/{listing_id}")
+async def get_listing(listing_id: str):
+    """
+    Get details of a specific listing.
+
+    Example: GET /marketplace/NWL-ABC123
+    """
+    return {**marketplace.get_listing(listing_id), "engine": ENGINE}
+
+
+@app.post("/marketplace/buy")
+async def buy_listing(request: BuyListingRequest):
+    """
+    Purchase a listing from the marketplace.
+
+    Example:
+        POST /marketplace/buy
+        {
+            "listing_id": "NWL-ABC123",
+            "buyer_email": "buyer@example.com",
+            "buyer_api_key": "newton_xxx"
+        }
+
+    Returns payment instructions to complete the purchase.
+    """
+    result = marketplace.buy_listing(
+        listing_id=request.listing_id,
+        buyer_email=request.buyer_email,
+        buyer_api_key=request.buyer_api_key,
+    )
+
+    if result.get("success"):
+        ledger.append(
+            operation="marketplace_purchase_initiated",
+            payload={"listing_id": request.listing_id},
+            result="pass"
+        )
+
+    return {**result, "engine": ENGINE}
+
+
+@app.post("/marketplace/confirm")
+async def confirm_sale(request: ConfirmSaleRequest):
+    """
+    Seller confirms payment and releases credits.
+
+    After the buyer sends payment, seller confirms to release credits.
+
+    Example:
+        POST /marketplace/confirm
+        {
+            "listing_id": "NWL-ABC123",
+            "seller_api_key": "newton_xxx",
+            "payment_confirmed": true
+        }
+    """
+    result = marketplace.confirm_sale(
+        listing_id=request.listing_id,
+        seller_api_key=request.seller_api_key,
+        payment_confirmed=request.payment_confirmed,
+    )
+
+    if result.get("success") and result.get("trade"):
+        ledger.append(
+            operation="marketplace_sale_completed",
+            payload={"listing_id": request.listing_id, "trade_id": result["trade"]["id"]},
+            result="pass"
+        )
+
+    return {**result, "engine": ENGINE}
+
+
+@app.post("/marketplace/cancel")
+async def cancel_listing(request: CancelListingRequest):
+    """
+    Cancel your listing.
+
+    Changed your mind? Cancel your active listing.
+
+    Example:
+        POST /marketplace/cancel
+        {
+            "listing_id": "NWL-ABC123",
+            "seller_api_key": "newton_xxx"
+        }
+    """
+    return {
+        **marketplace.cancel_listing(request.listing_id, request.seller_api_key),
+        "engine": ENGINE
+    }
+
+
+@app.get("/marketplace/my/listings")
+async def my_listings(seller_email: str):
+    """
+    Get all your listings.
+
+    Example: GET /marketplace/my/listings?seller_email=you@example.com
+    """
+    return {**marketplace.my_listings(seller_email), "engine": ENGINE}
+
+
+@app.get("/marketplace/my/trades")
+async def my_trades(email: str):
+    """
+    Get your trade history (buys and sells).
+
+    Example: GET /marketplace/my/trades?email=you@example.com
+    """
+    return {**marketplace.my_trades(email), "engine": ENGINE}
+
+
+@app.get("/marketplace/stats")
+async def marketplace_stats():
+    """
+    Get marketplace statistics.
+
+    See the current market: average prices, volume, active listings.
+    """
+    return {**marketplace.market_stats(), "engine": ENGINE}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

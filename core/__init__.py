@@ -195,6 +195,15 @@ from .gumroad import (
     get_gumroad_service,
 )
 
+from .marketplace import (
+    NewtonMarketplace,
+    Listing,
+    ListingStatus,
+    ListingType,
+    TradeRecord,
+    get_marketplace,
+)
+
 from .voice_interface import (
     # Core Interface
     NewtonVoiceInterface,
@@ -365,6 +374,9 @@ __all__ = [
 
     # Gumroad Integration
     'GumroadService', 'GumroadConfig', 'Customer', 'Feedback', 'LicenseVerification', 'get_gumroad_service',
+
+    # Marketplace - P2P Newton Exchange
+    'NewtonMarketplace', 'Listing', 'ListingStatus', 'ListingType', 'TradeRecord', 'get_marketplace',
 
     # Voice Interface (MOAD - Mother Of All Demos)
     'NewtonVoiceInterface', 'StreamingVoiceInterface', 'VoiceResponse',
