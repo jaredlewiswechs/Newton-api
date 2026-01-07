@@ -1,10 +1,58 @@
 # Changelog
 
-**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 7, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 All notable changes to Newton Supercomputer are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [1.2.1] - 2026-01-07
+
+### Added
+
+#### Cohen-Sutherland Constraint Clipping Model (#183)
+Semantic constraint clipping - not just pass/fail, but finding what CAN be done:
+
+- **`/clip` endpoint** - Apply Cohen-Sutherland inspired clipping to requests
+  - GREEN: Both endpoints inside constraint bounds → execute fully
+  - YELLOW: Mixed validity → clip to boundary, execute valid portion
+  - RED: Both endpoints outside bounds → finfr (truly impossible)
+
+- **ClipState enum** - Three-state model for constraint satisfaction
+- **ClipResult dataclass** - Rich response with negotiation, not just pass/fail
+- **Clippable constraints** - Harm, medical, legal boundaries with alternatives
+- This is the key insight: **Don't just reject. Find what CAN be done.**
+
+#### Morphic to Newton Evolution Documentation (#182)
+Computer science grade analysis of Newton's lineage:
+
+- **`docs/product-architecture/MORPHIC_TO_NEWTON_EVOLUTION.md`** - 410 lines
+  - From Morphic (Self/Squeak) direct manipulation to Newton verified manipulation
+  - Generation 0-4: Smalltalk → Self → Squeak → Scratch → Newton
+  - The f/g ratio as visual Morphic state
+  - "What you see is what you've verified"
+  - Complete mapping: Halo → Constraint Glyph, Step → Verification Loop
+  - The Dynabook with proof
+
+#### Auto-Discovering Newton SDK v3.0 (#181)
+Single-file SDK with automatic endpoint discovery:
+
+- **`sdk/newton.py`** - Drop-in Python SDK
+  - Auto-discovers all 115 endpoints from `/openapi.json`
+  - 15 namespaces: cartridge, education, teachers, voice, vault, ledger, jester, etc.
+  - NewtonResponse with `.success`, `.data`, `.verified`, `.merkle_root`
+  - Error hierarchy: NewtonError, NewtonConnectionError, NewtonAuthError
+  - CLI mode with `python newton.py`
+  - Only dependency: `requests`
+
+- **Usage**:
+  ```python
+  from newton import Newton
+  n = Newton()
+  result = n.ask("Is this safe?")
+  ```
 
 ---
 

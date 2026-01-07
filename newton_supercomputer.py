@@ -150,7 +150,7 @@ from parccloud.auth import (
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 ENGINE = f"Newton Supercomputer {VERSION}"
 
 # Initialize components

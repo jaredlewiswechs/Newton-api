@@ -2,7 +2,7 @@
 
 > **The constraint IS the instruction. The verification IS the computation.**
 
-**Version 1.2.0** | **January 6, 2026** | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
+**Version 1.2.1** | **January 7, 2026** | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 ---
 
