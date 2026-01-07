@@ -12,12 +12,22 @@ The constraint IS the instruction. The verification IS the computation.
 
 ---
 
+## Start Here
+
+### **[Hello, World. I'm Newton.](HELLO_WORLD.md)** — Newton's Introduction to Humanity
+*January 7, 2026 — The definitive guide to what Newton is, who it's for, and why it matters.*
+
+For students, educators, universities, creators, and developers. Newton on acid with Bill Atkinson and Woz. HCI, CS research, cybernetics, and linguistics. What's new, what's fast, and how to use it.
+
+---
+
 ## Documentation Index
 
 ### Getting Started
+- **[Hello World](HELLO_WORLD.md)** - Newton introduces himself (START HERE)
 - [Quick Start Guide](getting-started.md) - Get up and running in 5 minutes
-- **[Newton API Intro Course](INTRO_COURSE.md)** - 5-level PDA tutorial with runnable examples (NEW)
-- **[R/RStudio Quickstart](../RSTUDIO_QUICKSTART.md)** - Local and remote R integration (NEW)
+- **[Newton API Intro Course](INTRO_COURSE.md)** - 5-level PDA tutorial with runnable examples
+- **[R/RStudio Quickstart](../RSTUDIO_QUICKSTART.md)** - Local and remote R integration
 - [Authentication](authentication.md) - API keys, rate limits, and security
 - [Configuration](configuration.md) - Environment variables and settings
 
