@@ -1,21 +1,150 @@
-MIT License
+# Newton Supercomputer - Dual License
 
-Copyright (c) 2025 jaredlewiswechs
+**Copyright (c) 2025-2026 Jared Nashon Lewis**
+**Jared Lewis Conglomerate | parcRI | Newton | tinyTalk | Ada Computing Company**
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This software is dual-licensed. You may use it under one of the following licenses depending on your use case:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+---
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## OPTION 1: Educational & Research License (Free)
+
+### Grant of License
+
+Permission is hereby granted, **free of charge**, to any person or organization obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, modify, and distribute the Software, subject to the following conditions:
+
+### Eligible Users (Free License)
+
+This free license applies ONLY to:
+
+1. **Students** - Individuals enrolled in accredited educational institutions (K-12, undergraduate, graduate, doctoral programs)
+
+2. **Educators** - Teachers, professors, instructors, and educational staff at accredited institutions
+
+3. **Independent Researchers** - Individuals conducting non-commercial academic or scientific research
+
+4. **Non-Profit Organizations** - 501(c)(3) organizations or international equivalents with no commercial revenue streams
+
+5. **Personal Use** - Individuals using the Software for personal, non-commercial learning and experimentation
+
+6. **Open Source Projects** - Projects licensed under OSI-approved licenses with no commercial component
+
+### Conditions for Free Use
+
+- Attribution must be included in any derivative work or publication
+- The Software may not be sold or included in any product that is sold
+- The Software may not be used to provide paid services or generate revenue
+- The Software may not be used as a component of any commercial product
+- Publications using the Software must cite: "Newton Supercomputer by Jared Nashon Lewis"
+
+### Attribution Requirement
+
+The following notice must be included in all copies or substantial portions of the Software:
+
+```
+Newton Supercomputer
+Copyright (c) 2025-2026 Jared Nashon Lewis
+https://github.com/jaredlewiswechs/Newton-api
+```
+
+---
+
+## OPTION 2: Commercial License (Paid)
+
+### When You Need a Commercial License
+
+A commercial license is **required** if you:
+
+1. **Generate Revenue** - Use the Software in any product, service, or application that generates direct or indirect revenue
+
+2. **SaaS/Cloud Services** - Offer the Software as a service, API, or cloud-based solution
+
+3. **Enterprise Deployment** - Deploy the Software within a for-profit organization
+
+4. **Embedded Products** - Include the Software in hardware or software products for sale
+
+5. **Consulting Services** - Use the Software to provide paid consulting, development, or professional services
+
+6. **Internal Business Tools** - Use the Software for internal business operations in a for-profit company
+
+### Commercial License Terms
+
+Commercial licenses are available with the following terms:
+
+- **Startup License** - Companies with < $1M annual revenue
+- **Business License** - Companies with $1M - $10M annual revenue
+- **Enterprise License** - Companies with > $10M annual revenue
+- **Custom License** - Negotiated terms for specific use cases
+
+### How to Obtain a Commercial License
+
+1. **Open a GitHub Issue** at https://github.com/jaredlewiswechs/Newton-api/issues
+   - Use the title: "Commercial License Inquiry"
+   - Include: Company name, intended use case, estimated annual revenue
+
+2. **Response Time** - Expect a response within 5 business days
+
+3. **License Agreement** - A formal license agreement will be provided for execution
+
+---
+
+## COMMON TERMS (Both Licenses)
+
+### Intellectual Property
+
+- The Software, including all code, documentation, algorithms, and designs, remains the exclusive property of Jared Nashon Lewis and the Jared Lewis Conglomerate
+- No license, express or implied, is granted to any patents, trademarks, or trade secrets
+- The name "Newton," "tinyTalk," "parcRI," and associated logos may not be used without written permission
+
+### Warranty Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### Limitation of Liability
+
+IN NO EVENT SHALL JARED NASHON LEWIS, JARED LEWIS CONGLOMERATE, OR ANY CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### Termination
+
+- The free license terminates automatically if you violate any of its terms
+- Commercial licenses may be terminated according to the terms of the specific license agreement
+- Upon termination, you must cease all use and destroy all copies of the Software
+
+### Governing Law
+
+This license shall be governed by and construed in accordance with the laws of the State of Texas, United States of America, without regard to its conflict of law provisions.
+
+---
+
+## SUMMARY TABLE
+
+| Use Case | License Required | Cost |
+|----------|------------------|------|
+| Student homework/projects | Educational | Free |
+| Academic research | Educational | Free |
+| Teaching/classroom use | Educational | Free |
+| Personal learning | Educational | Free |
+| Non-profit mission work | Educational | Free |
+| Open source project (non-commercial) | Educational | Free |
+| Startup product/service | Commercial | Paid |
+| Enterprise internal use | Commercial | Paid |
+| SaaS offering | Commercial | Paid |
+| Consulting services | Commercial | Paid |
+| Any revenue-generating use | Commercial | Paid |
+
+---
+
+## QUESTIONS?
+
+- **License Questions**: Open a GitHub Issue
+- **Commercial Inquiries**: Open a GitHub Issue with title "Commercial License Inquiry"
+- **Report Violations**: Open a GitHub Issue with title "License Violation Report"
+
+---
+
+**Last Updated:** January 7, 2026
+**Version:** 1.0
+
+*"finfr = f/g. The ratio IS the constraint. 1 == 1."*
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company · Houston, Texas

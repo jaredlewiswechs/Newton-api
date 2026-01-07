@@ -17,13 +17,22 @@
 **Verified Computation. Ask Newton. Go.**
 
 [![Version](https://img.shields.io/badge/version-1.2.1-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
-[![License](https://img.shields.io/badge/license-Commercial-blue.svg)](#licensing)
+[![License](https://img.shields.io/badge/license-Dual%20License-blue.svg)](#licensing)
 [![API](https://img.shields.io/badge/API-REST-orange.svg)](#api-reference)
 [![Tests](https://img.shields.io/badge/tests-580%20passing-brightgreen.svg)](#testing)
 [![ACID](https://img.shields.io/badge/ACID-compliant-green.svg)](#newton-tlm)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
 
 **January 7, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+
+---
+
+> **FREE FOR EDUCATION & RESEARCH** | **COMMERCIAL LICENSE REQUIRED FOR BUSINESS USE**
+>
+> Students, educators, researchers, and non-profits: Use Newton freely with attribution.
+> Building a product or service? [Get a commercial license](#licensing).
+>
+> See [LICENSE](LICENSE) and [USAGE_AGREEMENT.md](USAGE_AGREEMENT.md) for details.
 
 ---
 
@@ -1174,13 +1183,50 @@ That's why Newton is a supercomputer that costs nothing to run.
 
 ## Licensing
 
-**Open Source (Non-Commercial)**
-Personal projects, academic research, non-profit organizations.
+Newton uses a **dual license** model to support education while protecting commercial interests.
 
-**Commercial License Required**
-SaaS products, enterprise deployments, revenue-generating applications.
+### Free License (Educational & Research)
 
-Contact: **Open a GitHub Issue for licensing inquiries**
+**Use Newton for FREE if you are:**
+- A **student** (K-12, undergraduate, graduate)
+- An **educator** (teacher, professor, instructor)
+- An **independent researcher** (academic, scientific)
+- A **non-profit organization** (501(c)(3) or equivalent)
+- Using for **personal learning** (no commercial intent)
+- Building **open source** (non-commercial)
+
+**Requirements:**
+- Include attribution in derivative works
+- Cite Newton in academic publications
+
+### Commercial License (Paid)
+
+**You NEED a commercial license if you:**
+- Generate revenue using Newton
+- Offer Newton as a SaaS/cloud service
+- Deploy Newton in a for-profit enterprise
+- Include Newton in products for sale
+- Provide paid consulting services using Newton
+
+**License Tiers:**
+| Tier | Revenue | Use Case |
+|------|---------|----------|
+| Startup | < $1M | Early-stage companies |
+| Business | $1M - $10M | Growing companies |
+| Enterprise | > $10M | Established companies |
+
+**Get a Commercial License:**
+Open a GitHub Issue with title "Commercial License Inquiry"
+
+### Documentation
+
+- **[LICENSE](LICENSE)** - Full dual license text
+- **[USAGE_AGREEMENT.md](USAGE_AGREEMENT.md)** - Detailed usage guidelines and FAQ
+
+### Contact
+
+- **License Questions**: Open a GitHub Issue
+- **Commercial Inquiries**: GitHub Issue titled "Commercial License Inquiry"
 
 ---
 

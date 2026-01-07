@@ -1,21 +1,46 @@
-MIT License
+# Newton R Package - Dual License
 
-Copyright (c) 2024 Newton Team
+**Copyright (c) 2025-2026 Jared Nashon Lewis**
+**Jared Lewis Conglomerate | parcRI | Newton | tinyTalk | Ada Computing Company**
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This R package is part of the Newton Supercomputer project and is subject to the same dual licensing terms.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## License Terms
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+This software is dual-licensed:
+
+1. **Educational & Research License (Free)** - For students, educators, researchers, non-profits, and personal use
+2. **Commercial License (Paid)** - For revenue-generating activities, SaaS, enterprise deployment
+
+## Full License
+
+See the main [LICENSE](../LICENSE) file in the repository root for complete terms.
+
+## Quick Reference
+
+| Use Case | License | Cost |
+|----------|---------|------|
+| Student/Academic | Educational | Free |
+| Research | Educational | Free |
+| Personal Learning | Educational | Free |
+| Non-Profit | Educational | Free |
+| Commercial/Business | Commercial | Paid |
+
+## Attribution
+
+When using this package, include:
+
+```
+Newton R Package
+Part of Newton Supercomputer by Jared Nashon Lewis
+https://github.com/jaredlewiswechs/Newton-api
+```
+
+## Contact
+
+- **License Questions**: Open a GitHub Issue
+- **Commercial Inquiries**: GitHub Issue titled "Commercial License Inquiry"
+
+---
+
+© 2025-2026 Jared Nashon Lewis · Jared Lewis Conglomerate · parcRI · Newton · tinyTalk · Ada Computing Company
