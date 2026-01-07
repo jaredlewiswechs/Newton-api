@@ -127,5 +127,4 @@ curl -X POST http://localhost:8000/verify \
 ## Need Help?
 
 - Check the [API Reference](api-reference.md)
-- Visit [parcri.net](https://parcri.net)
-- Contact: jn.lewis1@outlook.com
+- Open a [GitHub Issue](https://github.com/jaredlewiswechs/Newton-api/issues)

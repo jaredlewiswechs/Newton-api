@@ -1942,8 +1942,8 @@ async def root():
     </div>
 
     <footer>
-        <p style="margin-bottom: 8px;"><strong>Newton OS</strong> by <a href="https://parcri.net">Ada Computing Company</a></p>
-        <p>Houston, Texas · <a href="mailto:Jn.Lewis1@outlook.com">Jn.Lewis1@outlook.com</a></p>
+        <p style="margin-bottom: 8px;"><strong>Newton OS</strong> by <a href="https://github.com/jaredlewiswechs/Newton-api">Jared Lewis Conglomerate</a></p>
+        <p><a href="https://github.com/jaredlewiswechs/Newton-api/issues">Contact via GitHub</a></p>
         <p style="margin-top: 12px; color: #333;">The constraint IS the product. The compiler makes the constraint portable.</p>
     </footer>
 

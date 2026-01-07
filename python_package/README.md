@@ -275,4 +275,4 @@ Commercial License. See [LICENSE](LICENSE) for details.
 
 ## Author
 
-Created by Jared Lewis (jn.lewis1@outlook.com)
+Created by Jared Lewis Conglomerate - https://github.com/jaredlewiswechs/Newton-api

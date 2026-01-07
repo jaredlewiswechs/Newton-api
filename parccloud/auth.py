@@ -31,9 +31,13 @@ USERS_FILE = STORAGE_DIR / "parccloud_users.json"
 # Token expiration
 TOKEN_EXPIRY_HOURS = 24 * 7  # 1 week
 
-# Admin credentials (set via environment variables for security)
-ADMIN_KEY = os.environ.get("PARCCLOUD_ADMIN_KEY", "newton-admin-2026")
-ADMIN_SECRET = os.environ.get("PARCCLOUD_ADMIN_SECRET", "ask-newton-go")
+# Admin credentials (MUST be set via environment variables - no defaults for security)
+ADMIN_KEY = os.environ.get("PARCCLOUD_ADMIN_KEY")
+ADMIN_SECRET = os.environ.get("PARCCLOUD_ADMIN_SECRET")
+
+if not ADMIN_KEY or not ADMIN_SECRET:
+    import warnings
+    warnings.warn("PARCCLOUD_ADMIN_KEY and PARCCLOUD_ADMIN_SECRET must be set in environment variables")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

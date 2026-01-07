@@ -1180,7 +1180,7 @@ Personal projects, academic research, non-profit organizations.
 **Commercial License Required**
 SaaS products, enterprise deployments, revenue-generating applications.
 
-Contact: **jn.lewis1@outlook.com**
+Contact: **Open a GitHub Issue for licensing inquiries**
 
 ---
 
@@ -1188,8 +1188,8 @@ Contact: **jn.lewis1@outlook.com**
 
 Newton Supercomputer is built by **Ada Computing Company** in Houston, Texas.
 
-**Jared Lewis**
-[linkedin.com/in/jaredlewisuh](https://linkedin.com/in/jaredlewisuh) · [parcri.net](https://parcri.net)
+**Jared Lewis Conglomerate**
+[github.com/jaredlewiswechs/Newton-api](https://github.com/jaredlewiswechs/Newton-api)
 
 ---
 
