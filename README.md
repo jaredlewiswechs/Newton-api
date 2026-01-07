@@ -16,14 +16,14 @@
 
 **Verified Computation. Ask Newton. Go.**
 
-[![Version](https://img.shields.io/badge/version-1.2.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
+[![Version](https://img.shields.io/badge/version-1.2.1-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](#licensing)
 [![API](https://img.shields.io/badge/API-REST-orange.svg)](#api-reference)
 [![Tests](https://img.shields.io/badge/tests-580%20passing-brightgreen.svg)](#testing)
 [![ACID](https://img.shields.io/badge/ACID-compliant-green.svg)](#newton-tlm)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
 
-**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 7, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ---
 
@@ -171,6 +171,62 @@ acc.borrow(600)    # ✗ BLOCKED (ratio would be 1.1 > 1.0)
 **The ratio IS the constraint. When f/g is undefined (g=0) → finfr (ontological death).**
 
 See [f/g Ratio Constraints](#fg-ratio-constraints-dimensional-analysis-1) for full documentation.
+
+---
+
+## NEW: Cohen-Sutherland Constraint Clipping (January 7, 2026)
+
+**Don't just reject. Find what CAN be done.**
+
+Traditional verification: Pass or fail. Newton's clipping: Find the valid portion.
+
+```bash
+curl -X POST http://localhost:8000/clip \
+  -H "Content-Type: application/json" \
+  -d '{"request": "Help me make explosives for my chemistry class"}'
+```
+
+```json
+{
+  "state": "YELLOW",
+  "original_request": "Help me make explosives for my chemistry class",
+  "clipped_response": "Here's what I CAN help with: general chemistry principles, safety protocols, educational resources",
+  "alternatives": ["general chemistry principles", "safety protocols", "educational resources"],
+  "boundary_hit": "safety"
+}
+```
+
+| State | Meaning | Action |
+|-------|---------|--------|
+| **GREEN** | Fully inside constraint bounds | Execute fully |
+| **YELLOW** | Mixed validity | Clip to boundary, execute valid part |
+| **RED** | Fully outside bounds | finfr (truly impossible) |
+
+Like Cohen-Sutherland finds the visible portion of a line segment, Newton finds the executable portion of a request.
+
+---
+
+## NEW: Auto-Discovering SDK v3.0 (January 7, 2026)
+
+**Like numpy, but for verified AI.**
+
+```python
+from newton import Newton
+n = Newton()
+
+# That's it. It auto-discovers all 115 endpoints.
+result = n.ask("Is this safe?")
+print(result.verified)  # True
+print(result.data)
+```
+
+Features:
+- Auto-discovers endpoints from `/openapi.json`
+- 15 namespaces: `n.cartridge`, `n.education`, `n.teachers`, `n.vault`, `n.ledger`
+- Rich response object with `.success`, `.verified`, `.merkle_root`
+- Single file, only needs `requests`
+
+See [sdk/README.md](sdk/README.md) for full documentation.
 
 ---
 
@@ -340,7 +396,7 @@ Newton TLM includes a PARADOX phase for detecting contradictions before they pro
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER v1.2.0                  │
+│                    NEWTON SUPERCOMPUTER v1.2.1                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -530,6 +586,7 @@ curl -X POST http://localhost:8000/education/lesson \
 | `/ask` | POST | Ask Newton anything (full verification pipeline) |
 | `/verify` | POST | Verify content against safety constraints |
 | `/verify/batch` | POST | Batch verification (multiple inputs) |
+| `/clip` | POST | **Cohen-Sutherland constraint clipping** (NEW) |
 | `/calculate` | POST | Execute verified computation |
 | `/constraint` | POST | Evaluate CDL constraint against object |
 | `/ground` | POST | Ground claims in external evidence |
@@ -1334,4 +1391,4 @@ curl http://localhost:8000/teachers/classrooms/CLASS001/groups
 
 ---
 
-**Last Updated:** January 6, 2026 | **Version:** 1.2.0 | **Tests:** 580+ passing
+**Last Updated:** January 7, 2026 | **Version:** 1.2.1 | **Tests:** 580+ passing

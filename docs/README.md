@@ -8,7 +8,7 @@ The constraint IS the instruction. The verification IS the computation.
 
 **finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
 
-**Version**: 1.2.0 | **Date**: January 6, 2026 | **Tests**: 580+ passing | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
+**Version**: 1.2.1 | **Date**: January 7, 2026 | **Tests**: 580+ passing | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 ---
 
@@ -96,7 +96,7 @@ The constraint IS the instruction. The verification IS the computation.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER v1.2.0                  │
+│                    NEWTON SUPERCOMPUTER v1.2.1                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
