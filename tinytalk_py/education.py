@@ -7,7 +7,15 @@ Newton-powered verified computation for education. Treats TEKS, NES, and
 educational standards as machine-readable objects with full constraint
 verification.
 
+Updated for CDL 3.0 with:
+- f/g ratio analysis for mastery validation
+- Zone of Proximal Development (ZPD) constraints
+- Learning Trek integration
+- Common Core State Standards support
+- Newton grounding for pedagogical patterns
+
 "The standard IS the objective. The constraint IS the curriculum."
+"The f/g ratio IS the readiness. 1 == 1."
 
 © 2025-2026 Jared Lewis · Ada Computing Company · Houston, Texas
 ═══════════════════════════════════════════════════════════════════════════════
@@ -22,6 +30,47 @@ import hashlib
 import time
 import re
 import json
+
+# CDL 3.0 Integration - Import new education modules
+try:
+    from .common_core_standards import (
+        CommonCoreStandard, CommonCoreLibrary, get_common_core_library,
+        CCSSSubject, CCSSMathDomain, CCSSELAStrand
+    )
+    HAS_COMMON_CORE = True
+except ImportError:
+    HAS_COMMON_CORE = False
+
+try:
+    from .learning_treks import (
+        LearningTrek, TrekCheckpoint, LearningObjective, TrekLibrary,
+        TrekValidator, get_trek_library, get_trek_validator,
+        TrekDomain, MasteryLevel, CheckpointType
+    )
+    HAS_TREKS = True
+except ImportError:
+    HAS_TREKS = False
+
+try:
+    from .education_cdl import (
+        MasteryConstraint, ZPDConstraint, ProgressionConstraint,
+        DifferentiationConstraint, EducationCDLEvaluator,
+        verify_mastery, verify_zpd, verify_progression, get_differentiation_tier,
+        EducationDomain
+    )
+    HAS_EDUCATION_CDL = True
+except ImportError:
+    HAS_EDUCATION_CDL = False
+
+try:
+    from .education_grounding import (
+        EducationGroundingEngine, PedagogicalPattern, GroundedPattern,
+        ground_pattern, ground_lesson, get_grounded_pattern,
+        GROUNDED_PATTERNS
+    )
+    HAS_GROUNDING = True
+except ImportError:
+    HAS_GROUNDING = False
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1669,6 +1718,429 @@ def get_education_cartridge() -> EducationCartridge:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# CDL 3.0 ENHANCED EDUCATION CARTRIDGE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class EnhancedEducationCartridge(EducationCartridge):
+    """
+    Enhanced Education Cartridge with CDL 3.0 integration.
+
+    Extends base cartridge with:
+    - Common Core State Standards (CCSS)
+    - Learning Treks with f/g ratio validation
+    - Education-specific CDL constraints
+    - Newton grounding for pedagogical patterns
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        # Initialize new components
+        self.ccss_library = get_common_core_library() if HAS_COMMON_CORE else None
+        self.trek_library = get_trek_library() if HAS_TREKS else None
+        self.trek_validator = get_trek_validator() if HAS_TREKS else None
+        self.cdl_evaluator = EducationCDLEvaluator() if HAS_EDUCATION_CDL else None
+        self.grounding_engine = EducationGroundingEngine() if HAS_GROUNDING else None
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # COMMON CORE STANDARDS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def get_ccss(self, code: str) -> Optional[Dict[str, Any]]:
+        """Get a Common Core standard by code."""
+        if not self.ccss_library:
+            return None
+        standard = self.ccss_library.get(code)
+        return standard.to_dict() if standard else None
+
+    def search_ccss(self, query: str) -> List[Dict[str, Any]]:
+        """Search Common Core standards."""
+        if not self.ccss_library:
+            return []
+        results = self.ccss_library.search(query)
+        return [r.to_dict() for r in results]
+
+    def get_ccss_by_grade(self, grade: int) -> List[Dict[str, Any]]:
+        """Get all Common Core standards for a grade."""
+        if not self.ccss_library:
+            return []
+        results = self.ccss_library.get_by_grade(grade)
+        return [r.to_dict() for r in results]
+
+    def get_ccss_learning_path(self, code: str) -> Dict[str, List[Dict[str, Any]]]:
+        """Get learning path for a CCSS code."""
+        if not self.ccss_library:
+            return {"prerequisites": [], "current": [], "next": []}
+        path = self.ccss_library.get_learning_path(code)
+        return {
+            "prerequisites": [s.to_dict() for s in path["prerequisites"]],
+            "current": [s.to_dict() for s in path["current"]],
+            "next": [s.to_dict() for s in path["next"]]
+        }
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # LEARNING TREKS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def get_trek(self, trek_id: str) -> Optional[Dict[str, Any]]:
+        """Get a Learning Trek by ID."""
+        if not self.trek_library:
+            return None
+        trek = self.trek_library.get(trek_id)
+        return trek.to_dict() if trek else None
+
+    def get_treks_by_grade(self, grade: int) -> List[Dict[str, Any]]:
+        """Get all Treks appropriate for a grade level."""
+        if not self.trek_library:
+            return []
+        treks = self.trek_library.get_by_grade(grade)
+        return [t.to_dict() for t in treks]
+
+    def get_treks_by_domain(self, domain: str) -> List[Dict[str, Any]]:
+        """Get all Treks for a domain."""
+        if not self.trek_library:
+            return []
+        try:
+            domain_enum = TrekDomain(domain)
+            treks = self.trek_library.get_by_domain(domain_enum)
+            return [t.to_dict() for t in treks]
+        except ValueError:
+            return []
+
+    def validate_trek_readiness(
+        self,
+        trek_id: str,
+        checkpoint_id: str,
+        student_mastery: Dict[str, float]
+    ) -> Dict[str, Any]:
+        """
+        Validate if a student is ready for a Trek checkpoint.
+
+        Uses f/g ratio analysis:
+        - f = checkpoint difficulty
+        - g = prerequisite mastery average
+
+        When f/g > 1.0 → not ready (finfr)
+        When f/g <= 1.0 → ready to proceed
+        """
+        if not self.trek_library or not self.trek_validator:
+            return {"error": "Trek system not available"}
+
+        trek = self.trek_library.get(trek_id)
+        if not trek:
+            return {"error": f"Trek {trek_id} not found"}
+
+        return self.trek_validator.validate_student_readiness(
+            trek, checkpoint_id, student_mastery
+        )
+
+    def list_all_treks(self) -> List[Dict[str, Any]]:
+        """List all available Learning Treks."""
+        if not self.trek_library:
+            return []
+        return [t.to_dict() for t in self.trek_library.all_treks()]
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # CDL 3.0 CONSTRAINTS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def evaluate_mastery(
+        self,
+        student_id: str,
+        standard_code: str,
+        score: float,
+        threshold: float = 80.0
+    ) -> Dict[str, Any]:
+        """
+        Evaluate mastery using f/g ratio analysis.
+
+        f = student score
+        g = mastery threshold
+
+        When f/g >= 1.0 → mastery achieved
+        When f/g < 1.0 → needs intervention
+        """
+        if not self.cdl_evaluator:
+            # Fallback to basic evaluation
+            ratio = score / threshold if threshold > 0 else 0
+            return {
+                "mastered": ratio >= 1.0,
+                "student_id": student_id,
+                "standard_code": standard_code,
+                "score": score,
+                "threshold": threshold,
+                "ratio": round(ratio, 3),
+                "classification": "mastery" if ratio >= 1.0 else "needs_reteach"
+            }
+
+        return self.cdl_evaluator.evaluate_mastery(
+            student_id, standard_code, score, threshold
+        )
+
+    def evaluate_zpd(
+        self,
+        student_id: str,
+        current_ability: float,
+        task_difficulty: float
+    ) -> Dict[str, Any]:
+        """
+        Evaluate Zone of Proximal Development.
+
+        f = task_difficulty
+        g = current_ability
+
+        When 1.0 < f/g < 1.5 → in ZPD (optimal learning zone)
+        When f/g <= 1.0 → too easy (comfort zone)
+        When f/g >= 1.5 → too hard (frustration zone)
+        """
+        if not self.cdl_evaluator:
+            ratio = task_difficulty / current_ability if current_ability > 0 else float('inf')
+            zone = "zpd" if 1.0 < ratio < 1.5 else ("comfort" if ratio <= 1.0 else "frustration")
+            return {
+                "in_zpd": zone == "zpd",
+                "student_id": student_id,
+                "ratio": round(ratio, 3) if ratio != float('inf') else "undefined",
+                "zone": zone
+            }
+
+        return self.cdl_evaluator.evaluate_zpd(
+            student_id, current_ability, task_difficulty
+        )
+
+    def evaluate_class_mastery(
+        self,
+        students: List[Dict[str, Any]],
+        standard_code: str,
+        threshold: float = 80.0
+    ) -> Dict[str, Any]:
+        """
+        Evaluate an entire class on a standard with differentiation tiers.
+
+        Returns class statistics and student groupings.
+        """
+        if not self.cdl_evaluator:
+            # Fallback to basic evaluation
+            scores = [s.get("score", 0) for s in students]
+            n = len(scores)
+            avg = sum(scores) / n if n > 0 else 0
+            mastery_count = sum(1 for s in scores if s >= threshold)
+
+            return {
+                "standard_code": standard_code,
+                "statistics": {
+                    "count": n,
+                    "average": round(avg, 1),
+                    "mastery_count": mastery_count,
+                    "mastery_rate": round(mastery_count / n * 100, 1) if n > 0 else 0
+                }
+            }
+
+        return self.cdl_evaluator.batch_evaluate_class(
+            students, standard_code, threshold
+        )
+
+    def get_student_tier(self, student_id: str, score: float) -> Dict[str, Any]:
+        """
+        Get differentiation tier for a student.
+
+        Tiers:
+        - Tier 3 (Red): < 60% - Intensive intervention
+        - Tier 2 (Yellow): 60-79% - Strategic support
+        - Tier 1 (Green): 80-89% - Core instruction
+        - Enrichment (Blue): 90%+ - Extension activities
+        """
+        if not self.cdl_evaluator:
+            if score >= 90:
+                tier, color = "enrichment", "blue"
+            elif score >= 80:
+                tier, color = "tier1", "green"
+            elif score >= 60:
+                tier, color = "tier2", "yellow"
+            else:
+                tier, color = "tier3", "red"
+
+            return {"student_id": student_id, "score": score, "tier": tier, "color": color}
+
+        return self.cdl_evaluator.evaluate_differentiation(student_id, score)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # NEWTON GROUNDING
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def ground_lesson_plan(self, lesson_plan: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Ground a lesson plan against research-backed pedagogical patterns.
+
+        Validates:
+        - Gradual Release of Responsibility
+        - Explicit Instruction
+        - Formative Assessment
+        - Differentiation
+        """
+        if not self.grounding_engine:
+            return {
+                "valid": True,
+                "message": "Grounding engine not available - skipping validation",
+                "overall_score": 1.0
+            }
+
+        return self.grounding_engine.ground_lesson_plan(lesson_plan)
+
+    def ground_pedagogical_pattern(
+        self,
+        pattern: str,
+        implementation: str
+    ) -> Dict[str, Any]:
+        """
+        Validate implementation of a pedagogical pattern.
+
+        Available patterns:
+        - gradual_release
+        - explicit_instruction
+        - mastery_learning
+        - zpd_aligned
+        - formative_assessment
+        - differentiated
+        - backward_design
+        - cooperative_learning
+        """
+        if not self.grounding_engine:
+            return {"valid": True, "message": "Grounding not available"}
+
+        try:
+            pattern_enum = PedagogicalPattern(pattern)
+            return self.grounding_engine.ground_pedagogical_pattern(
+                pattern_enum, implementation
+            )
+        except ValueError:
+            return {
+                "valid": False,
+                "message": f"Unknown pattern: {pattern}",
+                "available_patterns": [p.value for p in PedagogicalPattern]
+            }
+
+    def get_pedagogical_pattern(self, pattern: str) -> Optional[Dict[str, Any]]:
+        """Get research-backed information about a pedagogical pattern."""
+        if not HAS_GROUNDING:
+            return None
+
+        try:
+            pattern_enum = PedagogicalPattern(pattern)
+            grounded = GROUNDED_PATTERNS.get(pattern_enum)
+            return grounded.to_dict() if grounded else None
+        except ValueError:
+            return None
+
+    def list_pedagogical_patterns(self) -> List[str]:
+        """List all available pedagogical patterns."""
+        if not HAS_GROUNDING:
+            return []
+        return [p.value for p in PedagogicalPattern]
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # UNIFIED STANDARDS SEARCH
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def search_all_standards(self, query: str) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Search both TEKS and CCSS standards.
+
+        Returns results from both systems.
+        """
+        results = {
+            "teks": self.search_teks(query),
+            "ccss": self.search_ccss(query) if self.ccss_library else []
+        }
+        results["total"] = len(results["teks"]) + len(results["ccss"])
+        return results
+
+    def get_standard(self, code: str) -> Optional[Dict[str, Any]]:
+        """
+        Get any standard by code (TEKS or CCSS).
+
+        Automatically detects standard type by code format.
+        """
+        if code.upper().startswith("CCSS"):
+            return self.get_ccss(code)
+        else:
+            return self.get_teks(code)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # ENHANCED LESSON GENERATION
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def generate_verified_lesson(
+        self,
+        grade: int,
+        subject: str,
+        standard_codes: List[str],
+        topic: Optional[str] = None,
+        student_needs: Optional[Dict[str, List[str]]] = None,
+        validate_patterns: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Generate a lesson plan with pattern grounding validation.
+
+        Generates an NES-compliant lesson plan and validates it against
+        research-backed pedagogical patterns.
+        """
+        # Generate base lesson
+        result = self.generate_lesson(
+            grade=grade,
+            subject=subject,
+            teks_codes=standard_codes,
+            topic=topic,
+            student_needs=student_needs
+        )
+
+        if not result.get("verified"):
+            return result
+
+        # Validate against pedagogical patterns if requested
+        if validate_patterns and self.grounding_engine:
+            grounding_result = self.ground_lesson_plan(result.get("lesson_plan", {}))
+            result["grounding"] = grounding_result
+            result["patterns_validated"] = grounding_result.get("overall_score", 0) >= 0.5
+
+        return result
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # SYSTEM INFO
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def get_capabilities(self) -> Dict[str, Any]:
+        """Get information about available capabilities."""
+        return {
+            "teks": True,
+            "common_core": HAS_COMMON_CORE,
+            "learning_treks": HAS_TREKS,
+            "cdl_constraints": HAS_EDUCATION_CDL,
+            "grounding": HAS_GROUNDING,
+            "version": "3.0",
+            "features": {
+                "fg_ratio_analysis": HAS_EDUCATION_CDL,
+                "zpd_validation": HAS_EDUCATION_CDL,
+                "differentiation_tiers": HAS_EDUCATION_CDL,
+                "pattern_validation": HAS_GROUNDING,
+                "trek_progression": HAS_TREKS,
+                "multi_standard_search": HAS_COMMON_CORE
+            }
+        }
+
+
+# Singleton instance for enhanced cartridge
+_enhanced_cartridge: Optional[EnhancedEducationCartridge] = None
+
+
+def get_enhanced_education_cartridge() -> EnhancedEducationCartridge:
+    """Get or create the global EnhancedEducationCartridge instance."""
+    global _enhanced_cartridge
+    if _enhanced_cartridge is None:
+        _enhanced_cartridge = EnhancedEducationCartridge()
+    return _enhanced_cartridge
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MODULE EXPORTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1697,7 +2169,17 @@ __all__ = [
     'TEKSLibrary',
     'get_teks_library',
 
-    # Cartridge
+    # Cartridge (Original)
     'EducationCartridge',
     'get_education_cartridge',
+
+    # Enhanced Cartridge (CDL 3.0)
+    'EnhancedEducationCartridge',
+    'get_enhanced_education_cartridge',
+
+    # Feature Flags
+    'HAS_COMMON_CORE',
+    'HAS_TREKS',
+    'HAS_EDUCATION_CDL',
+    'HAS_GROUNDING',
 ]
