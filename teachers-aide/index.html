@@ -61,12 +61,28 @@
         </button>
       </div>
 
+      <div class="nav-section">
+        <div class="nav-label">AI Assistant</div>
+        <button class="nav-item" data-view="newton-chat">
+          <span class="nav-icon">🤖</span>
+          <span class="nav-text">Ask Newton</span>
+        </button>
+        <button class="nav-item" data-view="docs">
+          <span class="nav-icon">📄</span>
+          <span class="nav-text">Newton Docs</span>
+        </button>
+      </div>
+
       <div class="sidebar-footer">
+        <div class="moad-badge" id="moad-status">
+          <span class="moad-icon">◈</span>
+          <span class="moad-text">MOAD Active</span>
+        </div>
         <div class="status-indicator" id="status">
           <span class="status-dot"></span>
           <span class="status-text">Connecting...</span>
         </div>
-        <div class="version">Powered by Newton 1.0.0</div>
+        <div class="version">Powered by Newton 2.0.0 + MOAD</div>
       </div>
     </nav>
 
@@ -511,7 +527,276 @@ Sofia, 95
           </section>
         </div>
       </div>
+
+      <!-- Newton AI Chat View -->
+      <div id="view-newton-chat" class="view">
+        <div class="view-header">
+          <h1>Ask Newton</h1>
+          <p class="view-description">Your AI teaching assistant - ask anything about lessons, standards, or pedagogy</p>
+        </div>
+
+        <div class="newton-chat-container">
+          <div class="chat-header">
+            <div class="chat-avatar">
+              <div class="avatar-icon">N</div>
+              <div class="avatar-info">
+                <span class="avatar-name">Newton</span>
+                <span class="avatar-status">
+                  <span class="status-dot online"></span>
+                  Online + MOAD Connected
+                </span>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <button class="btn-icon-only" onclick="toggleWebSearch()" id="web-search-toggle" title="Toggle web search">
+                🌐
+              </button>
+              <button class="btn-icon-only" onclick="clearChat()" title="Clear chat">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-message newton">
+              <div class="message-avatar">N</div>
+              <div class="message-content">
+                <div class="message-text">
+                  Hello! I'm Newton, your AI teaching assistant. I can help you with:
+                  <ul>
+                    <li><strong>TEKS Standards</strong> - Find and understand Texas standards</li>
+                    <li><strong>Lesson Planning</strong> - Create NES-compliant lessons</li>
+                    <li><strong>Pedagogy</strong> - Best practices for instruction</li>
+                    <li><strong>Web Search</strong> - Find current resources and research</li>
+                    <li><strong>MOAD Integration</strong> - Access the Model of All Domains</li>
+                  </ul>
+                  What can I help you with today?
+                </div>
+                <div class="message-meta">
+                  <span class="message-time">Just now</span>
+                  <span class="message-badge verified">Verified by Newton</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-suggestions" id="chat-suggestions">
+            <button class="suggestion-chip" onclick="askNewton('What TEKS standards cover fractions for 5th grade?')">
+              TEKS for fractions (5th)
+            </button>
+            <button class="suggestion-chip" onclick="askNewton('How do I differentiate instruction for ELL students?')">
+              ELL differentiation
+            </button>
+            <button class="suggestion-chip" onclick="askNewton('Create an exit ticket for addition')">
+              Exit ticket ideas
+            </button>
+            <button class="suggestion-chip" onclick="askNewton('What is the I Do, We Do, You Do model?')">
+              Gradual release model
+            </button>
+          </div>
+
+          <form class="chat-input-form" id="chat-form">
+            <div class="chat-input-container">
+              <div class="input-options">
+                <label class="toggle-label" id="web-search-label">
+                  <input type="checkbox" id="use-web-search" checked>
+                  <span class="toggle-text">🌐 Web</span>
+                </label>
+                <label class="toggle-label" id="moad-label">
+                  <input type="checkbox" id="use-moad" checked>
+                  <span class="toggle-text">◈ MOAD</span>
+                </label>
+              </div>
+              <textarea
+                id="chat-input"
+                placeholder="Ask Newton anything about teaching, standards, or pedagogy..."
+                rows="1"
+              ></textarea>
+              <button type="submit" class="btn-send" id="chat-send">
+                <span class="send-icon">→</span>
+              </button>
+            </div>
+            <div class="input-hint">
+              Press Enter to send, Shift+Enter for new line
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Newton Docs View -->
+      <div id="view-docs" class="view">
+        <div class="view-header">
+          <h1>Newton Documentation</h1>
+          <p class="view-description">Comprehensive documentation for Newton's constraint-verified education system</p>
+        </div>
+
+        <div class="docs-container">
+          <div class="docs-sidebar">
+            <nav class="docs-nav">
+              <div class="docs-nav-section">
+                <h4>Getting Started</h4>
+                <a href="#" onclick="loadDoc('overview')" class="docs-link active">Overview</a>
+                <a href="#" onclick="loadDoc('quickstart')" class="docs-link">Quick Start</a>
+                <a href="#" onclick="loadDoc('architecture')" class="docs-link">Architecture</a>
+              </div>
+              <div class="docs-nav-section">
+                <h4>Core Concepts</h4>
+                <a href="#" onclick="loadDoc('constraints')" class="docs-link">Constraint System</a>
+                <a href="#" onclick="loadDoc('tinytalk')" class="docs-link">tinyTalk Blueprints</a>
+                <a href="#" onclick="loadDoc('verification')" class="docs-link">Verification</a>
+              </div>
+              <div class="docs-nav-section">
+                <h4>Education Module</h4>
+                <a href="#" onclick="loadDoc('lesson-plans')" class="docs-link">Lesson Plans</a>
+                <a href="#" onclick="loadDoc('slide-decks')" class="docs-link">Slide Decks</a>
+                <a href="#" onclick="loadDoc('assessments')" class="docs-link">Assessments</a>
+                <a href="#" onclick="loadDoc('teks')" class="docs-link">TEKS Standards</a>
+              </div>
+              <div class="docs-nav-section">
+                <h4>MOAD Integration</h4>
+                <a href="#" onclick="loadDoc('moad-overview')" class="docs-link">What is MOAD?</a>
+                <a href="#" onclick="loadDoc('moad-api')" class="docs-link">MOAD API</a>
+                <a href="#" onclick="loadDoc('moad-domains')" class="docs-link">Domain System</a>
+              </div>
+              <div class="docs-nav-section">
+                <h4>API Reference</h4>
+                <a href="#" onclick="loadDoc('api-endpoints')" class="docs-link">Endpoints</a>
+                <a href="#" onclick="loadDoc('api-models')" class="docs-link">Data Models</a>
+                <a href="#" onclick="loadDoc('api-errors')" class="docs-link">Error Handling</a>
+              </div>
+            </nav>
+          </div>
+
+          <div class="docs-content" id="docs-content">
+            <article class="doc-article">
+              <h2>Newton Education System Overview</h2>
+              <p class="doc-lead">Newton is a constraint-verified computation system that ensures every educational artifact is mathematically proven correct before delivery.</p>
+
+              <section class="doc-section">
+                <h3>The Newton Difference</h3>
+                <p>Unlike traditional education software that generates content without verification, Newton employs a revolutionary constraint-first approach:</p>
+
+                <div class="doc-callout info">
+                  <div class="callout-icon">💡</div>
+                  <div class="callout-content">
+                    <strong>Core Principle:</strong> "1 == 1. The constraint IS the instruction."
+                    <p>Every lesson plan, slide deck, and assessment must satisfy mathematical constraints before it can be used.</p>
+                  </div>
+                </div>
+
+                <h4>Key Features</h4>
+                <ul>
+                  <li><strong>Constraint Verification</strong> - All outputs are mathematically verified</li>
+                  <li><strong>TEKS Alignment</strong> - Automatic alignment to Texas standards</li>
+                  <li><strong>NES Compliance</strong> - All lessons follow the New Education System phases</li>
+                  <li><strong>f/g Ratio Validation</strong> - Learning readiness is quantified</li>
+                  <li><strong>MOAD Integration</strong> - Connected to the Model of All Domains</li>
+                </ul>
+              </section>
+
+              <section class="doc-section">
+                <h3>MOAD: Model of All Domains</h3>
+                <p>Newton co-stars with MOAD, Anthropic's comprehensive domain knowledge system. This integration enables:</p>
+
+                <div class="doc-grid">
+                  <div class="doc-card">
+                    <div class="doc-card-icon">🧠</div>
+                    <h5>Domain Knowledge</h5>
+                    <p>Access to structured knowledge across all academic domains</p>
+                  </div>
+                  <div class="doc-card">
+                    <div class="doc-card-icon">🔗</div>
+                    <h5>Cross-Domain Links</h5>
+                    <p>Connect concepts across subjects for interdisciplinary learning</p>
+                  </div>
+                  <div class="doc-card">
+                    <div class="doc-card-icon">📊</div>
+                    <h5>Learning Paths</h5>
+                    <p>Optimal prerequisite chains for any concept</p>
+                  </div>
+                  <div class="doc-card">
+                    <div class="doc-card-icon">✅</div>
+                    <h5>Verified Facts</h5>
+                    <p>All domain knowledge is constraint-verified</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="doc-section">
+                <h3>Newton Slide Generation</h3>
+                <p>Newton doesn't just create slides - it <em>draws</em> them with mathematical precision:</p>
+
+                <pre class="doc-code"><code>// Newton Slide Blueprint
+SlideDeck {
+  @law duration_law: total_minutes == 50
+  @law alignment_law: teks_codes.length >= 1
+  @law phase_law: phases.includes_all(NES_PHASES)
+
+  // Newton draws each slide with verified content
+  slides: Newton.draw(lesson_plan) {
+    verify: content.accuracy >= 1.0
+    style: "modern" | "colorful" | "professional"
+    export: ["pptx", "pdf", "google_slides"]
+  }
+}</code></pre>
+
+                <div class="doc-callout success">
+                  <div class="callout-icon">✅</div>
+                  <div class="callout-content">
+                    <strong>Verified Output:</strong> Every slide includes a SHA256 fingerprint proving it was generated by Newton's verified computation system.
+                  </div>
+                </div>
+              </section>
+            </article>
+          </div>
+        </div>
+      </div>
     </main>
+  </div>
+
+  <!-- Newton Floating Assistant Button -->
+  <button class="newton-fab" id="newton-fab" onclick="toggleNewtonAssistant()" title="Ask Newton">
+    <span class="fab-icon">N</span>
+    <span class="fab-pulse"></span>
+  </button>
+
+  <!-- Newton Quick Assistant Panel -->
+  <div class="newton-assistant-panel" id="newton-assistant-panel">
+    <div class="assistant-header">
+      <div class="assistant-title">
+        <span class="assistant-icon">N</span>
+        Newton Assistant
+      </div>
+      <button class="assistant-close" onclick="toggleNewtonAssistant()">×</button>
+    </div>
+    <div class="assistant-body">
+      <div class="assistant-context" id="assistant-context">
+        <span class="context-label">Context:</span>
+        <span class="context-value" id="context-value">Lesson Planner</span>
+      </div>
+      <div class="assistant-quick-actions">
+        <button class="quick-action" onclick="newtonQuickAction('help')">
+          <span class="action-icon">❓</span>
+          <span class="action-text">Help with this</span>
+        </button>
+        <button class="quick-action" onclick="newtonQuickAction('improve')">
+          <span class="action-icon">✨</span>
+          <span class="action-text">Improve content</span>
+        </button>
+        <button class="quick-action" onclick="newtonQuickAction('explain')">
+          <span class="action-icon">📖</span>
+          <span class="action-text">Explain more</span>
+        </button>
+        <button class="quick-action" onclick="newtonQuickAction('search')">
+          <span class="action-icon">🌐</span>
+          <span class="action-text">Web search</span>
+        </button>
+      </div>
+      <form class="assistant-input-form" onsubmit="return submitAssistantQuery(event)">
+        <input type="text" id="assistant-input" placeholder="Ask Newton...">
+        <button type="submit" class="btn-assistant-send">→</button>
+      </form>
+    </div>
   </div>
 
   <script src="app.js"></script>

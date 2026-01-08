@@ -2,7 +2,9 @@
  * Newton Teacher's Aide - Application
  * The Ultimate Teaching Assistant for HISD NES
  * © 2026 Jared Lewis · Ada Computing Company
- * Last Updated: January 6, 2026
+ * Last Updated: January 8, 2026
+ *
+ * NEW: Newton AI Chat + MOAD Integration + Web Search
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -13,11 +15,22 @@ const CONFIG = {
   API_BASE: window.location.hostname === 'localhost'
     ? 'http://localhost:8000'
     : 'https://newton-api.onrender.com',
-  TIMEOUT: 60000
+  TIMEOUT: 60000,
+  MOAD_ENABLED: true,
+  WEB_SEARCH_ENABLED: true
 };
 
 // Store for current lesson plan (for slide generation)
 let currentLessonPlan = null;
+
+// Chat message history
+let chatHistory = [];
+
+// MOAD state
+let moadConnected = true;
+
+// Current view context for assistant
+let currentViewContext = 'lesson';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // API CLIENT
@@ -1231,3 +1244,1049 @@ function initEnhancedFeatures() {
 
 // Initialize enhanced features on load
 document.addEventListener('DOMContentLoaded', initEnhancedFeatures);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NEWTON AI CHAT SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Initialize Newton Chat
+ */
+function initNewtonChat() {
+  const chatForm = document.getElementById('chat-form');
+  const chatInput = document.getElementById('chat-input');
+
+  if (chatForm) {
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      // Clear input
+      chatInput.value = '';
+
+      // Send message
+      await askNewton(message);
+    });
+  }
+
+  // Auto-resize textarea
+  if (chatInput) {
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
+    });
+
+    // Handle Enter key
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.dispatchEvent(new Event('submit'));
+      }
+    });
+  }
+
+  console.log('✅ Newton Chat initialized');
+}
+
+/**
+ * Ask Newton a question
+ */
+async function askNewton(message) {
+  const messagesContainer = document.getElementById('chat-messages');
+  const suggestionsContainer = document.getElementById('chat-suggestions');
+  const useWebSearch = document.getElementById('use-web-search')?.checked ?? true;
+  const useMoad = document.getElementById('use-moad')?.checked ?? true;
+
+  // Hide suggestions after first message
+  if (suggestionsContainer) {
+    suggestionsContainer.style.display = 'none';
+  }
+
+  // Add user message to chat
+  addChatMessage('user', message);
+
+  // Add loading indicator
+  const loadingId = addChatMessage('newton', '...', true);
+
+  try {
+    // Build context from current state
+    const context = buildNewtonContext();
+
+    // Call Newton API
+    const response = await apiRequest('/newton/chat', 'POST', {
+      message,
+      context,
+      use_web_search: useWebSearch,
+      use_moad: useMoad,
+      history: chatHistory.slice(-10)  // Last 10 messages for context
+    });
+
+    // Remove loading indicator
+    removeChatMessage(loadingId);
+
+    // Add Newton's response
+    addChatMessage('newton', response.response, false, {
+      verified: response.verified,
+      sources: response.sources,
+      moad_domains: response.moad_domains
+    });
+
+    // Update chat history
+    chatHistory.push({ role: 'user', content: message });
+    chatHistory.push({ role: 'assistant', content: response.response });
+
+  } catch (error) {
+    // Remove loading indicator
+    removeChatMessage(loadingId);
+
+    // Handle error gracefully - provide offline response
+    const offlineResponse = generateOfflineResponse(message);
+    addChatMessage('newton', offlineResponse, false, { offline: true });
+  }
+}
+
+/**
+ * Build context for Newton based on current app state
+ */
+function buildNewtonContext() {
+  const context = {
+    current_view: currentViewContext,
+    timestamp: new Date().toISOString()
+  };
+
+  // Add lesson plan context if available
+  if (currentLessonPlan) {
+    context.lesson_plan = {
+      title: currentLessonPlan.title,
+      grade: currentLessonPlan.grade,
+      subject: currentLessonPlan.subject,
+      teks_codes: currentLessonPlan.teks_alignment?.map(t => t.code) || []
+    };
+  }
+
+  // Add form data from current view
+  const currentView = document.querySelector('.view.active');
+  if (currentView) {
+    const form = currentView.querySelector('form');
+    if (form) {
+      const formData = new FormData(form);
+      context.form_data = Object.fromEntries(formData);
+    }
+  }
+
+  return context;
+}
+
+/**
+ * Add a message to the chat
+ */
+function addChatMessage(role, content, isLoading = false, meta = {}) {
+  const messagesContainer = document.getElementById('chat-messages');
+  if (!messagesContainer) return null;
+
+  const messageId = 'msg-' + Date.now();
+  const messageDiv = document.createElement('div');
+  messageDiv.id = messageId;
+  messageDiv.className = `chat-message ${role}${isLoading ? ' loading' : ''}`;
+
+  const avatarIcon = role === 'newton' ? 'N' : '👤';
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  let metaHTML = '';
+  if (meta.verified) {
+    metaHTML += '<span class="message-badge verified">Verified by Newton</span>';
+  }
+  if (meta.sources && meta.sources.length > 0) {
+    metaHTML += '<span class="message-badge web">🌐 Web sources</span>';
+  }
+  if (meta.moad_domains && meta.moad_domains.length > 0) {
+    metaHTML += `<span class="message-badge moad">◈ ${meta.moad_domains.join(', ')}</span>`;
+  }
+  if (meta.offline) {
+    metaHTML += '<span class="message-badge offline">Offline response</span>';
+  }
+
+  let contentHTML = content;
+  if (isLoading) {
+    contentHTML = `
+      <div class="typing-indicator">
+        <span></span><span></span><span></span>
+      </div>
+    `;
+  } else {
+    // Convert markdown-like formatting
+    contentHTML = formatNewtonResponse(content);
+  }
+
+  // Add sources if available
+  let sourcesHTML = '';
+  if (meta.sources && meta.sources.length > 0) {
+    sourcesHTML = `
+      <div class="message-sources">
+        <span class="sources-label">Sources:</span>
+        ${meta.sources.map(s => `<a href="${s.url}" target="_blank" class="source-link">${s.title}</a>`).join('')}
+      </div>
+    `;
+  }
+
+  messageDiv.innerHTML = `
+    <div class="message-avatar">${avatarIcon}</div>
+    <div class="message-content">
+      <div class="message-text">${contentHTML}</div>
+      ${sourcesHTML}
+      <div class="message-meta">
+        <span class="message-time">${time}</span>
+        ${metaHTML}
+      </div>
+    </div>
+  `;
+
+  messagesContainer.appendChild(messageDiv);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  return messageId;
+}
+
+/**
+ * Remove a message from chat
+ */
+function removeChatMessage(messageId) {
+  const message = document.getElementById(messageId);
+  if (message) {
+    message.remove();
+  }
+}
+
+/**
+ * Format Newton's response with markdown-like styling
+ */
+function formatNewtonResponse(text) {
+  if (!text) return '';
+
+  // Convert **bold** to <strong>
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Convert *italic* to <em>
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Convert `code` to <code>
+  text = text.replace(/`(.+?)`/g, '<code>$1</code>');
+
+  // Convert line breaks to <br>
+  text = text.replace(/\n/g, '<br>');
+
+  // Convert bullet points
+  text = text.replace(/^- (.+)$/gm, '<li>$1</li>');
+  text = text.replace(/(<li>.*<\/li>)+/g, '<ul>$&</ul>');
+
+  // Convert numbered lists
+  text = text.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+  return text;
+}
+
+/**
+ * Generate offline response when API is unavailable
+ */
+function generateOfflineResponse(message) {
+  const lowerMessage = message.toLowerCase();
+
+  // TEKS-related questions
+  if (lowerMessage.includes('teks') || lowerMessage.includes('standard')) {
+    return `I can help you find TEKS standards! Here's how to search:
+
+1. Go to the **TEKS Browser** tab
+2. Use the search bar to find standards by keyword
+3. Filter by grade level and subject
+4. Click on any standard to copy its code
+
+Common TEKS codes:
+- **5.3A** - Add/subtract fractions with unlike denominators
+- **5.4B** - Multiplication with decimals
+- **5.NF.1** - Add/subtract fractions (CCSS equivalent)
+
+Would you like me to help you find specific standards?`;
+  }
+
+  // Lesson planning questions
+  if (lowerMessage.includes('lesson') || lowerMessage.includes('plan')) {
+    return `Here's how to create a great NES-compliant lesson plan:
+
+**5 Essential Phases:**
+1. **Opening (5 min)** - Hook and objective
+2. **Direct Instruction (15 min)** - Teacher modeling ("I Do")
+3. **Guided Practice (15 min)** - Collaborative work ("We Do")
+4. **Independent Practice (10 min)** - Student work ("You Do")
+5. **Closing (5 min)** - Exit ticket
+
+**Tips:**
+- Start with clear TEKS alignment
+- Include differentiation strategies
+- Plan formative checks every 5 minutes
+
+Go to **Lesson Planner** to get started!`;
+  }
+
+  // Differentiation questions
+  if (lowerMessage.includes('differentiat') || lowerMessage.includes('ell') || lowerMessage.includes('accommodat')) {
+    return `**Differentiation Strategies:**
+
+**For ELL Students:**
+- Provide visual supports and manipulatives
+- Use sentence stems and vocabulary walls
+- Allow extra processing time
+- Pair with bilingual peers
+
+**For Students with 504/IEP:**
+- Provide extended time as needed
+- Use graphic organizers
+- Break tasks into smaller steps
+- Offer alternative assessments
+
+**For Gifted Students:**
+- Provide extension activities
+- Allow for independent research
+- Increase depth and complexity
+- Offer leadership roles
+
+The Lesson Planner includes automatic accommodation suggestions!`;
+  }
+
+  // Default response
+  return `I'm Newton, your teaching assistant! I can help with:
+
+- **TEKS Standards** - Find and understand Texas standards
+- **Lesson Planning** - Create NES-compliant lessons
+- **Differentiation** - Strategies for diverse learners
+- **Assessments** - Exit tickets and formative checks
+- **PLC Reports** - Data-driven team insights
+
+Currently offline, but the full app features are available! Try the **Lesson Planner** or **TEKS Browser** to get started.`;
+}
+
+/**
+ * Clear chat history
+ */
+function clearChat() {
+  const messagesContainer = document.getElementById('chat-messages');
+  const suggestionsContainer = document.getElementById('chat-suggestions');
+
+  if (messagesContainer) {
+    // Keep only the welcome message
+    messagesContainer.innerHTML = `
+      <div class="chat-message newton">
+        <div class="message-avatar">N</div>
+        <div class="message-content">
+          <div class="message-text">
+            Hello! I'm Newton, your AI teaching assistant. I can help you with:
+            <ul>
+              <li><strong>TEKS Standards</strong> - Find and understand Texas standards</li>
+              <li><strong>Lesson Planning</strong> - Create NES-compliant lessons</li>
+              <li><strong>Pedagogy</strong> - Best practices for instruction</li>
+              <li><strong>Web Search</strong> - Find current resources and research</li>
+              <li><strong>MOAD Integration</strong> - Access the Model of All Domains</li>
+            </ul>
+            What can I help you with today?
+          </div>
+          <div class="message-meta">
+            <span class="message-time">Just now</span>
+            <span class="message-badge verified">Verified by Newton</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (suggestionsContainer) {
+    suggestionsContainer.style.display = 'flex';
+  }
+
+  chatHistory = [];
+  showNotification('Chat cleared', 'info');
+}
+
+/**
+ * Toggle web search
+ */
+function toggleWebSearch() {
+  const checkbox = document.getElementById('use-web-search');
+  if (checkbox) {
+    checkbox.checked = !checkbox.checked;
+    showNotification(checkbox.checked ? 'Web search enabled' : 'Web search disabled', 'info');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NEWTON FLOATING ASSISTANT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Toggle the Newton assistant panel
+ */
+function toggleNewtonAssistant() {
+  const panel = document.getElementById('newton-assistant-panel');
+  const fab = document.getElementById('newton-fab');
+
+  if (panel) {
+    panel.classList.toggle('open');
+    if (fab) {
+      fab.classList.toggle('active');
+    }
+
+    // Update context when opening
+    if (panel.classList.contains('open')) {
+      updateAssistantContext();
+    }
+  }
+}
+
+/**
+ * Update the assistant context based on current view
+ */
+function updateAssistantContext() {
+  const contextValue = document.getElementById('context-value');
+  const currentView = document.querySelector('.view.active');
+
+  if (contextValue && currentView) {
+    const viewId = currentView.id.replace('view-', '');
+    const contextNames = {
+      'lesson': 'Lesson Planner',
+      'slides': 'Slide Deck',
+      'assess': 'Assessment Analyzer',
+      'plc': 'PLC Report',
+      'teks': 'TEKS Browser',
+      'guide': 'User Guide',
+      'newton-chat': 'Newton Chat',
+      'docs': 'Documentation'
+    };
+    contextValue.textContent = contextNames[viewId] || viewId;
+    currentViewContext = viewId;
+  }
+}
+
+/**
+ * Handle quick actions from assistant
+ */
+function newtonQuickAction(action) {
+  const currentView = document.querySelector('.view.active');
+  const viewId = currentView?.id.replace('view-', '') || 'lesson';
+
+  const actions = {
+    help: {
+      lesson: 'How do I create an effective lesson plan for my students?',
+      slides: 'How can I make my slides more engaging for students?',
+      assess: 'What makes a good exit ticket assessment?',
+      plc: 'How do I interpret PLC report data effectively?',
+      teks: 'How do I find the right TEKS standards for my lesson?'
+    },
+    improve: {
+      lesson: 'Can you suggest improvements for my current lesson plan?',
+      slides: 'How can I improve my slide content for better learning?',
+      assess: 'What are some ways to improve my assessment questions?',
+      plc: 'How can I make my PLC report more actionable?'
+    },
+    explain: {
+      lesson: 'Explain the 5 NES phases in detail',
+      slides: 'Explain how to structure presentation slides for learning',
+      assess: 'Explain the difference between formative and summative assessment',
+      plc: 'Explain how to analyze student performance data'
+    },
+    search: {
+      lesson: 'Search for lesson planning best practices 2026',
+      slides: 'Search for engaging presentation techniques for students',
+      assess: 'Search for formative assessment strategies',
+      plc: 'Search for PLC meeting facilitation tips'
+    }
+  };
+
+  const message = actions[action]?.[viewId] || actions[action]?.lesson || 'How can I help?';
+
+  // Navigate to chat and ask the question
+  document.querySelector('[data-view="newton-chat"]')?.click();
+  setTimeout(() => askNewton(message), 300);
+
+  // Close the assistant panel
+  toggleNewtonAssistant();
+}
+
+/**
+ * Submit assistant query
+ */
+function submitAssistantQuery(event) {
+  event.preventDefault();
+  const input = document.getElementById('assistant-input');
+  const message = input?.value.trim();
+
+  if (message) {
+    // Navigate to chat
+    document.querySelector('[data-view="newton-chat"]')?.click();
+    setTimeout(() => askNewton(message), 300);
+    input.value = '';
+    toggleNewtonAssistant();
+  }
+
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MOAD INTEGRATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Initialize MOAD connection
+ */
+function initMOAD() {
+  const moadStatus = document.getElementById('moad-status');
+
+  // Check MOAD status periodically
+  checkMOADStatus();
+  setInterval(checkMOADStatus, 60000); // Every minute
+
+  console.log('✅ MOAD integration initialized');
+}
+
+/**
+ * Check MOAD connection status
+ */
+async function checkMOADStatus() {
+  const moadStatus = document.getElementById('moad-status');
+
+  try {
+    const response = await apiRequest('/moad/status', 'GET');
+    moadConnected = response.connected;
+
+    if (moadStatus) {
+      moadStatus.classList.toggle('connected', moadConnected);
+      moadStatus.querySelector('.moad-text').textContent =
+        moadConnected ? 'MOAD Active' : 'MOAD Offline';
+    }
+  } catch (error) {
+    // MOAD offline - use local knowledge
+    moadConnected = false;
+    if (moadStatus) {
+      moadStatus.classList.remove('connected');
+      moadStatus.querySelector('.moad-text').textContent = 'MOAD Offline';
+    }
+  }
+}
+
+/**
+ * Query MOAD for domain knowledge
+ */
+async function queryMOAD(domain, concept) {
+  if (!moadConnected) {
+    return null;
+  }
+
+  try {
+    const response = await apiRequest('/moad/query', 'POST', {
+      domain,
+      concept
+    });
+    return response;
+  } catch (error) {
+    console.warn('MOAD query failed:', error);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENHANCED SLIDE GENERATION WITH NEWTON DRAWING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Display slides with Newton-drawn content
+ */
+function displaySlidesWithNewtonDrawing(result) {
+  const container = document.getElementById('slides-result');
+  const content = document.getElementById('slides-content');
+  const deck = result.slide_deck;
+
+  document.getElementById('slides-time').textContent = `${result.elapsed_us}μs`;
+  document.getElementById('slides-count').textContent = `${deck.total_slides} slides`;
+
+  // Generate rich slide previews with Newton-drawn content
+  content.innerHTML = deck.slides.map(slide => {
+    const slideContent = generateSlideContent(slide);
+    const slideClass = getSlideTypeClass(slide.type);
+
+    return `
+      <div class="slide-card ${slideClass}" data-slide="${slide.slide_number}">
+        <div class="slide-header">
+          <span class="slide-number">Slide ${slide.slide_number}</span>
+          <span class="slide-type">${formatSlideType(slide.type)}</span>
+          <div class="slide-actions">
+            <button class="slide-action-btn" onclick="editSlideWithNewton(${slide.slide_number})" title="Edit with Newton">
+              ✨
+            </button>
+            <button class="slide-action-btn" onclick="regenerateSlide(${slide.slide_number})" title="Regenerate">
+              🔄
+            </button>
+          </div>
+        </div>
+        <div class="slide-content">
+          ${slideContent}
+        </div>
+        <div class="slide-footer">
+          <span class="newton-badge">Newton-drawn</span>
+          ${slide.teks_codes?.length ? `<span class="teks-mini">${slide.teks_codes.join(', ')}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Add export actions
+  content.innerHTML += `
+    <div class="slides-export-actions">
+      <button class="btn-primary" onclick="exportSlidesToPPTX()">
+        <span class="btn-icon">📊</span>
+        Export to PowerPoint
+      </button>
+      <button class="btn-secondary" onclick="exportSlidesToPDF()">
+        <span class="btn-icon">📄</span>
+        Export to PDF
+      </button>
+      <button class="btn-secondary" onclick="exportSlidesToGoogleSlides()">
+        <span class="btn-icon">🔗</span>
+        Open in Google Slides
+      </button>
+    </div>
+  `;
+
+  container.classList.remove('hidden');
+}
+
+/**
+ * Generate rich content for a slide based on its type
+ */
+function generateSlideContent(slide) {
+  switch (slide.type) {
+    case 'title':
+      return `
+        <div class="slide-title-content">
+          <h2 class="slide-main-title">${slide.title || 'Lesson Title'}</h2>
+          <p class="slide-subtitle">${slide.subtitle || ''}</p>
+          <div class="slide-meta-info">
+            <span>${slide.footer || ''}</span>
+          </div>
+        </div>
+      `;
+
+    case 'objective':
+      return `
+        <div class="slide-objective-content">
+          <div class="objective-icon">🎯</div>
+          <h3>Learning Objective</h3>
+          <p class="objective-text">${slide.content || ''}</p>
+          ${slide.teks_codes?.length ? `
+            <div class="teks-alignment">
+              <span class="teks-label">TEKS:</span>
+              ${slide.teks_codes.map(t => `<span class="teks-tag">${t}</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+    case 'vocabulary':
+      return `
+        <div class="slide-vocab-content">
+          <h3>📚 Key Vocabulary</h3>
+          <div class="vocab-grid">
+            ${(slide.content || '').split('\n').filter(v => v.trim()).map(vocab => {
+              const [term, def] = vocab.split(':').map(s => s.trim());
+              return `
+                <div class="vocab-item">
+                  <span class="vocab-term">${term || vocab}</span>
+                  ${def ? `<span class="vocab-def">${def}</span>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+
+    case 'phase_header':
+      const phaseIcons = {
+        'Opening': '🎯',
+        'I Do': '📖',
+        'We Do': '👥',
+        'You Do': '✏️',
+        'Closing': '📝'
+      };
+      const phaseIcon = Object.entries(phaseIcons).find(([key]) =>
+        (slide.title || '').includes(key))?.[1] || '📌';
+
+      return `
+        <div class="slide-phase-content">
+          <div class="phase-icon-large">${phaseIcon}</div>
+          <h2 class="phase-title">${slide.title || 'Phase'}</h2>
+          <p class="phase-subtitle">${slide.subtitle || ''}</p>
+        </div>
+      `;
+
+    case 'example':
+      return `
+        <div class="slide-example-content">
+          <div class="example-header">
+            <span class="example-badge">Example</span>
+            <h3>${slide.title || 'Worked Example'}</h3>
+          </div>
+          <div class="example-body">
+            <p>${slide.content || ''}</p>
+          </div>
+          <div class="example-footer">
+            <span class="think-aloud-hint">💭 Think aloud while solving</span>
+          </div>
+        </div>
+      `;
+
+    case 'practice':
+      return `
+        <div class="slide-practice-content">
+          <div class="practice-header">
+            <h3>${slide.title || "Let's Practice Together"}</h3>
+            <span class="practice-badge">We Do</span>
+          </div>
+          <div class="practice-problems">
+            <p>${slide.content || ''}</p>
+          </div>
+          <div class="practice-tip">
+            <span class="tip-icon">💡</span>
+            <span>Work with your partner. Share your thinking!</span>
+          </div>
+        </div>
+      `;
+
+    case 'exit_ticket':
+      return `
+        <div class="slide-exit-content">
+          <div class="exit-header">
+            <span class="exit-icon">🎫</span>
+            <h3>Exit Ticket</h3>
+          </div>
+          <div class="exit-body">
+            <p>${slide.content || ''}</p>
+          </div>
+          <div class="exit-footer">
+            <span class="exit-instruction">Complete independently. Turn in before you leave!</span>
+          </div>
+        </div>
+      `;
+
+    default:
+      return `
+        <div class="slide-default-content">
+          <h3 class="slide-title">${slide.title || ''}</h3>
+          <p class="slide-body">${slide.subtitle || slide.content || ''}</p>
+        </div>
+      `;
+  }
+}
+
+/**
+ * Get CSS class for slide type
+ */
+function getSlideTypeClass(type) {
+  const classes = {
+    'title': 'slide-type-title',
+    'objective': 'slide-type-objective',
+    'vocabulary': 'slide-type-vocab',
+    'phase_header': 'slide-type-phase',
+    'example': 'slide-type-example',
+    'practice': 'slide-type-practice',
+    'exit_ticket': 'slide-type-exit'
+  };
+  return classes[type] || 'slide-type-default';
+}
+
+/**
+ * Format slide type for display
+ */
+function formatSlideType(type) {
+  const names = {
+    'title': 'Title',
+    'objective': 'Objective',
+    'vocabulary': 'Vocabulary',
+    'phase_header': 'Phase',
+    'example': 'Example',
+    'practice': 'Practice',
+    'exit_ticket': 'Exit Ticket'
+  };
+  return names[type] || type.replace(/_/g, ' ');
+}
+
+/**
+ * Edit a slide with Newton's help
+ */
+async function editSlideWithNewton(slideNumber) {
+  const instruction = prompt(`How would you like Newton to modify Slide ${slideNumber}?`);
+  if (!instruction) return;
+
+  showNotification(`Newton is improving Slide ${slideNumber}...`, 'info');
+
+  try {
+    const response = await apiRequest('/education/slides/edit', 'POST', {
+      slide_number: slideNumber,
+      instruction,
+      lesson_plan: currentLessonPlan
+    });
+
+    if (response.verified) {
+      // Update the slide in the display
+      const slideCard = document.querySelector(`[data-slide="${slideNumber}"]`);
+      if (slideCard) {
+        const newContent = generateSlideContent(response.slide);
+        slideCard.querySelector('.slide-content').innerHTML = newContent;
+        showNotification(`Slide ${slideNumber} updated!`, 'success');
+      }
+    }
+  } catch (error) {
+    showNotification('Could not edit slide: ' + error.message, 'error');
+  }
+}
+
+/**
+ * Regenerate a single slide
+ */
+async function regenerateSlide(slideNumber) {
+  showNotification(`Regenerating Slide ${slideNumber}...`, 'info');
+
+  try {
+    const response = await apiRequest('/education/slides/regenerate', 'POST', {
+      slide_number: slideNumber,
+      lesson_plan: currentLessonPlan
+    });
+
+    if (response.verified) {
+      const slideCard = document.querySelector(`[data-slide="${slideNumber}"]`);
+      if (slideCard) {
+        const newContent = generateSlideContent(response.slide);
+        slideCard.querySelector('.slide-content').innerHTML = newContent;
+        showNotification(`Slide ${slideNumber} regenerated!`, 'success');
+      }
+    }
+  } catch (error) {
+    showNotification('Could not regenerate slide: ' + error.message, 'error');
+  }
+}
+
+/**
+ * Export slides to PowerPoint
+ */
+async function exportSlidesToPPTX() {
+  showNotification('Generating PowerPoint file...', 'info');
+
+  try {
+    const response = await apiRequest('/education/slides/export', 'POST', {
+      format: 'pptx',
+      lesson_plan: currentLessonPlan
+    });
+
+    if (response.download_url) {
+      window.open(response.download_url, '_blank');
+      showNotification('PowerPoint file ready!', 'success');
+    }
+  } catch (error) {
+    showNotification('Export failed: ' + error.message, 'error');
+  }
+}
+
+/**
+ * Export slides to PDF
+ */
+async function exportSlidesToPDF() {
+  showNotification('Generating PDF...', 'info');
+  window.print();
+  showNotification('Use print dialog to save as PDF', 'info');
+}
+
+/**
+ * Export to Google Slides
+ */
+async function exportSlidesToGoogleSlides() {
+  showNotification('Google Slides export coming soon!', 'info');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOCUMENTATION SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Load documentation page
+ */
+function loadDoc(docId) {
+  const docsContent = document.getElementById('docs-content');
+  const docsLinks = document.querySelectorAll('.docs-link');
+
+  // Update active link
+  docsLinks.forEach(link => link.classList.remove('active'));
+  event.target.classList.add('active');
+
+  // Load doc content
+  const docs = getDocumentation();
+  const doc = docs[docId];
+
+  if (doc) {
+    docsContent.innerHTML = `
+      <article class="doc-article">
+        <h2>${doc.title}</h2>
+        <p class="doc-lead">${doc.lead}</p>
+        ${doc.content}
+      </article>
+    `;
+  }
+}
+
+/**
+ * Get documentation content
+ */
+function getDocumentation() {
+  return {
+    'overview': {
+      title: 'Newton Education System Overview',
+      lead: 'Newton is a constraint-verified computation system that ensures every educational artifact is mathematically proven correct before delivery.',
+      content: document.getElementById('docs-content')?.innerHTML || ''
+    },
+    'quickstart': {
+      title: 'Quick Start Guide',
+      lead: 'Get started with Newton Teacher\'s Aide in 5 minutes.',
+      content: `
+        <section class="doc-section">
+          <h3>1. Create Your First Lesson Plan</h3>
+          <ol>
+            <li>Select your grade level (3-8)</li>
+            <li>Choose your subject area</li>
+            <li>Enter TEKS codes for your lesson</li>
+            <li>Add a specific topic (optional)</li>
+            <li>Click "Generate Lesson Plan"</li>
+          </ol>
+
+          <div class="doc-callout info">
+            <div class="callout-icon">💡</div>
+            <div class="callout-content">
+              <strong>Tip:</strong> Use the TEKS Browser to find the right standards for your lesson.
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section">
+          <h3>2. Generate Slides</h3>
+          <p>After creating a lesson plan, click "Generate Slides" to create a presentation deck. Newton will draw each slide with:</p>
+          <ul>
+            <li>Title slide with lesson metadata</li>
+            <li>Objective slide with TEKS alignment</li>
+            <li>Phase headers (I Do, We Do, You Do)</li>
+            <li>Example slides with worked problems</li>
+            <li>Exit ticket for assessment</li>
+          </ul>
+        </section>
+      `
+    },
+    'moad-overview': {
+      title: 'MOAD: Model of All Domains',
+      lead: 'MOAD is Anthropic\'s comprehensive domain knowledge system that powers Newton\'s educational intelligence.',
+      content: `
+        <section class="doc-section">
+          <h3>What is MOAD?</h3>
+          <p>MOAD (Model of All Domains) is a structured knowledge graph that represents academic concepts, their relationships, and learning progressions across all subjects.</p>
+
+          <h4>Key Capabilities</h4>
+          <ul>
+            <li><strong>Concept Mapping</strong> - Understand how ideas connect across subjects</li>
+            <li><strong>Prerequisite Chains</strong> - Know what students need to learn first</li>
+            <li><strong>Cross-Domain Links</strong> - Connect math to science, history to literature</li>
+            <li><strong>Difficulty Calibration</strong> - Match content to student readiness</li>
+          </ul>
+        </section>
+
+        <section class="doc-section">
+          <h3>MOAD + Newton Integration</h3>
+          <p>When you create lesson plans or ask Newton for help, MOAD provides:</p>
+
+          <div class="doc-grid">
+            <div class="doc-card">
+              <div class="doc-card-icon">🎯</div>
+              <h5>Precise Alignment</h5>
+              <p>Standards are mapped to specific domain concepts</p>
+            </div>
+            <div class="doc-card">
+              <div class="doc-card-icon">📊</div>
+              <h5>Learning Paths</h5>
+              <p>Optimal sequences for teaching concepts</p>
+            </div>
+            <div class="doc-card">
+              <div class="doc-card-icon">🔗</div>
+              <h5>Connections</h5>
+              <p>Related concepts for deeper understanding</p>
+            </div>
+            <div class="doc-card">
+              <div class="doc-card-icon">✅</div>
+              <h5>Verification</h5>
+              <p>All knowledge is constraint-checked</p>
+            </div>
+          </div>
+        </section>
+      `
+    }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UPDATED INITIALIZATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Update the navigation initialization to track context
+const originalInitNavigation = initNavigation;
+initNavigation = function() {
+  const navItems = document.querySelectorAll('.nav-item');
+  const views = document.querySelectorAll('.view');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const viewId = item.dataset.view;
+
+      // Update nav state
+      navItems.forEach(nav => nav.classList.remove('active'));
+      item.classList.add('active');
+
+      // Show view
+      views.forEach(view => view.classList.remove('active'));
+      document.getElementById(`view-${viewId}`).classList.add('active');
+
+      // Update context for assistant
+      currentViewContext = viewId;
+      updateAssistantContext();
+    });
+  });
+};
+
+// Override displaySlides to use enhanced version
+const originalDisplaySlides = displaySlides;
+displaySlides = displaySlidesWithNewtonDrawing;
+
+// Initialize new features on load
+document.addEventListener('DOMContentLoaded', () => {
+  initNewtonChat();
+  initMOAD();
+  updateAssistantContext();
+  console.log('✅ Newton Teacher\'s Aide 2.0 ready');
+  console.log('   - Newton AI Chat');
+  console.log('   - MOAD Integration');
+  console.log('   - Web Search');
+  console.log('   - Enhanced Slide Generation');
+});
+
+// Make new functions global
+window.askNewton = askNewton;
+window.clearChat = clearChat;
+window.toggleWebSearch = toggleWebSearch;
+window.toggleNewtonAssistant = toggleNewtonAssistant;
+window.newtonQuickAction = newtonQuickAction;
+window.submitAssistantQuery = submitAssistantQuery;
+window.loadDoc = loadDoc;
+window.editSlideWithNewton = editSlideWithNewton;
+window.regenerateSlide = regenerateSlide;
+window.exportSlidesToPPTX = exportSlidesToPPTX;
+window.exportSlidesToPDF = exportSlidesToPDF;
+window.exportSlidesToGoogleSlides = exportSlidesToGoogleSlides;
