@@ -2,6 +2,8 @@
 
 **A Constraint-First Execution Environment**
 
+*January 9, 2026 · Newton · Ada Computing Company*
+
 Programs don't "fail" — they never exist if they violate invariants.
 This is not a rule engine. It's geometric validation of intent.
 

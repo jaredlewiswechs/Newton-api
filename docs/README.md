@@ -8,7 +8,7 @@ The constraint IS the instruction. The verification IS the computation.
 
 **finfr = f/g** — Every constraint is a ratio between what you're trying to do (f) and what reality allows (g).
 
-**Version**: 1.2.1 | **Date**: January 7, 2026 | **Tests**: 580+ passing | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
+**Version**: 1.3.0 | **Date**: January 9, 2026 | **Tests**: 700+ passing | **Jared Nashon Lewis** | **Jared Lewis Conglomerate** | **parcRI** | **Newton** | **tinyTalk** | **Ada Computing Company**
 
 ---
 
@@ -78,15 +78,18 @@ For students, educators, universities, creators, and developers. Newton on acid 
 | **newton_os.rb** | Knowledge Base with origin truth |
 | **newton_tahoe.rb** | PixelEngine with genesis mark |
 
-#### Advanced Modules (NEW in 1.2.0)
+#### Advanced Modules (Updated January 9, 2026)
 
 | Component | Documentation | Purpose | Tests |
 |-----------|---------------|---------|-------|
+| **Newton Core** | [newton_core/README.md](../newton_core/README.md) | **Rust projection engine (Aid-a) - NEW** | 122/122 |
+| **Construct Studio** | [construct-studio/README.md](../construct-studio/README.md) | **Constraint-first execution environment - NEW** | ✓ |
 | **Newton TLM** | [newton_tlm/README.md](../newton_tlm/README.md) | ACID-compliant symbolic kernel with PARADOX detection | 23/23 |
 | **Newton Geometry** | [newton_geometry/README.md](../newton_geometry/README.md) | Topological constraint framework | ✓ |
 | **TextGen** | [textgen.md](textgen.md) | Constraint-preserving text generation | ✓ |
-| **Typed Dictionary** | [core/typed_dictionary.py](../core/typed_dictionary.py) | Words become laws through math + types (NEW) | ✓ |
+| **Typed Dictionary** | [core/typed_dictionary.py](../core/typed_dictionary.py) | Words become laws through math + types | ✓ |
 | **Jester** | [jester-analyzer/README.md](../jester-analyzer/README.md) | Code constraint translator | ✓ |
+| **HyperCard 2026** | [examples/HyperCard2026.swift](../examples/HyperCard2026.swift) | **Complete HyperCard remake for Swift Playgrounds - NEW** | ✓ |
 
 ### Advanced Features
 - [Cartridges](cartridges.md) - Visual, Sound, Sequence, Data, Rosetta, Auto
@@ -106,7 +109,7 @@ For students, educators, universities, creators, and developers. Newton on acid 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER v1.2.1                  │
+│                    NEWTON SUPERCOMPUTER v1.3.0                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
@@ -288,10 +291,11 @@ This isn't a feature. It's the architecture.
 
 ---
 
-## Test Coverage (January 2026)
+## Test Coverage (January 9, 2026)
 
 | Test Suite | Tests | Status | What It Proves |
 |------------|-------|--------|----------------|
+| **Newton Core (Rust)** | 122/122 | ✓ 100% | Aid-a projection engine |
 | **Full System** | 10/10 | ✓ 100% | All components connected |
 | **Newton TLM** | 23/23 | ✓ 100% | ACID compliance |
 | **Main Suite** | 558/586 | ✓ 95% | Core functionality |
@@ -300,6 +304,7 @@ This isn't a feature. It's the architecture.
 
 | Test Suite | Tests | Status |
 |------------|-------|--------|
+| Newton Core (Rust) | 122 | Passing |
 | Newton TLM (ACID) | 23 | Passing |
 | Reversible State Machine | 22 | Passing |
 | Reversible Shell | 46 | Passing |
@@ -311,7 +316,7 @@ This isn't a feature. It's the architecture.
 | Negotiator | 12 | Passing |
 | Policy Engine | 10 | Passing |
 | Properties (Hypothesis) | Multiple | Passing |
-| **Total** | **580+** | **95%+ Passing** |
+| **Total** | **700+** | **95%+ Passing** |
 
 ---
 
