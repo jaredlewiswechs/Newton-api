@@ -52,14 +52,24 @@ def building_to_3d_data(building) -> List[Dict]:
     return levels_data
 
 
-def create_detailed_building_mesh(levels_data: List[Dict]) -> List:
+def create_detailed_building_mesh(levels_data: List[Dict], z_offset: float = 0) -> List:
     """Create detailed 3D mesh from level data."""
+    return create_detailed_building_mesh_with_offset(levels_data, z_offset)
+
+
+def create_detailed_building_mesh_with_offset(levels_data: List[Dict], z_offset: float = 0) -> List:
+    """Create detailed 3D mesh from level data with optional z offset.
+
+    Args:
+        levels_data: Level definitions with spaces
+        z_offset: Vertical offset to apply (e.g., to lift basement to grade)
+    """
     from cad.geometry3d import Triangle, Box
 
     all_triangles = []
 
     for level in levels_data:
-        elevation = level.get('elevation', 0)
+        elevation = level.get('elevation', 0) + z_offset  # Apply offset
         height = level.get('height', 4)
 
         for space in level.get('spaces', []):
@@ -95,11 +105,16 @@ def render_parcri_3d(
     """
     # Get building data
     building = create_parcri_hq()
-    levels_data = building_to_3d_data(building)
+    all_levels_data = building_to_3d_data(building)
 
-    # Filter levels if requested
+    # Determine if we're showing a basement level
+    is_basement_view = False
     if show_single_level is not None:
-        levels_data = [levels_data[show_single_level]]
+        level_to_show = all_levels_data[show_single_level]
+        is_basement_view = level_to_show.get('elevation', 0) < 0
+        levels_data = [level_to_show]
+    else:
+        levels_data = all_levels_data
 
     # Create config
     config = Render3DConfig(
@@ -124,13 +139,11 @@ def render_parcri_3d(
     # Create renderer
     renderer = Renderer3D(config)
 
-    # Create mesh
-    triangles = create_detailed_building_mesh(levels_data)
-
-    # Calculate bounds
+    # Calculate bounds first (need for ground plane positioning)
     min_x = min_y = float('inf')
     max_x = max_y = float('-inf')
-    max_z = 0
+    min_z = float('inf')
+    max_z = float('-inf')
 
     for level in levels_data:
         elevation = level.get('elevation', 0)
@@ -140,9 +153,19 @@ def render_parcri_3d(
             min_y = min(min_y, space['y'])
             max_x = max(max_x, space['x'] + space['width'])
             max_y = max(max_y, space['y'] + space['height'])
+            min_z = min(min_z, elevation)
             max_z = max(max_z, elevation + height)
 
-    # Add ground plane
+    # For basement views, shift geometry up so it sits ON the ground
+    # (architectural section cut showing basement at grade)
+    z_offset = 0
+    if is_basement_view and min_z < 0:
+        z_offset = -min_z  # Shift up so bottom is at z=0
+
+    # Create mesh with z_offset applied
+    triangles = create_detailed_building_mesh_with_offset(levels_data, z_offset)
+
+    # Add ground plane at z=0 (after offset, geometry sits on it)
     ground_size = max(max_x - min_x, max_y - min_y) * 2
     ground_tris = create_ground_plane(
         ground_size,
@@ -151,11 +174,15 @@ def render_parcri_3d(
     )
     triangles.extend(ground_tris)
 
-    # Set camera
+    # Adjust bounds for camera after offset
+    min_z += z_offset
+    max_z += z_offset
+
+    # Set camera - center on the geometry
     center = Vec3(
         (max_x + min_x) / 2,
         (max_y + min_y) / 2,
-        max_z / 2
+        (max_z + min_z) / 2  # Proper center accounting for actual z range
     )
     distance = max(max_x - min_x, max_y - min_y) * 2
 
