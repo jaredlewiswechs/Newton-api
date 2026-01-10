@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construct Studio v0.1</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --border: #2a2a3a;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888a0;
+            --text-dim: #555566;
+            --accent-blue: #4a9eff;
+            --accent-cyan: #00d4ff;
+            --accent-green: #00ff88;
+            --accent-red: #ff4466;
+            --accent-yellow: #ffcc00;
+            --accent-purple: #aa66ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .logo-version {
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+
+        /* Main Layout */
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            height: calc(100vh - 65px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        /* Floor Cards */
+        .floor-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .floor-card:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .floor-card.active {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+        }
+
+        .floor-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .floor-type {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        /* Capacity Bars */
+        .capacity-bar {
+            margin-bottom: 8px;
+        }
+
+        .capacity-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .capacity-name {
+            color: var(--text-secondary);
+        }
+
+        .capacity-value {
+            color: var(--text-dim);
+        }
+
+        .capacity-track {
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .capacity-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease, background 0.3s;
+        }
+
+        .capacity-fill.low { background: var(--accent-green); }
+        .capacity-fill.medium { background: var(--accent-yellow); }
+        .capacity-fill.high { background: var(--accent-red); }
+
+        /* Main Canvas */
+        .canvas-area {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .canvas-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .canvas-subtitle {
+            color: var(--text-dim);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* Force Input */
+        .force-input-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .force-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .force-input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 16px;
+            width: 120px;
+        }
+
+        .force-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .force-select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .force-operator {
+            font-size: 24px;
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        .force-btn {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: #000;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .force-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Visualization */
+        .visualization {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .viz-title {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+        }
+
+        .geometry-container {
+            display: flex;
+            gap: 24px;
+            align-items: flex-end;
+            height: 200px;
+            padding: 20px;
+        }
+
+        .capacity-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .capacity-box {
+            width: 100%;
+            max-width: 120px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .capacity-fill-viz {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--accent-green);
+            transition: all 0.3s;
+            border-radius: 0 0 2px 2px;
+        }
+
+        .capacity-fill-viz.warning { background: var(--accent-yellow); }
+        .capacity-fill-viz.danger { background: var(--accent-red); }
+
+        .matter-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 68, 102, 0.3);
+            border: 2px dashed var(--accent-red);
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .matter-overlay.show { display: block; }
+
+        .capacity-label {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Right Panel - Ledger */
+        .ledger-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .ledger-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .ledger-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .ledger-clear {
+            font-size: 11px;
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+
+        .ledger-clear:hover {
+            color: var(--accent-red);
+        }
+
+        .ledger-entry {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .ledger-entry.success {
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .ledger-entry.death {
+            border-left: 3px solid var(--accent-red);
+            background: rgba(255, 68, 102, 0.1);
+        }
+
+        .ledger-status {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .ledger-status.success { color: var(--accent-green); }
+        .ledger-status.death { color: var(--accent-red); }
+
+        .ledger-details {
+            color: var(--text-dim);
+        }
+
+        .ledger-time {
+            color: var(--text-dim);
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.red { color: var(--accent-red); }
+        .stat-value.blue { color: var(--accent-cyan); }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Death Animation */
+        .death-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 68, 102, 0.1);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .death-overlay.show {
+            opacity: 1;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        /* Presets */
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        .preset-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .preset-desc {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 250px 1fr;
+            }
+            .ledger-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="death-overlay" id="deathOverlay"></div>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">C</div>
+            <div>
+                <div class="logo-text">Construct Studio</div>
+                <div class="logo-version">v0.1.0 - Constraint-First Execution</div>
+            </div>
+        </div>
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="resetAll()">Reset All</button>
+            <button class="quick-btn" onclick="runDemo()">Run Demo</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Left Sidebar - Floors -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Active Floors</div>
+                <div id="floorList"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Add Floor</div>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="addFloor('corporate_card')">
+                        <div class="preset-name">Corporate Card</div>
+                        <div class="preset-desc">$5,000 budget</div>
+                    </button>
+                    <button class="preset-btn" onclick="addFloor('deployment_quota')">
+                        <div class="preset-name">Deploy Quota</div>
+                        <div class="preset-desc">64 vCPU / 256 GB</div>
+                    </button>
+                    <button class="preset-btn" onclick="addFloor('risk_budget')">
+                        <div class="preset-name">Risk Budget</div>
+                        <div class="preset-desc">20% probability</div>
+                    </button>
+                    <button class="preset-btn" onclick="addFloor('custom')">
+                        <div class="preset-name">Custom</div>
+                        <div class="preset-desc">Define your own</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Canvas -->
+        <div class="canvas-area">
+            <div class="canvas-header">
+                <div>
+                    <div class="canvas-title">Force Application</div>
+                    <div class="canvas-subtitle">The constraint IS the instruction. The illegal state cannot exist.</div>
+                </div>
+            </div>
+
+            <!-- Force Input -->
+            <div class="force-input-container">
+                <div class="force-row">
+                    <input type="number" class="force-input" id="forceValue" placeholder="1500" value="1500">
+                    <select class="force-select" id="forceUnit">
+                        <option value="USD">USD</option>
+                        <option value="vCPU">vCPU</option>
+                        <option value="GB">GB</option>
+                        <option value="probability">probability</option>
+                    </select>
+                    <span class="force-operator">>></span>
+                    <select class="force-select" id="targetFloor">
+                        <option value="">Select Floor</option>
+                    </select>
+                    <select class="force-select" id="targetCapacity">
+                        <option value="">Select Capacity</option>
+                    </select>
+                    <button class="force-btn" onclick="applyForce()">Apply Force</button>
+                </div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="visualization">
+                <div class="viz-title">GEOMETRY VIEW - Capacity Utilization</div>
+                <div class="geometry-container" id="geometryView"></div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Ledger -->
+        <div class="ledger-panel">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value green" id="successCount">0</div>
+                    <div class="stat-label">ABSORBED</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value red" id="deathCount">0</div>
+                    <div class="stat-label">DEATHS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value blue" id="totalCount">0</div>
+                    <div class="stat-label">TOTAL</div>
+                </div>
+            </div>
+
+            <div class="ledger-header">
+                <div class="ledger-title">Decision Ledger</div>
+                <div class="ledger-clear" onclick="clearLedger()">Clear</div>
+            </div>
+            <div id="ledgerEntries"></div>
+        </div>
+    </div>
+
+    <script>
+        // Construct Studio Core - JavaScript Implementation
+
+        class Matter {
+            constructor(value, unit, label = null) {
+                this.value = parseFloat(value);
+                this.unit = unit;
+                this.label = label;
+                this.id = Math.random().toString(36).substr(2, 8);
+            }
+
+            toString() {
+                return `${this.value} ${this.unit}`;
+            }
+        }
+
+        class Capacity {
+            constructor(name, current, maximum, unit) {
+                this.name = name;
+                this.current = current;
+                this.maximum = maximum;
+                this.unit = unit;
+            }
+
+            get remaining() {
+                return this.maximum - this.current;
+            }
+
+            get utilization() {
+                return this.maximum > 0 ? this.current / this.maximum : 0;
+            }
+
+            canAccept(matter) {
+                return matter.unit === this.unit && matter.value <= this.remaining;
+            }
+
+            accept(matter) {
+                if (!this.canAccept(matter)) {
+                    return false;
+                }
+                this.current += matter.value;
+                return true;
+            }
+
+            reset() {
+                this.current = 0;
+            }
+        }
+
+        class Floor {
+            constructor(name, type, capacities) {
+                this.name = name;
+                this.type = type;
+                this.capacities = {};
+                for (const [capName, config] of Object.entries(capacities)) {
+                    this.capacities[capName] = new Capacity(
+                        capName,
+                        0,
+                        config.max,
+                        config.unit
+                    );
+                }
+            }
+
+            reset() {
+                for (const cap of Object.values(this.capacities)) {
+                    cap.reset();
+                }
+            }
+        }
+
+        class Ratio {
+            constructor(numerator, denominator, unit, fits) {
+                this.numerator = numerator;
+                this.denominator = denominator;
+                this.unit = unit;
+                this.fits = fits;
+                this.overflow = fits ? 0 : numerator - denominator;
+            }
+
+            get value() {
+                return this.denominator > 0 ? this.numerator / this.denominator : Infinity;
+            }
+
+            get percentage() {
+                return this.value * 100;
+            }
+        }
+
+        class LedgerEntry {
+            constructor(matter, target, ratio, success) {
+                this.id = Math.random().toString(36).substr(2, 8);
+                this.timestamp = new Date();
+                this.matter = matter;
+                this.target = target;
+                this.ratio = ratio;
+                this.success = success;
+            }
+        }
+
+        // Global State
+        const state = {
+            floors: {},
+            ledger: [],
+            stats: {
+                successes: 0,
+                deaths: 0
+            }
+        };
+
+        // Floor Presets
+        const FLOOR_PRESETS = {
+            corporate_card: {
+                name: 'CorporateCard',
+                type: 'Finance',
+                capacities: {
+                    budget: { max: 5000, unit: 'USD' }
+                }
+            },
+            deployment_quota: {
+                name: 'DeploymentQuota',
+                type: 'Infrastructure',
+                capacities: {
+                    cpu: { max: 64, unit: 'vCPU' },
+                    memory: { max: 256, unit: 'GB' }
+                }
+            },
+            risk_budget: {
+                name: 'RiskBudget',
+                type: 'Risk',
+                capacities: {
+                    total: { max: 0.20, unit: 'probability' }
+                }
+            }
+        };
+
+        // Force Application
+        function applyForce() {
+            const value = parseFloat(document.getElementById('forceValue').value);
+            const unit = document.getElementById('forceUnit').value;
+            const floorName = document.getElementById('targetFloor').value;
+            const capacityName = document.getElementById('targetCapacity').value;
+
+            if (!value || !floorName || !capacityName) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const floor = state.floors[floorName];
+            if (!floor) {
+                alert('Floor not found');
+                return;
+            }
+
+            const capacity = floor.capacities[capacityName];
+            if (!capacity) {
+                alert('Capacity not found');
+                return;
+            }
+
+            const matter = new Matter(value, unit);
+            const fits = capacity.canAccept(matter);
+            const ratio = new Ratio(value, capacity.remaining, unit, fits);
+
+            if (fits) {
+                capacity.accept(matter);
+                state.stats.successes++;
+                addLedgerEntry(matter, `${floorName}.${capacityName}`, ratio, true);
+            } else {
+                state.stats.deaths++;
+                addLedgerEntry(matter, `${floorName}.${capacityName}`, ratio, false);
+                showDeathAnimation();
+            }
+
+            updateUI();
+        }
+
+        function showDeathAnimation() {
+            const overlay = document.getElementById('deathOverlay');
+            overlay.classList.add('show');
+            setTimeout(() => overlay.classList.remove('show'), 500);
+        }
+
+        // Ledger
+        function addLedgerEntry(matter, target, ratio, success) {
+            const entry = new LedgerEntry(matter, target, ratio, success);
+            state.ledger.unshift(entry);
+            renderLedger();
+        }
+
+        function clearLedger() {
+            state.ledger = [];
+            state.stats = { successes: 0, deaths: 0 };
+            updateUI();
+        }
+
+        // Floor Management
+        function addFloor(preset) {
+            if (preset === 'custom') {
+                const name = prompt('Floor name:');
+                const capName = prompt('Capacity name:');
+                const max = parseFloat(prompt('Maximum value:'));
+                const unit = prompt('Unit (USD, vCPU, GB, probability):');
+
+                if (name && capName && max && unit) {
+                    state.floors[name] = new Floor(name, 'Custom', {
+                        [capName]: { max, unit }
+                    });
+                }
+            } else {
+                const config = FLOOR_PRESETS[preset];
+                if (config) {
+                    state.floors[config.name] = new Floor(config.name, config.type, config.capacities);
+                }
+            }
+            updateUI();
+        }
+
+        function resetAll() {
+            for (const floor of Object.values(state.floors)) {
+                floor.reset();
+            }
+            state.ledger = [];
+            state.stats = { successes: 0, deaths: 0 };
+            updateUI();
+        }
+
+        // Demo
+        function runDemo() {
+            resetAll();
+
+            // Add a corporate card
+            addFloor('corporate_card');
+
+            // Simulate transactions
+            const transactions = [
+                { value: 1500, unit: 'USD', desc: 'Office supplies' },
+                { value: 800, unit: 'USD', desc: 'Team lunch' },
+                { value: 2000, unit: 'USD', desc: 'Software' },
+                { value: 1200, unit: 'USD', desc: 'Conference' }  // This dies
+            ];
+
+            let delay = 500;
+            for (const txn of transactions) {
+                setTimeout(() => {
+                    document.getElementById('forceValue').value = txn.value;
+                    document.getElementById('forceUnit').value = txn.unit;
+                    document.getElementById('targetFloor').value = 'CorporateCard';
+                    document.getElementById('targetCapacity').value = 'budget';
+                    applyForce();
+                }, delay);
+                delay += 800;
+            }
+        }
+
+        // UI Rendering
+        function updateUI() {
+            renderFloorList();
+            renderFloorSelectors();
+            renderGeometry();
+            renderStats();
+            renderLedger();
+        }
+
+        function renderFloorList() {
+            const container = document.getElementById('floorList');
+            container.innerHTML = '';
+
+            for (const [name, floor] of Object.entries(state.floors)) {
+                const card = document.createElement('div');
+                card.className = 'floor-card';
+                card.innerHTML = `
+                    <div class="floor-name">${name}</div>
+                    <div class="floor-type">${floor.type}</div>
+                    ${Object.entries(floor.capacities).map(([capName, cap]) => `
+                        <div class="capacity-bar">
+                            <div class="capacity-header">
+                                <span class="capacity-name">${capName}</span>
+                                <span class="capacity-value">${cap.current.toFixed(1)}/${cap.maximum} ${cap.unit}</span>
+                            </div>
+                            <div class="capacity-track">
+                                <div class="capacity-fill ${getUtilizationClass(cap.utilization)}"
+                                     style="width: ${cap.utilization * 100}%"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        function renderFloorSelectors() {
+            const floorSelect = document.getElementById('targetFloor');
+            const currentFloor = floorSelect.value;
+
+            floorSelect.innerHTML = '<option value="">Select Floor</option>';
+            for (const name of Object.keys(state.floors)) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                floorSelect.appendChild(option);
+            }
+            floorSelect.value = currentFloor;
+
+            // Update capacity selector based on floor
+            floorSelect.onchange = () => {
+                const capSelect = document.getElementById('targetCapacity');
+                capSelect.innerHTML = '<option value="">Select Capacity</option>';
+
+                const floor = state.floors[floorSelect.value];
+                if (floor) {
+                    for (const capName of Object.keys(floor.capacities)) {
+                        const option = document.createElement('option');
+                        option.value = capName;
+                        option.textContent = capName;
+                        capSelect.appendChild(option);
+                    }
+                }
+            };
+        }
+
+        function renderGeometry() {
+            const container = document.getElementById('geometryView');
+            container.innerHTML = '';
+
+            for (const [name, floor] of Object.entries(state.floors)) {
+                for (const [capName, cap] of Object.entries(floor.capacities)) {
+                    const col = document.createElement('div');
+                    col.className = 'capacity-column';
+
+                    const height = 150;
+                    const fillHeight = cap.utilization * height;
+
+                    col.innerHTML = `
+                        <div class="capacity-box" style="height: ${height}px;">
+                            <div class="capacity-fill-viz ${getUtilizationClass(cap.utilization)}"
+                                 style="height: ${fillHeight}px;"></div>
+                        </div>
+                        <div class="capacity-label">${name}.${capName}</div>
+                    `;
+                    container.appendChild(col);
+                }
+            }
+        }
+
+        function renderStats() {
+            document.getElementById('successCount').textContent = state.stats.successes;
+            document.getElementById('deathCount').textContent = state.stats.deaths;
+            document.getElementById('totalCount').textContent = state.stats.successes + state.stats.deaths;
+        }
+
+        function renderLedger() {
+            const container = document.getElementById('ledgerEntries');
+            container.innerHTML = '';
+
+            for (const entry of state.ledger.slice(0, 20)) {
+                const el = document.createElement('div');
+                el.className = `ledger-entry ${entry.success ? 'success' : 'death'}`;
+                el.innerHTML = `
+                    <div class="ledger-status ${entry.success ? 'success' : 'death'}">
+                        ${entry.success ? '✓ ABSORBED' : '✗ ONTOLOGICAL DEATH'}
+                    </div>
+                    <div class="ledger-details">
+                        ${entry.matter.value} ${entry.matter.unit} >> ${entry.target}
+                        ${!entry.success ? `<br>Overflow: ${entry.ratio.overflow.toFixed(2)} ${entry.ratio.unit}` : ''}
+                    </div>
+                    <div class="ledger-time">${entry.timestamp.toLocaleTimeString()}</div>
+                `;
+                container.appendChild(el);
+            }
+        }
+
+        function getUtilizationClass(util) {
+            if (util >= 0.9) return 'high';
+            if (util >= 0.7) return 'medium';
+            return 'low';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add default floor
+            addFloor('corporate_card');
+            updateUI();
+        });
+    </script>
+</body>
+</html>
