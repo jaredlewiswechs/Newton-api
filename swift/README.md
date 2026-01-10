@@ -153,6 +153,49 @@ case .failure(let finfr): // Cannot exist
 | `TinyTalkExamples.swift` | Practical examples |
 | `Ada.swift` | Intent-to-Transform compiler |
 
+---
+
+## HyperCard 2026 (NEW - January 9, 2026)
+
+A complete modern remake of HyperCard for Swift Playgrounds!
+
+Copy `examples/HyperCard2026.swift` into a Swift Playgrounds project on iPad or Mac for a fully functional HyperCard implementation:
+
+### Features
+
+- **Card & Stack Management** — Create, navigate, and organize cards
+- **PencilKit Drawing** — Full drawing support with Apple Pencil
+- **Drag-and-Drop UI** — Add buttons, fields, images interactively
+- **HyperTalk-Inspired Scripting** — Write card scripts
+- **Card Transitions** — Dissolve, Wipe, Push, and more
+- **Newton Avenue AI Assistant** — Built-in AI integration
+- **Sound & Media Support** — Audio playback and recording
+- **Properties Inspector** — Visual property editing
+- **Script Editor** — Syntax highlighting and error checking
+- **Undo/Redo** — Full history support
+- **Search** — Find content across all stacks
+- **Import/Export** — Share your creations
+
+### Quick Start
+
+```swift
+// In Swift Playgrounds:
+// 1. Create new App project
+// 2. Copy HyperCard2026.swift contents
+// 3. Run
+
+// The HyperCard home stack will appear
+// Create cards, add buttons, write scripts!
+```
+
+### The Dynabook Dream
+
+HyperCard 2026 realizes the original Dynabook vision of a personal dynamic medium—now with constraint verification built in.
+
+See [examples/HyperCard2026.swift](../examples/HyperCard2026.swift) for the complete implementation.
+
+---
+
 ## Documentation
 
 See `docs/TinyTalk_Swift_DSL_Course.md` for the complete course.

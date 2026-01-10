@@ -16,14 +16,15 @@
 
 **Verified Computation. Ask Newton. Go.**
 
-[![Version](https://img.shields.io/badge/version-1.2.1-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
+[![Version](https://img.shields.io/badge/version-1.3.0-green.svg)](https://github.com/jaredlewiswechs/Newton-api)
 [![License](https://img.shields.io/badge/license-Dual%20License-blue.svg)](#licensing)
 [![API](https://img.shields.io/badge/API-REST-orange.svg)](#api-reference)
-[![Tests](https://img.shields.io/badge/tests-580%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-700%2B%20passing-brightgreen.svg)](#testing)
 [![ACID](https://img.shields.io/badge/ACID-compliant-green.svg)](#newton-tlm)
+[![Rust](https://img.shields.io/badge/newton__core-Rust-orange.svg)](#newton-core)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
 
-**January 7, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 9, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ---
 
@@ -276,6 +277,124 @@ See [Reversible Shell](#reversible-shell) for full documentation.
 
 ---
 
+## NEW: Newton Core (Rust) - Aid-a Projection Engine (January 9, 2026)
+
+**The mathematical bedrock for constraint-aware design assistance.**
+
+Newton Core is a high-performance Rust library implementing the Aid-a (Assistive Intelligence for Design Autonomy) suggestion engine. It provides mathematically-proven constraint projection using Dykstra's algorithm.
+
+```rust
+// Aid-a guarantees:
+// 1. Validity: All suggestions satisfy all constraints
+// 2. Determinism: Same input → identical output, bitwise
+// 3. Termination: Completes within bounded time
+// 4. Non-empty: Returns suggestions if feasible region exists
+```
+
+**Core Components:**
+- **Dykstra's Algorithm** — Projects points onto convex constraint intersections
+- **Halfspace Projection** — O(1) projection for linear constraints
+- **Weighted Projection** — Respects dimension importance
+- **Candidate Search** — Handles nonconvex constraints (collision, discrete)
+
+**Performance Targets:**
+| Operation | Target |
+|-----------|--------|
+| 2D Projection | < 0.1ms p99 |
+| 8D Projection | < 0.3ms p99 |
+| Full Suggestion | < 5ms p99 |
+
+**Testing:**
+- 7 property tests (10K+ cases each)
+- 10 adversarial tests (thin slabs, oscillation, skewed weights)
+- 122+ total tests passing
+
+See [newton_core/AIDA_SPEC.md](newton_core/AIDA_SPEC.md) for the complete specification.
+
+---
+
+## NEW: Construct Studio v0.1 (January 9, 2026)
+
+**A Constraint-First Execution Environment**
+
+Programs don't "fail" — they never exist if they violate invariants. This is not a rule engine. It's geometric validation of intent.
+
+```python
+from construct_studio import Matter, Floor, Construct
+
+# Define a Floor (constraint container)
+class CorporateCard(Floor):
+    budget = Matter(5000, "USD")
+
+# Apply force — either it absorbs or it's Ontological Death
+expense = Matter(1500, "USD")
+expense >> CorporateCard.budget  # ✓ Absorbed (30% utilization)
+
+big_expense = Matter(6000, "USD")
+big_expense >> CorporateCard.budget  # ✗ ONTOLOGICAL DEATH
+```
+
+**Domain Cartridges:**
+- **Finance** — Corporate cards, budgets, spending simulation
+- **Infrastructure** — Deployment quotas, resource limits
+- **Risk** — Probability budgets, portfolio simulation
+
+**Key Insight:** Pre-approval by physics, not by process. Invalid states cannot exist.
+
+See [construct-studio/README.md](construct-studio/README.md) for full documentation.
+
+---
+
+## NEW: HyperCard 2026 (January 9, 2026)
+
+**A complete modern remake of HyperCard for Swift Playgrounds.**
+
+Copy `examples/HyperCard2026.swift` into Swift Playgrounds on iPad or Mac for a fully functional HyperCard implementation:
+
+- Card & Stack Management
+- PencilKit Drawing
+- Drag-and-Drop UI Elements
+- HyperTalk-Inspired Scripting
+- Card Transitions (Dissolve, Wipe, Push)
+- Newton Avenue AI Assistant
+- Sound & Media Support
+- Properties Inspector
+- Script Editor with Syntax Highlighting
+- Undo/Redo Support
+
+**The Dynabook dream, realized in Swift.**
+
+See [examples/HyperCard2026.swift](examples/HyperCard2026.swift).
+
+---
+
+## NEW: GPT Fact-Checker (January 9, 2026)
+
+**Using Newton's constraint logic to verify AI claims.**
+
+When GPT makes claims about Newton's market presence, we fact-check using Newton itself:
+
+```bash
+python fact_check_gpt.py
+```
+
+**Results from GPT market analysis:**
+
+| Claim | Evidence | Status |
+|-------|----------|--------|
+| Energy/EV | 0% | FABRICATED |
+| Smart Cities | 0% | FABRICATED |
+| Traffic | 18% | FABRICATED (claimed "strongest") |
+| Education | 95% | MISSED (actual strongest) |
+| AI Safety | 97% | MISSED |
+| Developer Tools | 97% | MISSED |
+| Finance Governance | ✓ | ACCURATE |
+| Safety-Critical Systems | ✓ | ACCURATE |
+
+**The constraint IS the instruction. The evidence IS the truth.**
+
+---
+
 ## What is Newton?
 
 Newton is a **Cryptographically Verified Constraint Logic Programming (CLP) System**—a direct descendant of five decades of constraint programming research, synthesized into a modern Python implementation with cryptographic audit trails.
@@ -397,7 +516,7 @@ Newton TLM includes a PARADOX phase for detecting contradictions before they pro
 | **Cryptographic Integrity** | Hash chains, Merkle proofs | Verified |
 | **ACID Compliance** | Atomicity, Consistency, Isolation, Durability | Proven (23 tests) |
 
-**Test Suite**: 580+ test cases (95% passing). Property-based testing with Hypothesis. Full system integration tests via `test_full_system.py`.
+**Test Suite**: 700+ test cases (95%+ passing). Property-based testing with Hypothesis. Full system integration tests via `test_full_system.py`. Newton Core Rust tests: 122+ passing.
 
 ---
 
@@ -405,7 +524,7 @@ Newton TLM includes a PARADOX phase for detecting contradictions before they pro
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEWTON SUPERCOMPUTER v1.2.1                  │
+│                    NEWTON SUPERCOMPUTER v1.3.0                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -950,16 +1069,39 @@ r_undef <= 1.0     # False (undefined never satisfies <=)
 ```
 Newton-api/
 ├── newton_supercomputer.py   # Main API server (1,158 LOC)
-├── setup_newton.sh           # One-command setup script (NEW)
-├── test_full_system.py       # Full system integration test (NEW)
+├── setup_newton.sh           # One-command setup script
+├── test_full_system.py       # Full system integration test
+├── fact_check_gpt.py         # GPT fact-checker (NEW - Jan 9)
 ├── cli_verifier.py           # CLI verification tool
 ├── requirements.txt          # Python dependencies
 │
-├── newton_tlm/               # Topological Language Machine (NEW)
+├── newton_core/              # Rust Projection Engine (NEW - Jan 9)
+│   ├── AIDA_SPEC.md         # Aid-a specification (frozen contract)
+│   ├── Cargo.toml           # Rust package config
+│   ├── src/                 # Rust source
+│   │   ├── lib.rs           # Main library
+│   │   ├── linalg.rs        # Vector operations
+│   │   ├── primitives.rs    # NTObject, Bounds, FGState
+│   │   ├── constraints/     # Constraint implementations
+│   │   ├── projection/      # Dykstra's algorithm
+│   │   ├── candidates.rs    # Local search
+│   │   └── aida.rs          # Main suggestion engine
+│   ├── benches/             # Performance benchmarks
+│   └── tests/               # 122+ tests (property + adversarial)
+│
+├── construct-studio/         # Constraint-First Execution (NEW - Jan 9)
+│   ├── __init__.py          # Public API
+│   ├── core.py              # Matter, Floor, Force, Ratio
+│   ├── ledger.py            # Immutable audit trail
+│   ├── engine.py            # Simulation engine
+│   ├── cartridges/          # Domain modules (finance, infra, risk)
+│   └── ui/                  # Visual CAD interface
+│
+├── newton_tlm/               # Topological Language Machine
 │   ├── newton_tlm.py        # ACID-compliant symbolic kernel
 │   └── tests/               # 23 ACID compliance tests
 │
-├── newton_geometry/          # Topological Constraint Framework (NEW)
+├── newton_geometry/          # Topological Constraint Framework
 │   ├── geometry.py          # Constraint manifolds
 │   └── tests/               # Geometric verification tests
 │
@@ -1028,11 +1170,12 @@ Newton-api/
 ├── examples/                # Working demos
 │   ├── tinytalk_demo.py    # tinyTalk concepts in action
 │   ├── nes_helper_demo.py  # NES Teacher's Aide demo
-│   ├── pda_level1.py       # PDA Course Level 1: Basic Blueprint (NEW)
-│   ├── pda_level2.py       # PDA Course Level 2: Laws (NEW)
-│   ├── pda_level3.py       # PDA Course Level 3: Forges (NEW)
-│   ├── pda_level4.py       # PDA Course Level 4: Task Management (NEW)
-│   └── pda_level5.py       # PDA Course Level 5: Full PDA (NEW)
+│   ├── HyperCard2026.swift # Complete HyperCard remake (NEW - Jan 9)
+│   ├── pda_level1.py       # PDA Course Level 1: Basic Blueprint
+│   ├── pda_level2.py       # PDA Course Level 2: Laws
+│   ├── pda_level3.py       # PDA Course Level 3: Forges
+│   ├── pda_level4.py       # PDA Course Level 4: Task Management
+│   └── pda_level5.py       # PDA Course Level 5: Full PDA
 │
 ├── tinytalk/                # tinyTalk documentation
 │   ├── ruby/               # Ruby module
@@ -1133,15 +1276,17 @@ pytest newton_geometry/tests/ -v
 pytest tests/ --cov=core --cov-report=html
 ```
 
-**Test Results (January 2026):**
+**Test Results (January 9, 2026):**
 
 | Suite | Tests | Status | What It Proves |
 |-------|-------|--------|----------------|
 | Full System | 10/10 | ✓ 100% | All components connected |
 | Newton TLM | 23/23 | ✓ 100% | ACID compliance |
+| Newton Core (Rust) | 122/122 | ✓ 100% | Aid-a projection engine |
 | Main Suite | 558/586 | ✓ 95% | Core functionality |
 
 **Test Coverage:**
+- Newton Core (122 tests) - Property tests (10K+ cases), adversarial tests
 - Newton TLM (23 tests) - ACID compliance, phase cycles, determinism
 - Reversible state machine (22 tests) - Bijective transitions, Landauer compliance
 - Reversible shell commands (46 tests) - All command pairs validated
@@ -1437,4 +1582,4 @@ curl http://localhost:8000/teachers/classrooms/CLASS001/groups
 
 ---
 
-**Last Updated:** January 7, 2026 | **Version:** 1.2.1 | **Tests:** 580+ passing
+**Last Updated:** January 9, 2026 | **Version:** 1.3.0 | **Tests:** 700+ passing

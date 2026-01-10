@@ -1,10 +1,132 @@
 # Changelog
 
-**January 7, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**January 9, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 All notable changes to Newton Supercomputer are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [1.3.0] - 2026-01-09
+
+### Added
+
+#### Newton Core Phase 1 - Rust Projection Engine (#201)
+The mathematical bedrock for Aid-a (Assistive Intelligence for Design Autonomy):
+
+- **`newton_core/`** - New Rust crate for high-performance constraint projection
+  - `AIDA_SPEC.md` - Frozen constitution document defining all contracts
+  - `src/linalg.rs` - Vector type with arithmetic operations
+  - `src/primitives.rs` - NTObject, Bounds, FGState, Delta types
+  - `src/constraints/` - Constraint trait implementations
+    - `BoxBounds` - min ≤ x ≤ max per dimension
+    - `LinearConstraint` - a·x ≤ b (halfspace)
+    - `CollisionConstraint` - no overlap with other objects
+    - `DiscreteConstraint` - x ∈ {v1, v2, ..., vn}
+  - `src/projection/` - Projection algorithms
+    - Dykstra's algorithm for convex constraint intersections
+    - Halfspace projection (O(1))
+    - Weighted projection respecting dimension importance
+    - Convex relaxation for nonconvex constraints
+  - `src/candidates.rs` - Local search, snap candidates, boundary candidates
+  - `src/aida.rs` - Main suggestion engine with `suggest()` entry point
+
+- **Aid-a Contract Guarantees:**
+  1. **Validity** - All suggestions satisfy all constraints
+  2. **Determinism** - Identical inputs produce identical outputs
+  3. **Termination** - Completes within bounded time/iterations
+  4. **Non-empty** - Returns at least one suggestion if feasible
+
+- **Testing:** 122+ tests passing
+  - 7 property tests using proptest (10K+ cases each)
+  - 10 adversarial tests for edge cases (thin slabs, oscillation, skewed weights)
+  - 4 doc tests
+  - Benchmarks with Criterion for projection and candidate generation
+
+- **CI/CD:** `.github/workflows/aida-contract.yml` for contract enforcement
+
+#### Newton Fact-Checker for GPT Market Analysis (#202)
+Using Newton's constraint logic to verify AI claims:
+
+- **`fact_check_gpt.py`** - Standalone fact-checker
+- **`fact_check_gpt_standalone.py`** - No-dependency version
+- Verifies GPT's claims about Newton's market presence against actual evidence
+
+**Results:**
+| Claim | Evidence | Status |
+|-------|----------|--------|
+| Energy/EV | 0% | FABRICATED |
+| Smart Cities | 0% | FABRICATED |
+| Traffic | 18% | FABRICATED (claimed "strongest") |
+| Education | 95% | MISSED (actual strongest) |
+| AI Safety | 97% | MISSED |
+| Developer Tools | 97% | MISSED |
+
+*"The constraint IS the instruction. The evidence IS the truth."*
+
+#### Construct Studio v0.1 - Constraint-First Execution Environment (#196, #197, #198)
+A Logic CAD Tool where the constraint IS the instruction:
+
+- **`construct-studio/`** - New module for business physics simulation
+  - `core.py` - Matter, Floor, Force, Ratio, ConstructError
+  - `ledger.py` - Immutable audit trail
+  - `engine.py` - Simulation engine
+  - `cli.py` - Interactive REPL
+  - `cartridges/` - Domain modules
+    - `finance.py` - Corporate cards, budgets
+    - `infrastructure.py` - Deployment quotas
+    - `risk.py` - Probability budgets
+  - `ui/index.html` - Visual CAD interface
+
+- **Core Concepts:**
+  - **Matter** - Typed value with units (e.g., `Matter(1500, "USD")`)
+  - **Floor** - Constraint container (boundary of valid design space)
+  - **Force (>>)** - Physics operator applying Matter to Floor
+  - **Ontological Death** - Invalid states cannot exist
+
+- **Key Insight:** Pre-approval by physics, not by process.
+
+#### HyperCard 2026 - Complete Modern Remake (#195)
+A complete HyperCard implementation for Swift Playgrounds:
+
+- **`examples/HyperCard2026.swift`** - 2,500+ lines of pure Swift
+  - Card & Stack Management
+  - PencilKit Drawing
+  - Drag-and-Drop UI Elements
+  - HyperTalk-Inspired Scripting
+  - Card Transitions (Dissolve, Wipe, Push, etc.)
+  - Newton Avenue AI Assistant
+  - Sound & Media Support
+  - Properties Inspector
+  - Script Editor with Syntax Highlighting
+  - Undo/Redo Support
+  - Search Across Stacks
+  - Import/Export Capabilities
+
+*"The Dynabook dream, realized in Swift."*
+
+### Fixed
+
+#### Frontend Mobile Navigation (#200)
+- Added mobile navigation menu
+- Added "All Apps" section for quick access
+- Improved responsive layout
+
+#### CAD Basement Grounding (#199)
+- Fixed basement levels grounding in 3D renders
+- Proper Z-axis positioning for underground structures
+
+### Test Results
+
+| Test Suite | Results | Status |
+|------------|---------|--------|
+| Newton Core (Rust) | 122/122 | ✓ 100% |
+| Newton TLM (ACID) | 23/23 | ✓ 100% |
+| Main Test Suite | 558/586 | ✓ 95% |
+| Full System Test | 10/10 | ✓ 100% |
+
+**Total Tests:** 700+ passing
 
 ---
 
