@@ -237,30 +237,41 @@ class Renderer3D:
         )
 
     def project(self, point: Vec3) -> Tuple[float, float, float]:
-        """Project 3D point to 2D screen coordinates."""
+        """Project 3D point to 2D screen coordinates.
+
+        Uses standard 2D isometric projection formula:
+        - screen_x = (x - y) * scale
+        - screen_y = (x + y) / 2 * scale - z * scale
+
+        This maps the 3D world where:
+        - X/Y are horizontal floor plane axes
+        - Z is vertical (up)
+
+        To 2D screen where:
+        - Higher Z = higher on screen (smaller screen_y)
+        - Objects at z=0 sit on the ground plane
+        """
         cfg = self.config
         cx = cfg.width / 2
         cy = cfg.height / 2
 
         if cfg.projection == ProjectionType.ISOMETRIC:
-            # Isometric projection
-            # Rotate 45° around Z, then ~35.264° tilt
-            angle = math.radians(45)
-            tilt = math.radians(35.264)
+            # Standard 2D isometric projection
+            # This is the classic game/CAD isometric formula
 
-            # Rotate around Z
-            rx = point.x * math.cos(angle) - point.y * math.sin(angle)
-            ry = point.x * math.sin(angle) + point.y * math.cos(angle)
-            rz = point.z
+            # Screen X: diagonal based on world x and y
+            screen_x = (point.x - point.y) * cfg.scale * 0.866  # cos(30°)
 
-            # Apply tilt
-            screen_x = rx * cfg.scale
-            screen_y = (ry * math.sin(tilt) - rz * math.cos(tilt)) * cfg.scale
+            # Screen Y: combination of x+y (depth on floor) minus z (height)
+            # The 0.5 factor creates the isometric angle
+            # Z directly affects vertical screen position
+            screen_y = (point.x + point.y) * cfg.scale * 0.5 - point.z * cfg.scale
 
-            # Depth for sorting (further = more negative)
-            depth = ry * math.cos(tilt) + rz * math.sin(tilt)
+            # Depth for painter's algorithm sorting
+            # Objects further from camera (higher x+y, lower z) render first
+            depth = point.x + point.y - point.z * 2
 
-            return (cx + screen_x, cy - screen_y, depth)
+            return (cx + screen_x, cy + screen_y, depth)
 
         elif cfg.projection == ProjectionType.PERSPECTIVE:
             if not self.camera:
