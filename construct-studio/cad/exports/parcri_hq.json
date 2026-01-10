@@ -1,0 +1,789 @@
+{
+  "id": "291ef225",
+  "name": "parcRI HQ",
+  "address": "Innovation District",
+  "levels": [
+    {
+      "id": "8f7528e2",
+      "name": "L0 - Basement",
+      "elevation": -4.0,
+      "height": 4.0,
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 80,
+        "height": 60
+      },
+      "spaces": [
+        {
+          "id": "10981c4b",
+          "name": "Deep Work East",
+          "type": "office",
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 25,
+            "height": 25
+          },
+          "area": 625,
+          "label": "Deep Work\nEast"
+        },
+        {
+          "id": "9b30ec65",
+          "name": "Deep Work West",
+          "type": "office",
+          "bounds": {
+            "x": 0,
+            "y": 25,
+            "width": 25,
+            "height": 25
+          },
+          "area": 625,
+          "label": "Deep Work\nWest"
+        },
+        {
+          "id": "7da5c650",
+          "name": "Server Room",
+          "type": "server",
+          "bounds": {
+            "x": 0,
+            "y": 50,
+            "width": 15,
+            "height": 10
+          },
+          "area": 150,
+          "label": "Server\nRoom"
+        },
+        {
+          "id": "ec047977",
+          "name": "Mechanical",
+          "type": "mechanical",
+          "bounds": {
+            "x": 25,
+            "y": 0,
+            "width": 15,
+            "height": 20
+          },
+          "area": 300,
+          "label": "Mechanical"
+        },
+        {
+          "id": "98c03ed3",
+          "name": "Storage",
+          "type": "storage",
+          "bounds": {
+            "x": 25,
+            "y": 20,
+            "width": 15,
+            "height": 20
+          },
+          "area": 300,
+          "label": "Storage"
+        },
+        {
+          "id": "da56df16",
+          "name": "Basement Corridor",
+          "type": "corridor",
+          "bounds": {
+            "x": 25,
+            "y": 40,
+            "width": 30,
+            "height": 8
+          },
+          "area": 240,
+          "label": ""
+        },
+        {
+          "id": "718cdb42",
+          "name": "Workshop",
+          "type": "workshop",
+          "bounds": {
+            "x": 40,
+            "y": 0,
+            "width": 25,
+            "height": 30
+          },
+          "area": 750,
+          "label": "Workshop"
+        },
+        {
+          "id": "869cd48b",
+          "name": "Material Storage",
+          "type": "storage",
+          "bounds": {
+            "x": 40,
+            "y": 30,
+            "width": 15,
+            "height": 10
+          },
+          "area": 150,
+          "label": "Materials"
+        },
+        {
+          "id": "8167f21c",
+          "name": "Stair B0",
+          "type": "stair",
+          "bounds": {
+            "x": 55,
+            "y": 40,
+            "width": 8,
+            "height": 8
+          },
+          "area": 64,
+          "label": "Stair"
+        },
+        {
+          "id": "185c7baa",
+          "name": "Elevator B0",
+          "type": "elevator",
+          "bounds": {
+            "x": 63,
+            "y": 40,
+            "width": 5,
+            "height": 8
+          },
+          "area": 40,
+          "label": "Elev"
+        },
+        {
+          "id": "c0af22d3",
+          "name": "Utility",
+          "type": "utility",
+          "bounds": {
+            "x": 65,
+            "y": 0,
+            "width": 15,
+            "height": 20
+          },
+          "area": 300,
+          "label": "Utility"
+        },
+        {
+          "id": "5d028fc7",
+          "name": "Archive",
+          "type": "storage",
+          "bounds": {
+            "x": 65,
+            "y": 20,
+            "width": 15,
+            "height": 20
+          },
+          "area": 300,
+          "label": "Archive"
+        },
+        {
+          "id": "d20294cd",
+          "name": "Restrooms B0",
+          "type": "restroom",
+          "bounds": {
+            "x": 68,
+            "y": 40,
+            "width": 12,
+            "height": 10
+          },
+          "area": 120,
+          "label": "WC"
+        },
+        {
+          "id": "a0bbe5bf",
+          "name": "Break Room",
+          "type": "lounge",
+          "bounds": {
+            "x": 15,
+            "y": 50,
+            "width": 25,
+            "height": 10
+          },
+          "area": 250,
+          "label": "Break Room"
+        }
+      ],
+      "total_area": 4214,
+      "gross_area": 4800,
+      "efficiency": 0.8779166666666667
+    },
+    {
+      "id": "df8411d3",
+      "name": "L1 - Ground",
+      "elevation": 0.0,
+      "height": 5.0,
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 80,
+        "height": 60
+      },
+      "spaces": [
+        {
+          "id": "7259507f",
+          "name": "Grand Entry",
+          "type": "grand_entry",
+          "bounds": {
+            "x": 25,
+            "y": 48,
+            "width": 30,
+            "height": 12
+          },
+          "area": 360,
+          "label": "GRAND ENTRY"
+        },
+        {
+          "id": "f46f6f49",
+          "name": "Vestibule",
+          "type": "vestibule",
+          "bounds": {
+            "x": 32,
+            "y": 42,
+            "width": 16,
+            "height": 6
+          },
+          "area": 96,
+          "label": "Vestibule"
+        },
+        {
+          "id": "b1cbe637",
+          "name": "Reception",
+          "type": "reception",
+          "bounds": {
+            "x": 25,
+            "y": 30,
+            "width": 15,
+            "height": 12
+          },
+          "area": 180,
+          "label": "Reception"
+        },
+        {
+          "id": "3a1c258b",
+          "name": "Main Lounge",
+          "type": "lounge",
+          "bounds": {
+            "x": 40,
+            "y": 30,
+            "width": 15,
+            "height": 12
+          },
+          "area": 180,
+          "label": "Lounge"
+        },
+        {
+          "id": "b1f173d2",
+          "name": "Commons",
+          "type": "commons",
+          "bounds": {
+            "x": 20,
+            "y": 10,
+            "width": 40,
+            "height": 20
+          },
+          "area": 800,
+          "label": "COMMONS"
+        },
+        {
+          "id": "331b4aa3",
+          "name": "Forge",
+          "type": "forge",
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 20,
+            "height": 30
+          },
+          "area": 600,
+          "label": "THE FORGE\n(Maker Space)"
+        },
+        {
+          "id": "ee452095",
+          "name": "Forge Storage",
+          "type": "storage",
+          "bounds": {
+            "x": 0,
+            "y": 30,
+            "width": 10,
+            "height": 12
+          },
+          "area": 120,
+          "label": "Storage"
+        },
+        {
+          "id": "4b967aeb",
+          "name": "Tool Room",
+          "type": "utility",
+          "bounds": {
+            "x": 10,
+            "y": 30,
+            "width": 10,
+            "height": 12
+          },
+          "area": 120,
+          "label": "Tools"
+        },
+        {
+          "id": "f8b88b60",
+          "name": "Cafe",
+          "type": "cafe",
+          "bounds": {
+            "x": 60,
+            "y": 20,
+            "width": 20,
+            "height": 15
+          },
+          "area": 300,
+          "label": "CAFE"
+        },
+        {
+          "id": "2e4802fd",
+          "name": "Kitchen",
+          "type": "kitchen",
+          "bounds": {
+            "x": 60,
+            "y": 35,
+            "width": 12,
+            "height": 10
+          },
+          "area": 120,
+          "label": "Kitchen"
+        },
+        {
+          "id": "87cb431b",
+          "name": "Dining",
+          "type": "dining",
+          "bounds": {
+            "x": 60,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "area": 400,
+          "label": "Dining"
+        },
+        {
+          "id": "8a0cee63",
+          "name": "Gym",
+          "type": "gym",
+          "bounds": {
+            "x": 72,
+            "y": 35,
+            "width": 8,
+            "height": 15
+          },
+          "area": 120,
+          "label": "Gym"
+        },
+        {
+          "id": "d470473c",
+          "name": "Main Corridor",
+          "type": "corridor",
+          "bounds": {
+            "x": 20,
+            "y": 42,
+            "width": 5,
+            "height": 6
+          },
+          "area": 30,
+          "label": ""
+        },
+        {
+          "id": "465832af",
+          "name": "East Corridor",
+          "type": "corridor",
+          "bounds": {
+            "x": 55,
+            "y": 30,
+            "width": 5,
+            "height": 12
+          },
+          "area": 60,
+          "label": ""
+        },
+        {
+          "id": "86e2842a",
+          "name": "Stair 1",
+          "type": "stair",
+          "bounds": {
+            "x": 0,
+            "y": 42,
+            "width": 8,
+            "height": 8
+          },
+          "area": 64,
+          "label": "Stair"
+        },
+        {
+          "id": "39575124",
+          "name": "Stair 2",
+          "type": "stair",
+          "bounds": {
+            "x": 72,
+            "y": 50,
+            "width": 8,
+            "height": 8
+          },
+          "area": 64,
+          "label": "Stair"
+        },
+        {
+          "id": "8dd16d96",
+          "name": "Elevator 1",
+          "type": "elevator",
+          "bounds": {
+            "x": 8,
+            "y": 42,
+            "width": 5,
+            "height": 8
+          },
+          "area": 40,
+          "label": "Elev"
+        },
+        {
+          "id": "202ed44d",
+          "name": "Restrooms L1",
+          "type": "restroom",
+          "bounds": {
+            "x": 0,
+            "y": 50,
+            "width": 12,
+            "height": 10
+          },
+          "area": 120,
+          "label": "WC"
+        },
+        {
+          "id": "95b53233",
+          "name": "To Pocket Park",
+          "type": "garden",
+          "bounds": {
+            "x": 13,
+            "y": 42,
+            "width": 7,
+            "height": 8
+          },
+          "area": 56,
+          "label": "To Park"
+        }
+      ],
+      "total_area": 3830,
+      "gross_area": 4800,
+      "efficiency": 0.7979166666666667
+    },
+    {
+      "id": "03b5c9ae",
+      "name": "L2 - Upper",
+      "elevation": 5.0,
+      "height": 4.0,
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 80,
+        "height": 60
+      },
+      "spaces": [
+        {
+          "id": "4d13ed53",
+          "name": "Lab A",
+          "type": "lab",
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 18,
+            "height": 20
+          },
+          "area": 360,
+          "label": "LAB A\n(Research)"
+        },
+        {
+          "id": "1369aae2",
+          "name": "Lab B",
+          "type": "lab",
+          "bounds": {
+            "x": 0,
+            "y": 20,
+            "width": 18,
+            "height": 15
+          },
+          "area": 270,
+          "label": "LAB B\n(Prototype)"
+        },
+        {
+          "id": "da0bc602",
+          "name": "Media Studio",
+          "type": "studio",
+          "bounds": {
+            "x": 0,
+            "y": 35,
+            "width": 18,
+            "height": 15
+          },
+          "area": 270,
+          "label": "Media\nStudio"
+        },
+        {
+          "id": "a4191b78",
+          "name": "Open Office",
+          "type": "open_office",
+          "bounds": {
+            "x": 18,
+            "y": 0,
+            "width": 27,
+            "height": 25
+          },
+          "area": 675,
+          "label": "OPEN OFFICE"
+        },
+        {
+          "id": "33c7c5f3",
+          "name": "Collaboration Hub",
+          "type": "commons",
+          "bounds": {
+            "x": 18,
+            "y": 25,
+            "width": 27,
+            "height": 15
+          },
+          "area": 405,
+          "label": "Collaboration\nHub"
+        },
+        {
+          "id": "1a2a207e",
+          "name": "Conference A",
+          "type": "conference",
+          "bounds": {
+            "x": 18,
+            "y": 40,
+            "width": 12,
+            "height": 10
+          },
+          "area": 120,
+          "label": "Conf A"
+        },
+        {
+          "id": "409902a3",
+          "name": "Conference B",
+          "type": "conference",
+          "bounds": {
+            "x": 30,
+            "y": 40,
+            "width": 12,
+            "height": 10
+          },
+          "area": 120,
+          "label": "Conf B"
+        },
+        {
+          "id": "6c89e294",
+          "name": "Meeting 1",
+          "type": "meeting",
+          "bounds": {
+            "x": 18,
+            "y": 50,
+            "width": 8,
+            "height": 8
+          },
+          "area": 64,
+          "label": "Mtg 1"
+        },
+        {
+          "id": "6d02de11",
+          "name": "Meeting 2",
+          "type": "meeting",
+          "bounds": {
+            "x": 26,
+            "y": 50,
+            "width": 8,
+            "height": 8
+          },
+          "area": 64,
+          "label": "Mtg 2"
+        },
+        {
+          "id": "3bfe6aff",
+          "name": "Meeting 3",
+          "type": "meeting",
+          "bounds": {
+            "x": 34,
+            "y": 50,
+            "width": 8,
+            "height": 8
+          },
+          "area": 64,
+          "label": "Mtg 3"
+        },
+        {
+          "id": "a1f0fe9d",
+          "name": "Strategy Room",
+          "type": "boardroom",
+          "bounds": {
+            "x": 45,
+            "y": 0,
+            "width": 20,
+            "height": 18
+          },
+          "area": 360,
+          "label": "STRATEGY\nROOM"
+        },
+        {
+          "id": "1bca533b",
+          "name": "Executive Office",
+          "type": "office",
+          "bounds": {
+            "x": 45,
+            "y": 18,
+            "width": 15,
+            "height": 12
+          },
+          "area": 180,
+          "label": "Executive\nOffice"
+        },
+        {
+          "id": "51ee2002",
+          "name": "Legal",
+          "type": "office",
+          "bounds": {
+            "x": 60,
+            "y": 18,
+            "width": 10,
+            "height": 12
+          },
+          "area": 120,
+          "label": "Legal"
+        },
+        {
+          "id": "a1025d08",
+          "name": "Finance",
+          "type": "office",
+          "bounds": {
+            "x": 70,
+            "y": 18,
+            "width": 10,
+            "height": 12
+          },
+          "area": 120,
+          "label": "Finance"
+        },
+        {
+          "id": "d3f518b2",
+          "name": "Focus Room A",
+          "type": "office",
+          "bounds": {
+            "x": 65,
+            "y": 0,
+            "width": 15,
+            "height": 9
+          },
+          "area": 135,
+          "label": "Focus A"
+        },
+        {
+          "id": "577ed443",
+          "name": "Focus Room B",
+          "type": "office",
+          "bounds": {
+            "x": 65,
+            "y": 9,
+            "width": 15,
+            "height": 9
+          },
+          "area": 135,
+          "label": "Focus B"
+        },
+        {
+          "id": "0538174b",
+          "name": "Library",
+          "type": "library",
+          "bounds": {
+            "x": 45,
+            "y": 30,
+            "width": 20,
+            "height": 12
+          },
+          "area": 240,
+          "label": "LIBRARY"
+        },
+        {
+          "id": "157e62d6",
+          "name": "Wellness Room",
+          "type": "wellness",
+          "bounds": {
+            "x": 65,
+            "y": 30,
+            "width": 15,
+            "height": 12
+          },
+          "area": 180,
+          "label": "Wellness"
+        },
+        {
+          "id": "ebf624ff",
+          "name": "Restrooms L2",
+          "type": "restroom",
+          "bounds": {
+            "x": 65,
+            "y": 42,
+            "width": 15,
+            "height": 8
+          },
+          "area": 120,
+          "label": "WC"
+        },
+        {
+          "id": "8d92a92a",
+          "name": "Upper Corridor",
+          "type": "corridor",
+          "bounds": {
+            "x": 42,
+            "y": 40,
+            "width": 23,
+            "height": 10
+          },
+          "area": 230,
+          "label": ""
+        },
+        {
+          "id": "29609e1a",
+          "name": "Stair L2",
+          "type": "stair",
+          "bounds": {
+            "x": 0,
+            "y": 50,
+            "width": 8,
+            "height": 8
+          },
+          "area": 64,
+          "label": "Stair"
+        },
+        {
+          "id": "a0013c9e",
+          "name": "Elevator L2",
+          "type": "elevator",
+          "bounds": {
+            "x": 8,
+            "y": 50,
+            "width": 5,
+            "height": 8
+          },
+          "area": 40,
+          "label": "Elev"
+        },
+        {
+          "id": "f89fd7ab",
+          "name": "Terrace",
+          "type": "terrace",
+          "bounds": {
+            "x": 65,
+            "y": 50,
+            "width": 15,
+            "height": 10
+          },
+          "area": 150,
+          "label": "TERRACE"
+        }
+      ],
+      "total_area": 4486,
+      "gross_area": 4800,
+      "efficiency": 0.9345833333333333
+    }
+  ],
+  "total_area": 12530,
+  "gross_area": 14400,
+  "num_levels": 3
+}

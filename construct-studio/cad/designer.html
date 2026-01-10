@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construct Studio CAD Designer</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-panel: #0f0f23;
+            --border: #2a2a4a;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888a0;
+            --accent-cyan: #00d4ff;
+            --accent-green: #00ff88;
+            --grid-color: #252540;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .app {
+            display: grid;
+            grid-template-rows: 50px 1fr;
+            grid-template-columns: 250px 1fr 300px;
+            height: 100vh;
+        }
+
+        /* Header */
+        header {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tool-btn {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--text-primary);
+        }
+
+        .tool-btn.active {
+            background: var(--accent-cyan);
+            color: #000;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Left Panel - Space Types */
+        .panel-left {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .panel-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .space-type {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .space-type:hover {
+            background: var(--bg-panel);
+        }
+
+        .space-type.selected {
+            background: var(--bg-panel);
+            border: 1px solid var(--accent-cyan);
+        }
+
+        .space-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .space-name {
+            font-size: 12px;
+        }
+
+        .category-header {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin: 15px 0 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Canvas Area */
+        .canvas-container {
+            background: var(--bg-panel);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #canvas {
+            cursor: crosshair;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .zoom-btn:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        /* Right Panel - Properties */
+        .panel-right {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .property-group {
+            margin-bottom: 20px;
+        }
+
+        .property-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .property-label {
+            width: 80px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .property-input {
+            flex: 1;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 6px 10px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Stats */
+        .stats {
+            background: var(--bg-panel);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: var(--accent-cyan);
+        }
+
+        /* Space List */
+        .space-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .space-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            background: var(--bg-panel);
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .space-item:hover {
+            border: 1px solid var(--border);
+        }
+
+        .space-item.selected {
+            border: 1px solid var(--accent-cyan);
+        }
+
+        .delete-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #ff4466;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.5;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+        }
+
+        /* Level Tabs */
+        .level-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .level-tab {
+            padding: 6px 12px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .level-tab.active {
+            background: var(--accent-cyan);
+            color: #000;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Export Button */
+        .export-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--accent-green);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .export-btn:hover {
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <div class="logo">Construct Studio CAD</div>
+            <div class="toolbar">
+                <button class="tool-btn active" data-tool="select">Select</button>
+                <button class="tool-btn" data-tool="draw">Draw Space</button>
+                <button class="tool-btn" data-tool="move">Move</button>
+                <button class="tool-btn" data-tool="resize">Resize</button>
+            </div>
+            <div style="margin-left: auto; display: flex; gap: 10px;">
+                <button class="tool-btn" onclick="clearCanvas()">Clear</button>
+                <button class="tool-btn" onclick="loadParcRI()">Load parcRI HQ</button>
+            </div>
+        </header>
+
+        <div class="panel-left">
+            <div class="panel-title">Space Types</div>
+
+            <div class="category-header">Work</div>
+            <div class="space-type" data-type="office" data-color="#4A90D9">
+                <div class="space-color" style="background: #4A90D9"></div>
+                <span class="space-name">Office</span>
+            </div>
+            <div class="space-type" data-type="open_office" data-color="#5BA3EC">
+                <div class="space-color" style="background: #5BA3EC"></div>
+                <span class="space-name">Open Office</span>
+            </div>
+            <div class="space-type" data-type="studio" data-color="#3D7AB8">
+                <div class="space-color" style="background: #3D7AB8"></div>
+                <span class="space-name">Studio</span>
+            </div>
+            <div class="space-type" data-type="lab" data-color="#2E5F8A">
+                <div class="space-color" style="background: #2E5F8A"></div>
+                <span class="space-name">Lab</span>
+            </div>
+            <div class="space-type" data-type="forge" data-color="#8B4513">
+                <div class="space-color" style="background: #8B4513"></div>
+                <span class="space-name">Forge</span>
+            </div>
+
+            <div class="category-header">Common</div>
+            <div class="space-type" data-type="lobby" data-color="#7CB342">
+                <div class="space-color" style="background: #7CB342"></div>
+                <span class="space-name">Lobby</span>
+            </div>
+            <div class="space-type" data-type="reception" data-color="#8BC34A">
+                <div class="space-color" style="background: #8BC34A"></div>
+                <span class="space-name">Reception</span>
+            </div>
+            <div class="space-type" data-type="lounge" data-color="#9CCC65">
+                <div class="space-color" style="background: #9CCC65"></div>
+                <span class="space-name">Lounge</span>
+            </div>
+            <div class="space-type" data-type="commons" data-color="#AED581">
+                <div class="space-color" style="background: #AED581"></div>
+                <span class="space-name">Commons</span>
+            </div>
+            <div class="space-type" data-type="corridor" data-color="#E0E0E0">
+                <div class="space-color" style="background: #E0E0E0"></div>
+                <span class="space-name">Corridor</span>
+            </div>
+
+            <div class="category-header">Meeting</div>
+            <div class="space-type" data-type="conference" data-color="#9575CD">
+                <div class="space-color" style="background: #9575CD"></div>
+                <span class="space-name">Conference</span>
+            </div>
+            <div class="space-type" data-type="meeting" data-color="#B39DDB">
+                <div class="space-color" style="background: #B39DDB"></div>
+                <span class="space-name">Meeting</span>
+            </div>
+            <div class="space-type" data-type="boardroom" data-color="#7E57C2">
+                <div class="space-color" style="background: #7E57C2"></div>
+                <span class="space-name">Boardroom</span>
+            </div>
+
+            <div class="category-header">Amenities</div>
+            <div class="space-type" data-type="cafe" data-color="#FFB74D">
+                <div class="space-color" style="background: #FFB74D"></div>
+                <span class="space-name">Cafe</span>
+            </div>
+            <div class="space-type" data-type="kitchen" data-color="#FFA726">
+                <div class="space-color" style="background: #FFA726"></div>
+                <span class="space-name">Kitchen</span>
+            </div>
+            <div class="space-type" data-type="dining" data-color="#FFCC80">
+                <div class="space-color" style="background: #FFCC80"></div>
+                <span class="space-name">Dining</span>
+            </div>
+            <div class="space-type" data-type="gym" data-color="#FF7043">
+                <div class="space-color" style="background: #FF7043"></div>
+                <span class="space-name">Gym</span>
+            </div>
+
+            <div class="category-header">Support</div>
+            <div class="space-type" data-type="restroom" data-color="#BDBDBD">
+                <div class="space-color" style="background: #BDBDBD"></div>
+                <span class="space-name">Restroom</span>
+            </div>
+            <div class="space-type" data-type="storage" data-color="#9E9E9E">
+                <div class="space-color" style="background: #9E9E9E"></div>
+                <span class="space-name">Storage</span>
+            </div>
+            <div class="space-type" data-type="stair" data-color="#CFD8DC">
+                <div class="space-color" style="background: #CFD8DC"></div>
+                <span class="space-name">Stair</span>
+            </div>
+            <div class="space-type" data-type="elevator" data-color="#B0BEC5">
+                <div class="space-color" style="background: #B0BEC5"></div>
+                <span class="space-name">Elevator</span>
+            </div>
+
+            <div class="category-header">Entry</div>
+            <div class="space-type" data-type="entry" data-color="#FFCA28">
+                <div class="space-color" style="background: #FFCA28"></div>
+                <span class="space-name">Entry</span>
+            </div>
+            <div class="space-type" data-type="grand_entry" data-color="#FFC107">
+                <div class="space-color" style="background: #FFC107"></div>
+                <span class="space-name">Grand Entry</span>
+            </div>
+
+            <div class="category-header">Outdoor</div>
+            <div class="space-type" data-type="terrace" data-color="#A5D6A7">
+                <div class="space-color" style="background: #A5D6A7"></div>
+                <span class="space-name">Terrace</span>
+            </div>
+            <div class="space-type" data-type="garden" data-color="#66BB6A">
+                <div class="space-color" style="background: #66BB6A"></div>
+                <span class="space-name">Garden</span>
+            </div>
+            <div class="space-type" data-type="pocket_park" data-color="#4CAF50">
+                <div class="space-color" style="background: #4CAF50"></div>
+                <span class="space-name">Pocket Park</span>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">-</button>
+                <button class="zoom-btn" onclick="resetView()">⌂</button>
+            </div>
+        </div>
+
+        <div class="panel-right">
+            <div class="panel-title">Building</div>
+
+            <div class="property-group">
+                <div class="property-row">
+                    <span class="property-label">Name</span>
+                    <input type="text" class="property-input" id="buildingName" value="New Building">
+                </div>
+            </div>
+
+            <div class="level-tabs" id="levelTabs">
+                <button class="level-tab active" data-level="0">L0</button>
+                <button class="level-tab" data-level="1">L1</button>
+                <button class="level-tab" data-level="2">L2</button>
+                <button class="level-tab" onclick="addLevel()" style="background: none; border-style: dashed;">+</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-row">
+                    <span>Total Area</span>
+                    <span class="stat-value" id="totalArea">0 m²</span>
+                </div>
+                <div class="stat-row">
+                    <span>Spaces</span>
+                    <span class="stat-value" id="spaceCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Efficiency</span>
+                    <span class="stat-value" id="efficiency">0%</span>
+                </div>
+            </div>
+
+            <div class="panel-title">Selected Space</div>
+            <div class="property-group" id="selectedProps" style="display: none;">
+                <div class="property-row">
+                    <span class="property-label">Name</span>
+                    <input type="text" class="property-input" id="spaceName">
+                </div>
+                <div class="property-row">
+                    <span class="property-label">X</span>
+                    <input type="number" class="property-input" id="spaceX" style="width: 60px;">
+                    <span class="property-label" style="width: 30px; text-align: center;">Y</span>
+                    <input type="number" class="property-input" id="spaceY" style="width: 60px;">
+                </div>
+                <div class="property-row">
+                    <span class="property-label">Width</span>
+                    <input type="number" class="property-input" id="spaceW" style="width: 60px;">
+                    <span class="property-label" style="width: 30px; text-align: center;">H</span>
+                    <input type="number" class="property-input" id="spaceH" style="width: 60px;">
+                </div>
+                <div class="property-row">
+                    <span class="property-label">Area</span>
+                    <span id="spaceArea" style="color: var(--accent-cyan);">0 m²</span>
+                </div>
+            </div>
+
+            <div class="panel-title">Spaces on Level</div>
+            <div class="space-list" id="spaceList"></div>
+
+            <button class="export-btn" onclick="exportPNG()">Export PNG</button>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const state = {
+            building: {
+                name: "New Building",
+                levels: [
+                    { name: "L0", spaces: [] },
+                    { name: "L1", spaces: [] },
+                    { name: "L2", spaces: [] }
+                ]
+            },
+            currentLevel: 0,
+            selectedSpace: null,
+            selectedType: "office",
+            selectedColor: "#4A90D9",
+            tool: "select",
+            scale: 15,  // pixels per meter
+            offset: { x: 50, y: 50 },
+            gridSize: 5,  // meters
+            canvasSize: { width: 80, height: 60 }  // meters
+        };
+
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            render();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Rendering
+        function render() {
+            ctx.fillStyle = '#0f0f23';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawGrid();
+            drawSpaces();
+            updateStats();
+            updateSpaceList();
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = '#252540';
+            ctx.lineWidth = 1;
+
+            // Grid lines
+            for (let x = 0; x <= state.canvasSize.width; x += state.gridSize) {
+                const screenX = state.offset.x + x * state.scale;
+                ctx.beginPath();
+                ctx.moveTo(screenX, state.offset.y);
+                ctx.lineTo(screenX, state.offset.y + state.canvasSize.height * state.scale);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y <= state.canvasSize.height; y += state.gridSize) {
+                const screenY = state.offset.y + y * state.scale;
+                ctx.beginPath();
+                ctx.moveTo(state.offset.x, screenY);
+                ctx.lineTo(state.offset.x + state.canvasSize.width * state.scale, screenY);
+                ctx.stroke();
+            }
+        }
+
+        function drawSpaces() {
+            const level = state.building.levels[state.currentLevel];
+            if (!level) return;
+
+            for (const space of level.spaces) {
+                const x = state.offset.x + space.x * state.scale;
+                const y = state.offset.y + space.y * state.scale;
+                const w = space.width * state.scale;
+                const h = space.height * state.scale;
+
+                // Fill
+                ctx.fillStyle = space.color;
+                ctx.fillRect(x, y, w, h);
+
+                // Outline
+                ctx.strokeStyle = state.selectedSpace === space ? '#00d4ff' : darkenColor(space.color, 0.6);
+                ctx.lineWidth = state.selectedSpace === space ? 3 : 2;
+                ctx.strokeRect(x, y, w, h);
+
+                // Label
+                if (w > 40 && h > 30) {
+                    const brightness = getBrightness(space.color);
+                    ctx.fillStyle = brightness < 128 ? '#ffffff' : '#333333';
+                    ctx.font = '12px SF Mono, Consolas, monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(space.name || space.type, x + w/2, y + h/2 - 5);
+
+                    ctx.font = '10px SF Mono, Consolas, monospace';
+                    const area = (space.width * space.height).toFixed(0);
+                    ctx.fillText(`${area} m²`, x + w/2, y + h/2 + 10);
+                }
+            }
+        }
+
+        function darkenColor(hex, factor) {
+            const rgb = hexToRgb(hex);
+            return rgbToHex(
+                Math.floor(rgb.r * factor),
+                Math.floor(rgb.g * factor),
+                Math.floor(rgb.b * factor)
+            );
+        }
+
+        function getBrightness(hex) {
+            const rgb = hexToRgb(hex);
+            return (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => {
+                const hex = Math.max(0, Math.min(255, x)).toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+
+        // Interaction
+        let isDrawing = false;
+        let drawStart = null;
+
+        canvas.addEventListener('mousedown', (e) => {
+            const pos = screenToWorld(e.offsetX, e.offsetY);
+
+            if (state.tool === 'draw') {
+                isDrawing = true;
+                drawStart = pos;
+            } else if (state.tool === 'select') {
+                selectSpaceAt(pos.x, pos.y);
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDrawing && drawStart) {
+                // Preview would go here
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (isDrawing && drawStart) {
+                const pos = screenToWorld(e.offsetX, e.offsetY);
+                const x = Math.min(drawStart.x, pos.x);
+                const y = Math.min(drawStart.y, pos.y);
+                const w = Math.abs(pos.x - drawStart.x);
+                const h = Math.abs(pos.y - drawStart.y);
+
+                if (w > 1 && h > 1) {
+                    addSpace(x, y, w, h);
+                }
+
+                isDrawing = false;
+                drawStart = null;
+            }
+        });
+
+        function screenToWorld(screenX, screenY) {
+            return {
+                x: Math.round((screenX - state.offset.x) / state.scale),
+                y: Math.round((screenY - state.offset.y) / state.scale)
+            };
+        }
+
+        function selectSpaceAt(worldX, worldY) {
+            const level = state.building.levels[state.currentLevel];
+            state.selectedSpace = null;
+
+            for (const space of level.spaces) {
+                if (worldX >= space.x && worldX <= space.x + space.width &&
+                    worldY >= space.y && worldY <= space.y + space.height) {
+                    state.selectedSpace = space;
+                    break;
+                }
+            }
+
+            updateSelectedProps();
+            render();
+        }
+
+        function addSpace(x, y, width, height) {
+            const level = state.building.levels[state.currentLevel];
+            const space = {
+                id: Math.random().toString(36).substr(2, 8),
+                name: state.selectedType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                type: state.selectedType,
+                color: state.selectedColor,
+                x: x,
+                y: y,
+                width: width,
+                height: height
+            };
+            level.spaces.push(space);
+            state.selectedSpace = space;
+            updateSelectedProps();
+            render();
+        }
+
+        // Tools
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.tool = btn.dataset.tool;
+            });
+        });
+
+        // Space types
+        document.querySelectorAll('.space-type').forEach(el => {
+            el.addEventListener('click', () => {
+                document.querySelectorAll('.space-type').forEach(e => e.classList.remove('selected'));
+                el.classList.add('selected');
+                state.selectedType = el.dataset.type;
+                state.selectedColor = el.dataset.color;
+            });
+        });
+
+        // Level tabs
+        document.querySelectorAll('.level-tab[data-level]').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.level-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                state.currentLevel = parseInt(tab.dataset.level);
+                state.selectedSpace = null;
+                updateSelectedProps();
+                render();
+            });
+        });
+
+        // Updates
+        function updateStats() {
+            const level = state.building.levels[state.currentLevel];
+            const totalArea = level.spaces.reduce((sum, s) => sum + s.width * s.height, 0);
+            const grossArea = state.canvasSize.width * state.canvasSize.height;
+
+            document.getElementById('totalArea').textContent = `${totalArea.toFixed(0)} m²`;
+            document.getElementById('spaceCount').textContent = level.spaces.length;
+            document.getElementById('efficiency').textContent = `${((totalArea / grossArea) * 100).toFixed(0)}%`;
+        }
+
+        function updateSpaceList() {
+            const level = state.building.levels[state.currentLevel];
+            const list = document.getElementById('spaceList');
+            list.innerHTML = '';
+
+            for (const space of level.spaces) {
+                const div = document.createElement('div');
+                div.className = 'space-item' + (state.selectedSpace === space ? ' selected' : '');
+                div.innerHTML = `
+                    <div class="space-color" style="background: ${space.color}; width: 12px; height: 12px; border-radius: 2px;"></div>
+                    <span>${space.name}</span>
+                    <button class="delete-btn" onclick="deleteSpace('${space.id}')">×</button>
+                `;
+                div.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('delete-btn')) {
+                        state.selectedSpace = space;
+                        updateSelectedProps();
+                        render();
+                    }
+                });
+                list.appendChild(div);
+            }
+        }
+
+        function updateSelectedProps() {
+            const props = document.getElementById('selectedProps');
+            if (state.selectedSpace) {
+                props.style.display = 'block';
+                document.getElementById('spaceName').value = state.selectedSpace.name;
+                document.getElementById('spaceX').value = state.selectedSpace.x;
+                document.getElementById('spaceY').value = state.selectedSpace.y;
+                document.getElementById('spaceW').value = state.selectedSpace.width;
+                document.getElementById('spaceH').value = state.selectedSpace.height;
+                document.getElementById('spaceArea').textContent =
+                    `${(state.selectedSpace.width * state.selectedSpace.height).toFixed(0)} m²`;
+            } else {
+                props.style.display = 'none';
+            }
+        }
+
+        // Property inputs
+        ['spaceName', 'spaceX', 'spaceY', 'spaceW', 'spaceH'].forEach(id => {
+            document.getElementById(id).addEventListener('change', (e) => {
+                if (state.selectedSpace) {
+                    const prop = id.replace('space', '').toLowerCase();
+                    if (prop === 'name') {
+                        state.selectedSpace.name = e.target.value;
+                    } else {
+                        state.selectedSpace[prop === 'w' ? 'width' : prop === 'h' ? 'height' : prop] =
+                            parseFloat(e.target.value);
+                    }
+                    render();
+                }
+            });
+        });
+
+        function deleteSpace(id) {
+            const level = state.building.levels[state.currentLevel];
+            level.spaces = level.spaces.filter(s => s.id !== id);
+            if (state.selectedSpace && state.selectedSpace.id === id) {
+                state.selectedSpace = null;
+                updateSelectedProps();
+            }
+            render();
+        }
+
+        // Zoom
+        function zoomIn() {
+            state.scale = Math.min(50, state.scale + 2);
+            render();
+        }
+
+        function zoomOut() {
+            state.scale = Math.max(5, state.scale - 2);
+            render();
+        }
+
+        function resetView() {
+            state.scale = 15;
+            state.offset = { x: 50, y: 50 };
+            render();
+        }
+
+        function clearCanvas() {
+            if (confirm('Clear all spaces on this level?')) {
+                state.building.levels[state.currentLevel].spaces = [];
+                state.selectedSpace = null;
+                updateSelectedProps();
+                render();
+            }
+        }
+
+        function addLevel() {
+            const num = state.building.levels.length;
+            state.building.levels.push({ name: `L${num}`, spaces: [] });
+
+            const tabs = document.getElementById('levelTabs');
+            const addBtn = tabs.lastElementChild;
+            const newTab = document.createElement('button');
+            newTab.className = 'level-tab';
+            newTab.dataset.level = num;
+            newTab.textContent = `L${num}`;
+            newTab.addEventListener('click', () => {
+                document.querySelectorAll('.level-tab').forEach(t => t.classList.remove('active'));
+                newTab.classList.add('active');
+                state.currentLevel = num;
+                state.selectedSpace = null;
+                updateSelectedProps();
+                render();
+            });
+            tabs.insertBefore(newTab, addBtn);
+        }
+
+        // Export
+        function exportPNG() {
+            // Create a temporary canvas for export
+            const exportCanvas = document.createElement('canvas');
+            const exportCtx = exportCanvas.getContext('2d');
+
+            const padding = 80;
+            const scale = 18;
+            const width = state.canvasSize.width * scale + padding * 2;
+            const height = state.canvasSize.height * scale + padding * 2 + 60;
+
+            exportCanvas.width = width;
+            exportCanvas.height = height;
+
+            // Background
+            exportCtx.fillStyle = '#ffffff';
+            exportCtx.fillRect(0, 0, width, height);
+
+            // Title bar
+            exportCtx.fillStyle = '#2C3E50';
+            exportCtx.fillRect(0, 0, width, 55);
+
+            exportCtx.fillStyle = '#ffffff';
+            exportCtx.font = 'bold 24px Arial, sans-serif';
+            exportCtx.fillText(
+                `${state.building.name} - ${state.building.levels[state.currentLevel].name}`,
+                padding, 35
+            );
+
+            // Grid
+            exportCtx.strokeStyle = '#E8E8E8';
+            exportCtx.lineWidth = 1;
+            for (let x = 0; x <= state.canvasSize.width; x += 5) {
+                exportCtx.beginPath();
+                exportCtx.moveTo(padding + x * scale, 60 + padding);
+                exportCtx.lineTo(padding + x * scale, 60 + padding + state.canvasSize.height * scale);
+                exportCtx.stroke();
+            }
+            for (let y = 0; y <= state.canvasSize.height; y += 5) {
+                exportCtx.beginPath();
+                exportCtx.moveTo(padding, 60 + padding + y * scale);
+                exportCtx.lineTo(padding + state.canvasSize.width * scale, 60 + padding + y * scale);
+                exportCtx.stroke();
+            }
+
+            // Spaces
+            const level = state.building.levels[state.currentLevel];
+            for (const space of level.spaces) {
+                const x = padding + space.x * scale;
+                const y = 60 + padding + space.y * scale;
+                const w = space.width * scale;
+                const h = space.height * scale;
+
+                exportCtx.fillStyle = space.color;
+                exportCtx.fillRect(x, y, w, h);
+
+                exportCtx.strokeStyle = darkenColor(space.color, 0.6);
+                exportCtx.lineWidth = 2;
+                exportCtx.strokeRect(x, y, w, h);
+
+                if (w > 40 && h > 30) {
+                    const brightness = getBrightness(space.color);
+                    exportCtx.fillStyle = brightness < 128 ? '#ffffff' : '#333333';
+                    exportCtx.font = '13px Arial, sans-serif';
+                    exportCtx.textAlign = 'center';
+                    exportCtx.fillText(space.name, x + w/2, y + h/2 - 5);
+
+                    exportCtx.font = '11px Arial, sans-serif';
+                    exportCtx.fillText(`${(space.width * space.height).toFixed(0)} m²`, x + w/2, y + h/2 + 10);
+                }
+            }
+
+            // Scale bar
+            exportCtx.fillStyle = '#333333';
+            exportCtx.fillRect(padding, height - 35, 10 * scale, 3);
+            exportCtx.font = '12px Arial, sans-serif';
+            exportCtx.textAlign = 'left';
+            exportCtx.fillText('10m', padding + 10 * scale / 2 - 10, height - 15);
+
+            // Download
+            const link = document.createElement('a');
+            link.download = `${state.building.name.toLowerCase().replace(/\s+/g, '_')}_${state.building.levels[state.currentLevel].name.toLowerCase()}.png`;
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Load parcRI HQ example
+        function loadParcRI() {
+            state.building.name = "parcRI HQ";
+            document.getElementById('buildingName').value = "parcRI HQ";
+
+            // This would load the actual design
+            // For now, create a simplified version
+            state.building.levels[0] = {
+                name: "L0 - Basement",
+                spaces: [
+                    { id: '1', name: 'Deep Work East', type: 'office', color: '#4A90D9', x: 0, y: 0, width: 25, height: 25 },
+                    { id: '2', name: 'Deep Work West', type: 'office', color: '#4A90D9', x: 0, y: 25, width: 25, height: 25 },
+                    { id: '3', name: 'Workshop', type: 'forge', color: '#8B4513', x: 40, y: 0, width: 25, height: 30 },
+                    { id: '4', name: 'Mechanical', type: 'utility', color: '#757575', x: 25, y: 0, width: 15, height: 20 },
+                    { id: '5', name: 'Storage', type: 'storage', color: '#9E9E9E', x: 25, y: 20, width: 15, height: 20 },
+                ]
+            };
+
+            state.building.levels[1] = {
+                name: "L1 - Ground",
+                spaces: [
+                    { id: '1', name: 'GRAND ENTRY', type: 'grand_entry', color: '#FFC107', x: 25, y: 48, width: 30, height: 12 },
+                    { id: '2', name: 'Reception', type: 'reception', color: '#8BC34A', x: 25, y: 30, width: 15, height: 12 },
+                    { id: '3', name: 'Lounge', type: 'lounge', color: '#9CCC65', x: 40, y: 30, width: 15, height: 12 },
+                    { id: '4', name: 'COMMONS', type: 'commons', color: '#7CB342', x: 20, y: 10, width: 40, height: 20 },
+                    { id: '5', name: 'THE FORGE', type: 'forge', color: '#8B4513', x: 0, y: 0, width: 20, height: 30 },
+                    { id: '6', name: 'CAFE', type: 'cafe', color: '#FFB74D', x: 60, y: 20, width: 20, height: 15 },
+                    { id: '7', name: 'Kitchen', type: 'kitchen', color: '#FFA726', x: 60, y: 35, width: 12, height: 10 },
+                    { id: '8', name: 'Gym', type: 'gym', color: '#FF7043', x: 72, y: 35, width: 8, height: 15 },
+                ]
+            };
+
+            state.building.levels[2] = {
+                name: "L2 - Upper",
+                spaces: [
+                    { id: '1', name: 'LAB A', type: 'lab', color: '#2E5F8A', x: 0, y: 0, width: 18, height: 20 },
+                    { id: '2', name: 'LAB B', type: 'lab', color: '#2E5F8A', x: 0, y: 20, width: 18, height: 15 },
+                    { id: '3', name: 'Media Studio', type: 'studio', color: '#3D7AB8', x: 0, y: 35, width: 18, height: 15 },
+                    { id: '4', name: 'OPEN OFFICE', type: 'open_office', color: '#5BA3EC', x: 18, y: 0, width: 27, height: 25 },
+                    { id: '5', name: 'Collaboration', type: 'commons', color: '#AED581', x: 18, y: 25, width: 27, height: 15 },
+                    { id: '6', name: 'STRATEGY', type: 'boardroom', color: '#7E57C2', x: 45, y: 0, width: 20, height: 18 },
+                    { id: '7', name: 'Executive', type: 'office', color: '#4A90D9', x: 45, y: 18, width: 15, height: 12 },
+                    { id: '8', name: 'Library', type: 'library', color: '#4DB6AC', x: 45, y: 30, width: 20, height: 12 },
+                    { id: '9', name: 'TERRACE', type: 'terrace', color: '#A5D6A7', x: 65, y: 50, width: 15, height: 10 },
+                ]
+            };
+
+            state.currentLevel = 1;
+            document.querySelectorAll('.level-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.level-tab[data-level="1"]').classList.add('active');
+            render();
+        }
+
+        // Initialize
+        render();
+    </script>
+</body>
+</html>
