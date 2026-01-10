@@ -1,13 +1,17 @@
 """
-3D Renderer
-===========
+3D Renderer - Newton CAD
+========================
 
-Software 3D renderer with:
+Software 3D renderer with Newton f/g visualization:
 - Isometric and perspective projection
 - Painter's algorithm (depth sorting)
 - Directional lighting with ambient
-- Material colors and shading
+- f/g ratio color coding (green/amber/red)
+- Constraint state visualization
 - PNG export
+
+The Floor of Newton: The ground plane IS the constraint (g).
+Building volumes are Matter (f) applied against the Floor.
 """
 
 from __future__ import annotations
@@ -26,6 +30,45 @@ from .geometry3d import (
     Vec3, Mat4, Triangle, Quad, Box,
     hex_to_rgb, shade_color, blend_colors, clamp
 )
+
+
+# =============================================================================
+# f/g Visual Language Colors (from Newton type theory)
+# =============================================================================
+
+class FGState(Enum):
+    """Newton f/g constraint states."""
+    VERIFIED = "verified"      # f/g < 0.9θ  - Safe margin
+    WARNING = "warning"        # 0.9θ ≤ f/g < θ - Approaching boundary
+    FORBIDDEN = "forbidden"    # f/g ≥ θ - Constraint violated
+    UNDEFINED = "undefined"    # g ≈ 0 - Ontological death (finfr)
+
+
+# f/g Visual Language colors from docs/product-architecture/FG_VISUAL_LANGUAGE.md
+FG_COLORS = {
+    FGState.VERIFIED: (0, 200, 83),      # #00C853 - Green
+    FGState.WARNING: (255, 214, 0),      # #FFD600 - Amber
+    FGState.FORBIDDEN: (255, 23, 68),    # #FF1744 - Red
+    FGState.UNDEFINED: (183, 28, 28),    # #B71C1C - Deep Red (finfr)
+}
+
+
+def get_fg_state(f: float, g: float, threshold: float = 1.0) -> FGState:
+    """Determine f/g state from ratio values."""
+    if g <= 0:
+        return FGState.UNDEFINED
+    ratio = f / g
+    if ratio >= threshold:
+        return FGState.FORBIDDEN
+    if ratio >= threshold * 0.9:
+        return FGState.WARNING
+    return FGState.VERIFIED
+
+
+def get_fg_color(f: float, g: float, threshold: float = 1.0) -> Tuple[int, int, int]:
+    """Get color based on f/g ratio."""
+    state = get_fg_state(f, g, threshold)
+    return FG_COLORS.get(state, (176, 190, 197))
 
 
 class ProjectionType(Enum):
