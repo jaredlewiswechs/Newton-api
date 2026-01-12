@@ -85,6 +85,28 @@ from .tinytalk import (
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Kinematic Linguistics - Geometric Semantic Verification
+# ═══════════════════════════════════════════════════════════════════════════════
+from .kinematic_linguistics import (
+    # Core Axiom: Language is a conserved geometric system
+    GlyphMechanics,
+    GlyphRegistry,
+    PhonosemanticsCluster,
+    PhonosemanticsRegistry,
+    WordVector,
+    WordAssembly,
+    WordAssemblyAnalyzer,
+    DistortionReport,
+    DistortionIndexCalculator,
+    AntonymType,
+    AntonymAnalyzer,
+    CompilerRegime,
+    CompilationProof,
+    KinematicCompiler,
+    HallucinationDetector,
+)
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Client - Connect to Newton server
 # ═══════════════════════════════════════════════════════════════════════════════
 from .client import Newton, NewtonError
@@ -144,4 +166,20 @@ __all__ = [
     "Presence",
     "Delta",
     "motion",
+    # Kinematic Linguistics
+    "GlyphMechanics",
+    "GlyphRegistry",
+    "PhonosemanticsCluster",
+    "PhonosemanticsRegistry",
+    "WordVector",
+    "WordAssembly",
+    "WordAssemblyAnalyzer",
+    "DistortionReport",
+    "DistortionIndexCalculator",
+    "AntonymType",
+    "AntonymAnalyzer",
+    "CompilerRegime",
+    "CompilationProof",
+    "KinematicCompiler",
+    "HallucinationDetector",
 ]
