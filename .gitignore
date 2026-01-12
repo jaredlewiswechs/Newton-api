@@ -65,3 +65,4 @@ node_modules/
 gumroad/newton_ios.zip
 gumroad/newton_ios.zip.sha256
 gumroad/shortcuts/*.shortcut
+.ada_memory.json
