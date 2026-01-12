@@ -85,6 +85,31 @@ from .tinytalk import (
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# LLM Constraint Governor - Domain-agnostic validation
+# ═══════════════════════════════════════════════════════════════════════════════
+from .llm import (
+    # Schema
+    Domain as LLMDomain,
+    Claim,
+    ClaimBatch,
+    ValidationResult as LLMValidationResult,
+    BatchValidationResult,
+    # Validators
+    DomainValidator,
+    PhysicsValidator,
+    MathValidator,
+    LogicValidator,
+    PolicyValidator,
+    TemporalValidator,
+    FinancialValidator,
+    # Engine
+    ValidatorRegistry,
+    ConstraintEngine,
+    GenerationResult,
+    create_engine,
+)
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Client - Connect to Newton server
 # ═══════════════════════════════════════════════════════════════════════════════
 from .client import Newton, NewtonError
@@ -144,4 +169,21 @@ __all__ = [
     "Presence",
     "Delta",
     "motion",
+    # LLM Constraint Governor
+    "LLMDomain",
+    "Claim",
+    "ClaimBatch",
+    "LLMValidationResult",
+    "BatchValidationResult",
+    "DomainValidator",
+    "PhysicsValidator",
+    "MathValidator",
+    "LogicValidator",
+    "PolicyValidator",
+    "TemporalValidator",
+    "FinancialValidator",
+    "ValidatorRegistry",
+    "ConstraintEngine",
+    "GenerationResult",
+    "create_engine",
 ]
