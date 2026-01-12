@@ -6,12 +6,33 @@
 Verified computation with the TinyTalk constraint language.
 Built on the "No-First" philosophy: define what cannot happen.
 
+NEW: Ada - The Better ChatGPT
+-----------------------------
+Ada is a comprehensive AI assistant built on Newton's constraint verification.
+Everything ChatGPT does, Ada does BETTER - with verified outputs.
+
+Quick Start with Ada:
+    from newton.ada import Ada
+
+    ada = Ada()
+    response = ada.chat("What is 2 + 2?")
+    print(response.content)  # "2 + 2 = 4" (verified!)
+
+    # Deep research
+    report = ada.research("Latest advances in quantum computing")
+
+    # Agent mode
+    result = ada.agent("Find all Python files and count lines")
+
+    # Canvas for code/docs
+    doc = ada.canvas("Create a fibonacci function in Python")
+
 Installation:
     pip install newton-computer          # Client only
     pip install newton-computer[server]  # With server
     pip install newton-computer[all]     # Everything
 
-Quick Start:
+TinyTalk Quick Start:
     from newton import Blueprint, field, law, forge, when, finfr
 
     class BankAccount(Blueprint):
@@ -122,6 +143,30 @@ try:
 except ImportError:
     serve = None  # Server dependencies not installed
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# Ada - The Better ChatGPT
+# ═══════════════════════════════════════════════════════════════════════════════
+try:
+    from .ada import (
+        Ada,
+        AdaConfig,
+        AdaMode,
+        AdaResponse,
+        DeepResearch,
+        MemoryStore,
+        AdaAgent,
+        Canvas,
+        CodeSandbox,
+        TaskScheduler,
+        ConnectorRegistry,
+        create_ada_app,
+        ada_cli,
+    )
+    HAS_ADA = True
+except ImportError:
+    HAS_ADA = False
+    Ada = None
+
 __all__ = [
     # Version
     "__version__",
@@ -186,4 +231,19 @@ __all__ = [
     "ConstraintEngine",
     "GenerationResult",
     "create_engine",
+    # Ada - The Better ChatGPT
+    "Ada",
+    "AdaConfig",
+    "AdaMode",
+    "AdaResponse",
+    "DeepResearch",
+    "MemoryStore",
+    "AdaAgent",
+    "Canvas",
+    "CodeSandbox",
+    "TaskScheduler",
+    "ConnectorRegistry",
+    "create_ada_app",
+    "ada_cli",
+    "HAS_ADA",
 ]
