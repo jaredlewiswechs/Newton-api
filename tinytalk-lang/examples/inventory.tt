@@ -1,0 +1,13 @@
+blueprint Inventory
+  starts items as empty
+  starts capacity at 10
+  
+when add_item(name)
+  block if items.count is above capacity
+  change items by + name
+finfr "Item added"
+
+when remove_item(name)
+  block if name not in items
+  change items by - name
+finfr "Item removed"

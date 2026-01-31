@@ -1,0 +1,38 @@
+{
+  "name": "tinyTalk",
+  "scopeName": "source.tinytalk",
+  "fileTypes": ["tt"],
+  "patterns": [
+    {
+      "name": "keyword.control.tinytalk",
+      "match": "\\b(blueprint|starts|can be|when|and|is|above|below|within|make|set|change|create|erase|each|fin|finfr|block|must|calc|plus|minus|times|div|rem|memo|world|if|otherwise|reply|request|as|at|to|by|in|not|empty|end)\\b"
+    },
+    {
+      "name": "entity.name.type.tinytalk",
+      "match": "\\b(Clock|Random|Input|Screen|Storage)\\b"
+    },
+    {
+      "name": "comment.line.double-slash.tinytalk",
+      "match": "//.*$"
+    },
+    {
+      "name": "string.quoted.double.tinytalk",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.tinytalk",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "constant.numeric.tinytalk",
+      "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+    },
+    {
+      "name": "keyword.operator.tinytalk",
+      "match": "[+&#.]"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+// Test basic arithmetic
+blueprint TestCalc
+  starts value at 0
+
+when test_addition
+  calc 5 plus 3 as result
+  set value to result
+  must value is 8
+finfr "Addition works"
+
+when test_finfr
+  starts balance at 100
+  set balance to -50
+  must balance is above 0
+    otherwise "finfr should prevent negative balance"
+finfr "ACID works"

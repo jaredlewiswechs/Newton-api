@@ -1,0 +1,12 @@
+blueprint Calculator
+  starts result at 0
+  
+when add(a, b)
+  calc a plus b as sum
+  set result to sum
+finfr result
+
+when multiply(a, b)
+  calc a times b as product
+  set result to product
+finfr result
