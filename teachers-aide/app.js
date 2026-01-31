@@ -65,10 +65,25 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
   } catch (error) {
     clearTimeout(timeout);
     if (error.name === 'AbortError') {
-      throw new Error('Request timed out');
+      throw new Error('Request timed out - Check Mission Control for API status');
+    }
+    if (error.message.includes('fetch')) {
+      throw new Error('Failed to fetch - Check Mission Control for API diagnostics');
     }
     throw error;
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MISSION CONTROL INTEGRATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function showMissionControlLink(errorMessage) {
+  const missionControlUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:8000/mission-control/'
+    : 'https://75ac0fae.newton-api.pages.dev/mission-control/';
+  
+  return `${errorMessage}\n\n🔍 Check Mission Control for diagnostics:\n${missionControlUrl}`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -169,7 +184,7 @@ function initLessonPlanner() {
         alert('Error: ' + (result.error || 'Failed to generate lesson plan'));
       }
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert(showMissionControlLink('Error: ' + error.message));
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<span class="btn-icon">✨</span> Generate Lesson Plan';

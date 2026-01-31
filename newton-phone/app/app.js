@@ -114,10 +114,19 @@ const api = {
         } catch (error) {
             clearTimeout(timeoutId);
             if (error.name === 'AbortError') {
-                throw new Error('Request timed out');
+                throw new Error('Request timed out - Check Mission Control for API status');
+            }
+            if (error.message.includes('fetch')) {
+                throw new Error('Failed to fetch - Check Mission Control for API diagnostics');
             }
             throw error;
         }
+    },
+
+    getMissionControlUrl() {
+        return window.location.hostname === 'localhost'
+            ? 'http://localhost:8000/mission-control/'
+            : 'https://75ac0fae.newton-api.pages.dev/mission-control/';
     },
 
     async ask(query) {
