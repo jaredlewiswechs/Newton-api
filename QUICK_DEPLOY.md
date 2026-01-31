@@ -2,11 +2,15 @@
 
 ## What Was Fixed
 
-Three critical bugs preventing apps from working on https://newton-api.onrender.com/:
+Five critical issues preventing apps from working on https://newton-api.onrender.com/:
 
 1. **Error 500 in Jester API** - Fixed ValueError when no language specified
 2. **Error 404 for apps** - Fixed mount path mismatches 
 3. **Plain text homepage** - Fixed Content-Type header
+4. **Missing TinyTalk IDE** - Added mount for /tinytalk-ide
+5. **Missing Construct Studio** - Added mount for /construct-studio
+6. **Missing Games** - Added mount for /games
+7. **Missing ParcCloud** - Added mount for /parccloud
 
 ## Deploy Now
 
@@ -22,7 +26,7 @@ git push origin main
 - Watch Render dashboard for deployment status
 - Should complete in 2-5 minutes
 
-### 3. Test URLs
+### 3. Test All App URLs
 
 Test these URLs immediately after deployment:
 
@@ -33,31 +37,67 @@ https://newton-api.onrender.com/
 **Expected**: Dark UI with app icons (Newton Phone interface)
 **NOT**: Plain HTML text
 
+#### Core Apps
+```
+https://newton-api.onrender.com/app (Newton Supercomputer)
+https://newton-api.onrender.com/teachers (Teacher's Aide)
+https://newton-api.onrender.com/builder (Interface Builder)
+```
+
+#### Development Tools
+```
+https://newton-api.onrender.com/jester-analyzer (Jester Analyzer)
+https://newton-api.onrender.com/tinytalk-ide (TinyTalk IDE)
+https://newton-api.onrender.com/construct-studio (Construct Studio)
+```
+
+#### Demos & Games
+```
+https://newton-api.onrender.com/newton-demo (Newton Demo)
+https://newton-api.onrender.com/games/gravity_wars (Gravity Wars)
+```
+
+#### Additional Apps
+```
+https://newton-api.onrender.com/parccloud (ParcCloud)
+```
+
+### 4. Quick Functionality Tests
+
 #### Jester Analyzer
-```
-https://newton-api.onrender.com/jester-analyzer
-```
-**Test**: 
-1. Paste this code:
+1. Go to https://newton-api.onrender.com/jester-analyzer
+2. Paste this code:
 ```python
 def test(x):
     if x > 0:
         return True
 ```
-2. Click "Analyze Code"
-3. Should show extracted constraints (NOT error 405 or 500)
+3. Click "Analyze Code"
+4. Should show extracted constraints (NOT error 405 or 500)
 
 #### Newton Demo
-```
-https://newton-api.onrender.com/newton-demo
-```
-**Test**:
-1. Click "Analyze Code" tab
-2. Paste any code sample
-3. Click "Analyze with Jester"
-4. Should work (NOT "string unexpected" error)
+1. Go to https://newton-api.onrender.com/newton-demo
+2. Click "Analyze Code" tab
+3. Paste any code sample
+4. Click "Analyze with Jester"
+5. Should work (NOT "string unexpected" error)
 
-### 4. API Health Check
+#### TinyTalk IDE
+1. Go to https://newton-api.onrender.com/tinytalk-ide
+2. Should load IDE interface
+3. Verify editor is functional
+
+#### Construct Studio
+1. Go to https://newton-api.onrender.com/construct-studio
+2. Should load studio interface
+3. Verify UI elements render
+
+#### Games
+1. Go to https://newton-api.onrender.com/games/gravity_wars
+2. Should load game interface
+3. Verify game renders
+
+### 5. API Health Check
 ```bash
 # Quick API test
 curl https://newton-api.onrender.com/health
