@@ -23,7 +23,10 @@ export function registerTinyTalk(monaco) {
       'block', 'if', 'must', 'otherwise',
       
       // Actions
-      'set', 'to', 'make', 'calc', 'as', 'change', 'by',
+      'set', 'to', 'make', 'calc', 'as', 'change', 'by', 'memo',
+      
+      // String operations
+      'uppercase', 'lowercase', 'trim',
       
       // Operators (as keywords)
       'plus', 'minus', 'times', 'div', 'mod',
@@ -36,7 +39,7 @@ export function registerTinyTalk(monaco) {
       'Screen', 'Clock', 'Random', 'Input', 'Storage',
       
       // Reserved
-      'empty', 'true', 'false',
+      'empty', 'true', 'false', 'wanted', 'illegal', 'dead',
     ],
 
     typeKeywords: [
@@ -377,6 +380,33 @@ export function registerTinyTalk(monaco) {
           detail: 'Standard Kit - Storage',
           range,
         },
+        {
+          label: 'memo',
+          kind: monaco.languages.CompletionItemKind.Keyword,
+          insertText: 'memo ${1:variable} starts "${2:value}"',
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: 'Create a temporary variable',
+          detail: 'Temporary variable',
+          range,
+        },
+        {
+          label: 'uppercase',
+          kind: monaco.languages.CompletionItemKind.Keyword,
+          insertText: 'make ${1:variable} uppercase',
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: 'Convert string to uppercase',
+          detail: 'String operation',
+          range,
+        },
+        {
+          label: 'lowercase',
+          kind: monaco.languages.CompletionItemKind.Keyword,
+          insertText: 'make ${1:variable} lowercase',
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: 'Convert string to lowercase',
+          detail: 'String operation',
+          range,
+        },
       ];
 
       return { suggestions };
@@ -518,6 +548,31 @@ export function registerTinyTalk(monaco) {
         'Storage': {
           contents: [{
             value: '**Storage** — Standard Kit Blueprint\n\n**Fields:**\n- `save_file`: Save file path\n\n```tinytalk\nset Storage.save_file to "game.sav"\n```'
+          }]
+        },
+        'memo': {
+          contents: [{
+            value: '**memo** — Temporary variable\n\nCreate a temporary variable for intermediate calculations.\n\n```tinytalk\nmemo alert starts "WARNING: " & message\nmake alert uppercase\nset Screen.text to alert\n```'
+          }]
+        },
+        'uppercase': {
+          contents: [{
+            value: '**uppercase** — Convert to uppercase\n\nConvert a string to uppercase letters.\n\n```tinytalk\nmake message uppercase\n```'
+          }]
+        },
+        'lowercase': {
+          contents: [{
+            value: '**lowercase** — Convert to lowercase\n\nConvert a string to lowercase letters.\n\n```tinytalk\nmake message lowercase\n```'
+          }]
+        },
+        'wanted': {
+          contents: [{
+            value: '**wanted** — Boolean state\n\nA state that can be set with "can be wanted".\n\n```tinytalk\ncan be wanted\nmake player wanted\n```'
+          }]
+        },
+        'illegal': {
+          contents: [{
+            value: '**illegal** — Boolean state\n\nA state that can be checked.\n\n```tinytalk\ncan be illegal\nif item is illegal\n  make player wanted\n```'
           }]
         },
       };
