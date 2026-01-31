@@ -125,6 +125,48 @@ See [docs/INTRO_COURSE.md](docs/INTRO_COURSE.md) for the complete tutorial.
 
 ---
 
+## 🌐 Web Applications
+
+Newton includes a complete suite of web applications for verified computation, constraint analysis, and development:
+
+### Core Applications
+
+| Application | URL | Description |
+|------------|-----|-------------|
+| **Newton Supercomputer** | `/app` | Main verified computation interface with ask/verify/calculate |
+| **Teacher's Aide** | `/teachers` | NES lesson planning, TEKS alignment, student differentiation |
+| **Interface Builder** | `/builder` | Build verified interfaces from templates |
+| **API Documentation** | `/docs` | Complete REST API reference |
+
+### Development Tools
+
+| Application | URL | Description |
+|------------|-----|-------------|
+| **TinyTalk IDE** | `/tinytalk-ide` | Full Turing-complete IDE with Monaco editor, real-time verification |
+| **Jester Analyzer** | `/jester-analyzer` | Constraint extraction compiler - extract guards from source code |
+| **Construct Studio** | `/construct-studio/ui` | Logic CAD tool for business physics simulation |
+| **TinyTalk Guide** | [TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md) | Complete programming guide |
+
+### Demos & Examples
+
+| Application | URL | Description |
+|------------|-----|-------------|
+| **Newton Demo** | `/newton-demo` | Interactive demos of verification, Jester, and statistics |
+| **Gravity Wars** | `/games/gravity_wars` | Physics-based game showcasing verified computation |
+
+### System & Utilities
+
+| Application | URL | Description |
+|------------|-----|-------------|
+| **System Status** | `/health` | Real-time system health and component status |
+| **Metrics** | `/metrics` | Performance metrics and statistics |
+
+**Live Demo:** Visit the Newton showcase at https://75ac0fae.newton-api.pages.dev/
+
+All applications use verified computation with deterministic results, immutable audit trails, and sub-millisecond latency.
+
+---
+
 ## Documentation
 
 ### 🚀 Getting Started
