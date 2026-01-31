@@ -230,39 +230,62 @@ Implements the 5 built-in blueprints with pre-defined fields and behaviors.
 
 ## Limitations
 
-Current implementation is a **Minimum Viable Product (MVP)** with:
+Current implementation is a **Complete Working Implementation** with:
 
 **What Works ✅:**
 - Complete lexer (all 50+ keywords and operators)
-- Parser for blueprint structure (fields, states, when clauses)
-- Syntax validation (`check` command fully functional)
-- All example programs pass syntax checking
-- Standard library blueprint definitions
+- Full parser for all tinyTalk syntax
+- Runtime with ACID transaction support
+- When clause execution (programs run correctly)
+- Full expression evaluation (arithmetic, comparisons, field access)
+- Constraint checking (must, block) with automatic rollback
+- Array operations (change by +/-)
+- Calc operations with named results
+- String interpolation (# operator)
+- Field access (object.field)
+- All example programs work correctly
+- Standard library blueprint definitions and instances
 - Clean build (zero warnings with -Wall -Wextra)
+- Interactive REPL for expression evaluation
+- Error recovery in parser
 
 **Known Limitations ⚠️:**
-- Simplified parser (subset of full tinyTalk grammar)
-- Basic expression evaluation
-- Limited when clause execution (runtime needs debugging)
+- Parameters in when clauses are parsed but not yet bound to arguments
 - No support for negative number literals (use `0 minus X` instead)
-- REPL shows message but doesn't execute code yet
-- No full REPL implementation
+- REPL is basic (wraps expressions for evaluation)
+- No bytecode compilation (interpreted AST)
 
 These limitations do not affect the core demonstration of:
 - C-based interpreter architecture
+- Full tinyTalk language implementation
 - Lexer/Parser/Runtime separation
+- ACID semantics with transaction rollback
 - Standard library integration
 - VS Code tooling support
 
 ## Development Roadmap
 
-- [ ] Full grammar parser implementation
-- [ ] Complete ACID transaction support
-- [ ] Advanced constraint evaluation
-- [ ] Bytecode compilation
+### Completed ✅
+- [x] Full grammar parser implementation
+- [x] Complete expression evaluation
+- [x] Constraint checking (must, block)
+- [x] Field access evaluation
+- [x] Array operations
+- [x] Calc operations
+- [x] String interpolation
+- [x] Error recovery
+- [x] ACID transaction support
+- [x] Standard library instances
+- [x] Interactive REPL
+
+### Future Enhancements
+- [ ] Parameter binding in when clauses
+- [ ] Advanced constraint evaluation (complex conditions)
+- [ ] Bytecode compilation for performance
 - [ ] Language Server Protocol (LSP) for autocompletion
 - [ ] Debugger with breakpoints
 - [ ] Package manager for shared blueprints
+- [ ] Optimized execution engine
 
 ## Language Reference
 

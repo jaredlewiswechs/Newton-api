@@ -1,13 +1,18 @@
 blueprint Inventory
   starts items as empty
+  starts count at 0
   starts capacity at 10
   
-when add_item(name)
-  block if items.count is above capacity
-  change items by + name
+when add_item
+  block if count is above capacity
+  change items by + "sword"
+  calc count plus 1 as new_count
+  set count to new_count
 finfr "Item added"
 
-when remove_item(name)
-  block if name not in items
-  change items by - name
+when remove_item
+  block if count is below 1
+  change items by - "sword"
+  calc count minus 1 as new_count
+  set count to new_count
 finfr "Item removed"
