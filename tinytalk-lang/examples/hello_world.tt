@@ -1,0 +1,6 @@
+blueprint Greeter
+  starts name at "World"
+
+when say_hello
+  set Screen.text to "Hello, " & name
+finfr "Greeting displayed"

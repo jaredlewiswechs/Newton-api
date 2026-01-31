@@ -1,0 +1,45 @@
+{
+  "Blueprint": {
+    "prefix": "blueprint",
+    "body": [
+      "blueprint ${1:Name}",
+      "  starts ${2:field} at ${3:value}",
+      "  ",
+      "  when ${4:event}",
+      "    and ${5:condition}",
+      "  finfr \"${6:message}\"",
+      "end"
+    ],
+    "description": "Create a new blueprint"
+  },
+  "When Clause": {
+    "prefix": "when",
+    "body": [
+      "when ${1:event_name}",
+      "  ${2:// actions}",
+      "finfr \"${3:message}\""
+    ],
+    "description": "Create a when clause"
+  },
+  "Field Declaration": {
+    "prefix": "starts",
+    "body": [
+      "starts ${1:field_name} at ${2:initial_value}"
+    ],
+    "description": "Declare a field"
+  },
+  "Set Action": {
+    "prefix": "set",
+    "body": [
+      "set ${1:target}.${2:field} to ${3:value}"
+    ],
+    "description": "Set a field value"
+  },
+  "Calc Expression": {
+    "prefix": "calc",
+    "body": [
+      "calc ${1:expr1} ${2:plus} ${3:expr2} as ${4:result}"
+    ],
+    "description": "Calculate an expression"
+  }
+}

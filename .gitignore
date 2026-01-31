@@ -30,7 +30,6 @@ venv.bak/
 
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
@@ -66,3 +65,11 @@ gumroad/newton_ios.zip
 gumroad/newton_ios.zip.sha256
 gumroad/shortcuts/*.shortcut
 .ada_memory.json
+
+# C/C++ build artifacts (tinytalk-lang)
+*.o
+*.a
+*.out
+tinytalk-lang/tinytalk
+tinytalk-lang/src/*.o
+tinytalk-lang/test_lexer

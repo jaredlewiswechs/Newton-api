@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build tinyTalk",
+      "type": "shell",
+      "command": "make",
+      "options": {
+        "cwd": "${workspaceFolder}/tinytalk-lang"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Run tinyTalk",
+      "type": "shell",
+      "command": "./tinytalk-lang/tinytalk",
+      "args": ["run", "${file}"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Check tinyTalk Syntax",
+      "type": "shell",
+      "command": "./tinytalk-lang/tinytalk",
+      "args": ["check", "${file}"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
