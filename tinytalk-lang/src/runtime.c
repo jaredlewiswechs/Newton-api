@@ -5,10 +5,26 @@ Execution engine with ACID semantics
 ═══════════════════════════════════════════════════════════════
 */
 
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "runtime.h"
+
+// Portable strdup implementation for strict C11
+#ifndef _WIN32
+#ifndef strdup
+static char* my_strdup(const char* s) {
+    size_t len = strlen(s) + 1;
+    char* new_str = (char*)malloc(len);
+    if (new_str) {
+        memcpy(new_str, s, len);
+    }
+    return new_str;
+}
+#define strdup my_strdup
+#endif
+#endif
 
 // Value operations
 Value value_number(double n) {

@@ -5,6 +5,7 @@ Commands: run, repl, check
 ═══════════════════════════════════════════════════════════════
 */
 
+#define _POSIX_C_SOURCE 200809L
 #include "tinytalk.h"
 #include "lexer.h"
 #include "parser.h"
@@ -13,6 +14,21 @@ Commands: run, repl, check
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// Portable strdup implementation for strict C11
+#ifndef _WIN32
+#ifndef strdup
+static char* my_strdup(const char* s) {
+    size_t len = strlen(s) + 1;
+    char* new_str = (char*)malloc(len);
+    if (new_str) {
+        memcpy(new_str, s, len);
+    }
+    return new_str;
+}
+#define strdup my_strdup
+#endif
+#endif
 
 static char* read_file(const char* filename) {
     FILE* file = fopen(filename, "rb");

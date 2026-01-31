@@ -278,6 +278,7 @@ Token lexer_next_token(Lexer* lexer) {
             lexer->line++;
             return make_token(lexer, TOKEN_NEWLINE);
         case '+': return make_token(lexer, TOKEN_PLUS_OP);
+        case '-': return make_token(lexer, TOKEN_MINUS_OP);
         case '&': return make_token(lexer, TOKEN_AMPERSAND);
         case '#': return make_token(lexer, TOKEN_HASH);
         case '.': return make_token(lexer, TOKEN_DOT);
@@ -331,6 +332,7 @@ const char* token_type_name(TokenType type) {
         case TOKEN_STRING: return "string";
         case TOKEN_IDENTIFIER: return "identifier";
         case TOKEN_PLUS_OP: return "+";
+        case TOKEN_MINUS_OP: return "-";
         case TOKEN_AMPERSAND: return "&";
         case TOKEN_HASH: return "#";
         case TOKEN_DOT: return ".";

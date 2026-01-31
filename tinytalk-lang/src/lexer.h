@@ -56,6 +56,7 @@ typedef enum {
     
     // Operators
     TOKEN_PLUS_OP,       // + (natural add)
+    TOKEN_MINUS_OP,      // - (subtract/remove)
     TOKEN_AMPERSAND,     // & (fuse)
     TOKEN_HASH,          // # (tag/interpolation)
     TOKEN_DOT,           // . (field access)

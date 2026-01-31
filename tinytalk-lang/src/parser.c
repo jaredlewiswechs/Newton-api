@@ -152,9 +152,25 @@ static ASTNode* parse_field_declaration(Parser* parser) {
     consume(parser, TOKEN_IDENTIFIER, "Expected field name");
     char* field_name = copy_token_string(&parser->previous);
     
-    consume(parser, TOKEN_AT, "Expected 'at' after field name");
+    // Support both "at" and "as" for field initialization
+    if (!match(parser, TOKEN_AT) && !match(parser, TOKEN_AS)) {
+        error(parser, "Expected 'at' or 'as' after field name");
+        // Create a default node to avoid NULL
+        ASTNode* node = alloc_node(NODE_FIELD, parser->previous.line);
+        node->as.field.name = field_name;
+        node->as.field.initial_value = alloc_node(NODE_LITERAL, parser->previous.line);
+        node->as.field.initial_value->as.literal.value = value_null();
+        return node;
+    }
     
-    ASTNode* initial_value = parse_expression(parser);
+    // Handle "as empty" special case
+    ASTNode* initial_value;
+    if (match(parser, TOKEN_EMPTY)) {
+        initial_value = alloc_node(NODE_LITERAL, parser->previous.line);
+        initial_value->as.literal.value = value_null();
+    } else {
+        initial_value = parse_expression(parser);
+    }
     
     ASTNode* node = alloc_node(NODE_FIELD, parser->previous.line);
     node->as.field.name = field_name;

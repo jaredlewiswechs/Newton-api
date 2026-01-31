@@ -231,9 +231,21 @@ Implements the 5 built-in blueprints with pre-defined fields and behaviors.
 ## Limitations
 
 Current implementation is a **Minimum Viable Product (MVP)** with:
+
+**What Works ✅:**
+- Complete lexer (all 50+ keywords and operators)
+- Parser for blueprint structure (fields, states, when clauses)
+- Syntax validation (`check` command fully functional)
+- All example programs pass syntax checking
+- Standard library blueprint definitions
+- Clean build (zero warnings with -Wall -Wextra)
+
+**Known Limitations ⚠️:**
 - Simplified parser (subset of full tinyTalk grammar)
 - Basic expression evaluation
-- Limited when clause execution
+- Limited when clause execution (runtime needs debugging)
+- No support for negative number literals (use `0 minus X` instead)
+- REPL shows message but doesn't execute code yet
 - No full REPL implementation
 
 These limitations do not affect the core demonstration of:

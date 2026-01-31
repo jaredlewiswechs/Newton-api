@@ -72,3 +72,4 @@ gumroad/shortcuts/*.shortcut
 *.out
 tinytalk-lang/tinytalk
 tinytalk-lang/src/*.o
+tinytalk-lang/test_lexer
