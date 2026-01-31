@@ -1030,7 +1030,11 @@ async def serve_home():
 
     for index_file in possible_paths:
         if index_file.exists():
-            return HTMLResponse(content=index_file.read_text(), status_code=200)
+            return HTMLResponse(
+                content=index_file.read_text(), 
+                status_code=200,
+                media_type="text/html"
+            )
 
     # Log debug info if not found
     print(f"[Newton] index.html not found. ROOT_DIR={ROOT_DIR}, CWD={os.getcwd()}")
