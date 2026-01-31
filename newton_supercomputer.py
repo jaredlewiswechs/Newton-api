@@ -750,7 +750,8 @@ async def jester_analyze(request: JesterAnalyzeRequest):
 
     try:
         # Use the Jester analyzer
-        jester = Jester(request.code, SourceLanguage(request.language) if request.language else None)
+        language = SourceLanguage(request.language) if request.language else None
+        jester = Jester(request.code, language)
         result = jester.analyze().to_dict()
 
         elapsed_us = int((time.perf_counter() - start) * 1_000_000)
@@ -803,7 +804,8 @@ async def jester_cdl(request: JesterCdlRequest):
     start = time.perf_counter()
 
     try:
-        jester = Jester(request.code, SourceLanguage(request.language) if request.language else None)
+        language = SourceLanguage(request.language) if request.language else None
+        jester = Jester(request.code, language)
         cdl_output = jester.analyze().to_cdl()
 
         elapsed_us = int((time.perf_counter() - start) * 1_000_000)
@@ -1006,9 +1008,9 @@ if TEACHERS_DIR.exists():
 if BUILDER_DIR.exists():
     app.mount("/builder", StaticFiles(directory=str(BUILDER_DIR), html=True), name="builder")
 if JESTER_DIR.exists():
-    app.mount("/jester", StaticFiles(directory=str(JESTER_DIR), html=True), name="jester")
+    app.mount("/jester-analyzer", StaticFiles(directory=str(JESTER_DIR), html=True), name="jester-analyzer")
 if DEMO_DIR.exists():
-    app.mount("/demo", StaticFiles(directory=str(DEMO_DIR), html=True), name="demo")
+    app.mount("/newton-demo", StaticFiles(directory=str(DEMO_DIR), html=True), name="newton-demo")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NEWTON PHONE - Static Frontend Routes
