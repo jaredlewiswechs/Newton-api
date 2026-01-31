@@ -991,25 +991,7 @@ def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]
             return path
     return None
 
-# Mount static directories
-if FRONTEND_DIR.exists():
-    app.mount("/app", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="app")
-if TEACHERS_DIR.exists():
-    app.mount("/teachers", StaticFiles(directory=str(TEACHERS_DIR), html=True), name="teachers")
-if BUILDER_DIR.exists():
-    app.mount("/builder", StaticFiles(directory=str(BUILDER_DIR), html=True), name="builder")
-if JESTER_DIR.exists():
-    app.mount("/jester-analyzer", StaticFiles(directory=str(JESTER_DIR), html=True), name="jester-analyzer")
-if DEMO_DIR.exists():
-    app.mount("/newton-demo", StaticFiles(directory=str(DEMO_DIR), html=True), name="newton-demo")
-if PARCCLOUD_DIR.exists():
-    app.mount("/parccloud", StaticFiles(directory=str(PARCCLOUD_DIR), html=True), name="parccloud")
-if TINYTALK_IDE_DIR.exists():
-    app.mount("/tinytalk-ide", StaticFiles(directory=str(TINYTALK_IDE_DIR), html=True), name="tinytalk-ide")
-if CONSTRUCT_STUDIO_DIR.exists():
-    app.mount("/construct-studio", StaticFiles(directory=str(CONSTRUCT_STUDIO_DIR), html=True), name="construct-studio")
-if GAMES_DIR.exists():
-    app.mount("/games", StaticFiles(directory=str(GAMES_DIR), html=True), name="games")
+# Directory paths will be used for StaticFiles mounts later
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NEWTON PHONE - Static Frontend Routes
@@ -4239,44 +4221,29 @@ async def voice_demo():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# THE INTERFACE - Jared Lewis Conglomerate Frontend
+# STATICFILES MOUNTS - Must be defined after all API routes to avoid shadowing
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@app.get("/")
-async def home():
-    """Newton frontend - Claude-esque + Apple HIG 2026 design."""
-    frontend_index = FRONTEND_DIR / "index.html"
-    if frontend_index.exists():
-        return FileResponse(frontend_index, media_type="text/html")
-    # Fallback if frontend not found
-    return HTMLResponse(content="<h1>Newton</h1><p>Frontend not found. API available at /docs</p>")
-
-
-@app.get("/styles.css")
-async def styles():
-    """Serve CSS."""
-    css_file = FRONTEND_DIR / "styles.css"
-    if css_file.exists():
-        return FileResponse(css_file, media_type="text/css")
-    raise HTTPException(status_code=404, detail="CSS not found")
-
-
-@app.get("/app.js")
-async def app_js():
-    """Serve JavaScript."""
-    js_file = FRONTEND_DIR / "app.js"
-    if js_file.exists():
-        return FileResponse(js_file, media_type="application/javascript")
-    raise HTTPException(status_code=404, detail="JS not found")
-
-
-@app.get("/manifest.json")
-async def manifest():
-    """Serve PWA manifest."""
-    manifest_file = FRONTEND_DIR / "manifest.json"
-    if manifest_file.exists():
-        return FileResponse(manifest_file, media_type="application/json")
-    raise HTTPException(status_code=404, detail="Manifest not found")
+# Mount static directories for frontend apps
+# These are mounted last so specific API routes take precedence
+if FRONTEND_DIR.exists():
+    app.mount("/app", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="app")
+if TEACHERS_DIR.exists():
+    app.mount("/teachers", StaticFiles(directory=str(TEACHERS_DIR), html=True), name="teachers")
+if BUILDER_DIR.exists():
+    app.mount("/builder", StaticFiles(directory=str(BUILDER_DIR), html=True), name="builder")
+if JESTER_DIR.exists():
+    app.mount("/jester-analyzer", StaticFiles(directory=str(JESTER_DIR), html=True), name="jester-analyzer")
+if DEMO_DIR.exists():
+    app.mount("/newton-demo", StaticFiles(directory=str(DEMO_DIR), html=True), name="newton-demo")
+if PARCCLOUD_DIR.exists():
+    app.mount("/parccloud", StaticFiles(directory=str(PARCCLOUD_DIR), html=True), name="parccloud")
+if TINYTALK_IDE_DIR.exists():
+    app.mount("/tinytalk-ide", StaticFiles(directory=str(TINYTALK_IDE_DIR), html=True), name="tinytalk-ide")
+if CONSTRUCT_STUDIO_DIR.exists():
+    app.mount("/construct-studio", StaticFiles(directory=str(CONSTRUCT_STUDIO_DIR), html=True), name="construct-studio")
+if GAMES_DIR.exists():
+    app.mount("/games", StaticFiles(directory=str(GAMES_DIR), html=True), name="games")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
