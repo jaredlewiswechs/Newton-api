@@ -278,7 +278,12 @@ Token lexer_next_token(Lexer* lexer) {
             lexer->line++;
             return make_token(lexer, TOKEN_NEWLINE);
         case '+': return make_token(lexer, TOKEN_PLUS_OP);
-        case '-': return make_token(lexer, TOKEN_MINUS_OP);
+        case '-':
+            // Check if this is a negative number literal
+            if (isdigit(peek(lexer))) {
+                return number_token(lexer);
+            }
+            return make_token(lexer, TOKEN_MINUS_OP);
         case '&': return make_token(lexer, TOKEN_AMPERSAND);
         case '#': return make_token(lexer, TOKEN_HASH);
         case '.': return make_token(lexer, TOKEN_DOT);
