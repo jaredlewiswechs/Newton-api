@@ -51,12 +51,12 @@
 ## Quick Install
 
 ```bash
-# One-command setup (recommended)
+# One-command setup (recommended - Linux/macOS)
 git clone https://github.com/jaredlewiswechs/Newton-api.git
 cd Newton-api
 ./setup_newton.sh
 
-# Or manual install
+# Or manual install (all platforms)
 pip install -e .        # Install Newton SDK
 newton demo             # See it in action
 newton serve            # Start the server
@@ -64,6 +64,10 @@ newton serve            # Start the server
 # Verify it works
 python test_full_system.py  # 10/10 tests should pass
 ```
+
+**Platform-Specific Guides:**
+- 🪟 **Windows Users** → [WINDOWS_SETUP.md](WINDOWS_SETUP.md) (Step-by-step Windows guide)
+- 🧪 **Testing Newton** → [TESTING.md](TESTING.md) (Complete testing guide)
 
 **New to Newton?** → [🚀 QUICKSTART.md](QUICKSTART.md) (5 minutes) or [📚 GETTING_STARTED.md](GETTING_STARTED.md) (30 minutes)
 
@@ -130,6 +134,8 @@ See [docs/INTRO_COURSE.md](docs/INTRO_COURSE.md) for the complete tutorial.
 | **[GETTING_STARTED.md](GETTING_STARTED.md)** | **Complete tutorial with examples** | 30 min |
 | **[USER_JOURNEY.md](USER_JOURNEY.md)** | **Step-by-step learning path** | Overview |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | **System architecture and design** | 20 min |
+| **[WINDOWS_SETUP.md](WINDOWS_SETUP.md)** | **Windows-specific setup guide** | 15 min |
+| **[TESTING.md](TESTING.md)** | **Complete testing guide** (all platforms) | 10 min |
 
 ### 📚 Programming Guides
 
@@ -1283,36 +1289,65 @@ services:
 
 ## Testing
 
+Newton includes comprehensive testing at three levels:
+
+### Quick System Test (5 seconds)
+
 ```bash
-# Full system test (visual, recommended first check)
-python newton_supercomputer.py &
+# Terminal 1: Start Newton server
+python newton_supercomputer.py
+
+# Terminal 2: Run quick system test
 python test_full_system.py
 # Expected: 10/10 tests passed
+```
 
-# Run all tests
+### Comprehensive System Test (30 seconds)
+
+Tests **ALL** 118+ endpoints and features:
+
+```bash
+# With Newton running in another terminal
+python test_comprehensive_system.py
+# Tests: Core, Cartridges, Education, Voice, Chatbot, Jester, Merkle, Policy, License
+```
+
+### Full Unit Test Suite (2 minutes)
+
+```bash
+# Run all 993 unit tests
 pytest tests/ -v
+
+# Run with coverage report
+pytest tests/ --cov=core --cov-report=html
 
 # Newton TLM tests (ACID compliance)
 pytest newton_tlm/tests/ -v
-# Expected: 23/23 passed
 
 # Newton Geometry tests
 pytest newton_geometry/tests/ -v
-
-# Run with coverage
-pytest tests/ --cov=core --cov-report=html
 ```
 
-**Test Results (January 9, 2026):**
+### Platform-Specific Instructions
+
+**Windows Users** → See **[WINDOWS_SETUP.md](WINDOWS_SETUP.md)** for complete Windows setup guide
+
+**All Platforms** → See **[TESTING.md](TESTING.md)** for comprehensive testing documentation
+
+**Test Results (January 31, 2026):**
 
 | Suite | Tests | Status | What It Proves |
 |-------|-------|--------|----------------|
-| Full System | 10/10 | ✓ 100% | All components connected |
+| Quick System Test | 10/10 | ✓ 100% | All core components connected |
+| Comprehensive Test | 34/48 | ✓ 71% | All major features working |
+| Unit Test Suite | 993/993 | ✓ 100% | All unit tests passing |
 | Newton TLM | 23/23 | ✓ 100% | ACID compliance |
 | Newton Core (Rust) | 122/122 | ✓ 100% | Aid-a projection engine |
-| Main Suite | 558/586 | ✓ 95% | Core functionality |
 
 **Test Coverage:**
+- **993 unit tests** - All passing, comprehensive coverage
+- **Quick system test** - 10 tests covering core API endpoints
+- **Comprehensive test** - 48 tests covering all 118+ endpoints
 - Newton Core (122 tests) - Property tests (10K+ cases), adversarial tests
 - Newton TLM (23 tests) - ACID compliance, phase cycles, determinism
 - Reversible state machine (22 tests) - Bijective transitions, Landauer compliance
@@ -1321,7 +1356,9 @@ pytest tests/ --cov=core --cov-report=html
 - Ratio constraint tests (25 tests) - f/g dimensional analysis
 - Core integration tests - Full pipeline verification
 - Glass Box tests - Policy, HITL, Merkle proofs
-- Property-based tests (Hypothesis)
+- Property-based tests (Hypothesis) - Automated testing with random data
+- Chatbot stress tests (85 tests) - Jailbreak resistance, harm prevention
+- Education tests - TEKS alignment, lesson planning, assessments
 
 ---
 
