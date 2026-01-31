@@ -160,12 +160,32 @@ bool tinytalk_check_syntax(const char* source) {
 
 void tinytalk_repl(void) {
     printf("tinyTalk %s REPL\n", TINYTALK_VERSION);
-    printf("Type 'exit' to quit\n");
-    printf("Note: Enter simple expressions like: 2 plus 3, \"Hello\" & \"World\"\n\n");
+    printf("Type 'exit' or 'quit' to exit\n");
+    printf("Enter expressions like: 2 plus 3, \"Hello\" & \"World\", -42\n");
+    printf("Enter 'help' for more commands\n\n");
     
     Runtime runtime;
     runtime_init(&runtime);
     stdlib_init(&runtime);
+    
+    // Create a persistent REPL blueprint for evaluation
+    const char* repl_blueprint_source = 
+        "blueprint REPL\n"
+        "  starts last_result at 0\n"
+        "when eval\n"
+        "  set Screen.text to \"\"\n"
+        "finfr \"ok\"\n";
+    
+    Lexer lexer;
+    lexer_init(&lexer, repl_blueprint_source);
+    Parser parser;
+    parser_init(&parser, &lexer);
+    ASTNode* repl_ast = parser_parse(&parser);
+    
+    if (repl_ast) {
+        runtime_execute(&runtime, repl_ast);
+        ast_node_free(repl_ast);
+    }
     
     char line[1024];
     
@@ -184,37 +204,79 @@ void tinytalk_repl(void) {
             break;
         }
         
+        if (strcmp(line, "help") == 0) {
+            printf("Commands:\n");
+            printf("  exit, quit    - Exit the REPL\n");
+            printf("  help          - Show this help\n");
+            printf("\nExamples:\n");
+            printf("  2 plus 3\n");
+            printf("  -42\n");
+            printf("  \"Hello\" & \"World\"\n");
+            printf("  5 times 8\n");
+            continue;
+        }
+        
         if (strlen(line) == 0) {
             continue;
         }
         
-        // Wrap simple expressions as a blueprint with a when clause for evaluation
-        char wrapped[2048];
-        snprintf(wrapped, sizeof(wrapped), 
-                "blueprint REPL\nwhen eval\n  set Screen.text to %s\nfinfr \"ok\"\n", line);
+        // Try to parse as an expression directly
+        char expr_source[2048];
+        snprintf(expr_source, sizeof(expr_source), "blueprint Expr\nwhen test\n  set Screen.text to %s\nfinfr \"ok\"\n", line);
         
-        Result result = tinytalk_run_string(wrapped);
+        Lexer expr_lexer;
+        lexer_init(&expr_lexer, expr_source);
         
-        if (result.success) {
-            // Get Screen.text to show the result
-            ScreenInstance* screen = stdlib_get_screen(&runtime);
-            if (screen && screen->base.field_values) {
-                Value* text_val = &screen->base.field_values[0];
-                if (text_val->type == TYPE_STRING && text_val->as.string && strlen(text_val->as.string) > 0) {
-                    printf("=> %s\n", text_val->as.string);
-                } else if (text_val->type == TYPE_NUMBER) {
-                    printf("=> %g\n", text_val->as.number);
+        Parser expr_parser;
+        parser_init(&expr_parser, &expr_lexer);
+        
+        ASTNode* expr_ast = parser_parse(&expr_parser);
+        
+        if (expr_parser.had_error || !expr_ast) {
+            printf("Error: Invalid expression\n");
+            if (expr_ast) {
+                ast_node_free(expr_ast);
+            }
+            continue;
+        }
+        
+        // Execute the expression
+        Result result = runtime_execute(&runtime, expr_ast);
+        
+        if (result.success && expr_ast->type == NODE_BLUEPRINT) {
+            Instance* inst = runtime_create_instance(&runtime, "Expr");
+            
+            if (inst && inst->blueprint->when_count > 0) {
+                Result when_result = runtime_execute_when(&runtime, inst, "test", NULL, 0);
+                
+                if (when_result.success) {
+                    // Get the result from Screen.text
+                    ScreenInstance* screen = stdlib_get_screen(&runtime);
+                    if (screen && screen->base.field_values) {
+                        Value* text_val = &screen->base.field_values[0];
+                        if (text_val->type == TYPE_STRING && text_val->as.string && strlen(text_val->as.string) > 0) {
+                            printf("=> %s\n", text_val->as.string);
+                        } else if (text_val->type == TYPE_NUMBER) {
+                            printf("=> %g\n", text_val->as.number);
+                        }
+                    }
+                } else {
+                    printf("Error: %s\n", when_result.message ? when_result.message : "Unknown error");
+                }
+                
+                if (when_result.message) {
+                    free(when_result.message);
                 }
             }
         } else {
-            if (result.message) {
-                printf("Error: %s\n", result.message);
-            }
+            printf("Error: %s\n", result.message ? result.message : "Execution failed");
         }
         
         if (result.message) {
             free(result.message);
         }
+        
+        ast_node_free(expr_ast);
     }
     
     runtime_free(&runtime);

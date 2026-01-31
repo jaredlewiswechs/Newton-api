@@ -246,14 +246,16 @@ Current implementation is a **Complete Working Implementation** with:
 - All example programs work correctly
 - Standard library blueprint definitions and instances
 - Clean build (zero warnings with -Wall -Wextra)
-- Interactive REPL for expression evaluation
+- Interactive REPL for expression evaluation with help command
 - Error recovery in parser
+- **Parameter binding in when clauses** (arguments are bound to parameters)
+- **Negative number literals** (e.g., `-42`, `-3.14`)
+- **Enhanced REPL** with better error messages and help command
 
 **Known Limitations ⚠️:**
-- Parameters in when clauses are parsed but not yet bound to arguments
-- No support for negative number literals (use `0 minus X` instead)
-- REPL is basic (wraps expressions for evaluation)
 - No bytecode compilation (interpreted AST)
+- No language server protocol (LSP) integration yet
+- No debugger with breakpoints yet
 
 These limitations do not affect the core demonstration of:
 - C-based interpreter architecture
@@ -276,16 +278,19 @@ These limitations do not affect the core demonstration of:
 - [x] Error recovery
 - [x] ACID transaction support
 - [x] Standard library instances
-- [x] Interactive REPL
+- [x] Interactive REPL with help command
+- [x] Parameter binding in when clauses
+- [x] Negative number literal support
 
 ### Future Enhancements
-- [ ] Parameter binding in when clauses
 - [ ] Advanced constraint evaluation (complex conditions)
 - [ ] Bytecode compilation for performance
 - [ ] Language Server Protocol (LSP) for autocompletion
 - [ ] Debugger with breakpoints
 - [ ] Package manager for shared blueprints
 - [ ] Optimized execution engine
+- [ ] Multi-line REPL input with line editing
+- [ ] REPL history and command completion
 
 ## Language Reference
 
