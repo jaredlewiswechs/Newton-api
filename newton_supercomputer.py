@@ -993,7 +993,7 @@ def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]
 
 # Mount static directories
 if FRONTEND_DIR.exists():
-    app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+    app.mount("/app", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="app")
 if TEACHERS_DIR.exists():
     app.mount("/teachers", StaticFiles(directory=str(TEACHERS_DIR), html=True), name="teachers")
 if BUILDER_DIR.exists():
@@ -1121,42 +1121,6 @@ async def serve_home():
 </body>
 </html>"""
     return HTMLResponse(content=fallback_html, status_code=200)
-
-@app.get("/app", response_class=HTMLResponse)
-async def serve_newton_app():
-    """Serve the Newton Supercomputer app"""
-    index_file = find_app_file(FRONTEND_DIR)
-    if index_file:
-        return HTMLResponse(
-            content=index_file.read_text(), 
-            status_code=200,
-            media_type="text/html"
-        )
-    return HTMLResponse(content="<h1>Newton App</h1><p>Not found</p>", status_code=404)
-
-@app.get("/teachers", response_class=HTMLResponse)
-async def serve_teachers_aide():
-    """Serve Teacher's Aide app"""
-    index_file = find_app_file(TEACHERS_DIR)
-    if index_file:
-        return HTMLResponse(
-            content=index_file.read_text(), 
-            status_code=200,
-            media_type="text/html"
-        )
-    return HTMLResponse(content="<h1>Teacher's Aide</h1><p>Not found</p>", status_code=404)
-
-@app.get("/builder", response_class=HTMLResponse)
-async def serve_builder():
-    """Serve Interface Builder app"""
-    index_file = find_app_file(BUILDER_DIR)
-    if index_file:
-        return HTMLResponse(
-            content=index_file.read_text(), 
-            status_code=200,
-            media_type="text/html"
-        )
-    return HTMLResponse(content="<h1>Interface Builder</h1><p>Not found</p>", status_code=404)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
