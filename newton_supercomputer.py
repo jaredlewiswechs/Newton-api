@@ -974,7 +974,7 @@ PARCCLOUD_DIR = ROOT_DIR / "parccloud"
 JESTER_DIR = ROOT_DIR / "jester-analyzer"
 DEMO_DIR = ROOT_DIR / "newton-demo"
 TINYTALK_IDE_DIR = ROOT_DIR / "tinytalk-ide"
-CONSTRUCT_STUDIO_DIR = ROOT_DIR / "construct-studio"
+CONSTRUCT_STUDIO_DIR = ROOT_DIR / "construct-studio" / "ui"
 GAMES_DIR = ROOT_DIR / "games"
 
 # Helper: Find file across multiple possible paths (handles Render's environment)
@@ -1122,41 +1122,15 @@ async def serve_home():
 </html>"""
     return HTMLResponse(content=fallback_html, status_code=200)
 
+# Note: /app, /teachers, and /builder routes are handled by StaticFiles mounts above
+# The mounts with html=True automatically serve index.html for directory paths
+
+# Special case: /app redirects to /frontend for backward compatibility
 @app.get("/app", response_class=HTMLResponse)
 async def serve_newton_app():
-    """Serve the Newton Supercomputer app"""
-    index_file = find_app_file(FRONTEND_DIR)
-    if index_file:
-        return HTMLResponse(
-            content=index_file.read_text(), 
-            status_code=200,
-            media_type="text/html"
-        )
-    return HTMLResponse(content="<h1>Newton App</h1><p>Not found</p>", status_code=404)
-
-@app.get("/teachers", response_class=HTMLResponse)
-async def serve_teachers_aide():
-    """Serve Teacher's Aide app"""
-    index_file = find_app_file(TEACHERS_DIR)
-    if index_file:
-        return HTMLResponse(
-            content=index_file.read_text(), 
-            status_code=200,
-            media_type="text/html"
-        )
-    return HTMLResponse(content="<h1>Teacher's Aide</h1><p>Not found</p>", status_code=404)
-
-@app.get("/builder", response_class=HTMLResponse)
-async def serve_builder():
-    """Serve Interface Builder app"""
-    index_file = find_app_file(BUILDER_DIR)
-    if index_file:
-        return HTMLResponse(
-            content=index_file.read_text(), 
-            status_code=200,
-            media_type="text/html"
-        )
-    return HTMLResponse(content="<h1>Interface Builder</h1><p>Not found</p>", status_code=404)
+    """Redirect /app to /frontend for the Newton Supercomputer interface"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/frontend", status_code=307)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1166,11 +1140,9 @@ async def serve_builder():
 
 @app.get("/login", response_class=HTMLResponse)
 async def serve_parccloud_login():
-    """Serve parcCloud login page"""
-    index_file = find_app_file(PARCCLOUD_DIR)
-    if index_file:
-        return HTMLResponse(content=index_file.read_text(), status_code=200)
-    return HTMLResponse(content="<h1>parcCloud</h1><p>Login page not found</p>", status_code=404)
+    """Serve parcCloud login page - redirect to /parccloud"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/parccloud", status_code=307)
 
 
 @app.post("/parccloud/signup")
