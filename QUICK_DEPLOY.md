@@ -2,7 +2,7 @@
 
 ## What Was Fixed
 
-Five critical issues preventing apps from working on https://newton-api.onrender.com/:
+Seven critical issues preventing apps from working on https://newton-api.onrender.com/:
 
 1. **Error 500 in Jester API** - Fixed ValueError when no language specified
 2. **Error 404 for apps** - Fixed mount path mismatches 
