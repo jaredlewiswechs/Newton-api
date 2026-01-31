@@ -991,7 +991,7 @@ def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]
             return path
     return None
 
-# Directory paths will be used for StaticFiles mounts later
+# StaticFiles mounts are defined at the end of the file (after all API routes) to ensure proper routing precedence
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NEWTON PHONE - Static Frontend Routes
@@ -4227,6 +4227,7 @@ async def voice_demo():
 # Mount static directories for frontend apps
 # These are mounted last so specific API routes take precedence
 if FRONTEND_DIR.exists():
+    # Changed from /frontend to /app to match homepage links in index.html
     app.mount("/app", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="app")
 if TEACHERS_DIR.exists():
     app.mount("/teachers", StaticFiles(directory=str(TEACHERS_DIR), html=True), name="teachers")
