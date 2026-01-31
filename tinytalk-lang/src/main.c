@@ -160,7 +160,8 @@ bool tinytalk_check_syntax(const char* source) {
 
 void tinytalk_repl(void) {
     printf("tinyTalk %s REPL\n", TINYTALK_VERSION);
-    printf("Type 'exit' to quit\n\n");
+    printf("Type 'exit' to quit\n");
+    printf("Note: Enter simple expressions like: 2 plus 3, \"Hello\" & \"World\"\n\n");
     
     Runtime runtime;
     runtime_init(&runtime);
@@ -187,15 +188,33 @@ void tinytalk_repl(void) {
             continue;
         }
         
-        // Try to execute as expression
-        Lexer lexer;
-        lexer_init(&lexer, line);
+        // Wrap simple expressions as a blueprint with a when clause for evaluation
+        char wrapped[2048];
+        snprintf(wrapped, sizeof(wrapped), 
+                "blueprint REPL\nwhen eval\n  set Screen.text to %s\nfinfr \"ok\"\n", line);
         
-        Parser parser;
-        parser_init(&parser, &lexer);
+        Result result = tinytalk_run_string(wrapped);
         
-        // Skip parsing for simple expressions
-        printf("REPL: Not implemented yet\n");
+        if (result.success) {
+            // Get Screen.text to show the result
+            ScreenInstance* screen = stdlib_get_screen(&runtime);
+            if (screen && screen->base.field_values) {
+                Value* text_val = &screen->base.field_values[0];
+                if (text_val->type == TYPE_STRING && text_val->as.string && strlen(text_val->as.string) > 0) {
+                    printf("=> %s\n", text_val->as.string);
+                } else if (text_val->type == TYPE_NUMBER) {
+                    printf("=> %g\n", text_val->as.number);
+                }
+            }
+        } else {
+            if (result.message) {
+                printf("Error: %s\n", result.message);
+            }
+        }
+        
+        if (result.message) {
+            free(result.message);
+        }
     }
     
     runtime_free(&runtime);

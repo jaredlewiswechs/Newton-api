@@ -134,7 +134,9 @@ static ASTNode* parse_expression(Parser* parser) {
     while (match(parser, TOKEN_PLUS_OP) || match(parser, TOKEN_AMPERSAND) ||
            match(parser, TOKEN_HASH) || match(parser, TOKEN_PLUS) ||
            match(parser, TOKEN_MINUS) || match(parser, TOKEN_TIMES) ||
-           match(parser, TOKEN_DIV)) {
+           match(parser, TOKEN_DIV) || match(parser, TOKEN_IS) ||
+           match(parser, TOKEN_ABOVE) || match(parser, TOKEN_BELOW) ||
+           match(parser, TOKEN_WITHIN) || match(parser, TOKEN_IN)) {
         TokenType op = parser->previous.type;
         ASTNode* right = parse_primary(parser);
         
@@ -214,12 +216,42 @@ static ASTNode* parse_when_clause(Parser* parser) {
     
     // Parse actions until fin or finfr
     ASTNode** actions = (ASTNode**)malloc(sizeof(ASTNode*) * 64);
+    ASTNode** conditions = (ASTNode**)malloc(sizeof(ASTNode*) * 64);
     size_t action_count = 0;
+    size_t condition_count = 0;
     
     while (!check(parser, TOKEN_FIN) && !check(parser, TOKEN_FINFR) && !check(parser, TOKEN_EOF)) {
         skip_newlines(parser);
         
-        if (match(parser, TOKEN_SET)) {
+        if (match(parser, TOKEN_BLOCK)) {
+            // Parse block statement: block if condition
+            ASTNode* block_node = alloc_node(NODE_BLOCK, parser->previous.line);
+            
+            if (match(parser, TOKEN_IF)) {
+                block_node->as.block.condition = parse_expression(parser);
+                block_node->as.block.actions = NULL;
+                block_node->as.block.action_count = 0;
+                
+                conditions[condition_count++] = block_node;
+            } else {
+                error(parser, "Expected 'if' after 'block'");
+            }
+        } else if (match(parser, TOKEN_MUST)) {
+            // Parse must statement: must condition otherwise "message"
+            ASTNode* must_node = alloc_node(NODE_MUST, parser->previous.line);
+            
+            must_node->as.must.condition = parse_expression(parser);
+            must_node->as.must.error_message = NULL;
+            
+            skip_newlines(parser);
+            if (match(parser, TOKEN_OTHERWISE)) {
+                if (match(parser, TOKEN_STRING)) {
+                    must_node->as.must.error_message = parser->previous.value.string;
+                }
+            }
+            
+            conditions[condition_count++] = must_node;
+        } else if (match(parser, TOKEN_SET)) {
             ASTNode* action = alloc_node(NODE_ACTION_SET, parser->previous.line);
             
             consume(parser, TOKEN_IDENTIFIER, "Expected target");
@@ -248,14 +280,48 @@ static ASTNode* parse_when_clause(Parser* parser) {
             action->as.action_make.new_state = copy_token_string(&parser->previous);
             
             actions[action_count++] = action;
+        } else if (match(parser, TOKEN_CHANGE)) {
+            // Parse change statement: change field by +/- value
+            ASTNode* action = alloc_node(NODE_ACTION_CHANGE, parser->previous.line);
+            
+            consume(parser, TOKEN_IDENTIFIER, "Expected target");
+            char* target = copy_token_string(&parser->previous);
+            
+            if (match(parser, TOKEN_DOT)) {
+                consume(parser, TOKEN_IDENTIFIER, "Expected field name");
+                action->as.action_change.target = target;
+                action->as.action_change.field = copy_token_string(&parser->previous);
+            } else {
+                action->as.action_change.target = NULL;
+                action->as.action_change.field = target;
+            }
+            
+            consume(parser, TOKEN_BY, "Expected 'by' after field");
+            
+            // Parse the operation (+ or -)
+            if (match(parser, TOKEN_PLUS_OP) || match(parser, TOKEN_PLUS)) {
+                action->as.action_change.op = TOKEN_PLUS;
+            } else if (match(parser, TOKEN_MINUS_OP) || match(parser, TOKEN_MINUS)) {
+                action->as.action_change.op = TOKEN_MINUS;
+            } else {
+                error(parser, "Expected '+' or '-' after 'by'");
+            }
+            
+            action->as.action_change.value = parse_expression(parser);
+            actions[action_count++] = action;
         } else if (match(parser, TOKEN_CALC)) {
-            // Simplified calc parsing
+            // Simplified calc parsing - parse as expression and skip
             parse_expression(parser);
-            while (!check(parser, TOKEN_NEWLINE) && !check(parser, TOKEN_EOF)) {
+            while (!check(parser, TOKEN_NEWLINE) && !check(parser, TOKEN_EOF) && !check(parser, TOKEN_AS)) {
                 advance(parser);
             }
-        } else if (match(parser, TOKEN_BLOCK) || match(parser, TOKEN_MUST) ||
-                   match(parser, TOKEN_IF) || match(parser, TOKEN_MEMO)) {
+            if (match(parser, TOKEN_AS)) {
+                // Parse result variable name
+                if (match(parser, TOKEN_IDENTIFIER)) {
+                    // Store calc result variable for future implementation
+                }
+            }
+        } else if (match(parser, TOKEN_IF) || match(parser, TOKEN_MEMO)) {
             // Skip these for simplified parser
             while (!check(parser, TOKEN_NEWLINE) && !check(parser, TOKEN_EOF)) {
                 advance(parser);
@@ -269,6 +335,8 @@ static ASTNode* parse_when_clause(Parser* parser) {
     
     node->as.when.actions = actions;
     node->as.when.action_count = action_count;
+    node->as.when.conditions = conditions;
+    node->as.when.condition_count = condition_count;
     
     // Check for fin or finfr
     if (match(parser, TOKEN_FINFR)) {
