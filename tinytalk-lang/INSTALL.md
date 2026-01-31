@@ -1,5 +1,9 @@
 # TinyTalk Installation Guide
 
+**Turing-Complete C Implementation**
+
+TinyTalk is a Turing-complete programming language with bounded loops, ACID transaction semantics, and deterministic execution. This guide covers installing the native C implementation.
+
 ## Quick Install (Automated)
 
 ### Linux / macOS

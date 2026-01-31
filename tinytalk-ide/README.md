@@ -1,6 +1,6 @@
 # TinyTalk IDE
 
-**No-First Programming Environment with Newton Verification**
+**Turing-Complete Constraint-First Programming Environment**
 
 ```
 ╭──────────────────────────────────────────────────────────╮
@@ -9,15 +9,18 @@
 │   "Define what CANNOT happen."                           │
 │                                                          │
 │   Monaco Editor + Real-time Verification + Ledger        │
+│   Turing Complete with Bounded Loops                     │
 │                                                          │
 ╰──────────────────────────────────────────────────────────╯
 ```
 
 ## Overview
 
-TinyTalk IDE is a browser-based development environment for writing and running TinyTalk programs with real-time constraint verification. It features:
+TinyTalk IDE is a browser-based development environment for writing and running **Turing-complete** TinyTalk programs with real-time constraint verification. It features:
 
-- **Monaco Editor** with TinyTalk syntax highlighting
+- **Monaco Editor** with TinyTalk syntax highlighting (same engine as VS Code)
+- **Turing Complete** computation with bounded loops for guaranteed termination
+- **ACID Semantics** with automatic transaction rollback
 - **Live AST visualization** showing parsed blueprint structure
 - **Real-time verification** (`fin`/`finfr` status)
 - **Immutable ledger** tracking all state changes
@@ -25,47 +28,40 @@ TinyTalk IDE is a browser-based development environment for writing and running 
 
 ---
 
-## Prerequisites
+## 🎯 What You Need
 
-Before installing, ensure you have:
+Before starting, you need **Node.js** installed. That's it!
 
-- **Node.js** (v18 or later recommended)
-- **npm** (comes with Node.js)
-
-### Installing Node.js
-
-#### Windows
-
-1. Download the Windows installer from [nodejs.org](https://nodejs.org/)
-2. Run the installer (`.msi` file)
-3. Follow the installation wizard (accept defaults)
-4. Verify installation by opening **Command Prompt** or **PowerShell**:
-   ```cmd
-   node --version
-   npm --version
-   ```
-
-Alternatively, use **winget** (Windows Package Manager):
-```cmd
-winget install OpenJS.NodeJS.LTS
+### Quick Check
+```bash
+node --version   # Should show v18 or higher
+npm --version    # Should show 9 or higher
 ```
 
-Or use **Chocolatey**:
-```cmd
+### Don't Have Node.js?
+
+**Windows:**
+```powershell
+# Option 1: Download installer
+https://nodejs.org/  (get LTS version)
+
+# Option 2: Use winget
+winget install OpenJS.NodeJS.LTS
+
+# Option 3: Use Chocolatey
 choco install nodejs-lts
 ```
 
-#### macOS
-
-Using Homebrew:
+**macOS:**
 ```bash
+# Option 1: Homebrew
 brew install node
+
+# Option 2: Download from nodejs.org
+https://nodejs.org/
 ```
 
-Or download from [nodejs.org](https://nodejs.org/)
-
-#### Linux (Ubuntu/Debian)
-
+**Linux (Ubuntu/Debian):**
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
@@ -73,236 +69,240 @@ sudo apt-get install -y nodejs
 
 ---
 
-## Installation
-
-### Step 1: Clone the Repository (if you haven't already)
+## 🚀 Installation
 
 ```bash
-git clone https://github.com/jaredlewiswechs/Newton-api.git
-cd Newton-api
-```
-
-### Step 2: Navigate to TinyTalk IDE
-
-```bash
+# 1. Navigate to IDE folder
 cd tinytalk-ide
-```
 
-### Step 3: Install Dependencies
-
-```bash
+# 2. Install dependencies (one time only)
 npm install
+
+# 3. Start the IDE
+npm run dev
 ```
 
-This installs all required packages including:
-- Express (backend server)
-- Vite (frontend build tool)
-- React (UI framework)
-- Monaco Editor (code editor)
-- WebSocket support
+Open your browser to: **http://localhost:5173**
 
 ---
 
-## Running the IDE
+## ✨ Features
 
-### Development Mode (Recommended for First-Time Users)
+The IDE includes:
 
-Development mode runs both the backend server and frontend with hot-reloading:
-
-```bash
-npm run dev
-```
-
-This starts:
-- **Backend server** at `http://localhost:3000`
-- **Frontend dev server** at `http://localhost:5173`
-
-Open your browser to `http://localhost:5173` to use the IDE.
-
-### Production Mode
-
-For production deployment:
-
-```bash
-# Build the frontend
-npm run build
-
-# Start the server
-npm start
-```
-
-The server runs at `http://localhost:3000` serving both API and built frontend.
+✅ **Monaco Editor** - Same engine as VS Code  
+✅ **Turing Complete** - Full computational power with bounded loops  
+✅ **Syntax Highlighting** - All TinyTalk keywords  
+✅ **Autocomplete** - Smart suggestions as you type  
+✅ **Hover Docs** - Hover over keywords for help  
+✅ **Error Markers** - Real-time syntax checking  
+✅ **Code Snippets** - Templates for common patterns  
+✅ **ACID Transactions** - Automatic rollback on constraint violations  
+✅ **Dark Theme** - Easy on the eyes  
+✅ **Live Execution** - Run code in browser (planned)
 
 ---
 
-## Windows-Specific Instructions
+## 📝 Example Programs
 
-### Running from Command Prompt
+Try these in the editor:
 
-```cmd
-cd path\to\Newton-api\tinytalk-ide
-npm install
-npm run dev
-```
-
-### Running from PowerShell
-
-```powershell
-cd path\to\Newton-api\tinytalk-ide
-npm install
-npm run dev
-```
-
-### Running from Git Bash
-
-```bash
-cd /c/path/to/Newton-api/tinytalk-ide
-npm install
-npm run dev
-```
-
-### Troubleshooting Windows Issues
-
-#### Port Already in Use
-
-If you see `EADDRINUSE`, another process is using the port:
-
-```cmd
-# Find the process using port 3000
-netstat -ano | findstr :3000
-
-# Kill the process (replace PID with the actual process ID)
-taskkill /PID <PID> /F
-```
-
-#### Permission Errors
-
-Run your terminal as Administrator, or try:
-
-```cmd
-npm cache clean --force
-npm install
-```
-
-#### Long Path Issues
-
-Enable long paths in Windows (run as Administrator):
-
-```cmd
-git config --system core.longpaths true
-```
-
-#### Node.js Not Recognized
-
-If `node` is not recognized, add Node.js to your PATH:
-
-1. Open **System Properties** → **Advanced** → **Environment Variables**
-2. Under **System Variables**, find `Path` and click **Edit**
-3. Add the Node.js installation directory (typically `C:\Program Files\nodejs\`)
-4. Click **OK** and restart your terminal
-
----
-
-## Quick Start Guide
-
-Once the IDE is running:
-
-1. **Write TinyTalk code** in the editor (left panel)
-2. **View the AST** in the center panel
-3. **Run forges** using the Run button
-4. **Check the ledger** to see state history (right panel)
-5. **Load examples** from the Examples dropdown
-
-### Example: Bank Account
-
+### Hello World
 ```tinytalk
-blueprint BankAccount {
-    field balance: 100.0
+blueprint Greeter
+  starts name at "World"
 
-    law no_overdraft {
-        when(balance < 0, finfr)
-    }
-
-    forge deposit(amount) {
-        balance = balance + amount
-        reply("Deposited $" + amount)
-    }
-
-    forge withdraw(amount) {
-        balance = balance - amount
-        reply("Withdrew $" + amount)
-    }
-}
+when say_hello
+  set Screen.text to "Hello, " & name
+finfr "Greeting displayed"
 ```
 
-Try running:
-1. `deposit(50)` → ✓ fin
-2. `withdraw(30)` → ✓ fin
-3. `withdraw(200)` → ✗ finfr (blocked by `no_overdraft`)
+### Calculator
+```tinytalk
+blueprint Calculator
+  starts result at 0
+
+when add(a, b)
+  calc a plus b as sum
+  set result to sum
+finfr result
+```
+
+### Bank Account (ACID)
+```tinytalk
+blueprint BankAccount
+  starts balance at 1000
+
+when withdraw(amount)
+  must balance is above amount
+    otherwise "Insufficient funds"
+  
+  calc balance minus amount as new_balance
+  set balance to new_balance
+finfr "Withdrawal successful"
+```
+
+### Game Character (Turing Complete)
+```tinytalk
+blueprint Player
+  starts health at 100
+  starts max_health at 100
+  can be wanted
+  can be dead
+
+when take_damage(amount)
+  must health is above 0
+    otherwise "Already dead"
+  
+  calc health minus amount as new_health
+  set health to new_health
+  
+  block if health is below 0
+finfr "Damage applied"
+
+when heal(amount)
+  calc health plus amount as new_health
+  
+  block if new_health is above max_health
+  
+  set health to new_health
+finfr "Healed"
+```
 
 ---
 
-## Project Structure
+## 🛠️ Development
 
+### Project Structure
 ```
 tinytalk-ide/
-├── server/                 # Backend server
-│   ├── index.js           # Express + WebSocket server
-│   └── engine/            # TinyTalk engine
-│       ├── tokenizer.js   # Lexical analysis
-│       ├── parser.js      # AST generation
-│       ├── runner.js      # Verification & execution
-│       └── ledger.js      # Immutable state history
-│
-├── src/                    # Frontend (React + Vite)
-│   ├── App.jsx            # Main application
-│   ├── main.jsx           # Entry point
-│   ├── components/        # UI components
-│   │   ├── Editor.jsx     # Monaco editor wrapper
-│   │   └── ASTPanel.jsx   # AST visualization
-│   ├── language/          # TinyTalk language support
-│   │   └── tinytalk.js    # Syntax highlighting
-│   └── styles/            # CSS styles
-│       └── ide.css        # IDE styling
-│
-├── examples/               # Example TinyTalk programs
-├── index.html             # HTML entry point
-├── package.json           # Dependencies & scripts
-└── vite.config.mjs        # Vite configuration
+├── server/              # Backend (optional)
+│   └── index.js        # Express + WebSocket
+├── src/
+│   ├── App.jsx         # Main UI
+│   ├── components/
+│   │   └── Editor.jsx  # Monaco wrapper
+│   └── language/
+│       └── tinytalk.js # Language definition ⭐
+├── package.json
+└── vite.config.js
+```
+
+### Key File: `src/language/tinytalk.js`
+
+This file defines ALL editor features:
+- Syntax highlighting (tokenizer)
+- Autocomplete (completion provider)
+- Hover docs (hover provider)
+- Theme colors
+
+**Updated for C implementation** with keywords like `blueprint`, `starts`, `when`, `set`, `calc`, `must`, `block`, `finfr`.
+
+### Customizing the Editor
+
+**Add a new keyword:**
+```javascript
+// In tinytalk.js
+keywords: [
+  'blueprint', 'starts', 'when',
+  'yournewkeyword',  // Add here
+],
+```
+
+**Add autocomplete:**
+```javascript
+suggestions.push({
+  label: 'yournewkeyword',
+  kind: monaco.languages.CompletionItemKind.Keyword,
+  insertText: 'yournewkeyword ${1:arg}',
+  insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+  documentation: 'What it does',
+});
+```
+
+**Change colors:**
+```javascript
+// In defineTheme()
+{ token: 'keyword', foreground: 'FF0000' },  // Red keywords
 ```
 
 ---
 
-## API Endpoints
+## 🐛 Troubleshooting
 
-The server exposes these REST endpoints:
+### "npm: command not found"
+Install Node.js (see above).
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/parse` | POST | Parse source, return AST |
-| `/api/verify` | POST | Verify a forge action |
-| `/api/run` | POST | Run a forge (verify + execute) |
-| `/api/run-sequence` | POST | Run multiple forges |
-| `/api/state/:blueprint` | GET | Get current state |
-| `/api/omega/:blueprint` | GET | Get constraint space |
-| `/api/ledger/:blueprint` | GET | Get ledger entries |
-| `/api/reset/:blueprint` | POST | Reset to initial state |
-| `/api/blueprints` | GET | List loaded blueprints |
-| `/api/examples` | GET | List example files |
-| `/api/examples/:name` | GET | Get example source |
+### "Port 5173 already in use"
+```bash
+# Kill the process
+lsof -ti:5173 | xargs kill  # macOS/Linux
+# Or change port in vite.config.js
+```
 
-WebSocket available at `ws://localhost:3000/ws` for streaming logs.
+### Changes not showing?
+```bash
+# Clear cache
+rm -rf node_modules
+npm install
+npm run dev
+```
+
+### Windows: "cannot find module"
+```cmd
+# Clean install
+rmdir /s /q node_modules
+del package-lock.json
+npm install
+```
 
 ---
 
-## Need Help?
+## 📚 Learn More
 
-| Resource | Link |
-|----------|------|
-| TinyTalk Language Guide | [TINYTALK_PROGRAMMING_GUIDE.md](../TINYTALK_PROGRAMMING_GUIDE.md) |
-| TinyTalk Bible | [TINYTALK_BIBLE.md](../TINYTALK_BIBLE.md) |
-| Getting Started | [GETTING_STARTED.md](../GETTING_STARTED.md) |
-| Developer Guide | [DEVELOPERS.md](../DEVELOPERS.md) |
+- **Monaco Editor Docs**: https://microsoft.github.io/monaco-editor/
+- **TinyTalk Spec**: See `../tinytalk-lang/SPEC.md`
+- **Language Reference**: See `../tinytalk-lang/README.md`
+- **TinyTalk Guide**: See `../TINYTALK_PROGRAMMING_GUIDE.md`
+
+---
+
+## 🎓 Language Features
+
+TinyTalk is **Turing complete** with bounded loops, meaning:
+- Can compute anything a Turing machine can compute
+- Guaranteed to terminate (no infinite loops)
+- Deterministic execution
+- ACID transaction semantics
+
+### Core Keywords
+
+| Keyword | Purpose |
+|---------|---------|
+| `blueprint` | Define a new type |
+| `starts` | Declare a field with initial value |
+| `can be` | Declare a possible state |
+| `when` | Define an event handler |
+| `set` | Assign a value |
+| `calc` | Perform calculation |
+| `must` | Assert constraint (rollback if false) |
+| `block` | Prevent execution if condition true |
+| `finfr` | Final termination (commit transaction) |
+
+### Operators
+
+**Arithmetic:** `plus`, `minus`, `times`, `div`, `mod`  
+**Comparison:** `is`, `above`, `below`, `within`  
+**String:** `&` (concatenation), `+` (join with space)
+
+### Standard Kit
+
+Pre-built blueprints available:
+- **Screen** - Display output (`text`, `color`, `brightness`)
+- **Clock** - Time management (`time_of_day`, `day_of_week`, `paused`)
+- **Random** - Random values (`number`, `percent`, `dice`)
+- **Input** - User input (`mouse_x`, `mouse_y`, `keys`)
+- **Storage** - Persistence (`save_file`)
 
 ---
 
