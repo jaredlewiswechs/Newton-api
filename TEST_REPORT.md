@@ -102,11 +102,11 @@ Tests ALL features and 118+ endpoints in 30 seconds:
 ✅ Chatbot Compile  
 ✅ Chatbot Classify  
 
-#### Jester Analyzer (2 tests) - Skipped
-⊘ Jester Analyze (endpoint shadowed by static mount)  
-⊘ Jester CDL (endpoint shadowed by static mount)  
+#### Jester Analyzer (2 tests) - 100%
+✅ Jester Analyze  
+✅ Jester CDL  
 
-**Note:** Jester endpoints exist but are currently shadowed by the static file mount. This is a known configuration issue that doesn't affect functionality - the Jester analyzer works, just not via these specific API endpoints.
+**Note:** Fixed route ordering - Jester API endpoints now properly accessible.
 
 #### Merkle Proofs & Anchoring (2 tests) - 100%
 ✅ Latest Merkle Anchor  
@@ -301,10 +301,7 @@ All 8 core components operational:
 ## Known Issues
 
 ### Minor Issues
-1. **Jester API Endpoints** - POST endpoints `/jester/analyze` and `/jester/cdl` are shadowed by static file mount
-   - **Impact:** Low - Jester functionality works, just not via these specific endpoints
-   - **Workaround:** Use Jester via the web interface at `/jester` or directly via the Python module
-   - **Fix:** Reorder endpoint definitions before static mount (low priority)
+1. ~~**Jester API Endpoints** - Fixed~~ ✅ Route ordering corrected, all Jester endpoints now accessible
 
 2. **Vault Retrieve Edge Case** - Vault retrieve requires exact identity match across sessions
    - **Impact:** Very Low - Works correctly when identity is consistent

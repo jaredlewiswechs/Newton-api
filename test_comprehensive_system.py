@@ -679,15 +679,45 @@ def run_jester_tests(results: TestResult) -> List[str]:
     print_section("JESTER ANALYZER")
     details = []
     
-    # Note: Jester endpoints are currently shadowed by static file mount
-    # This is a known configuration issue - the POST endpoints exist but are
-    # not accessible because StaticFiles mount takes precedence
+    # Test Jester Analyze
+    success, result = test_endpoint(
+        "Jester Analyze",
+        "/jester/analyze",
+        method="POST",
+        data={
+            "code": "def validate(x):\n    if x <= 0:\n        raise ValueError('Must be positive')\n    return x * 2",
+            "language": "python"
+        }
+    )
+    if success and result:
+        elapsed_ms = result.get("elapsed_us", 0) / 1000
+        print(f"{GREEN}✓{RESET} Jester Analyze: {elapsed_ms:.2f}ms")
+        results.add_pass()
+        details.append(f"   Jester Analyze: {elapsed_ms:.2f}ms")
+    else:
+        print(f"{RED}✗{RESET} Jester Analyze: Failed")
+        results.add_fail("Jester Analyze")
+        details.append("   Jester Analyze: FAILED")
     
-    print(f"{YELLOW}⊘{RESET} Jester Analyze: Skipped (endpoint shadowed by static mount)")
-    print(f"{YELLOW}⊘{RESET} Jester CDL: Skipped (endpoint shadowed by static mount)")
-    results.add_skip()
-    results.add_skip()
-    details.append("   Jester endpoints exist but are shadowed by static mount")
+    # Test Jester CDL
+    success, result = test_endpoint(
+        "Jester CDL",
+        "/jester/cdl",
+        method="POST",
+        data={
+            "code": "def test(x):\n    assert x > 0\n    return x",
+            "language": "python"
+        }
+    )
+    if success and result:
+        elapsed_ms = result.get("elapsed_us", 0) / 1000
+        print(f"{GREEN}✓{RESET} Jester CDL: {elapsed_ms:.2f}ms")
+        results.add_pass()
+        details.append(f"   Jester CDL: {elapsed_ms:.2f}ms")
+    else:
+        print(f"{RED}✗{RESET} Jester CDL: Failed")
+        results.add_fail("Jester CDL")
+        details.append("   Jester CDL: FAILED")
     
     return details
 

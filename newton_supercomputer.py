@@ -701,6 +701,266 @@ async def parccloud_gateway_middleware(request: Request, call_next):
             }
         )
 
+
+class JesterAnalyzeRequest(BaseModel):
+    """Request to analyze source code for constraints."""
+    code: str
+    language: Optional[str] = None  # Auto-detect if not provided
+
+
+class JesterCdlRequest(BaseModel):
+    """Request to get CDL output for source code."""
+    code: str
+    language: Optional[str] = None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JESTER ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/jester/analyze")
+async def jester_analyze(request: JesterAnalyzeRequest):
+    """
+    Analyze source code to extract constraints.
+
+    Jester is a deterministic code analyzer that extracts:
+    - Guard conditions (if statements that protect against invalid states)
+    - Assertions (explicit requirements that must be true)
+    - Early exits (return statements that prevent further execution)
+    - Null checks (validation against null/nil/None values)
+    - Exception paths (conditions that lead to thrown errors)
+
+    Example:
+        POST /jester/analyze
+        {
+            "code": "def withdraw(amount, balance):\\n    if amount <= 0:\\n        raise ValueError('Invalid')\\n    if amount > balance:\\n        return None",
+            "language": "python"
+        }
+
+    Response:
+        {
+            "source_language": "python",
+            "constraints": [...],
+            "forbidden_states": [...],
+            "required_invariants": [...],
+            "summary": {"total_constraints": 2, "by_kind": {...}}
+        }
+    """
+    start = time.perf_counter()
+
+    try:
+        # Use the Jester analyzer
+        jester = Jester(request.code, SourceLanguage(request.language) if request.language else None)
+        result = jester.analyze().to_dict()
+
+        elapsed_us = int((time.perf_counter() - start) * 1_000_000)
+
+        # Log to ledger
+        ledger.append(
+            operation="jester_analyze",
+            payload={
+                "language": result.get("source_language"),
+                "code_length": len(request.code),
+                "constraint_count": len(result.get("constraints", []))
+            },
+            result="pass",
+            metadata={"elapsed_us": elapsed_us}
+        )
+
+        return {
+            **result,
+            "elapsed_us": elapsed_us,
+            "engine": ENGINE
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@app.post("/jester/cdl")
+async def jester_cdl(request: JesterCdlRequest):
+    """
+    Generate CDL (Constraint Definition Language) output from source code.
+
+    CDL is Newton's formal constraint representation format that can be
+    used for verification and reasoning.
+
+    Example:
+        POST /jester/cdl
+        {
+            "code": "def validate(x):\\n    assert x > 0\\n    if x > 100:\\n        return None",
+            "language": "python"
+        }
+
+    Response:
+        {
+            "cdl": "// Newton Cartridge - Generated from python\\n...",
+            "constraint_count": 2
+        }
+    """
+    start = time.perf_counter()
+
+    try:
+        jester = Jester(request.code, SourceLanguage(request.language) if request.language else None)
+        cdl_output = jester.analyze().to_cdl()
+
+        elapsed_us = int((time.perf_counter() - start) * 1_000_000)
+
+        return {
+            "cdl": cdl_output,
+            "constraint_count": len(jester.get_constraints()),
+            "source_language": jester.language.value,
+            "elapsed_us": elapsed_us,
+            "engine": ENGINE
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CDL generation failed: {str(e)}")
+
+
+@app.get("/jester/info")
+async def jester_info():
+    """
+    Get Jester analyzer capabilities and documentation.
+
+    Returns information about:
+    - Supported programming languages
+    - Types of constraints that can be extracted
+    - Available features
+    - API endpoints
+    """
+    return {
+        **JESTER_INFO,
+        "endpoints": [
+            {
+                "method": "POST",
+                "path": "/jester/analyze",
+                "description": "Analyze code to extract constraints"
+            },
+            {
+                "method": "POST",
+                "path": "/jester/cdl",
+                "description": "Generate CDL output from code"
+            },
+            {
+                "method": "GET",
+                "path": "/jester/info",
+                "description": "This info endpoint"
+            }
+        ],
+        "examples": {
+            "analyze_python": {
+                "endpoint": "POST /jester/analyze",
+                "body": {
+                    "code": "def withdraw(amount, balance):\n    if amount <= 0:\n        raise ValueError('Amount must be positive')\n    if amount > balance:\n        return None\n    return balance - amount",
+                    "language": "python"
+                }
+            },
+            "analyze_swift": {
+                "endpoint": "POST /jester/analyze",
+                "body": {
+                    "code": "func process(_ value: Int?) -> Int {\n    guard let v = value else { return 0 }\n    precondition(v >= 0)\n    return v * 2\n}",
+                    "language": "swift"
+                }
+            }
+        },
+        "engine": ENGINE
+    }
+
+
+@app.get("/jester/languages")
+async def jester_languages():
+    """
+    Get list of supported programming languages.
+    """
+    return {
+        "languages": [
+            {"id": "python", "name": "Python", "extensions": [".py"]},
+            {"id": "javascript", "name": "JavaScript", "extensions": [".js", ".mjs"]},
+            {"id": "typescript", "name": "TypeScript", "extensions": [".ts", ".tsx"]},
+            {"id": "swift", "name": "Swift", "extensions": [".swift"]},
+            {"id": "objc", "name": "Objective-C", "extensions": [".m", ".mm"]},
+            {"id": "c", "name": "C", "extensions": [".c", ".h"]},
+            {"id": "cpp", "name": "C++", "extensions": [".cpp", ".cc", ".hpp"]},
+            {"id": "java", "name": "Java", "extensions": [".java"]},
+            {"id": "go", "name": "Go", "extensions": [".go"]},
+            {"id": "rust", "name": "Rust", "extensions": [".rs"]},
+            {"id": "ruby", "name": "Ruby", "extensions": [".rb"]},
+        ],
+        "default": "auto-detect",
+        "engine": ENGINE
+    }
+
+
+@app.get("/jester/constraint-kinds")
+async def jester_constraint_kinds():
+    """
+    Get list of constraint types that Jester can extract.
+    """
+    return {
+        "kinds": [
+            {
+                "id": "guard",
+                "name": "Guard",
+                "description": "If statements that protect against invalid states",
+                "example": "if x <= 0: return"
+            },
+            {
+                "id": "assertion",
+                "name": "Assertion",
+                "description": "Explicit requirements that must be true",
+                "example": "assert x > 0"
+            },
+            {
+                "id": "early_exit",
+                "name": "Early Exit",
+                "description": "Return statements that prevent further execution",
+                "example": "if invalid: return None"
+            },
+            {
+                "id": "null_check",
+                "name": "Null Check",
+                "description": "Validation against null/nil/None values",
+                "example": "if user is None: raise Error"
+            },
+            {
+                "id": "range_check",
+                "name": "Range Check",
+                "description": "Bounds validation for numeric values",
+                "example": "if index >= len(list): return"
+            },
+            {
+                "id": "exception",
+                "name": "Exception",
+                "description": "Conditions that lead to thrown errors",
+                "example": "raise ValueError('invalid')"
+            },
+            {
+                "id": "precondition",
+                "name": "Precondition",
+                "description": "Requirements that must be true before execution",
+                "example": "precondition(x > 0)"
+            },
+            {
+                "id": "postcondition",
+                "name": "Postcondition",
+                "description": "Guarantees about the state after execution",
+                "example": "// ensures result >= 0"
+            },
+            {
+                "id": "invariant",
+                "name": "Invariant",
+                "description": "Conditions that must always be true",
+                "example": "// invariant: count >= 0"
+            },
+        ],
+        "engine": ENGINE
+    }
+
 # Mount static files for all frontends
 ROOT_DIR = Path(__file__).parent
 FRONTEND_DIR = ROOT_DIR / "frontend"
@@ -3446,264 +3706,6 @@ async def interface_builder_info():
 # JESTER MODELS
 # ─────────────────────────────────────────────────────────────────────────────
 
-class JesterAnalyzeRequest(BaseModel):
-    """Request to analyze source code for constraints."""
-    code: str
-    language: Optional[str] = None  # Auto-detect if not provided
-
-
-class JesterCdlRequest(BaseModel):
-    """Request to get CDL output for source code."""
-    code: str
-    language: Optional[str] = None
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# JESTER ENDPOINTS
-# ─────────────────────────────────────────────────────────────────────────────
-
-@app.post("/jester/analyze")
-async def jester_analyze(request: JesterAnalyzeRequest):
-    """
-    Analyze source code to extract constraints.
-
-    Jester is a deterministic code analyzer that extracts:
-    - Guard conditions (if statements that protect against invalid states)
-    - Assertions (explicit requirements that must be true)
-    - Early exits (return statements that prevent further execution)
-    - Null checks (validation against null/nil/None values)
-    - Exception paths (conditions that lead to thrown errors)
-
-    Example:
-        POST /jester/analyze
-        {
-            "code": "def withdraw(amount, balance):\\n    if amount <= 0:\\n        raise ValueError('Invalid')\\n    if amount > balance:\\n        return None",
-            "language": "python"
-        }
-
-    Response:
-        {
-            "source_language": "python",
-            "constraints": [...],
-            "forbidden_states": [...],
-            "required_invariants": [...],
-            "summary": {"total_constraints": 2, "by_kind": {...}}
-        }
-    """
-    start = time.perf_counter()
-
-    try:
-        # Use the Jester analyzer
-        jester = Jester(request.code, SourceLanguage(request.language) if request.language else None)
-        result = jester.analyze().to_dict()
-
-        elapsed_us = int((time.perf_counter() - start) * 1_000_000)
-
-        # Log to ledger
-        ledger.append(
-            operation="jester_analyze",
-            payload={
-                "language": result.get("source_language"),
-                "code_length": len(request.code),
-                "constraint_count": len(result.get("constraints", []))
-            },
-            result="pass",
-            metadata={"elapsed_us": elapsed_us}
-        )
-
-        return {
-            **result,
-            "elapsed_us": elapsed_us,
-            "engine": ENGINE
-        }
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
-
-@app.post("/jester/cdl")
-async def jester_cdl(request: JesterCdlRequest):
-    """
-    Generate CDL (Constraint Definition Language) output from source code.
-
-    CDL is Newton's formal constraint representation format that can be
-    used for verification and reasoning.
-
-    Example:
-        POST /jester/cdl
-        {
-            "code": "def validate(x):\\n    assert x > 0\\n    if x > 100:\\n        return None",
-            "language": "python"
-        }
-
-    Response:
-        {
-            "cdl": "// Newton Cartridge - Generated from python\\n...",
-            "constraint_count": 2
-        }
-    """
-    start = time.perf_counter()
-
-    try:
-        jester = Jester(request.code, SourceLanguage(request.language) if request.language else None)
-        cdl_output = jester.analyze().to_cdl()
-
-        elapsed_us = int((time.perf_counter() - start) * 1_000_000)
-
-        return {
-            "cdl": cdl_output,
-            "constraint_count": len(jester.get_constraints()),
-            "source_language": jester.language.value,
-            "elapsed_us": elapsed_us,
-            "engine": ENGINE
-        }
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"CDL generation failed: {str(e)}")
-
-
-@app.get("/jester/info")
-async def jester_info():
-    """
-    Get Jester analyzer capabilities and documentation.
-
-    Returns information about:
-    - Supported programming languages
-    - Types of constraints that can be extracted
-    - Available features
-    - API endpoints
-    """
-    return {
-        **JESTER_INFO,
-        "endpoints": [
-            {
-                "method": "POST",
-                "path": "/jester/analyze",
-                "description": "Analyze code to extract constraints"
-            },
-            {
-                "method": "POST",
-                "path": "/jester/cdl",
-                "description": "Generate CDL output from code"
-            },
-            {
-                "method": "GET",
-                "path": "/jester/info",
-                "description": "This info endpoint"
-            }
-        ],
-        "examples": {
-            "analyze_python": {
-                "endpoint": "POST /jester/analyze",
-                "body": {
-                    "code": "def withdraw(amount, balance):\n    if amount <= 0:\n        raise ValueError('Amount must be positive')\n    if amount > balance:\n        return None\n    return balance - amount",
-                    "language": "python"
-                }
-            },
-            "analyze_swift": {
-                "endpoint": "POST /jester/analyze",
-                "body": {
-                    "code": "func process(_ value: Int?) -> Int {\n    guard let v = value else { return 0 }\n    precondition(v >= 0)\n    return v * 2\n}",
-                    "language": "swift"
-                }
-            }
-        },
-        "engine": ENGINE
-    }
-
-
-@app.get("/jester/languages")
-async def jester_languages():
-    """
-    Get list of supported programming languages.
-    """
-    return {
-        "languages": [
-            {"id": "python", "name": "Python", "extensions": [".py"]},
-            {"id": "javascript", "name": "JavaScript", "extensions": [".js", ".mjs"]},
-            {"id": "typescript", "name": "TypeScript", "extensions": [".ts", ".tsx"]},
-            {"id": "swift", "name": "Swift", "extensions": [".swift"]},
-            {"id": "objc", "name": "Objective-C", "extensions": [".m", ".mm"]},
-            {"id": "c", "name": "C", "extensions": [".c", ".h"]},
-            {"id": "cpp", "name": "C++", "extensions": [".cpp", ".cc", ".hpp"]},
-            {"id": "java", "name": "Java", "extensions": [".java"]},
-            {"id": "go", "name": "Go", "extensions": [".go"]},
-            {"id": "rust", "name": "Rust", "extensions": [".rs"]},
-            {"id": "ruby", "name": "Ruby", "extensions": [".rb"]},
-        ],
-        "default": "auto-detect",
-        "engine": ENGINE
-    }
-
-
-@app.get("/jester/constraint-kinds")
-async def jester_constraint_kinds():
-    """
-    Get list of constraint types that Jester can extract.
-    """
-    return {
-        "kinds": [
-            {
-                "id": "guard",
-                "name": "Guard",
-                "description": "If statements that protect against invalid states",
-                "example": "if x <= 0: return"
-            },
-            {
-                "id": "assertion",
-                "name": "Assertion",
-                "description": "Explicit requirements that must be true",
-                "example": "assert x > 0"
-            },
-            {
-                "id": "early_exit",
-                "name": "Early Exit",
-                "description": "Return statements that prevent further execution",
-                "example": "if invalid: return None"
-            },
-            {
-                "id": "null_check",
-                "name": "Null Check",
-                "description": "Validation against null/nil/None values",
-                "example": "if user is None: raise Error"
-            },
-            {
-                "id": "range_check",
-                "name": "Range Check",
-                "description": "Bounds validation for numeric values",
-                "example": "if index >= len(list): return"
-            },
-            {
-                "id": "exception",
-                "name": "Exception",
-                "description": "Conditions that lead to thrown errors",
-                "example": "raise ValueError('invalid')"
-            },
-            {
-                "id": "precondition",
-                "name": "Precondition",
-                "description": "Requirements that must be true before execution",
-                "example": "precondition(x > 0)"
-            },
-            {
-                "id": "postcondition",
-                "name": "Postcondition",
-                "description": "Guarantees about the state after execution",
-                "example": "// ensures result >= 0"
-            },
-            {
-                "id": "invariant",
-                "name": "Invariant",
-                "description": "Conditions that must always be true",
-                "example": "// invariant: count >= 0"
-            },
-        ],
-        "engine": ENGINE
-    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
