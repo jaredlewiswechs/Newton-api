@@ -358,18 +358,18 @@ Value runtime_evaluate_expression(Runtime* rt, ASTNode* expr) {
             } else if (expr->as.binary_op.op == TOKEN_HASH) {
                 // String interpolation: "text #var" or "#var"
                 // For now, implement as concatenation with conversion
-                char buffer[1024];
+                char left_buf[512];
+                char right_buf[512];
                 const char* left_str = "";
                 const char* right_str = "";
                 
                 if (left.type == TYPE_STRING) {
                     left_str = left.as.string;
                 } else if (left.type == TYPE_NUMBER) {
-                    snprintf(buffer, sizeof(buffer), "%g", left.as.number);
-                    left_str = buffer;
+                    snprintf(left_buf, sizeof(left_buf), "%g", left.as.number);
+                    left_str = left_buf;
                 }
                 
-                char right_buf[512];
                 if (right.type == TYPE_STRING) {
                     right_str = right.as.string;
                 } else if (right.type == TYPE_NUMBER) {

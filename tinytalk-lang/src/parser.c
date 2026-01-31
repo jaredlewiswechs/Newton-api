@@ -14,6 +14,7 @@ Builds AST from token stream
 static ASTNode* parse_expression(Parser* parser);
 static ASTNode* parse_primary(Parser* parser);
 static void advance(Parser* parser);
+static void synchronize(Parser* parser);
 
 static void error_at(Parser* parser, Token* token, const char* message) {
     if (parser->panic_mode) return;
