@@ -272,6 +272,25 @@ Value runtime_evaluate_expression(Runtime* rt, ASTNode* expr) {
             return value_null();
         }
         
+        case NODE_FIELD_ACCESS: {
+            // Evaluate field access (e.g., Screen.text)
+            const char* object_name = expr->as.field_access.object->as.identifier.name;
+            const char* field_name = expr->as.field_access.field;
+            
+            // Find the instance
+            for (size_t i = 0; i < rt->instance_count; i++) {
+                if (strcmp(rt->instances[i]->blueprint->name, object_name) == 0) {
+                    // Find the field
+                    for (size_t j = 0; j < rt->instances[i]->blueprint->field_count; j++) {
+                        if (strcmp(rt->instances[i]->blueprint->fields[j]->as.field.name, field_name) == 0) {
+                            return value_copy(&rt->instances[i]->field_values[j]);
+                        }
+                    }
+                }
+            }
+            return value_null();
+        }
+        
         case NODE_BINARY_OP: {
             Value left = runtime_evaluate_expression(rt, expr->as.binary_op.left);
             Value right = runtime_evaluate_expression(rt, expr->as.binary_op.right);
@@ -286,9 +305,17 @@ Value runtime_evaluate_expression(Runtime* rt, ASTNode* expr) {
                 } else if (left.type == TYPE_STRING || right.type == TYPE_STRING) {
                     // Join with space
                     char buffer[1024];
-                    snprintf(buffer, sizeof(buffer), "%s %s",
-                            left.type == TYPE_STRING ? left.as.string : "",
-                            right.type == TYPE_STRING ? right.as.string : "");
+                    const char* left_str = "";
+                    const char* right_str = "";
+                    
+                    if (left.type == TYPE_STRING) {
+                        left_str = left.as.string;
+                    }
+                    if (right.type == TYPE_STRING) {
+                        right_str = right.as.string;
+                    }
+                    
+                    snprintf(buffer, sizeof(buffer), "%s %s", left_str, right_str);
                     value_free(&left);
                     value_free(&right);
                     return value_string(buffer);
@@ -298,6 +325,23 @@ Value runtime_evaluate_expression(Runtime* rt, ASTNode* expr) {
                 if (left.type == TYPE_STRING && right.type == TYPE_STRING) {
                     char buffer[1024];
                     snprintf(buffer, sizeof(buffer), "%s%s", left.as.string, right.as.string);
+                    value_free(&left);
+                    value_free(&right);
+                    return value_string(buffer);
+                } else if (left.type == TYPE_STRING || right.type == TYPE_STRING) {
+                    // Handle string with non-string
+                    char buffer[1024];
+                    const char* left_str = "";
+                    const char* right_str = "";
+                    
+                    if (left.type == TYPE_STRING) {
+                        left_str = left.as.string;
+                    }
+                    if (right.type == TYPE_STRING) {
+                        right_str = right.as.string;
+                    }
+                    
+                    snprintf(buffer, sizeof(buffer), "%s%s", left_str, right_str);
                     value_free(&left);
                     value_free(&right);
                     return value_string(buffer);
@@ -387,32 +431,75 @@ Result runtime_execute_when(Runtime* rt, Instance* inst, const char* when_name, 
             // Begin transaction for ACID semantics
             runtime_begin_transaction(inst);
             
+            bool should_rollback = false;
+            
+            // Set the current instance context for field lookups
+            Runtime* runtime_ctx = rt;
+            Instance* current_inst = inst;
+            
             // Execute actions
             for (size_t j = 0; j < when->as.when.action_count; j++) {
                 ASTNode* action = when->as.when.actions[j];
                 
                 if (action->type == NODE_ACTION_SET) {
-                    Value new_value = runtime_evaluate_expression(rt, action->as.action_set.value);
+                    // Temporarily set variables for fields from current instance
+                    for (size_t k = 0; k < current_inst->blueprint->field_count; k++) {
+                        runtime_set_variable(runtime_ctx, 
+                                           current_inst->blueprint->fields[k]->as.field.name,
+                                           value_copy(&current_inst->field_values[k]));
+                    }
                     
-                    // Find the field and set it
-                    for (size_t k = 0; k < inst->blueprint->field_count; k++) {
-                        if (strcmp(inst->blueprint->fields[k]->as.field.name, action->as.action_set.field) == 0) {
-                            value_free(&inst->field_values[k]);
-                            inst->field_values[k] = new_value;
-                            break;
+                    Value new_value = runtime_evaluate_expression(runtime_ctx, action->as.action_set.value);
+                    
+                    // Check if it's a field access (target.field) or just a field
+                    if (action->as.action_set.target) {
+                        // It's target.field - find the target instance
+                        Instance* target_inst = NULL;
+                        for (size_t k = 0; k < runtime_ctx->instance_count; k++) {
+                            if (strcmp(runtime_ctx->instances[k]->blueprint->name, action->as.action_set.target) == 0) {
+                                target_inst = runtime_ctx->instances[k];
+                                break;
+                            }
+                        }
+                        
+                        if (target_inst) {
+                            // Find the field and set it
+                            for (size_t k = 0; k < target_inst->blueprint->field_count; k++) {
+                                if (strcmp(target_inst->blueprint->fields[k]->as.field.name, action->as.action_set.field) == 0) {
+                                    value_free(&target_inst->field_values[k]);
+                                    target_inst->field_values[k] = new_value;
+                                    break;
+                                }
+                            }
+                        } else {
+                            value_free(&new_value);
+                        }
+                    } else {
+                        // Find the field and set it on current instance
+                        for (size_t k = 0; k < current_inst->blueprint->field_count; k++) {
+                            if (strcmp(current_inst->blueprint->fields[k]->as.field.name, action->as.action_set.field) == 0) {
+                                value_free(&current_inst->field_values[k]);
+                                current_inst->field_values[k] = new_value;
+                                break;
+                            }
                         }
                     }
                 }
             }
             
-            // Commit transaction
-            runtime_commit_transaction(inst);
-            
-            result.success = true;
-            if (when->as.when.result_message) {
-                result.message = strdup(when->as.when.result_message);
+            // Commit or rollback transaction
+            if (should_rollback) {
+                runtime_rollback_transaction(current_inst);
+                result.success = false;
+                result.message = strdup("Transaction rolled back");
             } else {
-                result.message = strdup("When clause executed successfully");
+                runtime_commit_transaction(current_inst);
+                result.success = true;
+                if (when->as.when.result_message) {
+                    result.message = strdup(when->as.when.result_message);
+                } else {
+                    result.message = strdup("When clause executed successfully");
+                }
             }
             break;
         }

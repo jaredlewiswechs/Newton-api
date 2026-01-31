@@ -35,6 +35,13 @@ void stdlib_init(Runtime* rt) {
     stdlib_register_input(rt);
     stdlib_register_screen(rt);
     stdlib_register_storage(rt);
+    
+    // Create singleton instances for standard library blueprints
+    runtime_create_instance(rt, "Clock");
+    runtime_create_instance(rt, "Random");
+    runtime_create_instance(rt, "Input");
+    runtime_create_instance(rt, "Screen");
+    runtime_create_instance(rt, "Storage");
 }
 
 void stdlib_register_clock(Runtime* rt) {
@@ -258,6 +265,14 @@ void stdlib_register_storage(Runtime* rt) {
 }
 
 ScreenInstance* stdlib_get_screen(Runtime* rt) {
+    // Look for existing Screen instance
+    for (size_t i = 0; i < rt->instance_count; i++) {
+        if (strcmp(rt->instances[i]->blueprint->name, "Screen") == 0) {
+            return (ScreenInstance*)rt->instances[i];
+        }
+    }
+    
+    // Create Screen instance if it doesn't exist
     if (!global_screen) {
         Instance* inst = runtime_create_instance(rt, "Screen");
         global_screen = (ScreenInstance*)inst;

@@ -101,8 +101,25 @@ Result tinytalk_run_string(const char* source) {
     // Initialize standard library
     stdlib_init(&runtime);
     
-    // Execute the AST
+    // Execute the AST (define the blueprint)
     result = runtime_execute(&runtime, ast);
+    
+    if (result.success && ast->type == NODE_BLUEPRINT) {
+        // Create an instance of the blueprint
+        Instance* inst = runtime_create_instance(&runtime, ast->as.blueprint.name);
+        
+        if (inst && inst->blueprint->when_count > 0) {
+            // Execute the first when clause if it exists
+            Result when_result = runtime_execute_when(&runtime, inst, 
+                                                     inst->blueprint->whens[0]->as.when.name, 
+                                                     NULL, 0);
+            if (when_result.message) {
+                free(result.message);
+                result.message = when_result.message;
+            }
+            result.success = when_result.success;
+        }
+    }
     
     // Print any output from Screen
     ScreenInstance* screen = stdlib_get_screen(&runtime);
