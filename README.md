@@ -41,7 +41,8 @@
 
 | Experience Level | Time | Start Here |
 |-----------------|------|------------|
-| **Absolute Beginner** | 5 min | [QUICKSTART.md](QUICKSTART.md) ← Start here! |
+| **Complete Beginner** | 1 hour | [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) ← Everything you can do! |
+| **Absolute Beginner** | 5 min | [QUICKSTART.md](QUICKSTART.md) ← Just want it working! |
 | **Know Python Basics** | 10 min | [Quick Install](#quick-install) ↓ |
 | **Ready to Learn** | 30 min | [GETTING_STARTED.md](GETTING_STARTED.md) |
 | **Want to Build** | 1 hour | [TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md) |
@@ -69,7 +70,7 @@ python test_full_system.py  # 10/10 tests should pass
 - 🪟 **Windows Users** → [WINDOWS_SETUP.md](WINDOWS_SETUP.md) (Step-by-step Windows guide)
 - 🧪 **Testing Newton** → [TESTING.md](TESTING.md) (Complete testing guide)
 
-**New to Newton?** → [🚀 QUICKSTART.md](QUICKSTART.md) (5 minutes) or [📚 GETTING_STARTED.md](GETTING_STARTED.md) (30 minutes)
+**New to Newton?** → [📖 BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) (Complete guide with all examples) or [🚀 QUICKSTART.md](QUICKSTART.md) (5 minutes) or [📚 GETTING_STARTED.md](GETTING_STARTED.md) (30 minutes)
 
 ---
 

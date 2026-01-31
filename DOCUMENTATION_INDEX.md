@@ -8,6 +8,7 @@
 
 | Speed | Document | Time | Best For |
 |-------|----------|------|----------|
+| **Complete** | [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) | 1 hour | Everything you can do with step-by-step examples |
 | **Lightning** | [QUICKSTART.md](QUICKSTART.md) | 5 min | Absolute beginners, want it working NOW |
 | **Guided** | [GETTING_STARTED.md](GETTING_STARTED.md) | 30 min | Learning properly, understanding concepts |
 | **Overview** | [README.md](README.md) | 10 min | Understanding what Newton is and does |
@@ -18,6 +19,7 @@
 
 | Topic | Document | Description |
 |-------|----------|-------------|
+| **Complete Guide** | [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) | Everything you can do with Newton |
 | **Learning Path** | [USER_JOURNEY.md](USER_JOURNEY.md) | Complete journey from beginner to master |
 | **TinyTalk Language** | [TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md) | Complete language reference |
 | **Intro Course** | [docs/INTRO_COURSE.md](docs/INTRO_COURSE.md) | 5-level PDA tutorial |
@@ -40,6 +42,7 @@
 
 | Topic | Document | Description |
 |-------|----------|-------------|
+| **Step-by-Step Tutorials** | [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md#step-by-step-tutorials) | Complete tutorials for all features |
 | **Programming Guide** | [TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md) | Complete language guide |
 | **Examples** | `examples/` directory | Working code examples |
 | **Best Practices** | [ARCHITECTURE.md](ARCHITECTURE.md) | Design patterns |
@@ -71,7 +74,8 @@
 ## 🎯 By Role
 
 ### Student / Educator
-- Start: [QUICKSTART.md](QUICKSTART.md)
+- Start: [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md)
+- Quick: [QUICKSTART.md](QUICKSTART.md)
 - Then: [docs/INTRO_COURSE.md](docs/INTRO_COURSE.md)
 - Examples: `examples/nes_helper_demo.py`
 
@@ -99,10 +103,11 @@
 ## 📊 By Document Type
 
 ### Getting Started (New Users)
-1. [QUICKSTART.md](QUICKSTART.md) - 5-minute setup
-2. [GETTING_STARTED.md](GETTING_STARTED.md) - Complete tutorial
-3. [USER_JOURNEY.md](USER_JOURNEY.md) - Learning path
-4. [README.md](README.md) - Project overview
+1. [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) - Everything you can do (1 hour)
+2. [QUICKSTART.md](QUICKSTART.md) - 5-minute setup
+3. [GETTING_STARTED.md](GETTING_STARTED.md) - Complete tutorial
+4. [USER_JOURNEY.md](USER_JOURNEY.md) - Learning path
+5. [README.md](README.md) - Project overview
 
 ### Reference (Lookup)
 1. [TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md) - Language reference
@@ -131,11 +136,13 @@
 ## 🎓 Recommended Reading Order
 
 ### Beginner Track (2 hours)
-1. [QUICKSTART.md](QUICKSTART.md) - 5 min
-2. [GETTING_STARTED.md](GETTING_STARTED.md) Level 1-2 - 20 min
-3. Run `examples/demo_bank_account.py` - 5 min
-4. [GETTING_STARTED.md](GETTING_STARTED.md) Level 3 - 30 min
-5. Build your first blueprint - 1 hour
+1. [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) - 1 hour (comprehensive)
+   OR
+2. [QUICKSTART.md](QUICKSTART.md) - 5 min
+3. [GETTING_STARTED.md](GETTING_STARTED.md) Level 1-2 - 20 min
+4. Run `examples/demo_bank_account.py` - 5 min
+5. [GETTING_STARTED.md](GETTING_STARTED.md) Level 3 - 30 min
+6. Build your first blueprint - 1 hour
 
 ### Developer Track (4 hours)
 1. [README.md](README.md) - 10 min
@@ -158,6 +165,7 @@
 
 | Document | Size | Reading Time |
 |----------|------|--------------|
+| BEGINNERS_GUIDE.md | 45 KB | 1 hour |
 | QUICKSTART.md | 7.5 KB | 5 min |
 | GETTING_STARTED.md | 25 KB | 30 min |
 | USER_JOURNEY.md | 11 KB | 15 min |
@@ -199,11 +207,12 @@
 
 ## 💡 Pro Tips
 
-1. **Start with QUICKSTART.md** - It's only 5 minutes and gets you running
-2. **Use verify_setup.py** - Automatically checks your installation
-3. **Read code examples** - `examples/` has real working code
-4. **Check troubleshooting** - [GETTING_STARTED.md](GETTING_STARTED.md#-troubleshooting) has solutions
-5. **Follow USER_JOURNEY.md** - Clear progression path from beginner to expert
+1. **Start with BEGINNERS_GUIDE.md** - Complete guide showing everything Newton can do
+2. **Or use QUICKSTART.md** - It's only 5 minutes and gets you running
+3. **Use verify_setup.py** - Automatically checks your installation
+4. **Read code examples** - `examples/` has real working code
+5. **Check troubleshooting** - [GETTING_STARTED.md](GETTING_STARTED.md#-troubleshooting) or [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md#troubleshooting) has solutions
+6. **Follow USER_JOURNEY.md** - Clear progression path from beginner to expert
 
 ---
 
