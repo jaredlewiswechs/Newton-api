@@ -253,13 +253,28 @@ static ASTNode* parse_when_clause(Parser* parser) {
     node->as.when.action_count = 0;
     
     // Parse parameters if present
+    ASTNode** params = NULL;
+    size_t param_count = 0;
     if (match(parser, TOKEN_LPAREN)) {
-        // Simplified: skip parameters for now
-        while (!check(parser, TOKEN_RPAREN) && !check(parser, TOKEN_EOF)) {
-            advance(parser);
+        params = (ASTNode**)malloc(sizeof(ASTNode*) * 16);
+        
+        if (!check(parser, TOKEN_RPAREN)) {
+            do {
+                consume(parser, TOKEN_IDENTIFIER, "Expected parameter name");
+                
+                // Create an identifier node for the parameter
+                ASTNode* param = alloc_node(NODE_IDENTIFIER, parser->previous.line);
+                param->as.identifier.name = copy_token_string(&parser->previous);
+                params[param_count++] = param;
+                
+            } while (match(parser, TOKEN_COMMA));
         }
+        
         consume(parser, TOKEN_RPAREN, "Expected ')' after parameters");
     }
+    
+    node->as.when.params = params;
+    node->as.when.param_count = param_count;
     
     skip_newlines(parser);
     

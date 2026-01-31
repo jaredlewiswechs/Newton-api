@@ -505,9 +505,6 @@ Result runtime_execute(Runtime* rt, ASTNode* node) {
 }
 
 Result runtime_execute_when(Runtime* rt, Instance* inst, const char* when_name, Value* args, size_t arg_count) {
-    (void)args;  // Unused for now
-    (void)arg_count;
-    
     Result result;
     result.success = false;
     result.message = strdup("When clause not found");
@@ -526,6 +523,16 @@ Result runtime_execute_when(Runtime* rt, Instance* inst, const char* when_name, 
             // Set the current instance context for field lookups
             Runtime* runtime_ctx = rt;
             Instance* current_inst = inst;
+            
+            // Bind parameters to arguments
+            if (when->as.when.param_count > 0) {
+                size_t params_to_bind = when->as.when.param_count < arg_count ? when->as.when.param_count : arg_count;
+                for (size_t k = 0; k < params_to_bind; k++) {
+                    runtime_set_variable(runtime_ctx,
+                                       when->as.when.params[k]->as.identifier.name,
+                                       value_copy(&args[k]));
+                }
+            }
             
             // Temporarily set variables for fields from current instance
             for (size_t k = 0; k < current_inst->blueprint->field_count; k++) {
