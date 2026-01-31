@@ -355,6 +355,33 @@ Value runtime_evaluate_expression(Runtime* rt, ASTNode* expr) {
                 value_free(&left);
                 value_free(&right);
                 return value_boolean(result);
+            } else if (expr->as.binary_op.op == TOKEN_HASH) {
+                // String interpolation: "text #var" or "#var"
+                // For now, implement as concatenation with conversion
+                char buffer[1024];
+                const char* left_str = "";
+                const char* right_str = "";
+                
+                if (left.type == TYPE_STRING) {
+                    left_str = left.as.string;
+                } else if (left.type == TYPE_NUMBER) {
+                    snprintf(buffer, sizeof(buffer), "%g", left.as.number);
+                    left_str = buffer;
+                }
+                
+                char right_buf[512];
+                if (right.type == TYPE_STRING) {
+                    right_str = right.as.string;
+                } else if (right.type == TYPE_NUMBER) {
+                    snprintf(right_buf, sizeof(right_buf), "%g", right.as.number);
+                    right_str = right_buf;
+                }
+                
+                char result_buf[1024];
+                snprintf(result_buf, sizeof(result_buf), "%s%s", left_str, right_str);
+                value_free(&left);
+                value_free(&right);
+                return value_string(result_buf);
             }
             
             // Smart operators
@@ -669,6 +696,41 @@ Result runtime_execute_when(Runtime* rt, Instance* inst, const char* when_name, 
                             }
                             target_inst->current_state = strdup(action->as.action_make.new_state);
                         }
+                    } else if (action->type == NODE_CALC) {
+                        // calc expr op expr as result_var
+                        Value left = runtime_evaluate_expression(runtime_ctx, action->as.calc.expr);
+                        Value right = runtime_evaluate_expression(runtime_ctx, action->as.calc.right);
+                        
+                        Value result = value_null();
+                        
+                        if (left.type == TYPE_NUMBER && right.type == TYPE_NUMBER) {
+                            switch (action->as.calc.op) {
+                                case TOKEN_PLUS:
+                                    result = value_number(left.as.number + right.as.number);
+                                    break;
+                                case TOKEN_MINUS:
+                                    result = value_number(left.as.number - right.as.number);
+                                    break;
+                                case TOKEN_TIMES:
+                                    result = value_number(left.as.number * right.as.number);
+                                    break;
+                                case TOKEN_DIV:
+                                    result = value_number(left.as.number / right.as.number);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        
+                        // Store result in variable
+                        if (action->as.calc.result_var) {
+                            runtime_set_variable(runtime_ctx, action->as.calc.result_var, result);
+                        } else {
+                            value_free(&result);
+                        }
+                        
+                        value_free(&left);
+                        value_free(&right);
                     }
                 }
             }

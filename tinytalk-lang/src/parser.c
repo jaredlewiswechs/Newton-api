@@ -10,6 +10,11 @@ Builds AST from token stream
 #include <string.h>
 #include "parser.h"
 
+// Forward declarations
+static ASTNode* parse_expression(Parser* parser);
+static ASTNode* parse_primary(Parser* parser);
+static void advance(Parser* parser);
+
 static void error_at(Parser* parser, Token* token, const char* message) {
     if (parser->panic_mode) return;
     parser->panic_mode = true;
@@ -30,6 +35,28 @@ static void error_at(Parser* parser, Token* token, const char* message) {
 
 static void error(Parser* parser, const char* message) {
     error_at(parser, &parser->previous, message);
+}
+
+static void synchronize(Parser* parser) {
+    parser->panic_mode = false;
+    
+    // Skip tokens until we find a statement boundary
+    while (parser->current.type != TOKEN_EOF) {
+        if (parser->previous.type == TOKEN_NEWLINE) return;
+        
+        switch (parser->current.type) {
+            case TOKEN_BLUEPRINT:
+            case TOKEN_WHEN:
+            case TOKEN_FIN:
+            case TOKEN_FINFR:
+            case TOKEN_END:
+                return;
+            default:
+                ; // Do nothing
+        }
+        
+        advance(parser);
+    }
 }
 
 static void advance(Parser* parser) {
@@ -82,10 +109,6 @@ static char* copy_token_string(Token* token) {
     return str;
 }
 
-// Forward declarations
-static ASTNode* parse_expression(Parser* parser);
-static ASTNode* parse_primary(Parser* parser);
-
 static ASTNode* parse_primary(Parser* parser) {
     if (match(parser, TOKEN_NUMBER)) {
         ASTNode* node = alloc_node(NODE_LITERAL, parser->previous.line);
@@ -130,13 +153,38 @@ static ASTNode* parse_primary(Parser* parser) {
 static ASTNode* parse_expression(Parser* parser) {
     ASTNode* left = parse_primary(parser);
     
+    // Handle "is" keyword before comparison operators
+    if (match(parser, TOKEN_IS)) {
+        // "is" can be followed by comparison operators or used alone for equality
+        if (match(parser, TOKEN_ABOVE) || match(parser, TOKEN_BELOW) || 
+            match(parser, TOKEN_WITHIN)) {
+            TokenType op = parser->previous.type;
+            ASTNode* right = parse_primary(parser);
+            
+            ASTNode* binary = alloc_node(NODE_BINARY_OP, parser->previous.line);
+            binary->as.binary_op.left = left;
+            binary->as.binary_op.right = right;
+            binary->as.binary_op.op = op;
+            left = binary;
+        } else {
+            // Plain "is" for equality
+            ASTNode* right = parse_primary(parser);
+            
+            ASTNode* binary = alloc_node(NODE_BINARY_OP, parser->previous.line);
+            binary->as.binary_op.left = left;
+            binary->as.binary_op.right = right;
+            binary->as.binary_op.op = TOKEN_IS;
+            left = binary;
+        }
+    }
+    
     // Handle binary operators
     while (match(parser, TOKEN_PLUS_OP) || match(parser, TOKEN_AMPERSAND) ||
            match(parser, TOKEN_HASH) || match(parser, TOKEN_PLUS) ||
            match(parser, TOKEN_MINUS) || match(parser, TOKEN_TIMES) ||
-           match(parser, TOKEN_DIV) || match(parser, TOKEN_IS) ||
-           match(parser, TOKEN_ABOVE) || match(parser, TOKEN_BELOW) ||
-           match(parser, TOKEN_WITHIN) || match(parser, TOKEN_IN)) {
+           match(parser, TOKEN_DIV) || match(parser, TOKEN_ABOVE) ||
+           match(parser, TOKEN_BELOW) || match(parser, TOKEN_WITHIN) ||
+           match(parser, TOKEN_IN)) {
         TokenType op = parser->previous.type;
         ASTNode* right = parse_primary(parser);
         
@@ -310,24 +358,55 @@ static ASTNode* parse_when_clause(Parser* parser) {
             action->as.action_change.value = parse_expression(parser);
             actions[action_count++] = action;
         } else if (match(parser, TOKEN_CALC)) {
-            // Simplified calc parsing - parse as expression and skip
-            parse_expression(parser);
-            while (!check(parser, TOKEN_NEWLINE) && !check(parser, TOKEN_EOF) && !check(parser, TOKEN_AS)) {
-                advance(parser);
+            // Parse calc statement: calc left op right as result_var
+            ASTNode* action = alloc_node(NODE_CALC, parser->previous.line);
+            
+            // Parse first operand (primary expression, not full expression to avoid consuming operator)
+            action->as.calc.expr = parse_primary(parser);
+            
+            // Parse operator keyword (plus, minus, times, div)
+            if (match(parser, TOKEN_PLUS) || match(parser, TOKEN_PLUS_OP)) {
+                action->as.calc.op = TOKEN_PLUS;
+            } else if (match(parser, TOKEN_MINUS) || match(parser, TOKEN_MINUS_OP)) {
+                action->as.calc.op = TOKEN_MINUS;
+            } else if (match(parser, TOKEN_TIMES)) {
+                action->as.calc.op = TOKEN_TIMES;
+            } else if (match(parser, TOKEN_DIV)) {
+                action->as.calc.op = TOKEN_DIV;
+            } else {
+                error(parser, "Expected operator (plus, minus, times, div)");
             }
+            
+            // Parse second operand
+            action->as.calc.right = parse_primary(parser);
+            
+            // Parse 'as' and result variable name
             if (match(parser, TOKEN_AS)) {
-                // Parse result variable name
                 if (match(parser, TOKEN_IDENTIFIER)) {
-                    // Store calc result variable for future implementation
+                    action->as.calc.result_var = copy_token_string(&parser->previous);
+                } else {
+                    error(parser, "Expected variable name after 'as'");
                 }
+            } else {
+                error(parser, "Expected 'as' after expression");
             }
+            
+            actions[action_count++] = action;
         } else if (match(parser, TOKEN_IF) || match(parser, TOKEN_MEMO)) {
             // Skip these for simplified parser
             while (!check(parser, TOKEN_NEWLINE) && !check(parser, TOKEN_EOF)) {
                 advance(parser);
             }
+        } else if (check(parser, TOKEN_FIN) || check(parser, TOKEN_FINFR) || check(parser, TOKEN_EOF)) {
+            // End of when clause
+            break;
         } else {
-            advance(parser);
+            // Unknown token - try to recover
+            error(parser, "Unexpected token in when clause");
+            synchronize(parser);
+            if (check(parser, TOKEN_FIN) || check(parser, TOKEN_FINFR)) {
+                break;
+            }
         }
         
         skip_newlines(parser);

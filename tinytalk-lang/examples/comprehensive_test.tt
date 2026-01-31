@@ -1,0 +1,46 @@
+blueprint Comprehensive
+  starts counter at 0
+  starts score at 100
+  starts items as empty
+  starts message at "Start"
+
+when test_arithmetic
+  calc 10 plus 5 as sum
+  calc 20 minus 3 as diff
+  calc 4 times 5 as product
+  calc 15 div 3 as quotient
+  set counter to sum
+  set Screen.text to "Arithmetic OK"
+finfr "Arithmetic passed"
+
+when test_strings
+  set message to "Hello" & " " & "World"
+  set Screen.text to message
+finfr "String operations passed"
+
+when test_comparisons
+  must score is above 50
+    otherwise "Score too low"
+  must counter is below 100
+    otherwise "Counter too high"
+  set Screen.text to "Comparisons OK"
+finfr "Comparison operators passed"
+
+when test_array_ops
+  change items by + "apple"
+  change items by + "banana"
+  change items by + "cherry"
+  change items by - "banana"
+  set Screen.text to "Array operations OK"
+finfr "Array operations passed"
+
+when test_block
+  block if score is below 0
+  set Screen.text to "Block did not trigger"
+finfr "Block constraint passed"
+
+when test_must_fail
+  must score is above 200
+    otherwise "This should fail"
+  set Screen.text to "This should not appear"
+finfr "This should not execute"
