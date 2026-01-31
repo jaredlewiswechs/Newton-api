@@ -1562,7 +1562,7 @@ The Lesson Planner includes automatic accommodation suggestions!`;
 - **Assessments** - Exit tickets and formative checks
 - **PLC Reports** - Data-driven team insights
 
-Currently offline, but the full app features are available! Try the **Lesson Planner** or **TEKS Browser** to get started.`;
+Currently online, and the full app features are available! Try the **Lesson Planner** or **TEKS Browser** to get started.`;
 }
 
 /**
