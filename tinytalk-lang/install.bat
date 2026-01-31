@@ -36,7 +36,12 @@ if %errorlevel% equ 0 (
     echo ✓ Binary: %cd%\tinytalk.exe
     echo.
     echo Testing installation...
-    tinytalk.exe run examples\hello_world.tt
+    if exist examples\hello_world.tt (
+        tinytalk.exe run examples\hello_world.tt
+    ) else (
+        echo Warning: examples\hello_world.tt not found, skipping test
+        echo Installation complete, but test file missing
+    )
     echo.
     echo To use anywhere, add this folder to your PATH:
     echo   setx PATH "%%PATH%%;%cd%"

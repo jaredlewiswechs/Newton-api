@@ -3,6 +3,9 @@
  *
  * Syntax highlighting, autocomplete, and hover information
  * for the TinyTalk C implementation.
+ * 
+ * NOTE: This uses C++-style comments (//) instead of hash (#) for compatibility
+ * with the C implementation syntax. The C version treats // as comments.
  */
 
 export function registerTinyTalk(monaco) {

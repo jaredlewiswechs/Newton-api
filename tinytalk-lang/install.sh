@@ -48,7 +48,12 @@ if [ $? -eq 0 ]; then
     # Test
     echo ""
     echo "🧪 Testing installation..."
-    ./tinytalk run examples/hello_world.tt
+    if [ -f "examples/hello_world.tt" ]; then
+        ./tinytalk run examples/hello_world.tt
+    else
+        echo "⚠️  Warning: examples/hello_world.tt not found, skipping test"
+        echo "   Installation complete, but test file missing"
+    fi
     
 else
     echo "❌ Build failed"
