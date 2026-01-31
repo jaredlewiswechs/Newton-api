@@ -750,6 +750,7 @@ async def jester_analyze(request: JesterAnalyzeRequest):
 
     try:
         # Use the Jester analyzer
+        # Extract language separately to avoid SourceLanguage(None) which raises ValueError
         language = SourceLanguage(request.language) if request.language else None
         jester = Jester(request.code, language)
         result = jester.analyze().to_dict()
@@ -804,6 +805,7 @@ async def jester_cdl(request: JesterCdlRequest):
     start = time.perf_counter()
 
     try:
+        # Extract language separately to avoid SourceLanguage(None) which raises ValueError
         language = SourceLanguage(request.language) if request.language else None
         jester = Jester(request.code, language)
         cdl_output = jester.analyze().to_cdl()
