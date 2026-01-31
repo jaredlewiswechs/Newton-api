@@ -210,6 +210,11 @@
         .app-icon.github { background: linear-gradient(135deg, #374151 0%, #1f2937 100%); color: #fff; }
         .app-icon.tinytalk { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; }
         .app-icon.ledger { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); color: #fff; }
+        .app-icon.jester { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #fff; }
+        .app-icon.demo { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #fff; }
+        .app-icon.ide { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: #fff; }
+        .app-icon.construct { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #fff; }
+        .app-icon.games { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; }
 
         /* ─────────────────────────────────────────────────────────────────
            Dock
@@ -383,17 +388,18 @@
             <div class="widget">
                 <div class="widget-header">
                     <div class="widget-icon newton">N</div>
-                    <span class="widget-title">NEWTON</span>
+                    <span class="widget-title">NEWTON SUPERCOMPUTER</span>
                 </div>
                 <div class="widget-content">
                     The verification layer for AI.<br>
+                    Verified computation at scale.<br>
                     What Apple meant to build.
                 </div>
                 <div class="widget-code">1 == 1</div>
             </div>
 
-            <!-- Apps -->
-            <div class="section-label">Apps</div>
+            <!-- Core Applications -->
+            <div class="section-label">Core Applications</div>
             <div class="app-grid">
                 <a href="/app" class="app">
                     <div class="app-icon newton">N</div>
@@ -407,17 +413,53 @@
                     <div class="app-icon builder">B</div>
                     <span class="app-name">Builder</span>
                 </a>
-                <a href="https://newton-api-sicp.onrender.com/docs" class="app" target="_blank">
+                <a href="https://75ac0fae.newton-api.pages.dev/docs" class="app" target="_blank">
                     <div class="app-icon api">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     </div>
                     <span class="app-name">API</span>
+                </a>
+            </div>
+
+            <!-- Development Tools -->
+            <div class="section-label">Development Tools</div>
+            <div class="app-grid">
+                <a href="/tinytalk-ide" class="app">
+                    <div class="app-icon ide">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <span class="app-name">TinyTalk IDE</span>
+                </a>
+                <a href="/jester-analyzer" class="app">
+                    <div class="app-icon jester">J</div>
+                    <span class="app-name">Jester</span>
+                </a>
+                <a href="/construct-studio/ui" class="app">
+                    <div class="app-icon construct">C</div>
+                    <span class="app-name">Construct</span>
                 </a>
                 <a href="https://github.com/jaredlewiswechs/Newton-api/blob/main/TINYTALK_PROGRAMMING_GUIDE.md" class="app" target="_blank">
                     <div class="app-icon tinytalk">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                     </div>
                     <span class="app-name">TinyTalk</span>
+                </a>
+            </div>
+
+            <!-- Demos & Examples -->
+            <div class="section-label">Demos & Examples</div>
+            <div class="app-grid">
+                <a href="/newton-demo" class="app">
+                    <div class="app-icon demo">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                    </div>
+                    <span class="app-name">Demo</span>
+                </a>
+                <a href="/games/gravity_wars" class="app">
+                    <div class="app-icon games">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    </div>
+                    <span class="app-name">Games</span>
                 </a>
                 <a href="https://github.com/jaredlewiswechs/Newton-api/tree/main/docs" class="app" target="_blank">
                     <div class="app-icon docs">
@@ -431,7 +473,12 @@
                     </div>
                     <span class="app-name">GitHub</span>
                 </a>
-                <a href="https://newton-api-sicp.onrender.com/health" class="app" target="_blank">
+            </div>
+
+            <!-- System & Utilities -->
+            <div class="section-label">System & Utilities</div>
+            <div class="app-grid">
+                <a href="https://75ac0fae.newton-api.pages.dev/health" class="app" target="_blank">
                     <div class="app-icon ledger">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     </div>
@@ -451,6 +498,11 @@
                 </a>
                 <a href="/builder" class="app">
                     <div class="app-icon builder">B</div>
+                </a>
+                <a href="/tinytalk-ide" class="app">
+                    <div class="app-icon ide">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
                 </a>
                 <a href="https://github.com/jaredlewiswechs/Newton-api" class="app" target="_blank">
                     <div class="app-icon github">
