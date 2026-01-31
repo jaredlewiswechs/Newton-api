@@ -976,6 +976,7 @@ DEMO_DIR = ROOT_DIR / "newton-demo"
 TINYTALK_IDE_DIR = ROOT_DIR / "tinytalk-ide"
 CONSTRUCT_STUDIO_DIR = ROOT_DIR / "construct-studio"
 GAMES_DIR = ROOT_DIR / "games"
+MISSION_CONTROL_DIR = ROOT_DIR / "mission-control"
 
 # Helper: Find file across multiple possible paths (handles Render's environment)
 def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]:
@@ -999,14 +1000,14 @@ def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_home():
-    """Serve the Newton Phone home screen"""
+    """Serve the Newton Mission Control dashboard"""
     import os
 
-    # Try multiple paths to find index.html
+    # Try multiple paths to find mission-control/index.html
     possible_paths = [
-        ROOT_DIR / "index.html",
-        Path(os.getcwd()) / "index.html",
-        Path("/opt/render/project/src/index.html"),
+        ROOT_DIR / "mission-control" / "index.html",
+        Path(os.getcwd()) / "mission-control" / "index.html",
+        Path("/opt/render/project/src/mission-control/index.html"),
     ]
 
     for index_file in possible_paths:
@@ -1018,22 +1019,22 @@ async def serve_home():
             )
 
     # Log debug info if not found
-    print(f"[Newton] index.html not found. ROOT_DIR={ROOT_DIR}, CWD={os.getcwd()}")
+    print(f"[Newton] mission-control/index.html not found. ROOT_DIR={ROOT_DIR}, CWD={os.getcwd()}")
     if ROOT_DIR.exists():
         print(f"[Newton] Files in ROOT_DIR: {[f.name for f in list(ROOT_DIR.iterdir())[:20]]}")
 
-    # Fallback: Minimal home screen that still works
+    # Fallback: Minimal Mission Control screen that still works
     fallback_html = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newton</title>
+    <title>Newton Mission Control</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #000;
-            color: #fff;
+            background: #1a1a1a;
+            color: #e0e0e0;
             font-family: -apple-system, system-ui, sans-serif;
             min-height: 100vh;
             display: flex;
@@ -1042,64 +1043,32 @@ async def serve_home():
             justify-content: center;
             padding: 20px;
         }
-        h1 { color: #4ecdc4; font-size: 48px; margin-bottom: 20px; }
-        .tagline { color: #86868b; margin-bottom: 40px; }
-        .apps {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            max-width: 400px;
+        h1 { color: #00e676; font-size: 48px; margin-bottom: 20px; }
+        .tagline { color: #a0a0a0; margin-bottom: 40px; }
+        .status { 
+            background: #242424; 
+            padding: 20px 40px; 
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
         }
+        .status-text { color: #00c853; font-weight: 600; }
         a {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            background: #1a1a1a;
-            border-radius: 16px;
+            color: #00e676;
             text-decoration: none;
-            color: #fff;
-            transition: transform 0.2s;
+            margin-top: 20px;
+            display: inline-block;
         }
-        a:hover { transform: scale(1.05); }
-        .icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        .newton { background: #4ecdc4; color: #000; }
-        .teachers { background: #ff3b30; }
-        .builder { background: #af52de; }
-        .docs { background: #007aff; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <h1>Newton</h1>
-    <p class="tagline">The verification layer for AI</p>
-    <div class="apps">
-        <a href="/app">
-            <div class="icon newton">N</div>
-            <span>Newton</span>
-        </a>
-        <a href="/teachers">
-            <div class="icon teachers">T</div>
-            <span>Teacher's Aide</span>
-        </a>
-        <a href="/builder">
-            <div class="icon builder">B</div>
-            <span>Builder</span>
-        </a>
-        <a href="/docs">
-            <div class="icon docs">API</div>
-            <span>Docs</span>
-        </a>
+    <h1>⚡ Newton Mission Control</h1>
+    <p class="tagline">Real-time API Health Monitoring</p>
+    <div class="status">
+        <span class="status-text">● System Online</span>
     </div>
+    <a href="/health">Check API Health →</a>
+    <a href="/docs">API Documentation →</a>
 </body>
 </html>"""
     return HTMLResponse(content=fallback_html, status_code=200)
@@ -4245,6 +4214,36 @@ if CONSTRUCT_STUDIO_DIR.exists():
     app.mount("/construct-studio", StaticFiles(directory=str(CONSTRUCT_STUDIO_DIR), html=True), name="construct-studio")
 if GAMES_DIR.exists():
     app.mount("/games", StaticFiles(directory=str(GAMES_DIR), html=True), name="games")
+
+# Mission Control static files - served from root for the home page
+# The index.html is served by the / route, but it needs access to its static files
+# Note: These common filenames (/styles.css, /app.js, /config.js) are at the root path
+# because the mission-control HTML expects relative paths. If conflicts arise,
+# consider updating the HTML to use namespaced paths like /mission-control/styles.css
+if MISSION_CONTROL_DIR.exists():
+    @app.get("/styles.css")
+    async def serve_mission_control_styles():
+        """Serve Mission Control styles"""
+        css_path = MISSION_CONTROL_DIR / "styles.css"
+        if css_path.exists():
+            return FileResponse(str(css_path), media_type="text/css")
+        raise HTTPException(status_code=404, detail="styles.css not found")
+
+    @app.get("/app.js")
+    async def serve_mission_control_app():
+        """Serve Mission Control app.js"""
+        js_path = MISSION_CONTROL_DIR / "app.js"
+        if js_path.exists():
+            return FileResponse(str(js_path), media_type="application/javascript")
+        raise HTTPException(status_code=404, detail="app.js not found")
+
+    @app.get("/config.js")
+    async def serve_mission_control_config():
+        """Serve Mission Control config.js"""
+        js_path = MISSION_CONTROL_DIR / "config.js"
+        if js_path.exists():
+            return FileResponse(str(js_path), media_type="application/javascript")
+        raise HTTPException(status_code=404, detail="config.js not found")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
