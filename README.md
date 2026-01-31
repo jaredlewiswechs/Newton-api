@@ -122,11 +122,27 @@ See [docs/INTRO_COURSE.md](docs/INTRO_COURSE.md) for the complete tutorial.
 
 ## Documentation
 
+### 🚀 Getting Started
+
+| Document | Description | Time |
+|----------|-------------|------|
+| **[QUICKSTART.md](QUICKSTART.md)** | **5-minute setup guide** (absolute beginners) | 5 min |
+| **[GETTING_STARTED.md](GETTING_STARTED.md)** | **Complete tutorial with examples** | 30 min |
+| **[USER_JOURNEY.md](USER_JOURNEY.md)** | **Step-by-step learning path** | Overview |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | **System architecture and design** | 20 min |
+
+### 📚 Programming Guides
+
 | Document | Description |
 |----------|-------------|
-| **[TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md)** | **Complete TinyTalk programming guide** (start here!) |
-| **[docs/INTRO_COURSE.md](docs/INTRO_COURSE.md)** | **Newton API Intro Course** - 5-level PDA app tutorial (NEW) |
-| **[RSTUDIO_QUICKSTART.md](RSTUDIO_QUICKSTART.md)** | R/RStudio integration guide (NEW) |
+| **[TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md)** | **Complete TinyTalk programming guide** |
+| **[docs/INTRO_COURSE.md](docs/INTRO_COURSE.md)** | **Newton API Intro Course** - 5-level PDA app tutorial |
+| **[RSTUDIO_QUICKSTART.md](RSTUDIO_QUICKSTART.md)** | R/RStudio integration guide |
+
+### 🏛️ Architecture & Philosophy
+
+| Document | Description |
+|----------|-------------|
 | **[WHITEPAPER.md](WHITEPAPER.md)** | Technical architecture and guarantees |
 | **[TINYTALK_BIBLE.md](TINYTALK_BIBLE.md)** | The "No-First" philosophy |
 | **[GLASS_BOX.md](GLASS_BOX.md)** | Policy, HITL, and Merkle proofs |
