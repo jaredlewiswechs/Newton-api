@@ -13,7 +13,7 @@ const CONFIG = {
   // API endpoint - Newton API backend
   API_BASE: window.location.hostname === 'localhost'
     ? 'http://localhost:8000'
-    : 'https://newton-api-sicp.onrender.com',
+    : 'https://75ac0fae.newton-api.pages.dev',
   TIMEOUT: 60000
 };
 

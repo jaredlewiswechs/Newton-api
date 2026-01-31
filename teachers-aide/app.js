@@ -14,7 +14,7 @@
 const CONFIG = {
   API_BASE: window.location.hostname === 'localhost'
     ? 'http://localhost:8000'
-    : 'https://newton-api.onrender.com',
+    : 'https://75ac0fae.newton-api.pages.dev',
   TIMEOUT: 60000,
   MOAD_ENABLED: true,
   WEB_SEARCH_ENABLED: true
@@ -104,10 +104,10 @@ async function checkStatus() {
   try {
     const response = await apiRequest('/health');
     statusEl.classList.add('online');
-    statusEl.querySelector('.status-text').textContent = 'Connected';
+    statusEl.querySelector('.status-text').textContent = 'API Connected';
   } catch (error) {
     statusEl.classList.remove('online');
-    statusEl.querySelector('.status-text').textContent = 'Offline';
+    statusEl.querySelector('.status-text').textContent = 'Local Mode';
   }
 }
 
@@ -1404,7 +1404,7 @@ function addChatMessage(role, content, isLoading = false, meta = {}) {
     metaHTML += `<span class="message-badge moad">◈ ${meta.moad_domains.join(', ')}</span>`;
   }
   if (meta.offline) {
-    metaHTML += '<span class="message-badge offline">Offline response</span>';
+    metaHTML += '<span class="message-badge offline">Local response</span>';
   }
 
   let contentHTML = content;
