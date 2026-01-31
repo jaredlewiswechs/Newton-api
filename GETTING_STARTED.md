@@ -57,6 +57,8 @@ python test_full_system.py
 
 **That's it.** You're ready.
 
+**Having issues?** Jump to [🔧 Troubleshooting](#-troubleshooting)
+
 ---
 
 ## Choose Your Level
@@ -423,6 +425,308 @@ class GameEntity(Blueprint):
         self.health = min(self.max_health, self.health + amount)
         return f"Healed {amount}, health: {self.health}"
 ```
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Installation Issues
+
+#### Problem: `./setup_newton.sh: Permission denied`
+
+**Solution:**
+```bash
+chmod +x setup_newton.sh
+./setup_newton.sh
+```
+
+Or run directly with bash:
+```bash
+bash setup_newton.sh
+```
+
+#### Problem: "Python 3.9+ required. Found: 3.7"
+
+You need Python 3.9 or higher.
+
+**On Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install python3.10 python3.10-venv python3.10-dev
+# Use it specifically
+python3.10 -m venv venv
+```
+
+**On macOS:**
+```bash
+# With Homebrew
+brew install python@3.10
+
+# Verify
+python3 --version
+```
+
+**On Windows:**
+1. Download from [python.org](https://www.python.org/downloads/)
+2. Install with "Add to PATH" checked
+3. Verify with `python --version` in PowerShell
+
+#### Problem: "pip: command not found"
+
+**On Ubuntu/Debian:**
+```bash
+sudo apt install python3-pip
+```
+
+**On macOS:**
+```bash
+python3 -m ensurepip --upgrade
+```
+
+#### Problem: Server won't start - "Address already in use"
+
+Something else is using port 8000.
+
+**Find what's using it:**
+```bash
+# On Mac/Linux
+lsof -i :8000
+sudo kill -9 <PID>
+
+# On Windows
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
+```
+
+**Or use a different port:**
+```bash
+# Edit newton_supercomputer.py
+# Change: uvicorn.run(app, host="0.0.0.0", port=8000)
+# To:     uvicorn.run(app, host="0.0.0.0", port=8001)
+
+# Or run with environment variable
+PORT=8001 python newton_supercomputer.py
+```
+
+#### Problem: "ModuleNotFoundError: No module named 'fastapi'"
+
+Virtual environment not activated or dependencies not installed.
+
+**Solution:**
+```bash
+source venv/bin/activate  # Mac/Linux
+# or
+venv\Scripts\activate     # Windows
+
+pip install -r requirements.txt
+```
+
+#### Problem: Tests fail with ImportError
+
+**Solution:**
+```bash
+# Install in development mode
+pip install -e .
+
+# This makes Newton SDK importable from anywhere in the project
+```
+
+### Platform-Specific Issues
+
+#### macOS: "SSL: CERTIFICATE_VERIFY_FAILED"
+
+**Solution:**
+```bash
+# Install certificates
+/Applications/Python\ 3.10/Install\ Certificates.command
+
+# Or use certifi
+pip install --upgrade certifi
+```
+
+#### macOS: "xcrun: error: invalid active developer path"
+
+Xcode command line tools missing.
+
+**Solution:**
+```bash
+xcode-select --install
+```
+
+#### Windows: "bash: command not found"
+
+Windows doesn't have bash by default.
+
+**Solution Option 1: Use PowerShell**
+Replace bash commands with PowerShell equivalents:
+- `source venv/bin/activate` → `venv\Scripts\activate`
+- `./setup_newton.sh` → Install Git Bash or use WSL
+
+**Solution Option 2: Use WSL2 (Recommended)**
+```powershell
+# Install WSL2
+wsl --install
+
+# Then follow Linux instructions inside WSL
+```
+
+**Solution Option 3: Use Git Bash**
+1. Install [Git for Windows](https://git-scm.com/download/win)
+2. Use Git Bash terminal
+3. Run `bash setup_newton.sh`
+
+#### Linux: "permission denied" errors
+
+**Solution:**
+```bash
+# Don't use sudo with pip in venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# If you need system Python packages
+sudo apt install python3-dev build-essential
+```
+
+### Runtime Errors
+
+#### Problem: "LawViolation" when running code
+
+This is **expected behavior**! Laws are constraints that prevent invalid states.
+
+**Example:**
+```python
+class Account(Blueprint):
+    balance = field(float, default=100)
+    
+    @law
+    def no_negative(self):
+        when(self.balance < 0, finfr)
+    
+    @forge
+    def withdraw(self, amount):
+        self.balance -= amount
+
+acc = Account()
+acc.withdraw(150)  # ✗ LawViolation: no_negative
+```
+
+**This is correct!** The law prevented an invalid state (negative balance).
+
+#### Problem: "finfr" error - what does this mean?
+
+**`finfr`** means "final/for" - it's an **ontological death**. The state you tried to create **cannot exist** according to your laws.
+
+This is not a bug - it's Newton protecting you from invalid states.
+
+**Example:**
+```python
+@law
+def temperature_bounds(self):
+    when(self.temp < -273.15, finfr)  # Can't go below absolute zero
+```
+
+If code tries to set temperature to -300, `finfr` prevents it because that state is physically impossible.
+
+#### Problem: Server returns 500 errors
+
+**Check server logs:**
+```bash
+# See full error details
+python newton_supercomputer.py
+
+# Watch for errors in the terminal
+```
+
+**Common causes:**
+1. Constraint violation in request
+2. Invalid JSON format
+3. Missing required fields
+4. Database connection (if using external DB)
+
+**Test with minimal request:**
+```bash
+curl -X POST http://localhost:8000/verify \
+  -H "Content-Type: application/json" \
+  -d '{"input": "test"}'
+```
+
+### Testing Issues
+
+#### Problem: Tests fail with "Server not running"
+
+**Solution:**
+```bash
+# Terminal 1: Start server
+python newton_supercomputer.py
+
+# Terminal 2: Run tests
+python test_full_system.py
+```
+
+#### Problem: Pytest not found
+
+**Solution:**
+```bash
+source venv/bin/activate
+pip install pytest hypothesis
+```
+
+#### Problem: "Import could not be resolved" in VSCode
+
+**Solution:**
+1. Select Python interpreter from venv:
+   - Press `Cmd/Ctrl + Shift + P`
+   - Type "Python: Select Interpreter"
+   - Choose `./venv/bin/python`
+
+2. Or add to `.vscode/settings.json`:
+```json
+{
+    "python.defaultInterpreterPath": "./venv/bin/python"
+}
+```
+
+### Getting Help
+
+Still stuck? Here's how to get help:
+
+1. **Check the docs:**
+   - [QUICKSTART.md](QUICKSTART.md) - Ultra-quick setup
+   - [TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md) - Complete guide
+   - [DEVELOPERS.md](DEVELOPERS.md) - Development setup
+
+2. **Run diagnostics:**
+```bash
+# Check Python version
+python3 --version
+
+# Check pip version  
+pip --version
+
+# Check virtual env
+which python  # Should show path with 'venv' in it
+
+# List installed packages
+pip list
+
+# Test imports
+python -c "import fastapi; print('FastAPI OK')"
+python -c "from tinytalk_py import Blueprint; print('tinyTalk OK')"
+```
+
+3. **Open an issue:**
+   - Go to [GitHub Issues](https://github.com/jaredlewiswechs/Newton-api/issues)
+   - Include:
+     - OS and Python version
+     - Full error message
+     - Steps to reproduce
+     - Output of diagnostic commands above
+
+4. **Read the source:**
+   Newton is open source. The code is the ultimate documentation:
+   - `newton_supercomputer.py` - Main server
+   - `tinytalk_py/__init__.py` - Python SDK
+   - `core/` - Core engines (CDL, Logic, Forge, Vault, Ledger)
 
 ---
 

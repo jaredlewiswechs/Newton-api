@@ -37,6 +37,17 @@
 
 ---
 
+## 🚀 Quick Start (Choose Your Path)
+
+| Experience Level | Time | Start Here |
+|-----------------|------|------------|
+| **Absolute Beginner** | 5 min | [QUICKSTART.md](QUICKSTART.md) ← Start here! |
+| **Know Python Basics** | 10 min | [Quick Install](#quick-install) ↓ |
+| **Ready to Learn** | 30 min | [GETTING_STARTED.md](GETTING_STARTED.md) |
+| **Want to Build** | 1 hour | [TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md) |
+
+---
+
 ## Quick Install
 
 ```bash
@@ -54,7 +65,7 @@ newton serve            # Start the server
 python test_full_system.py  # 10/10 tests should pass
 ```
 
-**New to Newton?** Start here → [GETTING_STARTED.md](GETTING_STARTED.md)
+**New to Newton?** → [🚀 QUICKSTART.md](QUICKSTART.md) (5 minutes) or [📚 GETTING_STARTED.md](GETTING_STARTED.md) (30 minutes)
 
 ---
 
