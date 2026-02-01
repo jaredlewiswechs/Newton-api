@@ -37,7 +37,7 @@ import os
 # ═══════════════════════════════════════════════════════════════════════════════
 
 VERSION = "1.0.0"
-API_ENDPOINT = "https://newton-api.onrender.com/verify"
+API_ENDPOINT = "https://newton-api-1.onrender.com/verify"
 VERIFY_TIMEOUT = 30  # seconds
 CONSTRAINTS_DIR = Path(__file__).parent / "constraints"
 SHORTCUTS_DIR = Path(__file__).parent / "shortcuts"

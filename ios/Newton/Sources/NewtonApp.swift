@@ -27,10 +27,10 @@ struct NewtonApp: App {
 
 @MainActor
 class AppSettings: ObservableObject {
-    @AppStorage("serverURL") var serverURL: String = "https://newton-api.onrender.com"
+    @AppStorage("serverURL") var serverURL: String = "https://newton-api-1.onrender.com"
     @AppStorage("darkMode") var darkMode: Bool = false
 
     var baseURL: URL {
-        URL(string: serverURL) ?? URL(string: "https://newton-api.onrender.com")!
+        URL(string: serverURL) ?? URL(string: "https://newton-api-1.onrender.com")!
     }
 }

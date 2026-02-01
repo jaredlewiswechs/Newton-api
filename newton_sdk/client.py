@@ -53,7 +53,7 @@ class Newton:
 
     Usage:
         newton = Newton()  # Connects to localhost:8000
-        newton = Newton("https://newton-api.onrender.com")  # Remote server
+        newton = Newton("https://newton-api-1.onrender.com")  # Remote server
 
         # Calculate
         result = newton.calculate({"op": "+", "args": [2, 3]})

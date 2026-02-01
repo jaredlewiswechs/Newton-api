@@ -14,7 +14,7 @@ const CONFIG = {
     // API endpoint - change for production
     API_BASE: window.location.hostname === 'localhost'
         ? 'http://localhost:8000'
-        : 'https://newton-api.onrender.com',
+        : window.location.origin,
 
     // Request timeout
     TIMEOUT: 60000

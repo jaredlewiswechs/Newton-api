@@ -230,7 +230,7 @@ Update `teachers-aide/app.js` to point to your Newton API:
 
 ```javascript
 const CONFIG = {
-  API_BASE: 'https://your-newton-api.onrender.com',
+  API_BASE: 'https://your-newton-api-1.onrender.com',
   TIMEOUT: 60000
 };
 ```

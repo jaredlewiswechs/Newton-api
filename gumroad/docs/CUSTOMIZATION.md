@@ -363,7 +363,7 @@ Check against `constraint_schema.json`:
 Before adding to shortcut, test with API:
 
 ```bash
-curl -X POST https://newton-api.onrender.com/verify \
+curl -X POST https://newton-api-1.onrender.com/verify \
   -H "Content-Type: application/json" \
   -d '{
     "input": "test text here",

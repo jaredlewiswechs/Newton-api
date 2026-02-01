@@ -2,7 +2,7 @@
 # Newton API Smoke Test Script
 # Tests all critical endpoints on the deployed Render service
 
-BASE_URL="${NEWTON_API_URL:-https://newton-api.onrender.com}"
+BASE_URL="${NEWTON_API_URL:-https://newton-api-1.onrender.com}"
 PASS=0
 FAIL=0
 

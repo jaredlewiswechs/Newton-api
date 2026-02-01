@@ -96,7 +96,7 @@
    - If this is BLOCKED, constraints are misconfigured
 
 2. **Check internet connection**
-   - Open Safari → visit https://newton-api.onrender.com/health
+   - Open Safari → visit https://newton-api-1.onrender.com/health
    - Should show: `{"status": "healthy"}`
    - If not, API is down or internet issue
 
@@ -107,7 +107,7 @@
    - Try just: `["medical"]` to isolate issue
 
 4. **API endpoint**
-   - Shortcut should call: `https://newton-api.onrender.com/verify`
+   - Shortcut should call: `https://newton-api-1.onrender.com/verify`
    - If different URL, it's misconfigured
    - Re-install shortcut
 
@@ -154,7 +154,7 @@
 4. **API overload**
    - Rare: many users at once
    - Wait 30 seconds and retry
-   - Check status: https://newton-api.onrender.com/health
+   - Check status: https://newton-api-1.onrender.com/health
 
 ---
 

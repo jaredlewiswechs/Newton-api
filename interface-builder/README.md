@@ -46,7 +46,7 @@ GET  /interface/info              - API documentation
 ### Build from Template
 
 ```bash
-curl -X POST https://newton-api.onrender.com/interface/build \
+curl -X POST https://newton-api-1.onrender.com/interface/build \
   -H "Content-Type: application/json" \
   -d '{
     "template_id": "dashboard-basic",
@@ -62,7 +62,7 @@ curl -X POST https://newton-api.onrender.com/interface/build \
 ### Build from Spec
 
 ```bash
-curl -X POST https://newton-api.onrender.com/interface/build \
+curl -X POST https://newton-api-1.onrender.com/interface/build \
   -H "Content-Type: application/json" \
   -d '{
     "spec": {

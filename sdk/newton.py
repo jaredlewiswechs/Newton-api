@@ -59,7 +59,7 @@ __author__ = "Newton Verified Computation Engine"
 # CONFIGURATION
 # =============================================================================
 
-DEFAULT_BASE_URL = "https://newton-api.onrender.com"
+DEFAULT_BASE_URL = "https://newton-api-1.onrender.com"
 OPENAPI_PATH = "/openapi.json"
 CARTRIDGE_INFO_PATH = "/cartridge/info"
 DISCOVERY_CACHE_TTL = 300  # 5 minutes

@@ -36,7 +36,7 @@ app.mount("/newton-demo", StaticFiles(...), name="newton-demo")
 ```
 
 ### 3. Root Page Rendering as Plain Text
-**Problem**: https://newton-api.onrender.com/ showing HTML source instead of rendered page
+**Problem**: https://newton-api-1.onrender.com/ showing HTML source instead of rendered page
 
 **Root Cause**: Missing explicit Content-Type header
 
@@ -58,19 +58,19 @@ return HTMLResponse(
 After deploying to Render, verify:
 
 ### Root Page
-- [ ] Visit https://newton-api.onrender.com/
+- [ ] Visit https://newton-api-1.onrender.com/
 - [ ] Page should display styled Newton Phone UI (dark background, app icons)
 - [ ] NOT plain HTML text
 
 ### Jester Analyzer  
-- [ ] Visit https://newton-api.onrender.com/jester-analyzer
+- [ ] Visit https://newton-api-1.onrender.com/jester-analyzer
 - [ ] Should show Jester code analyzer interface
 - [ ] Paste code example (Python function with if statements)
 - [ ] Click "Analyze Code" button
 - [ ] Should extract constraints successfully (no error 405 or 500)
 
 ### Newton Demo
-- [ ] Visit https://newton-api.onrender.com/newton-demo
+- [ ] Visit https://newton-api-1.onrender.com/newton-demo
 - [ ] Should show Newton demo page with tabs
 - [ ] Test "Ask Newton" tab - enter question, click button
 - [ ] Test "Analyze Code" tab - paste code, click analyze
@@ -79,14 +79,14 @@ After deploying to Render, verify:
 ### API Endpoints (Direct)
 ```bash
 # Test Jester analyze endpoint
-curl -X POST https://newton-api.onrender.com/jester/analyze \
+curl -X POST https://newton-api-1.onrender.com/jester/analyze \
   -H "Content-Type: application/json" \
   -d '{"code": "def test():\n    if x > 0:\n        return True"}'
 
 # Should return JSON with constraints, NOT error 500
 
 # Test with empty language parameter
-curl -X POST https://newton-api.onrender.com/jester/analyze \
+curl -X POST https://newton-api-1.onrender.com/jester/analyze \
   -H "Content-Type: application/json" \
   -d '{"code": "def test():\n    if x > 0:\n        return True", "language": ""}'
 
@@ -96,7 +96,7 @@ curl -X POST https://newton-api.onrender.com/jester/analyze \
 ## Architecture Notes
 
 ### Single Deployment Model
-All components now served from **https://newton-api.onrender.com/**:
+All components now served from **https://newton-api-1.onrender.com/**:
 - Backend API: FastAPI server
 - Frontend apps: Mounted as StaticFiles
 - Main homepage: Served by root route
@@ -108,8 +108,8 @@ Previous setup had split deployment:
 
 ### API URL Detection
 Frontend apps use `window.location.origin`:
-- When served from https://newton-api.onrender.com/jester-analyzer
-- API calls go to https://newton-api.onrender.com/jester/analyze
+- When served from https://newton-api-1.onrender.com/jester-analyzer
+- API calls go to https://newton-api-1.onrender.com/jester/analyze
 - Same origin = no CORS issues
 
 ## Files Changed

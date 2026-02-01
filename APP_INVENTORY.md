@@ -2,30 +2,30 @@
 
 ## All Apps Available on Render
 
-This document lists all applications available at **https://newton-api.onrender.com/** after consolidating from the Cloudflare Pages deployment.
+This document lists all applications available at **https://newton-api-1.onrender.com/** after consolidating from the Cloudflare Pages deployment.
 
 ## Core Applications
 
 ### Newton Supercomputer
-- **URL**: https://newton-api.onrender.com/app
-- **Alternative**: https://newton-api.onrender.com/frontend
+- **URL**: https://newton-api-1.onrender.com/app
+- **Alternative**: https://newton-api-1.onrender.com/frontend
 - **Description**: Main Newton verification engine interface
 - **Directory**: `frontend/`
 
 ### Teacher's Aide
-- **URL**: https://newton-api.onrender.com/teachers
+- **URL**: https://newton-api-1.onrender.com/teachers
 - **Description**: Educational tools and lesson planning
 - **Directory**: `teachers-aide/`
 
 ### Interface Builder
-- **URL**: https://newton-api.onrender.com/builder
+- **URL**: https://newton-api-1.onrender.com/builder
 - **Description**: Visual interface construction tool
 - **Directory**: `interface-builder/`
 
 ## Development Tools
 
 ### Jester Analyzer
-- **URL**: https://newton-api.onrender.com/jester-analyzer
+- **URL**: https://newton-api-1.onrender.com/jester-analyzer
 - **Description**: Code constraint analyzer - extracts guards, assertions, and constraints from source code
 - **Features**: 
   - Multi-language support (Python, JavaScript, Swift, etc.)
@@ -34,7 +34,7 @@ This document lists all applications available at **https://newton-api.onrender.
 - **Directory**: `jester-analyzer/`
 
 ### TinyTalk IDE
-- **URL**: https://newton-api.onrender.com/tinytalk-ide
+- **URL**: https://newton-api-1.onrender.com/tinytalk-ide
 - **Description**: Integrated development environment for TinyTalk language
 - **Features**:
   - Code editor
@@ -43,8 +43,8 @@ This document lists all applications available at **https://newton-api.onrender.
 - **Directory**: `tinytalk-ide/`
 
 ### Construct Studio
-- **URL**: https://newton-api.onrender.com/construct-studio
-- **Alternative**: https://newton-api.onrender.com/construct-studio/ui
+- **URL**: https://newton-api-1.onrender.com/construct-studio
+- **Alternative**: https://newton-api-1.onrender.com/construct-studio/ui
 - **Description**: CAD and construction design tools
 - **Features**:
   - UI design interface
@@ -54,7 +54,7 @@ This document lists all applications available at **https://newton-api.onrender.
 ## Demos & Examples
 
 ### Newton Demo
-- **URL**: https://newton-api.onrender.com/newton-demo
+- **URL**: https://newton-api-1.onrender.com/newton-demo
 - **Description**: Interactive demo of Newton verification capabilities
 - **Features**:
   - Ask Newton interface
@@ -64,21 +64,21 @@ This document lists all applications available at **https://newton-api.onrender.
 - **Directory**: `newton-demo/`
 
 ### Games
-- **URL**: https://newton-api.onrender.com/games
+- **URL**: https://newton-api-1.onrender.com/games
 - **Description**: Collection of games built with Newton
 - **Available Games**:
-  - **Gravity Wars**: https://newton-api.onrender.com/games/gravity_wars
+  - **Gravity Wars**: https://newton-api-1.onrender.com/games/gravity_wars
 - **Directory**: `games/`
 
 ## Additional Apps
 
 ### ParcCloud
-- **URL**: https://newton-api.onrender.com/parccloud
+- **URL**: https://newton-api-1.onrender.com/parccloud
 - **Description**: Cloud authentication and services
 - **Directory**: `parccloud/`
 
 ### Newton Phone (Home)
-- **URL**: https://newton-api.onrender.com/
+- **URL**: https://newton-api-1.onrender.com/
 - **Description**: Main landing page with app grid (iOS-style interface)
 - **File**: `index.html`
 
@@ -136,7 +136,7 @@ These handlers ensure proper Content-Type headers and fallback logic.
 
 ## Migration from Cloudflare Pages
 
-All apps previously hosted on `2ec0521e.newton-api.pages.dev` are now available on Render at `newton-api.onrender.com`.
+All apps previously hosted on `2ec0521e.newton-api.pages.dev` are now available on Render at `newton-api-1.onrender.com`.
 
 ### Redirects Handled
 The `_redirects` file configured on Cloudflare Pages is no longer needed. All routing is handled by FastAPI:
@@ -148,23 +148,23 @@ The `_redirects` file configured on Cloudflare Pages is no longer needed. All ro
 1. **Single Origin** - No CORS issues
 2. **Unified API** - Backend and frontend on same domain
 3. **Simpler Deployment** - One deployment instead of two
-4. **Consistent URLs** - All apps at newton-api.onrender.com
+4. **Consistent URLs** - All apps at newton-api-1.onrender.com
 
 ## Testing Checklist
 
 After deployment, verify these URLs work:
 
-- [ ] https://newton-api.onrender.com/ (home)
-- [ ] https://newton-api.onrender.com/app (Newton app)
-- [ ] https://newton-api.onrender.com/teachers (Teacher's Aide)
-- [ ] https://newton-api.onrender.com/builder (Builder)
-- [ ] https://newton-api.onrender.com/jester-analyzer (Jester)
-- [ ] https://newton-api.onrender.com/tinytalk-ide (TinyTalk IDE)
-- [ ] https://newton-api.onrender.com/construct-studio (Construct)
-- [ ] https://newton-api.onrender.com/newton-demo (Demo)
-- [ ] https://newton-api.onrender.com/games/gravity_wars (Game)
-- [ ] https://newton-api.onrender.com/parccloud (ParcCloud)
-- [ ] https://newton-api.onrender.com/health (API health)
+- [ ] https://newton-api-1.onrender.com/ (home)
+- [ ] https://newton-api-1.onrender.com/app (Newton app)
+- [ ] https://newton-api-1.onrender.com/teachers (Teacher's Aide)
+- [ ] https://newton-api-1.onrender.com/builder (Builder)
+- [ ] https://newton-api-1.onrender.com/jester-analyzer (Jester)
+- [ ] https://newton-api-1.onrender.com/tinytalk-ide (TinyTalk IDE)
+- [ ] https://newton-api-1.onrender.com/construct-studio (Construct)
+- [ ] https://newton-api-1.onrender.com/newton-demo (Demo)
+- [ ] https://newton-api-1.onrender.com/games/gravity_wars (Game)
+- [ ] https://newton-api-1.onrender.com/parccloud (ParcCloud)
+- [ ] https://newton-api-1.onrender.com/health (API health)
 
 ## Support
 
@@ -177,4 +177,4 @@ For issues with specific apps:
 ---
 
 **Last Updated**: 2026-01-31
-**Deployment**: https://newton-api.onrender.com/
+**Deployment**: https://newton-api-1.onrender.com/

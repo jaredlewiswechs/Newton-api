@@ -3,7 +3,7 @@
     "name": "Newton",
     "description": "Full Newton verification with all constraint categories",
     "version": "1.0.0",
-    "api_endpoint": "https://newton-api.onrender.com/verify",
+    "api_endpoint": "https://newton-api-1.onrender.com/verify",
     "constraints": [
       "medical",
       "legal",
@@ -18,7 +18,7 @@
     "name": "NewtonVerify",
     "description": "Lightweight verification (medical only)",
     "version": "1.0.0",
-    "api_endpoint": "https://newton-api.onrender.com/verify",
+    "api_endpoint": "https://newton-api-1.onrender.com/verify",
     "constraints": [
       "medical"
     ],

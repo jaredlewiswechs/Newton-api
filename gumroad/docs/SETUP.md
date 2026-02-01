@@ -182,7 +182,7 @@ Example: To only check medical claims:
 
 **What leaves your device:**
 - Only the text you explicitly share to Newton
-- Sent to: `https://newton-api.onrender.com/verify`
+- Sent to: `https://newton-api-1.onrender.com/verify`
 - Used for: Constraint verification only
 - Stored: Not stored - verification only
 

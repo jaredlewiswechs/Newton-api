@@ -89,7 +89,7 @@ Newton for iOS is an **Apple Shortcuts-based AI safety layer** that runs entirel
 
 - **Platform**: iOS 17+ (iPhone, iPad)
 - **Requirements**: Internet connection for API verification (optional for local-only mode)
-- **API Endpoint**: `https://newton-api.onrender.com/verify`
+- **API Endpoint**: `https://newton-api-1.onrender.com/verify`
 - **Verification Time**: <1 second (median 2.31ms API latency)
 - **Constraint Language**: CDL 3.0 (Constraint Definition Language)
 
