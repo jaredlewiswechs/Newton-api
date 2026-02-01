@@ -9,10 +9,33 @@
 // Configuration
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Determine API base URL based on deployment environment
+function getApiBase() {
+    const hostname = window.location.hostname;
+    
+    // Local development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:8000';
+    }
+    
+    // Render deployment - API is on same origin
+    // Use endsWith to prevent subdomain spoofing attacks
+    if (hostname.endsWith('.onrender.com') || hostname === 'onrender.com') {
+        return window.location.origin;
+    }
+    
+    // Cloudflare Pages or other static hosting - point to Render API
+    if (hostname.endsWith('.pages.dev') || hostname === 'pages.dev' ||
+        hostname.endsWith('.cloudflare.com') || hostname === 'cloudflare.com') {
+        return 'https://newton-api-1.onrender.com';
+    }
+    
+    // Default: assume API is on same origin
+    return window.location.origin;
+}
+
 const CONFIG = {
-    API_BASE: window.location.hostname === 'localhost'
-        ? 'http://localhost:8000'
-        : window.location.origin,
+    API_BASE: getApiBase(),
     TIMEOUT: 60000
 };
 
