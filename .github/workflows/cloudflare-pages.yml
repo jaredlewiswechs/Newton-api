@@ -101,13 +101,17 @@ jobs:
 
       - name: Deployment Summary
         run: |
-          echo "## Newton Frontend Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "## Newton Frontend Deployed to Cloudflare Pages (Legacy)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Deployed Routes:" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** Primary deployment is now on Render at https://newton-api-1.onrender.com" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Cloudflare Pages (Legacy/Backup):" >> $GITHUB_STEP_SUMMARY
           echo "- **Landing**: https://newton-api.pages.dev/" >> $GITHUB_STEP_SUMMARY
           echo "- **Newton App**: https://newton-api.pages.dev/app" >> $GITHUB_STEP_SUMMARY
           echo "- **Teacher's Aide**: https://newton-api.pages.dev/teachers" >> $GITHUB_STEP_SUMMARY
           echo "- **Interface Builder**: https://newton-api.pages.dev/builder" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "These frontends will automatically use the Render API at https://newton-api-1.onrender.com" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Branch: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

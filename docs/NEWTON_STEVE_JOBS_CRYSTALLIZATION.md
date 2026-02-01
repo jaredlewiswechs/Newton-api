@@ -196,7 +196,7 @@ class BeachTonight(Blueprint):
         The constraint is real.
         """
         # What ships tonight?
-        # 1. The app is live: https://newton-teachers-aide.pages.dev/
+        # 1. The app is live: https://newton-api-1.onrender.com/teachers
         # 2. The documentation is complete
         # 3. The demo works
         # 4. The math is true

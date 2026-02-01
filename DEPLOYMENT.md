@@ -181,15 +181,18 @@ If creating a new Cloudflare Pages project:
 | `/teachers` | Teacher's Aide | `teachers-aide/` |
 | `/builder` | Interface Builder | `interface-builder/` |
 
-**Production URLs:**
-- Main site: `https://newton-api.pages.dev`
-- Newton App: `https://newton-api.pages.dev/app`
-- Teacher's Aide: `https://newton-api.pages.dev/teachers`
-- Interface Builder: `https://newton-api.pages.dev/builder`
+**Production URLs (Render):**
+- Main site: `https://newton-api-1.onrender.com`
+- Newton App: `https://newton-api-1.onrender.com/app`
+- Teacher's Aide: `https://newton-api-1.onrender.com/teachers`
+- Interface Builder: `https://newton-api-1.onrender.com/builder`
+- Mission Control: `https://newton-api-1.onrender.com/mission-control/`
 
 ---
 
-## STEP 4: TEACHER'S AIDE (STANDALONE DEPLOYMENT)
+## STEP 4: TEACHER'S AIDE (LEGACY CLOUDFLARE PAGES DEPLOYMENT)
+
+**Note:** The primary deployment model is now Render (all-in-one). The instructions below are for legacy Cloudflare Pages deployment only if needed.
 
 For standalone deployment of Teacher's Aide (separate from unified site):
 
@@ -211,7 +214,8 @@ npx wrangler pages deploy teachers-aide
 1. Go to [Cloudflare Pages](https://pages.cloudflare.com)
 2. Click "Create a project" → "Direct Upload"
 3. Upload the `teachers-aide/` folder
-4. Your site deploys at: `https://newton-teachers-aide.pages.dev`
+4. Your site deploys at a Cloudflare Pages URL (e.g., `https://newton-teachers-aide.pages.dev`)
+5. The app will automatically point to the Render API at `https://newton-api-1.onrender.com`
 
 ### 4.3 Features
 

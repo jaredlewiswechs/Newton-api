@@ -20,7 +20,7 @@ npx wrangler pages deploy . --project-name=newton-interface-builder
 1. Go to [Cloudflare Pages](https://pages.cloudflare.com)
 2. Click "Create a project" → "Direct Upload"
 3. Upload the `interface-builder/` folder
-4. Live at: `https://newton-interface-builder.pages.dev`
+4. Live at: `https://newton-api-1.onrender.com/builder`
 
 ## Features
 

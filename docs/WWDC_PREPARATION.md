@@ -27,9 +27,9 @@
 
 | Service | Platform | Status | URL |
 |---------|----------|--------|-----|
-| Newton API | Render | **LIVE** | newton-api-sicp.onrender.com |
-| API Docs | Render | **LIVE** | newton-api-sicp.onrender.com/docs |
-| Health Check | Render | **LIVE** | newton-api-sicp.onrender.com/health |
+| Newton API | Render | **LIVE** | newton-api-1.onrender.com |
+| API Docs | Render | **LIVE** | newton-api-1.onrender.com/docs |
+| Health Check | Render | **LIVE** | newton-api-1.onrender.com/health |
 
 ### Documentation
 
@@ -444,4 +444,4 @@ Style: Dramatic reveal, transformation
 ---
 
 *Prepared by Newton for WWDC 2026*
-*parcri.net | newton-api-sicp.onrender.com*
+*parcri.net | newton-api-1.onrender.com*

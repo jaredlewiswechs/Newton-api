@@ -432,7 +432,7 @@ class NESLessonPlan(Blueprint):
 ## Support
 
 - **Issues**: https://github.com/jaredlewiswechs/Newton-api/issues
-- **Documentation**: https://newton-docs.pages.dev/education
+- **Documentation**: https://newton-api-1.onrender.com/education
 
 ---
 
