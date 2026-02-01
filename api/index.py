@@ -15,8 +15,8 @@ if parent_dir not in sys.path:
 
 # Import the FastAPI app
 # This will fail at build time if newton_supercomputer.py has issues
+# Vercel's Python runtime expects an 'app' variable for ASGI applications
 from newton_supercomputer import app
 
-# Export for Vercel
-# Vercel's Python runtime expects an 'app' variable for ASGI applications
-handler = app
+# The 'app' variable is automatically exported for Vercel
+# No need to rename it - Vercel will use it directly
