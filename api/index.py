@@ -6,10 +6,13 @@ import sys
 from pathlib import Path
 
 # Add parent directory to path so we can import newton_supercomputer
-sys.path.insert(0, str(Path(__file__).parent.parent))
+parent_dir = str(Path(__file__).parent.parent)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 # Import the FastAPI app
 from newton_supercomputer import app
 
-# Vercel expects a variable named 'app' to be exported
-# This is already done by the import above
+# Export for Vercel
+# Vercel's Python runtime expects an 'app' variable for ASGI applications
+handler = app
