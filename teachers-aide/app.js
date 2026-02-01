@@ -57,18 +57,47 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
     clearTimeout(timeout);
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'API request failed');
+      // Try to parse error details, but handle cases where response is not valid JSON
+      let errorDetail = `API request failed with status ${response.status}`;
+      try {
+        const errorBody = await response.text();
+        if (errorBody) {
+          try {
+            const errorJson = JSON.parse(errorBody);
+            errorDetail = errorJson.detail || errorDetail;
+          } catch {
+            // Response is not JSON, use the text if it's short
+            if (errorBody.length < 200) {
+              errorDetail = errorBody;
+            }
+          }
+        }
+      } catch {
+        // Could not read response body
+      }
+      throw new Error(errorDetail);
     }
 
-    return await response.json();
+    // Handle successful response - also handle empty or non-JSON responses
+    const responseText = await response.text();
+    if (!responseText) {
+      // Empty responses are acceptable for some endpoints (e.g., health checks, DELETE operations)
+      // Return empty object to allow callers to handle gracefully
+      return {};
+    }
+    try {
+      return JSON.parse(responseText);
+    } catch {
+      throw new Error('Server returned invalid JSON response');
+    }
   } catch (error) {
     clearTimeout(timeout);
     if (error.name === 'AbortError') {
       throw new Error('Request timed out - Check Mission Control for API status');
     }
-    if (error.message.includes('fetch')) {
-      throw new Error('Failed to fetch - Check Mission Control for API diagnostics');
+    // Check for network-related errors (TypeError for fetch failures, or error messages)
+    if (error instanceof TypeError || error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('Network request failed')) {
+      throw new Error('Failed to connect to server - Check Mission Control for API diagnostics');
     }
     throw error;
   }
