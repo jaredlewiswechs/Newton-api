@@ -102,6 +102,38 @@ curl -X POST https://newton-kernel-xxxx.onrender.com/verify \
 
 ## STEP 2: ALTERNATIVE DEPLOYMENTS
 
+### Vercel (Serverless)
+
+The repository includes `vercel.json` and `api/index.py` for serverless deployment on Vercel.
+
+#### Deploy to Vercel
+
+1. Go to [vercel.com](https://vercel.com) and sign in
+2. Click "Add New" → "Project"
+3. Import your GitHub repository
+4. Vercel will automatically detect the `vercel.json` configuration
+5. Click "Deploy"
+6. Wait for deployment (approximately 1-2 minutes)
+7. Your API will be available at `https://your-project.vercel.app`
+
+#### Verify Deployment
+
+```bash
+curl https://your-project.vercel.app/health
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "version": "3.0.0",
+  "engine": "Newton OS 3.0.0",
+  "uptime_seconds": 123.45
+}
+```
+
+**Note:** Vercel's serverless functions have a 10-second execution timeout on the free tier and 60 seconds on paid plans. For long-running operations, consider using Render or Docker deployment instead.
+
 ### Docker
 
 ```bash
