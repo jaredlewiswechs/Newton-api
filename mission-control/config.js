@@ -54,14 +54,14 @@ export const ENDPOINTS = {
                 method: 'POST',
                 name: 'Verify Content',
                 description: 'Verify content against constraints',
-                sampleData: { content: "Test content", constraints: [] }
+                sampleData: { input: "Test content", constraints: [] }
             },
             {
                 path: '/verify/batch',
                 method: 'POST',
                 name: 'Batch Verify',
                 description: 'Verify multiple items at once',
-                sampleData: { items: ["item1", "item2"] }
+                sampleData: { inputs: ["item1", "item2"] }
             },
             {
                 path: '/calculate',
@@ -84,7 +84,7 @@ export const ENDPOINTS = {
                 description: 'Evaluate CDL constraints',
                 sampleData: { 
                     constraint: { "op": "gt", "field": "value", "value": 0 },
-                    context: { value: 5 }
+                    object: { value: 5 }
                 }
             }
         ]
@@ -111,7 +111,7 @@ export const ENDPOINTS = {
                 method: 'POST',
                 name: 'Search TEKS',
                 description: 'Search TEKS standards',
-                sampleData: { query: "multiplication", subject: "math" }
+                sampleData: { query: "multiplication" }
             },
             {
                 path: '/education/lesson',
@@ -119,9 +119,13 @@ export const ENDPOINTS = {
                 name: 'Generate Lesson',
                 description: 'Generate TEKS-aligned lesson plan',
                 sampleData: { 
-                    teks_code: "5.3A",
-                    duration: 50,
-                    grade_level: 5
+                    grade: 5,
+                    subject: "Math",
+                    teks_codes: ["5.3A"],
+                    topic: "Multiplication strategies",
+                    student_needs: {
+                        ell: ["visual_aids", "sentence_frames"]
+                    }
                 }
             },
             {
@@ -130,8 +134,23 @@ export const ENDPOINTS = {
                 name: 'Generate Slides',
                 description: 'Generate presentation slides',
                 sampleData: {
-                    teks_code: "5.3A",
-                    num_slides: 10
+                    lesson_plan: {
+                        title: "Multiplication Models",
+                        grade: 5,
+                        subject: "Math",
+                        teks_alignment: [{"code": "5.3A"}],
+                        objective: "Model multiplication with arrays",
+                        phases: [
+                            {
+                                "phase": "instruction",
+                                "title": "Mini Lesson",
+                                "duration_minutes": 15,
+                                "activities": ["Model arrays on grid paper"]
+                            }
+                        ],
+                        assessment: {"exit_ticket": "Draw an array for 4 x 6"}
+                    },
+                    style: "modern"
                 }
             },
             {
@@ -140,8 +159,14 @@ export const ENDPOINTS = {
                 name: 'Assessment Analysis',
                 description: 'Analyze assessment scores',
                 sampleData: { 
-                    scores: [85, 90, 78, 92, 88],
-                    mastery_threshold: 80
+                    assessment_name: "Unit 1 Check",
+                    teks_codes: ["5.3A"],
+                    total_points: 10,
+                    mastery_threshold: 80,
+                    students: [
+                        {"id": "S1", "name": "Ava", "score": 9},
+                        {"id": "S2", "name": "Liam", "score": 7}
+                    ]
                 }
             },
             {
@@ -150,9 +175,12 @@ export const ENDPOINTS = {
                 name: 'PLC Report',
                 description: 'Generate Professional Learning Community report',
                 sampleData: {
-                    assessment_data: {
-                        scores: [85, 90, 78, 92]
-                    }
+                    assessment_data: [
+                        {"id": "S1", "name": "Ava", "score": 9},
+                        {"id": "S2", "name": "Liam", "score": 7}
+                    ],
+                    teks_codes: ["5.3A"],
+                    team_name: "Grade 5 Math"
                 }
             },
             {
@@ -180,9 +208,11 @@ export const ENDPOINTS = {
                 name: 'Add Student',
                 description: 'Add a student to the database',
                 sampleData: {
-                    name: "John Doe",
+                    first_name: "John",
+                    last_name: "Doe",
+                    grade: 5,
                     student_id: "S12345",
-                    grade: 5
+                    accommodations: ["ell"]
                 }
             },
             {
@@ -215,6 +245,7 @@ export const ENDPOINTS = {
                 description: 'Create a new assessment',
                 sampleData: {
                     name: "Unit 1 Test",
+                    classroom_id: "CLASS001",
                     teks_codes: ["5.3A", "5.3B"],
                     total_points: 100
                 }
@@ -231,8 +262,9 @@ export const ENDPOINTS = {
                 name: 'Create Intervention',
                 description: 'Create intervention plan',
                 sampleData: {
-                    student_id: "S12345",
-                    teks_code: "5.3A",
+                    classroom_id: "CLASS001",
+                    teks_codes: ["5.3A"],
+                    target_group: "needs_reteach",
                     strategy: "Small group instruction"
                 }
             },
@@ -273,8 +305,7 @@ export const ENDPOINTS = {
                 name: 'Ground Claim',
                 description: 'Ground a claim in verifiable evidence',
                 sampleData: {
-                    claim: "Paris is the capital of France",
-                    max_sources: 3
+                    claim: "Paris is the capital of France"
                 }
             }
         ]
@@ -358,8 +389,13 @@ export const ENDPOINTS = {
                 name: 'Build Interface',
                 description: 'Generate interface from description',
                 sampleData: {
-                    description: "A login form with username and password",
-                    interface_type: "web"
+                    template_id: "dashboard-basic",
+                    variables: {
+                        title: "Mission Control",
+                        metric1_value: "99.8%",
+                        metric1_label: "Uptime"
+                    },
+                    output_format: "json"
                 }
             },
             {
@@ -414,8 +450,10 @@ export const ENDPOINTS = {
                 name: 'Create Request',
                 description: 'Create negotiator request',
                 sampleData: {
-                    request_type: "approval",
-                    data: {}
+                    operation: "content_publish",
+                    input_data: "Publish daily summary report",
+                    reason: "Requires human approval",
+                    priority: "medium"
                 }
             },
             {
@@ -430,8 +468,11 @@ export const ENDPOINTS = {
                 name: 'Create Policy',
                 description: 'Create a new policy',
                 sampleData: {
-                    name: "Sample Policy",
-                    rules: []
+                    id: "policy-001",
+                    name: "Max Payload Size",
+                    type: "size_limit",
+                    action: "deny",
+                    condition: {"max_length": 5000}
                 }
             }
         ]
@@ -472,9 +513,12 @@ export const ENDPOINTS = {
                 name: 'Store Data',
                 description: 'Store encrypted data',
                 sampleData: {
-                    key: "my-key",
-                    data: "sensitive data",
-                    identity: "user123"
+                    key: "tester",
+                    identity: "tester",
+                    passphrase: "tester",
+                    data: {
+                        message: "sensitive data"
+                    }
                 }
             },
             {
@@ -483,8 +527,10 @@ export const ENDPOINTS = {
                 name: 'Retrieve Data',
                 description: 'Retrieve encrypted data',
                 sampleData: {
-                    key: "my-key",
-                    identity: "user123"
+                    key: "tester",
+                    identity: "tester",
+                    passphrase: "tester",
+                    entry_id: "V_TEST_ENTRY"
                 }
             }
         ]
@@ -500,7 +546,7 @@ export const ENDPOINTS = {
                 name: 'Compile Request',
                 description: 'Compile and validate chatbot request',
                 sampleData: {
-                    prompt: "Tell me about the weather"
+                    input: "Tell me about the weather"
                 }
             },
             {
@@ -509,7 +555,7 @@ export const ENDPOINTS = {
                 name: 'Classify Request',
                 description: 'Classify request type and risk',
                 sampleData: {
-                    prompt: "What is 2+2?"
+                    input: "What is 2+2?"
                 }
             },
             {
@@ -518,7 +564,7 @@ export const ENDPOINTS = {
                 name: 'Batch Compile',
                 description: 'Compile multiple requests',
                 sampleData: {
-                    prompts: ["Hello", "How are you?"]
+                    inputs: ["Hello", "How are you?"]
                 }
             },
             {
@@ -607,8 +653,12 @@ export const ENDPOINTS = {
                 name: 'Verify Plan',
                 description: 'Verify extracted constraints',
                 sampleData: {
-                    constraints: [],
-                    context: {}
+                    plan: {
+                        name: "Sample Plan",
+                        group_size: 2,
+                        duration_week: 1
+                    },
+                    text: "A trip for two friends lasting one week."
                 }
             },
             {
@@ -629,42 +679,42 @@ export const ENDPOINTS = {
                 method: 'POST',
                 name: 'Visual Cartridge',
                 description: 'Visual computation',
-                sampleData: { operation: "process_image" }
+                sampleData: { intent: "Generate a bar chart for quarterly sales" }
             },
             {
                 path: '/cartridge/sound',
                 method: 'POST',
                 name: 'Sound Cartridge',
                 description: 'Audio computation',
-                sampleData: { operation: "analyze_audio" }
+                sampleData: { intent: "Create a calming notification chime" }
             },
             {
                 path: '/cartridge/sequence',
                 method: 'POST',
                 name: 'Sequence Cartridge',
                 description: 'Sequence analysis',
-                sampleData: { sequence: [1, 2, 3] }
+                sampleData: { intent: "Storyboard a 10-second intro animation" }
             },
             {
                 path: '/cartridge/data',
                 method: 'POST',
                 name: 'Data Cartridge',
                 description: 'Data processing',
-                sampleData: { data: {} }
+                sampleData: { intent: "Summarize weekly metrics", data: { visits: 1200 } }
             },
             {
                 path: '/cartridge/rosetta',
                 method: 'POST',
                 name: 'Rosetta Cartridge',
                 description: 'Translation',
-                sampleData: { text: "hello" }
+                sampleData: { intent: "Create a Swift function that validates an email" }
             },
             {
                 path: '/cartridge/auto',
                 method: 'POST',
                 name: 'Auto Cartridge',
                 description: 'Auto-select cartridge',
-                sampleData: { task: "process data" }
+                sampleData: { intent: "Generate a report summary for Q1" }
             },
             {
                 path: '/cartridge/info',
@@ -685,8 +735,7 @@ export const ENDPOINTS = {
                 name: 'Verify License',
                 description: 'Verify Gumroad license',
                 sampleData: {
-                    license_key: "test-key",
-                    product_id: "newton"
+                    license_key: "TEST_LICENSE"
                 }
             },
             {
@@ -714,9 +763,9 @@ export const ENDPOINTS = {
                 name: 'Sign Up',
                 description: 'Create new account',
                 sampleData: {
-                    username: "testuser",
-                    password: "testpass123",
-                    email: "test@example.com"
+                    name: "Test User",
+                    email: "tester@example.com",
+                    password: "testpass123"
                 }
             },
             {
@@ -725,7 +774,7 @@ export const ENDPOINTS = {
                 name: 'Sign In',
                 description: 'Sign in to account',
                 sampleData: {
-                    username: "testuser",
+                    email: "tester@example.com",
                     password: "testpass123"
                 }
             },
