@@ -1,6 +1,9 @@
 """
 Vercel serverless function entry point for Newton Supercomputer.
 This module exports the FastAPI app for Vercel's Python runtime.
+
+Note: If imports fail, Vercel will display the error in the build logs.
+Ensure all dependencies in requirements.txt are compatible with Vercel's Python runtime.
 """
 import sys
 from pathlib import Path
@@ -11,6 +14,7 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 # Import the FastAPI app
+# This will fail at build time if newton_supercomputer.py has issues
 from newton_supercomputer import app
 
 # Export for Vercel

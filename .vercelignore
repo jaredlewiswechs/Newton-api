@@ -60,6 +60,8 @@ newton_storage/
 # Documentation (not needed for deployment)
 *.md
 !README.md
+# Note: DEPLOYMENT.md and other docs are for developers only,
+# not needed in the runtime environment
 
 # Node (for frontend - if not needed for API)
 node_modules/
