@@ -153,12 +153,15 @@ from parccloud.auth import (
 VERSION = "1.2.1"
 ENGINE = f"Newton Supercomputer {VERSION}"
 
+# Serverless storage path (only writable directory in serverless environments)
+SERVERLESS_STORAGE_PATH = "/tmp/.newton_anchors"
+
 # Detect serverless environment (Vercel, AWS Lambda, etc.)
 # In serverless environments, we cannot use background threads or write to local filesystem
 IS_SERVERLESS = (
-    os.environ.get("VERCEL") == "1" or
-    os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None or
-    os.environ.get("SERVERLESS") == "1"
+    "VERCEL" in os.environ or
+    "AWS_LAMBDA_FUNCTION_NAME" in os.environ or
+    "SERVERLESS" in os.environ
 )
 
 # Initialize components
@@ -176,7 +179,7 @@ negotiator = get_negotiator()
 # In serverless environments, use /tmp for storage (only writable directory)
 # and don't start background scheduler thread
 if IS_SERVERLESS:
-    merkle_scheduler = MerkleAnchorScheduler(ledger, interval_seconds=300, storage_path="/tmp/.newton_anchors")
+    merkle_scheduler = MerkleAnchorScheduler(ledger, interval_seconds=300, storage_path=SERVERLESS_STORAGE_PATH)
 else:
     merkle_scheduler = MerkleAnchorScheduler(ledger, interval_seconds=300)
 
