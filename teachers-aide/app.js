@@ -14,7 +14,7 @@
 const CONFIG = {
   API_BASE: window.location.hostname === 'localhost'
     ? 'http://localhost:8000'
-    : 'https://75ac0fae.newton-api.pages.dev',
+    : 'https://newton-api.onrender.com',
   TIMEOUT: 60000,
   MOAD_ENABLED: true,
   WEB_SEARCH_ENABLED: true
@@ -81,7 +81,7 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
 function showMissionControlLink(errorMessage) {
   const missionControlUrl = window.location.hostname === 'localhost'
     ? 'http://localhost:8000/mission-control/'
-    : 'https://75ac0fae.newton-api.pages.dev/mission-control/';
+    : 'https://newton-api.onrender.com/mission-control/';
   
   return `${errorMessage}\n\n🔍 Check Mission Control for diagnostics:\n${missionControlUrl}`;
 }

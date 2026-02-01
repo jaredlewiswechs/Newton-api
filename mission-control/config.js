@@ -9,7 +9,7 @@
 
 export const API_ENVIRONMENTS = {
     localhost: 'http://localhost:8000',
-    production: 'https://75ac0fae.newton-api.pages.dev',
+    production: 'https://newton-api.onrender.com',
     custom: '' // User can set custom URL
 };
 
