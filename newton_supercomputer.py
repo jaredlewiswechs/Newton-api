@@ -481,11 +481,23 @@ class TEKSSearchRequest(BaseModel):
 
 class AddStudentRequest(BaseModel):
     """Add a new student."""
-    first_name: str
-    last_name: str
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     grade: int
     accommodations: Optional[List[str]] = None
     student_id: Optional[str] = None
+
+    def get_first_last(self) -> tuple[str, str]:
+        """Return first/last name from either full name or split fields."""
+        if self.first_name and self.last_name:
+            return self.first_name, self.last_name
+        if self.name:
+            parts = self.name.strip().split(" ", 1)
+            first = parts[0]
+            last = parts[1] if len(parts) > 1 else ""
+            return first, last
+        raise ValueError("Provide name or first_name/last_name")
 
 
 class AddStudentsRequest(BaseModel):
@@ -2600,9 +2612,14 @@ async def add_student(request: AddStudentRequest):
         POST /teachers/students
         {"first_name": "Maria", "last_name": "Garcia", "grade": 5, "accommodations": ["ell"]}
     """
+    try:
+        first_name, last_name = request.get_first_last()
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     student = teachers_db.add_student(
-        first_name=request.first_name,
-        last_name=request.last_name,
+        first_name=first_name,
+        last_name=last_name,
         grade=request.grade,
         accommodations=request.accommodations,
         student_id=request.student_id

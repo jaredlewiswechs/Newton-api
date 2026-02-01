@@ -1217,6 +1217,7 @@ Add a new student to the database.
 
 ```json
 {
+  "name": "Maria Garcia",
   "first_name": "Maria",
   "last_name": "Garcia",
   "grade": 5,
@@ -1226,10 +1227,13 @@ Add a new student to the database.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
+| `name` | string | No | Full name (alternative to first/last) |
 | `first_name` | string | Yes | Student's first name |
 | `last_name` | string | Yes | Student's last name |
 | `grade` | int | Yes | Grade level (K=0, 1-12) |
 | `accommodations` | array | No | List: ell, sped, 504, gt, dyslexia, rti |
+
+Provide either `name` or `first_name`/`last_name`.
 
 #### Response
 

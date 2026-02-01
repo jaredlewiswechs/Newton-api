@@ -47,13 +47,31 @@ from threading import Lock
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SERVERLESS STORAGE PATH
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _get_default_ledger_storage_path() -> str:
+    """Return ledger storage path, using /tmp for serverless environments."""
+    env_path = os.environ.get("NEWTON_LEDGER_PATH")
+    if env_path:
+        return env_path
+
+    is_serverless = (
+        "VERCEL" in os.environ or
+        "AWS_LAMBDA_FUNCTION_NAME" in os.environ or
+        "SERVERLESS" in os.environ
+    )
+    return "/tmp/.newton_ledger" if is_serverless else ".newton_ledger"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # LEDGER CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @dataclass
 class LedgerConfig:
     """Configuration for the Ledger."""
-    storage_path: str = ".newton_ledger"
+    storage_path: str = field(default_factory=_get_default_ledger_storage_path)
     max_entries_memory: int = 10000      # Max entries in RAM
     sync_interval_seconds: int = 60       # Auto-sync to disk
     enable_merkle_tree: bool = True       # Build Merkle tree for integrity
