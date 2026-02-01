@@ -17,6 +17,7 @@ COPY interface-builder/ ./interface-builder/
 COPY teachers-aide/ ./teachers-aide/
 COPY jester-analyzer/ ./jester-analyzer/
 COPY newton-demo/ ./newton-demo/
+COPY mission-control/ ./mission-control/
 
 ENV PYTHONPATH=/app
 
