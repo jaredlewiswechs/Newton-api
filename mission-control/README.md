@@ -195,8 +195,16 @@ const config = JSON.parse(
     localStorage.getItem('newton-mission-control-config')
 );
 const API_BASE = config?.environment === 'production' 
-    ? 'https://75ac0fae.newton-api.pages.dev'
+    ? 'https://newton-api-1.onrender.com'
     : 'http://localhost:8000';
+```
+
+Note: For best results, use the shared-config.js module instead:
+```html
+<script src="/shared-config.js"></script>
+<script>
+  const API_BASE = window.NewtonConfig.API_BASE;
+</script>
 ```
 
 ## File Structure

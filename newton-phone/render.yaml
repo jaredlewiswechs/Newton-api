@@ -39,7 +39,7 @@ services:
         destination: /builder/index.html
 
 # This static site connects to the Newton API at:
-# https://newton-api-sicp.onrender.com
+# Primary deployment: https://newton-api-1.onrender.com
 #
 # Routes served:
 #   /              → Newton Phone home screen

@@ -232,7 +232,7 @@ n.constraint({
 
 ## For Educators: What This Means for Teaching
 
-Newton was born in the classroom. **Teacher's Aide** is live: https://newton-teachers-aide.pages.dev/
+Newton was born in the classroom. **Teacher's Aide** is live: https://newton-api-1.onrender.com/teachers
 
 What it does:
 - **Lesson plans** verified against TEKS standards (188 K-8 standards loaded)

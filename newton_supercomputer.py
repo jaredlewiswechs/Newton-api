@@ -4215,15 +4215,17 @@ if CONSTRUCT_STUDIO_DIR.exists():
 if GAMES_DIR.exists():
     app.mount("/games", StaticFiles(directory=str(GAMES_DIR), html=True), name="games")
 
-# Mission Control static files - served from root for the home page
-# The index.html is served by the / route, but it needs access to its static files
-# Note: These common filenames (/styles.css, /app.js, /config.js) are at the root path
-# because the mission-control HTML expects relative paths. If conflicts arise,
-# consider updating the HTML to use namespaced paths like /mission-control/styles.css
+# Mission Control static files - served from both root and /mission-control/
+# Root paths support the homepage (/) route which serves mission-control/index.html
+# /mission-control/ paths allow other apps to link to the dashboard
 if MISSION_CONTROL_DIR.exists():
+    # Mount Mission Control at /mission-control/ for direct access
+    app.mount("/mission-control", StaticFiles(directory=str(MISSION_CONTROL_DIR), html=True), name="mission-control")
+    
+    # Also serve at root for homepage compatibility (legacy)
     @app.get("/styles.css")
     async def serve_mission_control_styles():
-        """Serve Mission Control styles"""
+        """Serve Mission Control styles at root"""
         css_path = MISSION_CONTROL_DIR / "styles.css"
         if css_path.exists():
             return FileResponse(str(css_path), media_type="text/css")
@@ -4231,7 +4233,7 @@ if MISSION_CONTROL_DIR.exists():
 
     @app.get("/app.js")
     async def serve_mission_control_app():
-        """Serve Mission Control app.js"""
+        """Serve Mission Control app.js at root"""
         js_path = MISSION_CONTROL_DIR / "app.js"
         if js_path.exists():
             return FileResponse(str(js_path), media_type="application/javascript")
@@ -4239,11 +4241,20 @@ if MISSION_CONTROL_DIR.exists():
 
     @app.get("/config.js")
     async def serve_mission_control_config():
-        """Serve Mission Control config.js"""
+        """Serve Mission Control config.js at root"""
         js_path = MISSION_CONTROL_DIR / "config.js"
         if js_path.exists():
             return FileResponse(str(js_path), media_type="application/javascript")
         raise HTTPException(status_code=404, detail="config.js not found")
+
+# Serve shared configuration for all frontend apps
+@app.get("/shared-config.js")
+async def serve_shared_config():
+    """Serve shared configuration for frontend apps"""
+    config_path = ROOT_DIR / "shared-config.js"
+    if config_path.exists():
+        return FileResponse(str(config_path), media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="shared-config.js not found")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

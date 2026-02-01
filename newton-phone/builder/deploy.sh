@@ -18,7 +18,7 @@ if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
     echo "  1. Go to https://pages.cloudflare.com"
     echo "  2. Click 'Create a project' → 'Direct Upload'"
     echo "  3. Upload the 'interface-builder' folder"
-    echo "  4. Your site deploys at: https://newton-interface-builder.pages.dev"
+    echo "  4. Your site deploys at: https://newton-api-1.onrender.com/builder"
     echo ""
     exit 1
 fi
@@ -29,7 +29,7 @@ npx wrangler pages deploy . --project-name=newton-interface-builder
 
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Live at: https://newton-interface-builder.pages.dev"
+echo "🌐 Live at: https://newton-api-1.onrender.com/builder"
 echo ""
 echo "🔗 Newton Interface Builder Features:"
 echo "   • 7 templates (dashboard, form, settings, etc.)"

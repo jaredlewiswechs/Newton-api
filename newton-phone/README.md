@@ -28,7 +28,7 @@ This directory is configured for static site deployment on Render.
 The site will automatically:
 - Serve the Newton Phone home screen at `/`
 - Route to each app: `/app/`, `/teachers/`, `/builder/`
-- Connect to the Newton API at `https://newton-api-sicp.onrender.com`
+- Connect to the Newton API at `https://newton-api-1.onrender.com`
 
 ### Local Development
 
@@ -65,7 +65,7 @@ newton-phone/
 
 All apps connect to the Newton API backend:
 
-- **Production**: `https://newton-api-sicp.onrender.com`
+- **Production**: `https://newton-api-1.onrender.com`
 - **Local**: `http://localhost:8000`
 
 The API URL is configured in each app's `app.js` file.

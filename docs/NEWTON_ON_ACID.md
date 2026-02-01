@@ -73,7 +73,7 @@ We built a machine that tells the truth.
 ## Part 2: The Apps
 
 ### App 1: Teacher's Aide
-**Live:** https://newton-teachers-aide.pages.dev/
+**Live:** https://newton-api-1.onrender.com/teachers
 
 What it does:
 - Generates TEKS-aligned lesson plans (constraint: must be NES-compliant)
@@ -248,7 +248,7 @@ python -c "print(1 == 1)"
 ### What to Demonstrate
 
 1. **Lesson Plan Generation**
-   - Go to https://newton-teachers-aide.pages.dev/
+   - Go to https://newton-api-1.onrender.com/teachers
    - Generate a lesson plan
    - Watch it verify in <10ms
 
@@ -297,7 +297,7 @@ patterns_crystallized:
 
 artifacts:
   - app: teachers_aide
-    url: https://newton-teachers-aide.pages.dev/
+    url: https://newton-api-1.onrender.com/teachers
     status: LIVE
 
   - doc: steve_jobs_crystallization
