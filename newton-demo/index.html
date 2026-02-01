@@ -664,6 +664,12 @@ states that cannot exist.</div>
     <script>
         // API URL - detect deployment environment
         function getApiBase() {
+            // Try to use shared config first
+            if (typeof window.NewtonConfig !== 'undefined') {
+                return window.NewtonConfig.API_BASE;
+            }
+            
+            // Fallback: detect from hostname
             const hostname = window.location.hostname;
             
             // Local development
@@ -676,7 +682,7 @@ states that cannot exist.</div>
                 return window.location.origin;
             }
             
-            // Cloudflare Pages or other static hosting - point to Render API
+            // Legacy Cloudflare Pages - point to Render API
             if (hostname.endsWith('.pages.dev') || hostname === 'pages.dev' ||
                 hostname.endsWith('.cloudflare.com') || hostname === 'cloudflare.com') {
                 return 'https://newton-api-1.onrender.com';

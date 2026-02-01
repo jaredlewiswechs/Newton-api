@@ -12,6 +12,12 @@
 
 // Determine API base URL based on deployment environment
 function getApiBase() {
+    // Try to use shared config first
+    if (typeof window.NewtonConfig !== 'undefined') {
+        return window.NewtonConfig.API_BASE;
+    }
+    
+    // Fallback: detect from hostname
     const hostname = window.location.hostname;
     
     // Local development
@@ -20,12 +26,11 @@ function getApiBase() {
     }
     
     // Render deployment - API is on same origin
-    // Use endsWith to prevent subdomain spoofing attacks
     if (hostname.endsWith('.onrender.com') || hostname === 'onrender.com') {
         return window.location.origin;
     }
     
-    // Cloudflare Pages or other static hosting - point to Render API
+    // Legacy Cloudflare Pages - point to Render API
     if (hostname.endsWith('.pages.dev') || hostname === 'pages.dev' ||
         hostname.endsWith('.cloudflare.com') || hostname === 'cloudflare.com') {
         return 'https://newton-api-1.onrender.com';
