@@ -14,7 +14,7 @@ const CONFIG = {
     // API endpoint - Newton API backend
     API_BASE: window.location.hostname === 'localhost'
         ? 'http://localhost:8000'
-        : 'https://75ac0fae.newton-api.pages.dev',
+        : 'https://newton-api.onrender.com',
 
     // Request timeout
     TIMEOUT: 60000
@@ -126,7 +126,7 @@ const api = {
     getMissionControlUrl() {
         return window.location.hostname === 'localhost'
             ? 'http://localhost:8000/mission-control/'
-            : 'https://75ac0fae.newton-api.pages.dev/mission-control/';
+            : 'https://newton-api.onrender.com/mission-control/';
     },
 
     async ask(query) {
