@@ -161,7 +161,7 @@ Newton includes a complete suite of web applications for verified computation, c
 | **System Status** | `/health` | Real-time system health and component status |
 | **Metrics** | `/metrics` | Performance metrics and statistics |
 
-**Live Demo:** Visit the Newton showcase at https://newton-api.onrender.com/
+**Live Demo:** Visit the Newton showcase at https://newton-api-1.onrender.com/
 
 All applications use verified computation with deterministic results, immutable audit trails, and sub-millisecond latency.
 

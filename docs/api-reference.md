@@ -8,7 +8,7 @@ Complete reference for the Newton Supercomputer API.
 
 | Environment | URL |
 |-------------|-----|
-| Hosted API | `https://newton-api.onrender.com` |
+| Hosted API | `https://newton-api-1.onrender.com` |
 | Self-hosted | `http://localhost:8000` |
 
 ---

@@ -54,7 +54,7 @@ L2: APPLICATION (REST API)
 ### 1. Build from Template (Easiest)
 
 ```bash
-curl -X POST https://newton-api.onrender.com/interface/build \
+curl -X POST https://newton-api-1.onrender.com/interface/build \
   -H "Content-Type: application/json" \
   -d '{
     "template_id": "dashboard-basic",
@@ -70,7 +70,7 @@ curl -X POST https://newton-api.onrender.com/interface/build \
 ### 2. Build from Specification (Custom)
 
 ```bash
-curl -X POST https://newton-api.onrender.com/interface/build \
+curl -X POST https://newton-api-1.onrender.com/interface/build \
   -H "Content-Type: application/json" \
   -d '{
     "spec": {
@@ -492,7 +492,7 @@ python -m http.server 3000
 ```jsx
 import { useState, useEffect } from 'react';
 
-const API_BASE = 'https://newton-api.onrender.com';
+const API_BASE = 'https://newton-api-1.onrender.com';
 
 function Dashboard() {
   const [interface, setInterface] = useState(null);
@@ -521,7 +521,7 @@ function Dashboard() {
 import requests
 
 response = requests.post(
-    'https://newton-api.onrender.com/interface/build',
+    'https://newton-api-1.onrender.com/interface/build',
     json={
         'template_id': 'form-contact',
         'variables': {'title': 'Contact Us'},
@@ -545,7 +545,7 @@ else:
 const fetch = require('node-fetch');
 
 async function buildInterface() {
-  const response = await fetch('https://newton-api.onrender.com/interface/build', {
+  const response = await fetch('https://newton-api-1.onrender.com/interface/build', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -665,7 +665,7 @@ GET /health
 
 ## Support
 
-- **API Docs:** https://newton-api.onrender.com/docs
+- **API Docs:** https://newton-api-1.onrender.com/docs
 - **GitHub:** https://github.com/Newton-api
 - **Philosophy:** "1 == 1. The cloud is weather. We're building shelter."
 

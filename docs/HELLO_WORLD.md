@@ -226,7 +226,7 @@ n.constraint({
 2. Constraints are ratios (f/g)
 3. Colors mean: GREEN (go), YELLOW (careful), RED (stop)
 
-**Try the live system:** https://newton-api.onrender.com/docs
+**Try the live system:** https://newton-api-1.onrender.com/docs
 
 ---
 
@@ -479,7 +479,7 @@ If you're a company, email me. Let's talk licensing.
 
 ### Option 1: Try the API (No Setup)
 ```bash
-curl https://newton-api.onrender.com/ask \
+curl https://newton-api-1.onrender.com/ask \
   -H "Content-Type: application/json" \
   -d '{"question": "Is 1 equal to 1?"}'
 ```

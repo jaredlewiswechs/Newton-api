@@ -297,12 +297,12 @@ QUICK START:
 
 1. Purchase → Get license key
 2. Verify license:
-   curl -X POST https://newton-api.onrender.com/license/verify \
+   curl -X POST https://newton-api-1.onrender.com/license/verify \
      -H "Content-Type: application/json" \
      -d '{"license_key": "YOUR_KEY"}'
 3. Get your API key from response
 4. Start building:
-   curl -X POST https://newton-api.onrender.com/ask \
+   curl -X POST https://newton-api-1.onrender.com/ask \
      -H "X-API-Key: your_api_key" \
      -H "Content-Type: application/json" \
      -d '{"query": "verify: x > 0 AND x < 100"}'
@@ -443,7 +443,7 @@ import requests
 def safe_respond(ai_output):
     # Verify with Newton Shield
     result = requests.post(
-        "https://newton-api.onrender.com/verify",
+        "https://newton-api-1.onrender.com/verify",
         headers={"X-API-Key": "your_key"},
         json={"content": ai_output}
     )

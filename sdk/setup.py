@@ -62,6 +62,6 @@ setup(
     project_urls={
         "Bug Reports": "https://github.com/jaredlewiswechs/Newton-api/issues",
         "Source": "https://github.com/jaredlewiswechs/Newton-api",
-        "Documentation": "https://newton-api.onrender.com/docs",
+        "Documentation": "https://newton-api-1.onrender.com/docs",
     },
 )

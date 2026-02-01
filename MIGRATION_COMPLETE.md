@@ -2,7 +2,7 @@
 
 ## Summary
 
-Successfully migrated **all 10+ apps** from Cloudflare Pages (`2ec0521e.newton-api.pages.dev`) to Render (`newton-api.onrender.com`).
+Successfully migrated **all 10+ apps** from Cloudflare Pages (`2ec0521e.newton-api.pages.dev`) to Render (`newton-api-1.onrender.com`).
 
 ## What Was Done
 
@@ -30,7 +30,7 @@ Added 4 apps that were on Cloudflare but missing from Render:
 
 ## Complete App List
 
-All these apps are now available at `https://newton-api.onrender.com`:
+All these apps are now available at `https://newton-api-1.onrender.com`:
 
 1. **/** - Newton Phone (Home screen)
 2. **/app** - Newton Supercomputer
@@ -49,7 +49,7 @@ Plus all API endpoints at the same domain.
 
 ✅ **Single Origin** - No CORS issues  
 ✅ **Unified Deployment** - One deployment instead of two  
-✅ **Consistent URLs** - All apps at newton-api.onrender.com  
+✅ **Consistent URLs** - All apps at newton-api-1.onrender.com  
 ✅ **Simpler Maintenance** - Single codebase and deployment
 
 ## Technical Changes
@@ -81,28 +81,28 @@ After deployment, test these key URLs:
 
 ```bash
 # Home page with styled UI
-curl https://newton-api.onrender.com/
+curl https://newton-api-1.onrender.com/
 
 # Main apps
-curl https://newton-api.onrender.com/app
-curl https://newton-api.onrender.com/teachers
-curl https://newton-api.onrender.com/builder
+curl https://newton-api-1.onrender.com/app
+curl https://newton-api-1.onrender.com/teachers
+curl https://newton-api-1.onrender.com/builder
 
 # Development tools
-curl https://newton-api.onrender.com/jester-analyzer
-curl https://newton-api.onrender.com/tinytalk-ide
-curl https://newton-api.onrender.com/construct-studio
+curl https://newton-api-1.onrender.com/jester-analyzer
+curl https://newton-api-1.onrender.com/tinytalk-ide
+curl https://newton-api-1.onrender.com/construct-studio
 
 # Demos & games
-curl https://newton-api.onrender.com/newton-demo
-curl https://newton-api.onrender.com/games/gravity_wars
+curl https://newton-api-1.onrender.com/newton-demo
+curl https://newton-api-1.onrender.com/games/gravity_wars
 
 # Additional apps
-curl https://newton-api.onrender.com/parccloud
+curl https://newton-api-1.onrender.com/parccloud
 
 # API health
-curl https://newton-api.onrender.com/health
-curl https://newton-api.onrender.com/jester/info
+curl https://newton-api-1.onrender.com/health
+curl https://newton-api-1.onrender.com/jester/info
 ```
 
 See **APP_INVENTORY.md** for complete testing checklist.
@@ -142,7 +142,7 @@ All apps from Cloudflare Pages have been migrated to Render with proper configur
 
 **Migration Date**: 2026-01-31  
 **Source**: 2ec0521e.newton-api.pages.dev  
-**Destination**: newton-api.onrender.com  
+**Destination**: newton-api-1.onrender.com  
 **Apps Migrated**: 10+  
 **Issues Fixed**: 7  
 **Security**: Passed

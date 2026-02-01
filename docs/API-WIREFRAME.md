@@ -3,7 +3,7 @@
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
 │                              NEWTON SUPERCOMPUTER API                                     │
-│                        https://newton-api.onrender.com                                   │
+│                        https://newton-api-1.onrender.com                                   │
 │                                    (Render Web Service)                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
                                            │
@@ -117,7 +117,7 @@
 │                                                                                         │
 │  ┌─────────────────────────────────────────────────────────────────────────────────┐   │
 │  │                        newton-api (Web Service)                                  │   │
-│  │                    https://newton-api.onrender.com                               │   │
+│  │                    https://newton-api-1.onrender.com                               │   │
 │  ├─────────────────────────────────────────────────────────────────────────────────┤   │
 │  │  Runtime: Python 3.11.4                                                          │   │
 │  │  Workers: 4 (Gunicorn + Uvicorn)                                                 │   │
@@ -146,7 +146,7 @@
 │  │    /teachers/* → Teacher's Aide SPA                                              │   │
 │  │    /builder/* → Interface Builder SPA                                            │   │
 │  │                                                                                  │   │
-│  │  API calls → https://newton-api.onrender.com                                     │   │
+│  │  API calls → https://newton-api-1.onrender.com                                     │   │
 │  └─────────────────────────────────────────────────────────────────────────────────┘   │
 │                                                                                         │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
@@ -329,7 +329,7 @@
 
 | Service | URL | Type |
 |---------|-----|------|
-| Newton API | https://newton-api.onrender.com | Web Service (Python) |
+| Newton API | https://newton-api-1.onrender.com | Web Service (Python) |
 | Newton Phone | https://newton-phone.onrender.com | Static Site (optional) |
 
 ## Quick Start
@@ -345,7 +345,7 @@ uvicorn newton_supercomputer:app --host 0.0.0.0 --port 8000 --reload
 ## Health Check
 
 ```bash
-curl https://newton-api.onrender.com/health
+curl https://newton-api-1.onrender.com/health
 ```
 
 Expected response:

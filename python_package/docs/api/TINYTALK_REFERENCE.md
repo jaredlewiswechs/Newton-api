@@ -404,7 +404,7 @@ Client for Newton Supercomputer server.
 from newton import Newton
 
 newton = Newton("http://localhost:8000")
-newton = Newton("https://newton-api.onrender.com", api_key="...")
+newton = Newton("https://newton-api-1.onrender.com", api_key="...")
 ```
 
 **Methods:**

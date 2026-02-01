@@ -5,7 +5,7 @@ Usage:
     from newton import Newton
 
     newton = Newton()  # localhost:8000
-    newton = Newton("https://newton-api.onrender.com")  # Remote
+    newton = Newton("https://newton-api-1.onrender.com")  # Remote
 
     result = newton.calculate({"op": "+", "args": [2, 3]})
     print(result.result)  # 5
@@ -60,7 +60,7 @@ class Newton:
 
     Usage:
         newton = Newton()  # Connects to localhost:8000
-        newton = Newton("https://newton-api.onrender.com")  # Remote server
+        newton = Newton("https://newton-api-1.onrender.com")  # Remote server
 
         # Calculate
         result = newton.calculate({"op": "+", "args": [2, 3]})
