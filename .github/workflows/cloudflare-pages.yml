@@ -20,16 +20,6 @@
 name: Deploy to Cloudflare Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - '_redirects'
-      - 'frontend/**'
-      - 'teachers-aide/**'
-      - 'interface-builder/**'
-      - '.github/workflows/cloudflare-pages.yml'
-      - 'wrangler.toml'
   workflow_dispatch:
     inputs:
       environment:

@@ -63,6 +63,7 @@ Newton OS v3.0.0 is a deterministic verification engine that governs AI executio
 ## STEP 1: DEPLOY TO RENDER (RECOMMENDED)
 
 The repository includes a `render.yaml` preconfigured for Python deployment.
+Render is the single-tool deployment that "just works" for this repo because it serves the API and frontend together.
 
 ### 1.1 Deploy to Render
 
@@ -126,19 +127,18 @@ uvicorn newton_os_server:app --host 0.0.0.0 --port 8000
 
 ---
 
-## STEP 3: CLOUDFLARE PAGES (UNIFIED FRONTEND)
+## STEP 3: CLOUDFLARE PAGES (OPTIONAL)
 
-The Newton frontend is deployed as a unified static site on Cloudflare Pages. This includes:
-- **Root**: Landing page (marketing site)
-- **/app**: Newton Supercomputer (main app)
-- **/teachers**: Teacher's Aide (education tools)
-- **/builder**: Interface Builder (development tools)
+Cloudflare Pages is optional if you want the frontend hosted separately. The recommended default is a single Render deployment
+so the API and frontend share one origin (no CORS or routing conflicts).
 
-### 3.1 Automatic Deployment (Recommended)
+If you choose Cloudflare Pages, you must keep it manual to avoid split deployments.
 
-The repository includes a GitHub Actions workflow that automatically deploys to Cloudflare Pages on push to `main`.
+### 3.1 Manual Deployment Only
 
-**Required GitHub Secrets:**
+Deploy manually when needed (the GitHub Actions workflow is manual-only).
+
+**Required Cloudflare Credentials:**
 - `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Pages edit permissions
 - `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
 
