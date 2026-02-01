@@ -52,7 +52,9 @@ echo ""
 echo "[4/6] Installing dependencies..."
 pip install --upgrade pip > /dev/null
 pip install -r requirements.txt > /dev/null
+pip install -e . > /dev/null
 echo "      ✓ Dependencies installed"
+echo "      ✓ Newton SDK installed (newton command available)"
 
 # Run tests to verify installation
 echo ""

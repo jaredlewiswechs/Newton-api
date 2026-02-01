@@ -995,7 +995,7 @@ def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]
 # StaticFiles mounts are defined at the end of the file (after all API routes) to ensure proper routing precedence
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# NEWTON PHONE - Static Frontend Routes
+# NEWTON MISSION CONTROL - Static Frontend Routes
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/", response_class=HTMLResponse)

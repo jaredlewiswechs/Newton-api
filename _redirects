@@ -1,5 +1,8 @@
 # Newton Phone - Cloudflare Pages Redirects
-# Root serves the home screen (index.html)
+# Root serves Mission Control
+
+# Root redirects to mission control
+/               /mission-control/index.html 200
 
 # Newton Supercomputer (main app)
 /app            /frontend/index.html        200
@@ -25,6 +28,11 @@
 # Ledger
 /ledger         /ledger/index.html          200
 /ledger/*       /ledger/index.html          200
+
+# Mission Control static assets
+/styles.css     /mission-control/styles.css 200
+/app.js         /mission-control/app.js     200
+/config.js      /mission-control/config.js  200
 
 # All other routes serve their files directly
 /*              /:splat                     200

@@ -4,7 +4,7 @@
 # Deploy command: npx wrangler pages deploy . --project-name=newton-api
 #
 # This deploys the entire repository with:
-# - Root index.html as the landing page
+# - / -> mission-control/index.html (Newton Mission Control)
 # - /app -> frontend/index.html (Newton Supercomputer)
 # - /teachers -> teachers-aide/index.html (Teacher's Aide)
 # - /builder -> interface-builder/index.html (Interface Builder)

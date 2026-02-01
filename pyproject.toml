@@ -52,7 +52,8 @@ Documentation = "https://github.com/jaredlewiswechs/Newton-api/blob/main/README.
 Repository = "https://github.com/jaredlewiswechs/Newton-api"
 
 [tool.setuptools.packages.find]
-include = ["newton_sdk*", "tinytalk_py*"]
+where = [".", "src"]
+include = ["newton*", "newton_sdk*", "tinytalk_py*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.json"]

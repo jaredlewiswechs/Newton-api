@@ -22,7 +22,7 @@ services:
     autoDeploy: true
 
 # Routes served by newton-api:
-#   /           → Newton Phone (iPhone home screen)
+#   /           → Newton Mission Control (dashboard)
 #   /app        → Newton Supercomputer
 #   /teachers   → Teacher's Aide
 #   /builder    → Interface Builder
