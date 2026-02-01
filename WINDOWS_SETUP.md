@@ -75,12 +75,18 @@ REM 4. Install dependencies
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 
-REM 5. Install Newton SDK
+REM 5. Install Newton SDK (REQUIRED for 'newton' command to work!)
 pip install -e .
 
-REM 6. Test the installation
+REM 6. Verify 'newton' command works
+newton --help
+
+REM 7. Test the installation
 python test_full_system.py
 ```
+
+> ⚠️ **Important:** Step 5 (`pip install -e .`) is required for the `newton` command to work. 
+> Without it, you'll get "newton is not recognized as an internal or external command".
 
 ### Method 2: With Virtual Environment (Best Practice)
 
@@ -401,6 +407,22 @@ taskkill /PID <PID> /F
    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
    ```
 
+### Newton Command Not Found
+
+**Problem:** `'newton' is not recognized as an internal or external command`
+
+**Solution:**
+```cmd
+REM Make sure virtual environment is activated
+venv\Scripts\activate.bat
+
+REM Install Newton SDK (this registers the 'newton' command)
+pip install -e .
+
+REM Verify it works
+newton --help
+```
+
 ### Module Not Found
 
 **Problem:** `ModuleNotFoundError: No module named 'fastapi'`
@@ -412,6 +434,19 @@ venv\Scripts\activate.bat
 
 REM Reinstall dependencies
 pip install -r requirements.txt
+```
+
+### Module Not Found (newton.ada or similar)
+
+**Problem:** `ModuleNotFoundError: No module named 'newton'`
+
+**Solution:**
+```cmd
+REM Make sure virtual environment is activated
+venv\Scripts\activate.bat
+
+REM Install the Newton package in development mode
+pip install -e .
 ```
 
 ### Git Clone Fails
@@ -637,9 +672,10 @@ REM Quick start on Windows:
 2. git clone https://github.com/jaredlewiswechs/Newton-api.git
 3. cd Newton-api
 4. pip install -r requirements.txt
-5. pip install -e .
-6. python newton_supercomputer.py    (Terminal 1)
-7. python test_full_system.py         (Terminal 2)
+5. pip install -e .                      <-- Required for 'newton' command!
+6. newton --help                         (Verify command works)
+7. python newton_supercomputer.py        (Terminal 1)
+8. python test_full_system.py            (Terminal 2)
 
 If all tests pass: Newton is ready! 1 == 1.
 ```

@@ -36,6 +36,7 @@ cd Newton-api
 **What happens:**
 - Creates a Python virtual environment
 - Installs all dependencies
+- Installs Newton SDK (`newton` command)
 - Runs verification tests
 - Tests the server
 
@@ -45,6 +46,17 @@ cd Newton-api
                 SETUP COMPLETE!
 ═══════════════════════════════════════════════════════════════
 Newton is ready!
+```
+
+**Manual Install (Windows or if script fails):**
+```bash
+git clone https://github.com/jaredlewiswechs/Newton-api.git
+cd Newton-api
+python -m venv venv
+# On Windows: venv\Scripts\activate
+# On Mac/Linux: source venv/bin/activate
+pip install -r requirements.txt
+pip install -e .    # Required for 'newton' command to work!
 ```
 
 ---
