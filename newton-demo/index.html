@@ -662,10 +662,31 @@ states that cannot exist.</div>
     </footer>
 
     <script>
-        // API URL
-        const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:8000'
-            : window.location.origin;
+        // API URL - detect deployment environment
+        function getApiBase() {
+            const hostname = window.location.hostname;
+            
+            // Local development
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return 'http://localhost:8000';
+            }
+            
+            // Render deployment - API is on same origin
+            if (hostname.endsWith('.onrender.com') || hostname === 'onrender.com') {
+                return window.location.origin;
+            }
+            
+            // Cloudflare Pages or other static hosting - point to Render API
+            if (hostname.endsWith('.pages.dev') || hostname === 'pages.dev' ||
+                hostname.endsWith('.cloudflare.com') || hostname === 'cloudflare.com') {
+                return 'https://newton-api-1.onrender.com';
+            }
+            
+            // Default: assume API is on same origin
+            return window.location.origin;
+        }
+        
+        const API = getApiBase();
 
         // Tab switching
         document.querySelectorAll('.demo-tab').forEach(tab => {
