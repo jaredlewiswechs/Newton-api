@@ -194,9 +194,9 @@ class WordAssemblyAnalyzer:
         vowel_cohesion = sum(vowel_stabilities) if vowel_stabilities else 0.0
         weighted_vector = (cls.CONSONANT_WEIGHT * consonant_force) + (cls.VOWEL_WEIGHT * vowel_cohesion)
 
-        # Standard stability calculation
+        # Standard stability calculation (clamped to [0, 1])
         all_stabilities = [r.weighted_stability for r in letters]
-        avg_stability = sum(all_stabilities) / len(all_stabilities)
+        avg_stability = min(1.0, max(0.0, sum(all_stabilities) / len(all_stabilities)))
 
         # Count glyph categories
         upper_word = word.upper()
@@ -222,7 +222,7 @@ class WordAssemblyAnalyzer:
         return WordVector(
             word=word,
             stability_score=avg_stability,
-            instability_score=1.0 - avg_stability,
+            instability_score=max(0.0, 1.0 - avg_stability),
             consonant_force=consonant_force,
             vowel_cohesion=vowel_cohesion,
             weighted_vector=weighted_vector,
