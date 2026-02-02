@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Damian Neveaux | #22 | DB/LB | MPC Football</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A84FF;
+            --gold: #FFD60A;
+            --green: #30D158;
+            --red: #FF453A;
+            --surface: #1C1C1E;
+            --surface-elevated: #2C2C2E;
+            --surface-high: #3A3A3C;
+            --text-primary: #FFFFFF;
+            --text-secondary: rgba(255,255,255,0.7);
+            --text-tertiary: rgba(255,255,255,0.5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding: 60px 20px;
+            background: 
+                radial-gradient(ellipse at 50% 0%, rgba(10, 132, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255, 214, 10, 0.1) 0%, transparent 40%),
+                #000;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.5;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .jersey-number {
+            font-size: clamp(120px, 25vw, 280px);
+            font-weight: 700;
+            line-height: 0.85;
+            background: linear-gradient(180deg, var(--gold) 0%, #B8860B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 80px rgba(255, 214, 10, 0.3);
+            letter-spacing: -0.05em;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 30px rgba(255, 214, 10, 0.3)); }
+            50% { filter: drop-shadow(0 0 60px rgba(255, 214, 10, 0.5)); }
+        }
+
+        .player-name {
+            font-size: clamp(36px, 8vw, 72px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 20px 0 10px;
+        }
+
+        .position-badge {
+            display: inline-flex;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .badge {
+            padding: 8px 20px;
+            background: var(--surface-elevated);
+            border: 1px solid var(--surface-high);
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .badge.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #0066CC 100%);
+            border: none;
+        }
+
+        .school-info {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        .school-info strong {
+            color: var(--gold);
+        }
+
+        /* Stats Grid */
+        .stats-section {
+            padding: 100px 20px;
+            background: var(--surface);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--surface-elevated);
+            border-radius: 20px;
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(255, 214, 10, 0.15) 0%, rgba(255, 214, 10, 0.05) 100%);
+            border: 1px solid rgba(255, 214, 10, 0.3);
+        }
+
+        .stat-card.highlight::before {
+            content: '🔥';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 20px;
+        }
+
+        .stat-value {
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card.highlight .stat-value {
+            background: linear-gradient(180deg, var(--gold) 0%, #B8860B 100%);
+            -webkit-background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-context {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+        }
+
+        /* Kinematic Analysis */
+        .kinematic-section {
+            padding: 100px 20px;
+            background: #000;
+        }
+
+        .kinematic-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .kinematic-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .kinematic-visual {
+            aspect-ratio: 1;
+            background: var(--surface);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .radar-chart {
+            width: 80%;
+            height: 80%;
+            position: relative;
+        }
+
+        .radar-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+        }
+
+        .radar-ring {
+            position: absolute;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .radar-ring:nth-child(1) { inset: 0%; }
+        .radar-ring:nth-child(2) { inset: 20%; }
+        .radar-ring:nth-child(3) { inset: 40%; }
+        .radar-ring:nth-child(4) { inset: 60%; }
+
+        .radar-axis {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            transform-origin: left center;
+        }
+
+        .radar-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--gold);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(255, 214, 10, 0.5);
+        }
+
+        .radar-label {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kinematic-content h3 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .kinematic-content p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+
+        .metric-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .metric-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .metric-bar-label {
+            font-size: 13px;
+            font-weight: 500;
+            width: 100px;
+            color: var(--text-secondary);
+        }
+
+        .metric-bar-track {
+            flex: 1;
+            height: 8px;
+            background: var(--surface-elevated);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        .metric-bar-value {
+            font-size: 14px;
+            font-weight: 600;
+            width: 50px;
+            text-align: right;
+        }
+
+        /* Highlights Section */
+        .highlights-section {
+            padding: 100px 20px;
+            background: var(--surface);
+        }
+
+        .video-placeholder {
+            aspect-ratio: 16/9;
+            background: var(--surface-elevated);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--surface-high);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .video-placeholder:hover {
+            border-color: var(--primary);
+            background: rgba(10, 132, 255, 0.1);
+        }
+
+        .play-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .video-placeholder p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Season Comparison */
+        .comparison-section {
+            padding: 100px 20px;
+            background: #000;
+        }
+
+        .seasons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .season-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .season-card.featured {
+            background: linear-gradient(135deg, var(--surface) 0%, rgba(10, 132, 255, 0.1) 100%);
+            border: 1px solid rgba(10, 132, 255, 0.3);
+        }
+
+        .season-card.featured::after {
+            content: 'BREAKOUT YEAR';
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            background: var(--gold);
+            color: #000;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 40px;
+            transform: rotate(45deg);
+            letter-spacing: 1px;
+        }
+
+        .season-year {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
+        }
+
+        .season-card.featured .season-year {
+            color: var(--primary);
+        }
+
+        .season-record {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .season-record .perfect {
+            color: var(--green);
+        }
+
+        .season-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .season-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--surface-high);
+        }
+
+        .season-stat:last-child {
+            border-bottom: none;
+        }
+
+        .season-stat-label {
+            color: var(--text-secondary);
+        }
+
+        .season-stat-value {
+            font-weight: 600;
+        }
+
+        .season-card.featured .season-stat-value {
+            color: var(--gold);
+        }
+
+        /* Awards */
+        .awards-section {
+            padding: 100px 20px;
+            background: var(--surface);
+        }
+
+        .awards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .award-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 24px;
+            background: var(--surface-elevated);
+            border-radius: 16px;
+            transition: transform 0.2s ease;
+        }
+
+        .award-item:hover {
+            transform: translateX(8px);
+        }
+
+        .award-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--gold) 0%, #B8860B 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .award-text h4 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .award-text p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Contact CTA */
+        .contact-section {
+            padding: 120px 20px;
+            background: 
+                radial-gradient(ellipse at 50% 100%, rgba(10, 132, 255, 0.2) 0%, transparent 50%),
+                #000;
+            text-align: center;
+        }
+
+        .contact-section h2 {
+            font-size: clamp(32px, 6vw, 56px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+        }
+
+        .contact-section p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .contact-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #0077ED;
+            transform: scale(1.02);
+        }
+
+        .btn-secondary {
+            background: var(--surface-elevated);
+            color: #fff;
+            border: 1px solid var(--surface-high);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-high);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 40px 20px;
+            text-align: center;
+            background: var(--surface);
+            border-top: 1px solid var(--surface-high);
+        }
+
+        .footer-logo {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
+        }
+
+        .footer-powered {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .footer-powered a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Animations */
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            animation: fade-up 0.8s ease forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="jersey-number">22</div>
+            <h1 class="player-name">Damian Neveaux</h1>
+            <div class="position-badge">
+                <span class="badge primary">Defensive Back</span>
+                <span class="badge">Linebacker</span>
+                <span class="badge">Hybrid</span>
+            </div>
+            <p class="school-info">
+                <strong>Monterey Peninsula College</strong> · Lobos Football · Class of 2026
+            </p>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">2025 Season</p>
+                <h2 class="section-title">Elite Performance</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="stat-value">126</div>
+                    <div class="stat-label">Total Tackles</div>
+                    <div class="stat-context">11+ per game average</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Interceptions</div>
+                    <div class="stat-context">Ball hawk instincts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">2.5</div>
+                    <div class="stat-label">Sacks</div>
+                    <div class="stat-context">Pass rush versatility</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6'0"</div>
+                    <div class="stat-label">Height</div>
+                    <div class="stat-context">Ideal hybrid frame</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">205</div>
+                    <div class="stat-label">Weight (lbs)</div>
+                    <div class="stat-context">Physical presence</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4.5</div>
+                    <div class="stat-label">40-Yard</div>
+                    <div class="stat-context">Speed to sideline</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Kinematic Analysis -->
+    <section class="kinematic-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">Newton Analysis</p>
+                <h2 class="section-title">Athletic Profile</h2>
+            </div>
+            <div class="kinematic-grid">
+                <div class="kinematic-visual">
+                    <div class="radar-chart">
+                        <div class="radar-bg">
+                            <div class="radar-ring"></div>
+                            <div class="radar-ring"></div>
+                            <div class="radar-ring"></div>
+                            <div class="radar-ring"></div>
+                        </div>
+                        <div class="radar-axis" style="transform: rotate(0deg);"></div>
+                        <div class="radar-axis" style="transform: rotate(60deg);"></div>
+                        <div class="radar-axis" style="transform: rotate(120deg);"></div>
+                        <div class="radar-axis" style="transform: rotate(180deg);"></div>
+                        <div class="radar-axis" style="transform: rotate(240deg);"></div>
+                        <div class="radar-axis" style="transform: rotate(300deg);"></div>
+                        
+                        <div class="radar-label" style="top: 5%; left: 50%; transform: translateX(-50%);">SPEED</div>
+                        <div class="radar-label" style="top: 25%; right: 5%;">TACKLING</div>
+                        <div class="radar-label" style="bottom: 25%; right: 5%;">COVERAGE</div>
+                        <div class="radar-label" style="bottom: 5%; left: 50%; transform: translateX(-50%);">INSTINCTS</div>
+                        <div class="radar-label" style="bottom: 25%; left: 5%;">BLITZ</div>
+                        <div class="radar-label" style="top: 25%; left: 5%;">PHYSICALITY</div>
+                    </div>
+                </div>
+                <div class="kinematic-content">
+                    <h3>Hybrid Defensive Force</h3>
+                    <p>
+                        Damian's unique skill set allows him to excel in multiple defensive roles. 
+                        His combination of speed, instincts, and physicality makes him a chess piece 
+                        that coordinators can deploy anywhere in the defensive backfield or at linebacker.
+                    </p>
+                    <div class="metric-bars">
+                        <div class="metric-bar">
+                            <span class="metric-bar-label">Tackling</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill" style="width: 98%; background: var(--gold);"></div>
+                            </div>
+                            <span class="metric-bar-value">98</span>
+                        </div>
+                        <div class="metric-bar">
+                            <span class="metric-bar-label">Speed</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill" style="width: 88%; background: var(--primary);"></div>
+                            </div>
+                            <span class="metric-bar-value">88</span>
+                        </div>
+                        <div class="metric-bar">
+                            <span class="metric-bar-label">Coverage</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill" style="width: 85%; background: var(--green);"></div>
+                            </div>
+                            <span class="metric-bar-value">85</span>
+                        </div>
+                        <div class="metric-bar">
+                            <span class="metric-bar-label">Football IQ</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill" style="width: 92%; background: #AF52DE;"></div>
+                            </div>
+                            <span class="metric-bar-value">92</span>
+                        </div>
+                        <div class="metric-bar">
+                            <span class="metric-bar-label">Physicality</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill" style="width: 90%; background: var(--red);"></div>
+                            </div>
+                            <span class="metric-bar-value">90</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Highlights -->
+    <section class="highlights-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">Film</p>
+                <h2 class="section-title">Game Highlights</h2>
+            </div>
+            <div class="video-placeholder" onclick="alert('Add highlight reel video here')">
+                <div class="play-icon">▶</div>
+                <p>Click to add highlight reel</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Season Comparison -->
+    <section class="comparison-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">Career Progression</p>
+                <h2 class="section-title">Year Over Year Growth</h2>
+            </div>
+            <div class="seasons-grid">
+                <div class="season-card">
+                    <div class="season-year">2024</div>
+                    <div class="season-record">Team Record: <span class="perfect">11-0 UNDEFEATED</span></div>
+                    <div class="season-stats">
+                        <div class="season-stat">
+                            <span class="season-stat-label">Total Tackles</span>
+                            <span class="season-stat-value">41</span>
+                        </div>
+                        <div class="season-stat">
+                            <span class="season-stat-label">Interceptions</span>
+                            <span class="season-stat-value">1</span>
+                        </div>
+                        <div class="season-stat">
+                            <span class="season-stat-label">Sacks</span>
+                            <span class="season-stat-value">1.0</span>
+                        </div>
+                        <div class="season-stat">
+                            <span class="season-stat-label">Role</span>
+                            <span class="season-stat-value">Contributor</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="season-card featured">
+                    <div class="season-year">2025</div>
+                    <div class="season-record">Golden Coast Conference</div>
+                    <div class="season-stats">
+                        <div class="season-stat">
+                            <span class="season-stat-label">Total Tackles</span>
+                            <span class="season-stat-value">126</span>
+                        </div>
+                        <div class="season-stat">
+                            <span class="season-stat-label">Interceptions</span>
+                            <span class="season-stat-value">2</span>
+                        </div>
+                        <div class="season-stat">
+                            <span class="season-stat-label">Sacks</span>
+                            <span class="season-stat-value">2.5</span>
+                        </div>
+                        <div class="season-stat">
+                            <span class="season-stat-label">Role</span>
+                            <span class="season-stat-value">Defensive Leader</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Awards -->
+    <section class="awards-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">Recognition</p>
+                <h2 class="section-title">Awards & Honors</h2>
+            </div>
+            <div class="awards-list">
+                <div class="award-item">
+                    <div class="award-icon">🏆</div>
+                    <div class="award-text">
+                        <h4>First Team All-Conference</h4>
+                        <p>Golden Coast League · 2025</p>
+                    </div>
+                </div>
+                <div class="award-item">
+                    <div class="award-icon">⭐</div>
+                    <div class="award-text">
+                        <h4>All-State Candidate</h4>
+                        <p>Region II · 2025</p>
+                    </div>
+                </div>
+                <div class="award-item">
+                    <div class="award-icon">🏈</div>
+                    <div class="award-text">
+                        <h4>Undefeated Season Champion</h4>
+                        <p>MPC Lobos · 2024</p>
+                    </div>
+                </div>
+                <div class="award-item">
+                    <div class="award-icon">💪</div>
+                    <div class="award-text">
+                        <h4>Defensive Player of the Week</h4>
+                        <p>Multiple Selections · 2025</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact CTA -->
+    <section class="contact-section">
+        <div class="container">
+            <h2>Ready to Compete<br>at the Next Level</h2>
+            <p>
+                D1 ready. High character. Relentless work ethic. 
+                Let's connect about opportunities.
+            </p>
+            <div class="contact-buttons">
+                <a href="mailto:recruit@example.com" class="btn btn-primary">
+                    📧 Contact Coach
+                </a>
+                <a href="#" class="btn btn-secondary">
+                    📄 Download Resume
+                </a>
+                <a href="https://twitter.com" class="btn btn-secondary" target="_blank">
+                    𝕏 Follow
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p class="footer-logo">DAMIAN NEVEAUX · #22 · MPC FOOTBALL</p>
+        <p class="footer-powered">
+            Athletic analysis powered by <a href="#">Newton Kinematic Engine</a>
+        </p>
+    </footer>
+
+    <script>
+        // Animate metric bars on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.querySelectorAll('.metric-bar-fill').forEach(bar => {
+                        const width = bar.style.width;
+                        bar.style.width = '0%';
+                        setTimeout(() => {
+                            bar.style.width = width;
+                        }, 100);
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.kinematic-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
