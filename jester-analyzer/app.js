@@ -1,6 +1,7 @@
 /**
  * JESTER - Code Constraint Analyzer
  * Newton-style deterministic code analysis
+ * Updated: February 1, 2026
  */
 
 // =============================================================================
@@ -29,15 +30,20 @@ function detectApiUrl() {
         return 'http://localhost:8000';
     }
     
-    // Render deployment - API is on same origin
+    // Vercel deployment - API is on same origin (PRIMARY)
+    if (hostname.endsWith('.vercel.app') || hostname === 'vercel.app') {
+        return window.location.origin;
+    }
+    
+    // Legacy Render deployment - API is on same origin
     if (hostname.endsWith('.onrender.com') || hostname === 'onrender.com') {
         return window.location.origin;
     }
     
-    // Legacy Cloudflare Pages - point to Render API
+    // Legacy Cloudflare Pages - same origin
     if (hostname.endsWith('.pages.dev') || hostname === 'pages.dev' ||
         hostname.endsWith('.cloudflare.com') || hostname === 'cloudflare.com') {
-        return 'https://newton-api-1.onrender.com';
+        return window.location.origin;
     }
     
     // Default: assume API is on same origin

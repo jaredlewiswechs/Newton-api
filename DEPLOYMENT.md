@@ -1,6 +1,6 @@
 # NEWTON DEPLOYMENT PACKAGE
 
-**January 6, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**February 1, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ---
 
@@ -19,7 +19,7 @@ Newton OS v3.0.0 is a deterministic verification engine that governs AI executio
 │        ▼                                                            │
 │   ┌─────────────┐                                                   │
 │   │   NEWTON    │  ← Python FastAPI (Primary)                      │
-│   │     API     │     newton_os_server.py                          │
+│   │     API     │     newton_supercomputer.py                      │
 │   └──────┬──────┘                                                   │
 │          │                                                          │
 │          │  Deterministic Constraint Verification                   │
@@ -47,9 +47,10 @@ Newton OS v3.0.0 is a deterministic verification engine that governs AI executio
 
 | File | Purpose | Deploy Location |
 |------|---------|-----------------|
-| `newton_os_server.py` | **Primary API (Python)** | Render / Docker / Server |
+| `newton_supercomputer.py` | **Primary API (Python)** | Vercel / Docker / Server |
 | `requirements.txt` | Python dependencies | With API |
-| `render.yaml` | Render config | Root of repo |
+| `vercel.json` | Vercel config | Root of repo |
+| `api/index.py` | Vercel serverless entry point | With API |
 | `Dockerfile` | Docker deployment | Container environments |
 | `core/grounding.py` | Claim verification engine | With API |
 | `newton-pda/` | Personal Data Assistant (PWA) | Static hosting |
@@ -60,53 +61,11 @@ Newton OS v3.0.0 is a deterministic verification engine that governs AI executio
 
 ---
 
-## STEP 1: DEPLOY TO RENDER (RECOMMENDED)
+## STEP 1: DEPLOY TO VERCEL (RECOMMENDED)
 
-The repository includes a `render.yaml` preconfigured for Python deployment.
+The repository includes `vercel.json` and `api/index.py` configured for serverless deployment on Vercel.
 
-### 1.1 Deploy to Render
-
-1. Go to [render.com](https://render.com) and sign in
-2. Click "New" → "Web Service"
-3. Connect your GitHub repository
-4. Render will detect the `render.yaml` and configure automatically
-5. Click "Create Web Service"
-6. Wait for deployment (approximately 2-3 minutes)
-7. Copy your URL: `https://newton-kernel-xxxx.onrender.com`
-
-### 1.2 Verify Deployment
-
-```bash
-curl https://newton-kernel-xxxx.onrender.com/health
-```
-
-Expected response:
-```json
-{
-  "status": "ok",
-  "version": "3.0.0",
-  "engine": "Newton OS 3.0.0",
-  "uptime_seconds": 123.45
-}
-```
-
-### 1.3 Test Verification
-
-```bash
-curl -X POST https://newton-kernel-xxxx.onrender.com/verify \
-  -H "Content-Type: application/json" \
-  -d '{"input": "Help me write a business plan"}'
-```
-
----
-
-## STEP 2: ALTERNATIVE DEPLOYMENTS
-
-### Vercel (Serverless)
-
-The repository includes `vercel.json` and `api/index.py` for serverless deployment on Vercel.
-
-#### Deploy to Vercel
+### 1.1 Deploy to Vercel
 
 1. Go to [vercel.com](https://vercel.com) and sign in
 2. Click "Add New" → "Project"
@@ -116,7 +75,7 @@ The repository includes `vercel.json` and `api/index.py` for serverless deployme
 6. Wait for deployment (approximately 1-2 minutes)
 7. Your API will be available at `https://your-project.vercel.app`
 
-#### Verify Deployment
+### 1.2 Verify Deployment
 
 ```bash
 curl https://your-project.vercel.app/health
@@ -132,7 +91,33 @@ Expected response:
 }
 ```
 
-**Note:** Vercel's serverless functions have a 10-second execution timeout on the free tier and 60 seconds on paid plans. For long-running operations, consider using Render or Docker deployment instead.
+### 1.3 Test Verification
+
+```bash
+curl -X POST https://your-project.vercel.app/verify \
+  -H "Content-Type: application/json" \
+  -d '{"input": "Help me write a business plan"}'
+```
+
+**Note:** Vercel's serverless functions have a 10-second execution timeout on the free tier and 60 seconds on paid plans. The Newton API is optimized for serverless with automatic detection of the Vercel environment and serverless-safe ledger storage.
+
+---
+
+## STEP 2: ALTERNATIVE DEPLOYMENTS
+
+### Render (Legacy)
+
+The repository includes a `render.yaml` for Render deployment as a backup option.
+
+#### Deploy to Render
+
+1. Go to [render.com](https://render.com) and sign in
+2. Click "New" → "Web Service"
+3. Connect your GitHub repository
+4. Render will detect the `render.yaml` and configure automatically
+5. Click "Create Web Service"
+6. Wait for deployment (approximately 2-3 minutes)
+7. Copy your URL: `https://newton-kernel-xxxx.onrender.com`
 
 ### Docker
 
@@ -213,18 +198,18 @@ If creating a new Cloudflare Pages project:
 | `/teachers` | Teacher's Aide | `teachers-aide/` |
 | `/builder` | Interface Builder | `interface-builder/` |
 
-**Production URLs (Render):**
-- Main site: `https://newton-api-1.onrender.com`
-- Newton App: `https://newton-api-1.onrender.com/app`
-- Teacher's Aide: `https://newton-api-1.onrender.com/teachers`
-- Interface Builder: `https://newton-api-1.onrender.com/builder`
-- Mission Control: `https://newton-api-1.onrender.com/mission-control/`
+**Production URLs (Vercel):**
+- Main site: `https://your-project.vercel.app`
+- Newton App: `https://your-project.vercel.app/app`
+- Teacher's Aide: `https://your-project.vercel.app/teachers`
+- Interface Builder: `https://your-project.vercel.app/builder`
+- Mission Control: `https://your-project.vercel.app/mission-control/`
 
 ---
 
 ## STEP 4: TEACHER'S AIDE (LEGACY CLOUDFLARE PAGES DEPLOYMENT)
 
-**Note:** The primary deployment model is now Render (all-in-one). The instructions below are for legacy Cloudflare Pages deployment only if needed.
+**Note:** The primary deployment model is now Vercel (all-in-one). The instructions below are for legacy Cloudflare Pages deployment only if needed.
 
 For standalone deployment of Teacher's Aide (separate from unified site):
 
@@ -247,7 +232,7 @@ npx wrangler pages deploy teachers-aide
 2. Click "Create a project" → "Direct Upload"
 3. Upload the `teachers-aide/` folder
 4. Your site deploys at a Cloudflare Pages URL (e.g., `https://newton-teachers-aide.pages.dev`)
-5. The app will automatically point to the Render API at `https://newton-api-1.onrender.com`
+5. The app will automatically point to the primary Vercel API
 
 ### 4.3 Features
 
@@ -266,7 +251,7 @@ Update `teachers-aide/app.js` to point to your Newton API:
 
 ```javascript
 const CONFIG = {
-  API_BASE: 'https://your-newton-api-1.onrender.com',
+  API_BASE: 'https://your-project.vercel.app',
   TIMEOUT: 60000
 };
 ```

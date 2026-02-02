@@ -7,6 +7,7 @@
  * the correct API base URL based on the deployment environment.
  * 
  * © 2026 Jared Lewis · Ada Computing Company
+ * Updated: February 2026
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
@@ -15,8 +16,9 @@
  * 
  * Deployment model:
  * - Local: API at http://localhost:8000
- * - Render: All-in-one deployment at newton-api-1.onrender.com (API + static frontends)
- * - Legacy Cloudflare Pages: Static frontends point to Render API
+ * - Vercel: All-in-one deployment (API + static frontends) - PRIMARY
+ * - Legacy Render: Backup deployment at newton-api-1.onrender.com
+ * - Legacy Cloudflare Pages: Static frontends point to primary API
  * 
  * @returns {string} The API base URL
  */
@@ -28,17 +30,21 @@ function getApiBase() {
         return 'http://localhost:8000';
     }
     
-    // Render deployment - API is on same origin
+    // Vercel deployment - API is on same origin (PRIMARY)
     // Use endsWith to prevent subdomain spoofing attacks
+    if (hostname.endsWith('.vercel.app') || hostname === 'vercel.app') {
+        return window.location.origin;
+    }
+    
+    // Legacy Render deployment - API is on same origin
     if (hostname.endsWith('.onrender.com') || hostname === 'onrender.com') {
         return window.location.origin;
     }
     
-    // Legacy Cloudflare Pages or other static hosting - point to Render API
-    // Note: Primary deployment model is now Render (all-in-one)
+    // Legacy Cloudflare Pages or other static hosting - point to primary API
     if (hostname.endsWith('.pages.dev') || hostname === 'pages.dev' ||
         hostname.endsWith('.cloudflare.com') || hostname === 'cloudflare.com') {
-        return 'https://newton-api-1.onrender.com';
+        return window.location.origin;
     }
     
     // Default: assume API is on same origin

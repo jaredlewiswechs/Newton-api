@@ -1,31 +1,33 @@
 # Newton API - Complete App Inventory
 
-## All Apps Available on Render
+## All Apps Available on Vercel
 
-This document lists all applications available at **https://newton-api-1.onrender.com/** after consolidating from the Cloudflare Pages deployment.
+This document lists all applications available at **https://your-project.vercel.app/** after consolidating from the previous deployments.
+
+**Updated: February 1, 2026**
 
 ## Core Applications
 
 ### Newton Supercomputer
-- **URL**: https://newton-api-1.onrender.com/app
-- **Alternative**: https://newton-api-1.onrender.com/frontend
+- **URL**: https://your-project.vercel.app/app
+- **Alternative**: https://your-project.vercel.app/frontend
 - **Description**: Main Newton verification engine interface
 - **Directory**: `frontend/`
 
 ### Teacher's Aide
-- **URL**: https://newton-api-1.onrender.com/teachers
+- **URL**: https://your-project.vercel.app/teachers
 - **Description**: Educational tools and lesson planning
 - **Directory**: `teachers-aide/`
 
 ### Interface Builder
-- **URL**: https://newton-api-1.onrender.com/builder
+- **URL**: https://your-project.vercel.app/builder
 - **Description**: Visual interface construction tool
 - **Directory**: `interface-builder/`
 
 ## Development Tools
 
 ### Jester Analyzer
-- **URL**: https://newton-api-1.onrender.com/jester-analyzer
+- **URL**: https://your-project.vercel.app/jester-analyzer
 - **Description**: Code constraint analyzer - extracts guards, assertions, and constraints from source code
 - **Features**: 
   - Multi-language support (Python, JavaScript, Swift, etc.)
@@ -34,7 +36,7 @@ This document lists all applications available at **https://newton-api-1.onrende
 - **Directory**: `jester-analyzer/`
 
 ### TinyTalk IDE
-- **URL**: https://newton-api-1.onrender.com/tinytalk-ide
+- **URL**: https://your-project.vercel.app/tinytalk-ide
 - **Description**: Integrated development environment for TinyTalk language
 - **Features**:
   - Code editor
@@ -43,8 +45,8 @@ This document lists all applications available at **https://newton-api-1.onrende
 - **Directory**: `tinytalk-ide/`
 
 ### Construct Studio
-- **URL**: https://newton-api-1.onrender.com/construct-studio
-- **Alternative**: https://newton-api-1.onrender.com/construct-studio/ui
+- **URL**: https://your-project.vercel.app/construct-studio
+- **Alternative**: https://your-project.vercel.app/construct-studio/ui
 - **Description**: CAD and construction design tools
 - **Features**:
   - UI design interface
@@ -54,7 +56,7 @@ This document lists all applications available at **https://newton-api-1.onrende
 ## Demos & Examples
 
 ### Newton Demo
-- **URL**: https://newton-api-1.onrender.com/newton-demo
+- **URL**: https://your-project.vercel.app/newton-demo
 - **Description**: Interactive demo of Newton verification capabilities
 - **Features**:
   - Ask Newton interface
@@ -64,21 +66,21 @@ This document lists all applications available at **https://newton-api-1.onrende
 - **Directory**: `newton-demo/`
 
 ### Games
-- **URL**: https://newton-api-1.onrender.com/games
+- **URL**: https://your-project.vercel.app/games
 - **Description**: Collection of games built with Newton
 - **Available Games**:
-  - **Gravity Wars**: https://newton-api-1.onrender.com/games/gravity_wars
+  - **Gravity Wars**: https://your-project.vercel.app/games/gravity_wars
 - **Directory**: `games/`
 
 ## Additional Apps
 
 ### ParcCloud
-- **URL**: https://newton-api-1.onrender.com/parccloud
+- **URL**: https://your-project.vercel.app/parccloud
 - **Description**: Cloud authentication and services
 - **Directory**: `parccloud/`
 
 ### Newton Phone (Home)
-- **URL**: https://newton-api-1.onrender.com/
+- **URL**: https://your-project.vercel.app/
 - **Description**: Main landing page with app grid (iOS-style interface)
 - **File**: `index.html`
 
@@ -134,47 +136,59 @@ Some routes have dedicated handlers that serve index.html:
 
 These handlers ensure proper Content-Type headers and fallback logic.
 
-## Migration from Cloudflare Pages
+## Deployment Platform
 
-All apps previously hosted on `2ec0521e.newton-api.pages.dev` are now available on Render at `newton-api-1.onrender.com`.
+**Primary: Vercel** (as of February 2026)
 
-### Redirects Handled
-The `_redirects` file configured on Cloudflare Pages is no longer needed. All routing is handled by FastAPI:
-- Static mounts for directory serving
-- Route handlers for main app entry points
-- API endpoints for backend functionality
+The Newton API is deployed as a serverless application on Vercel, providing:
+- Fast global edge deployment
+- Automatic HTTPS
+- Zero-config deployments from GitHub
+- Serverless functions with Python runtime
 
-### Benefits of Consolidated Deployment
-1. **Single Origin** - No CORS issues
-2. **Unified API** - Backend and frontend on same domain
-3. **Simpler Deployment** - One deployment instead of two
-4. **Consistent URLs** - All apps at newton-api-1.onrender.com
+### Vercel Configuration
+
+The `vercel.json` file configures the deployment:
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index.py" }
+  ]
+}
+```
+
+### Environment Detection
+
+The API automatically detects when running in a Vercel serverless environment:
+- Disables background threads (serverless-safe)
+- Uses /tmp for temporary storage
+- Optimizes for stateless execution
 
 ## Testing Checklist
 
 After deployment, verify these URLs work:
 
-- [ ] https://newton-api-1.onrender.com/ (home)
-- [ ] https://newton-api-1.onrender.com/app (Newton app)
-- [ ] https://newton-api-1.onrender.com/teachers (Teacher's Aide)
-- [ ] https://newton-api-1.onrender.com/builder (Builder)
-- [ ] https://newton-api-1.onrender.com/jester-analyzer (Jester)
-- [ ] https://newton-api-1.onrender.com/tinytalk-ide (TinyTalk IDE)
-- [ ] https://newton-api-1.onrender.com/construct-studio (Construct)
-- [ ] https://newton-api-1.onrender.com/newton-demo (Demo)
-- [ ] https://newton-api-1.onrender.com/games/gravity_wars (Game)
-- [ ] https://newton-api-1.onrender.com/parccloud (ParcCloud)
-- [ ] https://newton-api-1.onrender.com/health (API health)
+- [ ] https://your-project.vercel.app/ (home)
+- [ ] https://your-project.vercel.app/app (Newton app)
+- [ ] https://your-project.vercel.app/teachers (Teacher's Aide)
+- [ ] https://your-project.vercel.app/builder (Builder)
+- [ ] https://your-project.vercel.app/jester-analyzer (Jester)
+- [ ] https://your-project.vercel.app/tinytalk-ide (TinyTalk IDE)
+- [ ] https://your-project.vercel.app/construct-studio (Construct)
+- [ ] https://your-project.vercel.app/newton-demo (Demo)
+- [ ] https://your-project.vercel.app/games/gravity_wars (Game)
+- [ ] https://your-project.vercel.app/parccloud (ParcCloud)
+- [ ] https://your-project.vercel.app/health (API health)
 
 ## Support
 
 For issues with specific apps:
 - Check the app's directory for README.md
 - Verify static files exist in the directory
-- Check Render logs for mounting errors
+- Check Vercel deployment logs for errors
 - Ensure all dependencies are installed
 
 ---
 
-**Last Updated**: 2026-01-31
-**Deployment**: https://newton-api-1.onrender.com/
+**Last Updated**: February 1, 2026
+**Deployment**: Vercel (Serverless)

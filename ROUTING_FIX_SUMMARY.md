@@ -1,9 +1,11 @@
 # Newton API Routing Fix Summary
 
+**Updated: February 1, 2026**
+
 ## Problem Statement
 
 The Newton API repository had routing issues due to:
-1. Legacy domain references scattered throughout the codebase (pages.dev, newton-api-sicp.onrender.com)
+1. Legacy domain references scattered throughout the codebase (pages.dev, onrender.com)
 2. Duplicate API base URL detection logic in 10+ frontend files
 3. Mission Control dashboard not accessible at `/mission-control/` mount point
 4. Documentation referencing old deployment URLs
@@ -18,20 +20,21 @@ The Newton API repository had routing issues due to:
 - Provides `getApiBase()` and `getMissionControlUrl()` functions
 - Automatically detects deployment environment:
   - Local: `http://localhost:8000`
-  - Render: Uses same origin (e.g., `https://newton-api-1.onrender.com`)
-  - Legacy Cloudflare Pages: Points to Render API
+  - Vercel: Uses same origin (PRIMARY)
+  - Legacy Render: Uses same origin
+  - Legacy Cloudflare Pages: Uses same origin
 
-### 2. Server Updates
+### 2. Vercel Deployment
 
-**Updated `newton_supercomputer.py`:**
-- Added `/mission-control/` StaticFiles mount point
-- Added `/shared-config.js` endpoint to serve shared configuration
-- Maintained backward compatibility with root-level mission-control files
-- All frontend apps are now properly mounted with `html=True` for SPA support
+**Primary deployment is now Vercel:**
+- Serverless Python runtime
+- Zero-config deployment from GitHub
+- Automatic HTTPS and global CDN
+- Uses `vercel.json` and `api/index.py`
 
 ### 3. Frontend Updates
 
-**Updated 10 frontend files** to use shared config with fallback:
+**Updated frontend files** to use shared config with fallback:
 - `frontend/app.js`
 - `teachers-aide/app.js`
 - `jester-analyzer/app.js`
@@ -41,41 +44,22 @@ The Newton API repository had routing issues due to:
 - `newton-phone/teachers/app.js`
 - `newton-demo/index.html`
 - `legacy/ada.html`
-- `mission-control/config.js` (already had correct logic)
+- `mission-control/config.js`
 
 Each now:
 1. Checks for `window.NewtonConfig` first (from shared-config.js)
 2. Falls back to inline detection logic if not available
-3. Consistently uses `newton-api-1.onrender.com` as production API
+3. Uses same-origin requests for all deployments
 
 ### 4. Documentation Updates
 
-**Replaced ~40+ references** to legacy domains:
-- ❌ `75ac0fae.newton-api.pages.dev` → ✅ `newton-api-1.onrender.com`
-- ❌ `2ec0521e.newton-api.pages.dev` → ✅ `newton-api-1.onrender.com`
-- ❌ `newton-api-sicp.onrender.com` → ✅ `newton-api-1.onrender.com`
-- ❌ `newton-api.pages.dev` → ✅ `newton-api-1.onrender.com`
-- ❌ `newton-teachers-aide.pages.dev` → ✅ `newton-api-1.onrender.com/teachers`
-- ❌ `newton-interface-builder.pages.dev` → ✅ `newton-api-1.onrender.com/builder`
-
-**Updated files:**
-- `DEPLOYMENT.md` - Fixed production URLs section
-- `mission-control/README.md` - Updated example code
-- `docs/HELLO_WORLD.md`, `docs/NEWTON_ON_ACID.md`, `docs/NEWTON_STEVE_JOBS_CRYSTALLIZATION.md` - Fixed URLs
-- `docs/WWDC_PREPARATION.md` - Updated deployment table
-- `teachers-aide/README.md`, `newton-phone/teachers/README.md` - Fixed references
-- `interface-builder/README.md`, `newton-phone/builder/README.md` - Fixed references
-- `interface-builder/deploy.sh`, `newton-phone/builder/deploy.sh` - Updated output URLs
-- `newton-phone/README.md` - Fixed API references
-- `frontend/index.html`, `newton-phone/index.html` - Updated hardcoded links
-- `.github/workflows/cloudflare-pages.yml` - Added note about primary deployment
-- `newton-phone/render.yaml` - Updated comments
+All documentation has been updated to reflect Vercel deployment.
 
 ## Deployment Architecture
 
 ### Current (Primary)
-**All-in-one Render Deployment:** `https://newton-api-1.onrender.com`
-- Backend: FastAPI server at root
+**Vercel Serverless Deployment**
+- Backend: FastAPI server via `api/index.py`
 - Frontend apps mounted at:
   - `/app` - Newton Supercomputer
   - `/teachers` - Teacher's Aide
@@ -90,16 +74,12 @@ Each now:
 
 **Benefits:**
 - Same-origin requests (no CORS issues)
-- Single deployment to manage
-- Simplified routing
-- Consistent URLs
+- Fast global edge deployment
+- Zero-config from GitHub
+- Automatic scaling
 
 ### Legacy (Backup)
-**Cloudflare Pages:** Static frontends can still be deployed separately
-- Frontends automatically detect Cloudflare Pages domain
-- Point to `newton-api-1.onrender.com` for API calls
-- CORS is configured on server to allow this
-- Useful for testing or CDN distribution
+**Render** and **Cloudflare Pages** are still supported as backup options.
 
 ## Testing
 
@@ -130,12 +110,16 @@ if (hostname === 'localhost') {
     return 'http://localhost:8000';
 }
 
+if (hostname.endsWith('.vercel.app')) {
+    return window.location.origin;  // Same origin (PRIMARY)
+}
+
 if (hostname.endsWith('.onrender.com')) {
     return window.location.origin;  // Same origin
 }
 
 if (hostname.endsWith('.pages.dev')) {
-    return 'https://newton-api-1.onrender.com';  // Cross-origin
+    return window.location.origin;  // Same origin
 }
 
 return window.location.origin;  // Default
@@ -166,13 +150,6 @@ function getApiBase() {
 }
 ```
 
-## Remaining References
-
-These references are acceptable and should remain:
-- `.pages.dev` domain detection in API base URL logic (needed for Cloudflare Pages support)
-- `pages.dev` in comments explaining legacy deployment model
-- Documentation explaining the migration from Cloudflare Pages to Render
-
 ## Impact
 
 ### Before
@@ -185,24 +162,10 @@ These references are acceptable and should remain:
 ### After
 - ✅ Single shared-config.js for all apps
 - ✅ Mission Control accessible at `/mission-control/`
-- ✅ Clear documentation of primary deployment model
-- ✅ All legacy domains updated to newton-api-1.onrender.com
+- ✅ Clear documentation of primary deployment model (Vercel)
+- ✅ All legacy domains handled gracefully
 - ✅ Consistent API base URL detection across all frontends
 - ✅ Backward compatible with existing deployments
-
-## Files Changed
-
-**Phase 1 - Core Infrastructure:**
-- `shared-config.js` (new)
-- `newton_supercomputer.py`
-
-**Phase 2 - Frontend Apps:**
-- 10 app.js/HTML files updated
-
-**Phase 3 - Documentation:**
-- 16 documentation/config files updated
-
-**Total:** 28 files modified, 1 file created
 
 ## Verification
 
@@ -218,13 +181,13 @@ To verify the fix is working:
 
 2. **Production Testing:**
    ```bash
-   curl https://newton-api-1.onrender.com/health
-   curl https://newton-api-1.onrender.com/shared-config.js
-   curl https://newton-api-1.onrender.com/mission-control/
+   curl https://your-project.vercel.app/health
+   curl https://your-project.vercel.app/shared-config.js
+   curl https://your-project.vercel.app/mission-control/
    ```
 
 3. **Frontend Testing:**
-   - Open `https://newton-api-1.onrender.com/mission-control/`
+   - Open your Vercel deployment `/mission-control/`
    - Check browser console for `window.NewtonConfig`
    - Verify API calls go to same origin
    - Test each frontend app (/app, /teachers, /builder, etc.)
@@ -233,8 +196,8 @@ To verify the fix is working:
 
 All routing issues have been resolved by:
 1. Centralizing API configuration
-2. Adding proper static file mounts
-3. Updating all legacy domain references
-4. Improving documentation clarity
+2. Deploying to Vercel (serverless)
+3. Updating all documentation
+4. Improving environment detection
 
 The codebase now has a single source of truth for API endpoints, proper mission-control routing, and consistent documentation.

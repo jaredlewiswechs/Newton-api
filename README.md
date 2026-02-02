@@ -23,8 +23,9 @@
 [![ACID](https://img.shields.io/badge/ACID-compliant-green.svg)](#newton-tlm)
 [![Rust](https://img.shields.io/badge/newton__core-Rust-orange.svg)](#newton-core)
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
+[![Vercel](https://img.shields.io/badge/deployed%20on-Vercel-black.svg)](#deployment)
 
-**January 9, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**February 1, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ---
 
@@ -161,9 +162,11 @@ Newton includes a complete suite of web applications for verified computation, c
 | **System Status** | `/health` | Real-time system health and component status |
 | **Metrics** | `/metrics` | Performance metrics and statistics |
 
-**Live Demo:** Visit the Newton showcase at https://newton-api-1.onrender.com/
+**Live Demo:** Visit the Newton showcase on your Vercel deployment or locally at http://localhost:8000/
 
 All applications use verified computation with deterministic results, immutable audit trails, and sub-millisecond latency.
+
+**Deployment:** Newton is deployed on **Vercel** as a serverless application. See [DEPLOYMENT.md](DEPLOYMENT.md) for setup instructions.
 
 ---
 

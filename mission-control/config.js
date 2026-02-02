@@ -4,6 +4,7 @@
  * Single source of truth for all Newton API endpoints
  * 
  * © 2026 Jared Lewis · Ada Computing Company
+ * Updated: February 2026
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
@@ -16,15 +17,20 @@ function getApiBase() {
         return 'http://localhost:8000';
     }
     
-    // Render deployment - API is on same origin
+    // Vercel deployment - API is on same origin (PRIMARY)
+    if (hostname.endsWith('.vercel.app') || hostname === 'vercel.app') {
+        return window.location.origin;
+    }
+    
+    // Legacy Render deployment - API is on same origin
     if (hostname.endsWith('.onrender.com') || hostname === 'onrender.com') {
         return window.location.origin;
     }
     
-    // Cloudflare Pages or other static hosting - point to Render API
+    // Cloudflare Pages or other static hosting - same origin
     if (hostname.endsWith('.pages.dev') || hostname === 'pages.dev' ||
         hostname.endsWith('.cloudflare.com') || hostname === 'cloudflare.com') {
-        return 'https://newton-api-1.onrender.com';
+        return window.location.origin;
     }
     
     // Default: assume API is on same origin

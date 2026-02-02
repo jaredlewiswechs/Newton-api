@@ -1,10 +1,37 @@
 # Changelog
 
-**January 9, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**February 1, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 All notable changes to Newton Supercomputer are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [1.3.1] - 2026-02-01
+
+### Changed
+
+#### Vercel Deployment (Primary Platform)
+Newton is now deployed on **Vercel** as the primary platform:
+
+- **Serverless deployment** - Zero-config from GitHub
+- **Global edge CDN** - Fast worldwide access
+- **Automatic HTTPS** - SSL certificates included
+- **vercel.json** - Configuration for rewrites
+- **api/index.py** - ASGI entry point for FastAPI
+
+#### Documentation Updates
+- Updated all README files for Vercel deployment
+- Updated DEPLOYMENT.md with Vercel as primary option
+- Updated APP_INVENTORY.md with new deployment info
+- Updated QUICK_DEPLOY.md with Vercel instructions
+- Updated shared-config.js for Vercel detection
+
+#### Serverless Compatibility
+- Automatic detection of Vercel environment
+- Background thread disabling in serverless mode
+- Serverless-safe ledger storage using /tmp
 
 ---
 
