@@ -1,0 +1,50 @@
+{
+  "facts": {
+    "158ad19b6e40": {
+      "id": "158ad19b6e40",
+      "key": "integration_test_1770153134.632175",
+      "fact": "The integration test passed successfully.",
+      "category": "Testing",
+      "source": "pytest",
+      "source_url": "https://pytest.org",
+      "confidence": 1.0,
+      "added_at": 1770153134.632686,
+      "added_by": "test"
+    },
+    "9581184ee1d3": {
+      "id": "9581184ee1d3",
+      "key": "e2e_test_albert_einstein",
+      "fact": "Albert Einstein developed the theory of relativity.",
+      "category": "Science",
+      "source": "Wikipedia",
+      "source_url": "https://en.wikipedia.org/wiki/Albert_Einstein",
+      "confidence": 0.85,
+      "added_at": 1770153178.1972566,
+      "added_by": "adanpedia"
+    },
+    "c00a0c76d71b": {
+      "id": "c00a0c76d71b",
+      "key": "integration_test_1770153160.834258",
+      "fact": "The integration test passed successfully.",
+      "category": "Testing",
+      "source": "pytest",
+      "source_url": "https://pytest.org",
+      "confidence": 1.0,
+      "added_at": 1770153160.834351,
+      "added_by": "test"
+    },
+    "715f696fbc24": {
+      "id": "715f696fbc24",
+      "key": "integration_test_1770153178.074343",
+      "fact": "The integration test passed successfully.",
+      "category": "Testing",
+      "source": "pytest",
+      "source_url": "https://pytest.org",
+      "confidence": 1.0,
+      "added_at": 1770153178.074399,
+      "added_by": "test"
+    }
+  },
+  "updated_at": 1770153178.1973135,
+  "count": 4
+}

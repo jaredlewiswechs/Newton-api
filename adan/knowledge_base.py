@@ -21,6 +21,13 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 import re
 
+# Import shared knowledge store for dynamically added facts
+try:
+    from .knowledge_store import get_knowledge_store
+    HAS_KNOWLEDGE_STORE = True
+except ImportError:
+    HAS_KNOWLEDGE_STORE = False
+
 # Import language mechanics for typo correction and query normalization
 try:
     from .language_mechanics import get_language_mechanics
@@ -35,19 +42,12 @@ try:
 except ImportError:
     HAS_QUERY_PARSER = False
 
-# Import semantic resolver (Datamuse API)
+# Import semantic resolver (Datamuse API) - Tier 2 semantic fields
 try:
     from .semantic_resolver import SemanticResolver
     HAS_SEMANTIC_RESOLVER = True
 except ImportError:
     HAS_SEMANTIC_RESOLVER = False
-
-# Import embeddings for semantic search fallback
-try:
-    from .embeddings import get_embedding_engine, SemanticMatch
-    HAS_EMBEDDINGS = True
-except ImportError:
-    HAS_EMBEDDINGS = False
 
 
 @dataclass
@@ -1931,7 +1931,8 @@ class KnowledgeBase:
     Pre-verified knowledge base for instant fact retrieval.
     No LLM needed for known facts.
     
-    Search Strategy (Three-Tier Kinematic Semantics):
+    Search Strategy (Five-Tier Kinematic Semantics):
+    0. SHARED STORE: Check dynamically added facts (~0ms)
     1. SHAPE: Kinematic query parsing (~0ms) - questions as equations
     2. SEMANTIC: Datamuse semantic field resolution (~200ms) - when patterns miss
     3. KEYWORD: Traditional keyword matching (~1ms) - fallback
@@ -1943,14 +1944,17 @@ class KnowledgeBase:
     CIA_FACTBOOK_URL = "https://www.cia.gov/the-world-factbook/"
     NIST_URL = "https://www.nist.gov/pml/fundamental-physical-constants"
     
-    def __init__(self, enable_embeddings: bool = True):
+    def __init__(self):
         self.queries = 0
         self.hits = 0
+        self.store_hits = 0       # Tier 0: Shared knowledge store
         self.shape_hits = 0       # Tier 1: Kinematic parser
         self.semantic_hits = 0    # Tier 2: Datamuse semantic fields
         self.keyword_hits = 0     # Tier 3: Traditional keyword matching
-        self.embedding_hits = 0   # Tier 4: Vector embeddings
         self.typo_corrections = 0
+        
+        # Initialize shared knowledge store (Tier 0) - dynamically added facts
+        self._store = get_knowledge_store() if HAS_KNOWLEDGE_STORE else None
         
         # Initialize language mechanics if available
         self._lm = get_language_mechanics() if HAS_LANGUAGE_MECHANICS else None
@@ -1958,69 +1962,8 @@ class KnowledgeBase:
         # Initialize kinematic query parser (Tier 1)
         self._parser = get_query_parser() if HAS_QUERY_PARSER else None
         
-        # Initialize semantic resolver (Tier 2)
+        # Initialize semantic resolver (Tier 2) - Datamuse semantic fields
         self._semantic = SemanticResolver() if HAS_SEMANTIC_RESOLVER else None
-        
-        # Initialize embedding engine (Tier 4) - lazy loaded
-        self._embeddings = None
-        self._embeddings_indexed = False
-        self._enable_embeddings = enable_embeddings and HAS_EMBEDDINGS
-    
-    def _ensure_embeddings_indexed(self):
-        """Lazy-load and index facts for semantic search."""
-        if not self._enable_embeddings or self._embeddings_indexed:
-            return
-        
-        try:
-            self._embeddings = get_embedding_engine()
-            if self._embeddings.is_available():
-                # Build searchable facts from our data
-                facts_to_index = self._build_searchable_facts()
-                self._embeddings.index_facts(facts_to_index)
-                self._embeddings_indexed = True
-        except Exception:
-            self._embeddings = None
-    
-    def _build_searchable_facts(self) -> Dict[str, str]:
-        """Build dictionary of searchable facts for embedding."""
-        facts = {}
-        
-        # Capitals
-        for country, capital in COUNTRY_CAPITALS.items():
-            facts[f"capital_{country}"] = f"The capital of {country.title()} is {capital}."
-        
-        # Scientific constants
-        for const, (value, unit, desc) in SCIENTIFIC_CONSTANTS.items():
-            if unit:
-                facts[f"science_{const}"] = f"{desc}: {value} {unit}"
-            else:
-                facts[f"science_{const}"] = f"{desc}: {value}"
-        
-        # Historical dates
-        for event, (date, desc) in HISTORICAL_DATES.items():
-            facts[f"history_{event}"] = f"{desc} ({date})."
-        
-        # Acronyms
-        for acronym, (expansion, desc) in ACRONYMS.items():
-            facts[f"acronym_{acronym}"] = f"{acronym.upper()} stands for {expansion}. {desc}."
-        
-        # Biology
-        for topic, (fact, description) in BIOLOGY_FACTS.items():
-            facts[f"biology_{topic}"] = f"{fact}. {description}"
-        
-        # Physics
-        for law, (statement, formula) in PHYSICS_LAWS.items():
-            facts[f"physics_{law}"] = f"{statement}. {formula}" if formula else statement
-        
-        # Elements
-        for element, (symbol, num, mass, category) in PERIODIC_TABLE.items():
-            facts[f"element_{element}"] = f"{element.title()} ({symbol}) is element {num} with atomic mass {mass}. It is a {category}."
-        
-        # Chemical notation
-        for formula, explanation in CHEMICAL_NOTATION.items():
-            facts[f"notation_{formula}"] = explanation
-        
-        return facts
     
     def query(self, question: str) -> Optional[VerifiedFact]:
         """
@@ -2028,10 +1971,12 @@ class KnowledgeBase:
         Returns None if fact not found.
         
         Three-Tier Kinematic Semantics:
+        0. STORE: Shared knowledge store (~0ms) - dynamically added facts
         1. SHAPE: Kinematic query parsing (~0ms) - questions as equations
         2. SEMANTIC: Datamuse semantic field resolution (~200ms)
         3. KEYWORD: Traditional keyword matching (~1ms)
-        4. EMBEDDING: Vector search (~100ms) - last resort
+        
+        'The question has shape. The KB has shape. Match shapes, fill slots.'
         """
         self.queries += 1
         question_lower = question.lower().strip()
@@ -2044,6 +1989,17 @@ class KnowledgeBase:
                 question_lower = corrected
             # Normalize the query (e.g., "founder of X" → "who founded X")
             question_lower = self._lm.normalize_query(question_lower)
+        
+        # ═══════════════════════════════════════════════════════════════════════
+        # TIER 0: SHARED KNOWLEDGE STORE (~0ms)
+        # Dynamically added facts from Adanpedia, Wikipedia imports, etc.
+        # ═══════════════════════════════════════════════════════════════════════
+        if self._store:
+            result = self._query_shared_store(question, question_lower)
+            if result:
+                self.hits += 1
+                self.store_hits += 1
+                return result
         
         # ═══════════════════════════════════════════════════════════════════════
         # TIER 1: KINEMATIC SHAPE PARSING (~0ms)
@@ -2096,16 +2052,66 @@ class KnowledgeBase:
             self.keyword_hits += 1
             return result
         
-        # ═══════════════════════════════════════════════════════════════════════
-        # TIER 4: EMBEDDING SEARCH (~100ms)
-        # Last resort - when structure is truly ambiguous
-        # ═══════════════════════════════════════════════════════════════════════
-        result = self._query_embedding(question_lower)
-        if result:
-            self.hits += 1
-            self.embedding_hits += 1
+        # No match found - LLM fallback would happen at agent level
+        return None
+    
+    def _query_shared_store(self, question: str, question_lower: str) -> Optional[VerifiedFact]:
+        """
+        Tier 0: Query the shared knowledge store for dynamically added facts.
+        These are facts added via Adanpedia, Wikipedia imports, or other sources.
+        """
+        if not self._store:
+            return None
         
-        return result
+        # Extract key terms from the question
+        # Try common patterns: "What is X?", "Tell me about X", etc.
+        key_patterns = [
+            r"what is (?:the )?(.+?)[\?\.]?$",
+            r"tell me about (.+?)[\?\.]?$",
+            r"who is (.+?)[\?\.]?$",
+            r"when was (.+?)[\?\.]?$",
+            r"where is (.+?)[\?\.]?$",
+            r"(.+?)[\?\.]?$",  # Fallback: just the question
+        ]
+        
+        search_terms = []
+        for pattern in key_patterns:
+            match = re.match(pattern, question_lower)
+            if match:
+                term = match.group(1).strip()
+                if term and len(term) > 2:
+                    search_terms.append(term)
+                    break
+        
+        # Also add the raw question
+        search_terms.append(question_lower)
+        
+        # Search the store
+        for term in search_terms:
+            # First try exact key match
+            stored = self._store.get(term)
+            if stored:
+                return VerifiedFact(
+                    fact=stored.fact,
+                    category=stored.category,
+                    source=stored.source,
+                    source_url=stored.source_url,
+                    confidence=stored.confidence
+                )
+            
+            # Then try search
+            results = self._store.search(term, limit=1)
+            if results:
+                stored = results[0]
+                return VerifiedFact(
+                    fact=stored.fact,
+                    category=stored.category,
+                    source=stored.source,
+                    source_url=stored.source_url,
+                    confidence=stored.confidence
+                )
+        
+        return None
     
     def _query_by_shape(self, question: str) -> Optional[VerifiedFact]:
         """
@@ -2283,33 +2289,6 @@ class KnowledgeBase:
                 )
         
         return None
-    
-    def _query_embedding(self, question: str) -> Optional[VerifiedFact]:
-        """
-        Tier 4: Embedding search fallback.
-        Last resort - when structure is truly ambiguous.
-        """
-        if not self._enable_embeddings:
-            return None
-        
-        # Lazy-load embeddings on first embedding query
-        self._ensure_embeddings_indexed()
-        
-        if not self._embeddings or not self._embeddings.is_available():
-            return None
-        
-        match = self._embeddings.find_best_match(question)
-        if not match:
-            return None
-        
-        # Return fact with similarity score in confidence
-        return VerifiedFact(
-            fact=match.text,
-            category="embedding_match",
-            source="Knowledge Base (Embedding)",
-            source_url="",
-            confidence=match.similarity,  # Similarity score as confidence
-        )
     
     def _extract_country(self, text: str) -> Optional[str]:
         """Extract country name from question."""
@@ -2767,24 +2746,29 @@ class KnowledgeBase:
         return None
     
     def get_stats(self) -> Dict:
+        """
+        Get knowledge base statistics.
+        
+        Kinematic Semantics Pipeline:
+        - Tier 0: Shared store (dynamically added facts)
+        - Tier 1: Shape matching (kinematic query parsing)
+        - Tier 2: Semantic fields (Datamuse resolution)
+        - Tier 3: Keyword matching (pattern fallback)
+        """
         stats = {
             "queries": self.queries,
             "hits": self.hits,
             "hit_rate": self.hits / max(1, self.queries),
+            "tier_0_store_hits": self.store_hits,
             "tier_1_shape_hits": self.shape_hits,
             "tier_2_semantic_hits": self.semantic_hits,
             "tier_3_keyword_hits": self.keyword_hits,
-            "tier_4_embedding_hits": self.embedding_hits,
             "typo_corrections": self.typo_corrections,
+            "store_enabled": self._store is not None,
+            "store_facts": self._store.count() if self._store else 0,
             "parser_enabled": self._parser is not None,
             "semantic_enabled": self._semantic is not None,
-            "embeddings_enabled": self._enable_embeddings,
-            "embeddings_indexed": self._embeddings_indexed,
         }
-        
-        # Add embedding engine stats if available
-        if self._embeddings and self._embeddings_indexed:
-            stats["embedding_stats"] = self._embeddings.get_stats()
         
         return stats
 
