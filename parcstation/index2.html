@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>parcStation — Built on Proof</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">◈</span>
+                    <span class="logo-text">parc<span class="accent">Station</span></span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Your Territory</div>
+                    <div class="stack-list" id="stack-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Cartridges</div>
+                    <div class="cartridge-list" id="cartridge-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="newton-status" id="newton-status">
+                    <span class="status-indicator online"></span>
+                    <span class="status-text">Newton Ready</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Toolbar -->
+            <header class="toolbar">
+                <div class="toolbar-left">
+                    <button class="btn-icon" id="btn-back" title="Back">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                    </button>
+                    <div class="breadcrumb" id="breadcrumb">
+                        <span class="breadcrumb-item active">All Stacks</span>
+                    </div>
+                </div>
+                <div class="toolbar-center">
+                    <div class="search-box">
+                        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" placeholder="Ask Newton anything..." id="search-input">
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn-icon" id="btn-new-stack" title="New Stack">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon" id="btn-new-card" title="Quick Card">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <path d="M14 2v6h6M12 18v-6M9 15h6"/>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content" id="content">
+                <!-- Stack Grid View (default) -->
+                <div class="view view-stacks" id="view-stacks">
+                    <div class="view-header">
+                        <h1>Your Territory</h1>
+                        <p class="view-subtitle">Knowledge stacks verified by Newton</p>
+                    </div>
+                    <div class="stack-grid" id="stack-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Stack Detail View -->
+                <div class="view view-stack-detail hidden" id="view-stack-detail">
+                    <div class="view-header">
+                        <h1 id="stack-detail-title">Stack Name</h1>
+                        <div class="stack-meta">
+                            <span class="verification-badge" id="stack-verification-badge">
+                                <span class="badge-icon">✓</span>
+                                <span class="badge-text">100% Verified</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-list" id="card-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Card Detail View -->
+                <div class="view view-card-detail hidden" id="view-card-detail">
+                    <div class="card-detail-panel glass">
+                        <div class="card-detail-header">
+                            <h2 id="card-detail-title">Card</h2>
+                            <span class="card-status" id="card-detail-status">Draft</span>
+                        </div>
+                        <div class="card-detail-body">
+                            <div class="detail-section">
+                                <label>Claim</label>
+                                <p class="claim-text" id="card-detail-claim"></p>
+                            </div>
+                            <div class="detail-section">
+                                <label>Sources</label>
+                                <div class="source-list" id="card-detail-sources">
+                                    <!-- Populated by JS -->
+                                </div>
+                                <button class="btn-text" id="btn-add-source">+ Add Source</button>
+                            </div>
+                            <div class="detail-section">
+                                <label>Verification</label>
+                                <div class="verification-panel" id="card-verification-panel">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-detail-actions">
+                            <button class="btn btn-secondary" id="btn-cancel-card">Cancel</button>
+                            <button class="btn btn-primary" id="btn-verify-card">
+                                <span class="btn-icon">⚡</span>
+                                Verify with Newton
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Results View -->
+                <div class="view view-search hidden" id="view-search">
+                    <div class="view-header">
+                        <h1>Search Results</h1>
+                        <p class="view-subtitle" id="search-query-display"></p>
+                    </div>
+                    <div class="search-results" id="search-results">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Quick Card Sheet -->
+        <div class="sheet-overlay hidden" id="sheet-overlay"></div>
+        <div class="sheet hidden" id="quick-card-sheet">
+            <div class="sheet-header">
+                <h2>Quick Card</h2>
+                <button class="btn-icon sheet-close" id="close-quick-card">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="sheet-body">
+                <p class="sheet-hint">Draft a claim. Newton will help you verify it.</p>
+                <div class="form-group">
+                    <label for="quick-claim">What do you want to verify?</label>
+                    <textarea id="quick-claim" placeholder="e.g., Jasper Lewis owned 200 acres in Brazoria County in 1857"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="quick-source">Source (optional)</label>
+                    <input type="text" id="quick-source" placeholder="e.g., Texas GLO Patent #4521">
+                </div>
+                <div class="form-group">
+                    <label for="quick-stack">Add to Stack</label>
+                    <select id="quick-stack">
+                        <option value="">— Keep as draft —</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="sheet-footer">
+                <button class="btn btn-secondary" id="btn-cancel-quick">Cancel</button>
+                <button class="btn btn-primary" id="btn-save-quick">Save Card</button>
+            </div>
+        </div>
+
+        <!-- New Stack Sheet -->
+        <div class="sheet hidden" id="new-stack-sheet">
+            <div class="sheet-header">
+                <h2>New Stack</h2>
+                <button class="btn-icon sheet-close" id="close-new-stack">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="sheet-body">
+                <div class="form-group">
+                    <label for="stack-name">Name</label>
+                    <input type="text" id="stack-name" placeholder="e.g., Lewis Family History">
+                </div>
+                <div class="form-group">
+                    <label for="stack-desc">Description</label>
+                    <textarea id="stack-desc" placeholder="What is this stack about?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <div class="color-picker" id="color-picker">
+                        <button class="color-option selected" data-color="#3B82F6" style="background:#3B82F6"></button>
+                        <button class="color-option" data-color="#8B5CF6" style="background:#8B5CF6"></button>
+                        <button class="color-option" data-color="#10B981" style="background:#10B981"></button>
+                        <button class="color-option" data-color="#F59E0B" style="background:#F59E0B"></button>
+                        <button class="color-option" data-color="#EF4444" style="background:#EF4444"></button>
+                        <button class="color-option" data-color="#EC4899" style="background:#EC4899"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="sheet-footer">
+                <button class="btn btn-secondary" id="btn-cancel-stack">Cancel</button>
+                <button class="btn btn-primary" id="btn-create-stack">Create Stack</button>
+            </div>
+        </div>
+
+        <!-- Newton Agent Chat Panel -->
+        <div class="chat-panel" id="chat-panel">
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-avatar">🧠</div>
+                    <div>
+                        <div class="chat-title">Newton Agent</div>
+                        <div class="chat-subtitle">Self-verifying AI assistant</div>
+                    </div>
+                </div>
+                <button class="btn-icon" id="close-chat">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-message assistant">
+                    <div class="chat-message-avatar">🧠</div>
+                    <div>
+                        <div class="chat-message-content">
+                            Hi! I'm Newton Agent. Every claim I make is grounded in evidence. Ask me anything about your stacks, or any question you need verified.
+                        </div>
+                        <div class="chat-message-meta">
+                            <span class="verified">✓ Grounded response</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Ask Newton...">
+                <button class="chat-send" id="chat-send">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat FAB -->
+        <button class="chat-fab" id="chat-fab">💬</button>
+    </div>
+
+    <script src="app2.js"></script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>parcStation — Built on Proof</title>
+    <link rel="stylesheet" href="parcstation.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-area">
+                <h1 class="logo">
+                    <span class="logo-icon">◈</span>
+                    parc<span class="logo-accent">Station</span>
+                </h1>
+                <p class="tagline">Built on proof</p>
+            </div>
+            <nav class="nav">
+                <button class="nav-btn" id="btn-home" title="Home View">
+                    <span>🏠</span>
+                </button>
+                <button class="nav-btn" id="btn-add-stack" title="New Stack">
+                    <span>📚</span>
+                </button>
+                <button class="nav-btn" id="btn-add-cartridge" title="Add Cartridge">
+                    <span>🔌</span>
+                </button>
+                <button class="nav-btn" id="btn-quick-card" title="Quick Card">
+                    <span>📝</span>
+                </button>
+            </nav>
+        </header>
+
+        <!-- Main 3D Viewport -->
+        <main class="viewport" id="viewport">
+            <!-- Three.js canvas renders here -->
+            
+            <!-- Overlay: Selected Item Panel -->
+            <aside class="panel panel-right" id="detail-panel">
+                <div class="panel-header">
+                    <h2 id="detail-title">Select an item</h2>
+                    <button class="panel-close" id="close-detail">×</button>
+                </div>
+                <div class="panel-content" id="detail-content">
+                    <p class="hint">Click on a Stack, Card, or Cartridge to see details.</p>
+                </div>
+            </aside>
+
+            <!-- Overlay: Quick Actions -->
+            <div class="quick-actions" id="quick-actions">
+                <div class="search-box">
+                    <input type="text" placeholder="Ask Newton..." id="search-input">
+                    <button class="search-btn" id="search-btn">🔍</button>
+                </div>
+            </div>
+
+            <!-- Overlay: Trust Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-dot verified"></span>
+                    <span>Verified (100%)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot partial"></span>
+                    <span>Partial (50-99%)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot draft"></span>
+                    <span>Draft (&lt;50%)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot unverified"></span>
+                    <span>Live/Unverified</span>
+                </div>
+            </div>
+
+            <!-- Overlay: Newton Status -->
+            <div class="newton-status">
+                <span class="status-dot"></span>
+                <span>Newton: Ready</span>
+            </div>
+        </main>
+
+        <!-- Sidebar: Stacks List -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Your Territory</h3>
+            </div>
+            <div class="stack-list" id="stack-list">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="sidebar-footer">
+                <h4>Recent Queries</h4>
+                <ul class="recent-queries" id="recent-queries">
+                    <li class="query-item">
+                        <span class="query-text">"Who owned the creek in 1857?"</span>
+                        <span class="query-stack">→ Lewis Family</span>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Modal: Add Stack -->
+        <dialog class="modal" id="modal-add-stack">
+            <div class="modal-content">
+                <h2>New Stack</h2>
+                <form id="form-add-stack">
+                    <div class="form-group">
+                        <label for="stack-name">Name</label>
+                        <input type="text" id="stack-name" placeholder="e.g., Lewis Family History" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stack-description">Description</label>
+                        <textarea id="stack-description" placeholder="What is this stack about?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="stack-color">Color</label>
+                        <input type="color" id="stack-color" value="#4a9eff">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-add-stack">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Stack</button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
+
+        <!-- Modal: Add Cartridge -->
+        <dialog class="modal" id="modal-add-cartridge">
+            <div class="modal-content">
+                <h2>Add Cartridge</h2>
+                <div class="cartridge-grid" id="cartridge-grid">
+                    <button class="cartridge-option" data-type="visual">
+                        <span class="cartridge-icon">🎨</span>
+                        <span class="cartridge-name">Visual</span>
+                        <span class="cartridge-desc">SVG & Images</span>
+                    </button>
+                    <button class="cartridge-option" data-type="sound">
+                        <span class="cartridge-icon">🔊</span>
+                        <span class="cartridge-name">Sound</span>
+                        <span class="cartridge-desc">Audio specs</span>
+                    </button>
+                    <button class="cartridge-option" data-type="data">
+                        <span class="cartridge-icon">📊</span>
+                        <span class="cartridge-name">Data</span>
+                        <span class="cartridge-desc">Reports & tables</span>
+                    </button>
+                    <button class="cartridge-option" data-type="voicepath">
+                        <span class="cartridge-icon">🎵</span>
+                        <span class="cartridge-name">VoicePath</span>
+                        <span class="cartridge-desc">Music trajectories</span>
+                    </button>
+                    <button class="cartridge-option" data-type="sequence">
+                        <span class="cartridge-icon">🎬</span>
+                        <span class="cartridge-name">Sequence</span>
+                        <span class="cartridge-desc">Video & animation</span>
+                    </button>
+                    <button class="cartridge-option" data-type="rosetta">
+                        <span class="cartridge-icon">💻</span>
+                        <span class="cartridge-name">Rosetta</span>
+                        <span class="cartridge-desc">Code generation</span>
+                    </button>
+                    <button class="cartridge-option" data-type="document">
+                        <span class="cartridge-icon">📄</span>
+                        <span class="cartridge-name">Document</span>
+                        <span class="cartridge-desc">PDF & receipts</span>
+                    </button>
+                    <button class="cartridge-option" data-type="web">
+                        <span class="cartridge-icon">🌐</span>
+                        <span class="cartridge-name">Web</span>
+                        <span class="cartridge-desc">Live web data</span>
+                    </button>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-add-cartridge">Cancel</button>
+                </div>
+            </div>
+        </dialog>
+
+        <!-- Modal: Quick Card -->
+        <dialog class="modal" id="modal-quick-card">
+            <div class="modal-content">
+                <h2>Quick Card</h2>
+                <p class="modal-hint">Draft a claim. Newton will help you verify it.</p>
+                <form id="form-quick-card">
+                    <div class="form-group">
+                        <label for="card-claim">Claim</label>
+                        <textarea id="card-claim" placeholder="e.g., Jasper Lewis owned 200 acres in Brazoria County in 1857" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="card-source">Source (optional)</label>
+                        <input type="text" id="card-source" placeholder="e.g., Texas GLO Patent #4521">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-quick-card">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add to Notebook</button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                <strong>parcStation</strong> by Newton — 
+                <em>The constraint IS the instruction</em>
+            </p>
+        </footer>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
