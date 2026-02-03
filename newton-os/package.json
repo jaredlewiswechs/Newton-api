@@ -1,0 +1,30 @@
+{
+  "name": "newton-os",
+  "version": "0.1.0",
+  "description": "Your Computer in a Browser - Built on Verified Computation",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  },
+  "keywords": [
+    "newton",
+    "verified-computation",
+    "squircle",
+    "desktop",
+    "browser-os"
+  ],
+  "author": "Newton Labs",
+  "license": "MIT"
+}

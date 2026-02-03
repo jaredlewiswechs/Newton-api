@@ -14,42 +14,23 @@
  */
 
 // Layer 0: The Bezier Primitive
-export { 
-  Point,
-  BezierSegment,
-  SuperellipseParams,
-  NBezierObject,
-  NShapes,
-} from './bezier';
+export type { Point, BezierSegment, SuperellipseParams } from './bezier';
+export { NBezierObject, NShapes } from './bezier';
 
 // Layer 1: The Universal Object
+export type { NObjectId, NValue, RelationshipKind } from './nobject';
 export {
   NObject,
-  NObjectId,
-  NValue,
   NProperty,
   NRelationship,
-  RelationshipKind,
   NObjectTypes,
   NObjectFactory,
 } from './nobject';
 
 // Layer 2: The Object Graph
-export {
-  NObjectGraph,
-  NConstraint,
-  NQueryResult,
-  NGraphMutation,
-  TheGraph,
-} from './graph';
+export type { NConstraint, NQueryResult, NGraphMutation } from './graph';
+export { NObjectGraph, TheGraph } from './graph';
 
 // Layer 3: The Newton Protocol
-export {
-  NewtonProtocol,
-  NewtonRequest,
-  NewtonResponse,
-  LedgerEntry,
-  VerificationResult,
-  VerifiedGraph,
-  Newton,
-} from './protocol';
+export type { NewtonRequest, NewtonResponse, LedgerEntry, VerificationResult } from './protocol';
+export { NewtonProtocol, VerifiedGraph, Newton } from './protocol';

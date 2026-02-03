@@ -14,9 +14,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-import { NBezierObject, NShapes, Point } from '../core/bezier';
-import { NObject, NObjectId } from '../core/nobject';
-import { TheGraph } from '../core/graph';
+import { NObjectId } from '../core/nobject';
 
 /**
  * Dock item (app or minimized window)

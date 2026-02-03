@@ -14,7 +14,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-import { BehaviorSubject, Observable, Subject, combineLatest, map } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 /**
  * Unique identifier for objects
@@ -32,6 +32,18 @@ export type NValue =
   | NObject 
   | NValue[] 
   | { [key: string]: NValue };
+
+/**
+ * Relationship kinds
+ */
+export type RelationshipKind = 
+  | 'owns'       // Strong ownership - target deleted when source deleted
+  | 'references' // Weak reference - can become dangling
+  | 'contains'   // Containment - spatial/logical grouping
+  | 'views'      // View relationship - observer pattern
+  | 'extends'    // Inheritance/prototype
+  | 'implements' // Interface implementation
+  | string;      // Custom relationship types
 
 /**
  * A reactive property - observable value with verification
@@ -98,51 +110,6 @@ export class NProperty<T extends NValue = NValue> {
 }
 
 /**
- * Relationship kinds
- */
-export type RelationshipKind = 
-  | 'owns'       // Strong ownership - target deleted when source deleted
-  | 'references' // Weak reference - can become dangling
-  | 'contains'   // Containment - spatial/logical grouping
-  | 'views'      // View relationship - observer pattern
-  | 'extends'    // Inheritance/prototype
-  | 'implements' // Interface implementation
-  | string;      // Custom relationship types
-
-/**
- * NRelationship - Relationships ARE Objects
- * 
- * This is key: a relationship between A and B is itself an object.
- * It can have properties, constraints, be observed, be verified.
- */
-export class NRelationship extends NObject {
-  constructor(
-    public readonly sourceId: NObjectId,
-    public readonly targetId: NObjectId,
-    public readonly kind: RelationshipKind,
-    id?: NObjectId
-  ) {
-    super('relationship', id);
-    this.setProperty('sourceId', sourceId);
-    this.setProperty('targetId', targetId);
-    this.setProperty('kind', kind);
-  }
-  
-  /**
-   * Inverse relationship (if bidirectional)
-   */
-  private _inverse?: NRelationship;
-  
-  get inverse(): NRelationship | undefined {
-    return this._inverse;
-  }
-  
-  setInverse(rel: NRelationship): void {
-    this._inverse = rel;
-  }
-}
-
-/**
  * NObject - The Universal Object
  * 
  * The fundamental unit of Newton OS.
@@ -182,7 +149,7 @@ export class NObject {
       prop.value = value;
     } else {
       prop = new NProperty<T>(name, value, constraint);
-      this._properties.set(name, prop as NProperty);
+      this._properties.set(name, prop as unknown as NProperty);
     }
     
     this._propertyChanged$.next({ name, value });
@@ -395,6 +362,39 @@ export class NObject {
     }
     
     return obj;
+  }
+}
+
+/**
+ * NRelationship - Relationships ARE Objects
+ * 
+ * This is key: a relationship between A and B is itself an object.
+ * It can have properties, constraints, be observed, be verified.
+ */
+export class NRelationship extends NObject {
+  constructor(
+    public readonly sourceId: NObjectId,
+    public readonly targetId: NObjectId,
+    public readonly kind: RelationshipKind,
+    id?: NObjectId
+  ) {
+    super('relationship', id);
+    this.setProperty('sourceId', sourceId);
+    this.setProperty('targetId', targetId);
+    this.setProperty('kind', kind);
+  }
+  
+  /**
+   * Inverse relationship (if bidirectional)
+   */
+  private _inverse?: NRelationship;
+  
+  get inverse(): NRelationship | undefined {
+    return this._inverse;
+  }
+  
+  setInverse(rel: NRelationship): void {
+    this._inverse = rel;
   }
 }
 

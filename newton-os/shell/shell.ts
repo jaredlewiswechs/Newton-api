@@ -15,11 +15,11 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-import { NObject, NObjectId } from '../core/nobject';
-import { TheGraph, NObjectGraph } from '../core/graph';
-import { Newton, NewtonProtocol } from '../core/protocol';
+import { NObjectId } from '../core/nobject';
+import { TheGraph } from '../core/graph';
+import { Newton } from '../core/protocol';
 import { NWindow } from './window';
-import { NDock, DockItem } from './dock';
+import { NDock } from './dock';
 
 /**
  * Shell configuration
@@ -108,7 +108,7 @@ export class NShell {
     }
     
     // Listen for graph changes
-    TheGraph.mutations$.subscribe(mutation => {
+    TheGraph.mutations$.subscribe((mutation: { type: string; objectId: string; object?: { type: string } }) => {
       if (mutation.type === 'add' && mutation.object?.type === 'window') {
         // Auto-render new windows
         // This would be handled by window creation API

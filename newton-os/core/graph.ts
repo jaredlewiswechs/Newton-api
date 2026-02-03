@@ -15,8 +15,8 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-import { BehaviorSubject, Observable, Subject, combineLatest, filter, map } from 'rxjs';
-import { NObject, NObjectId, NRelationship, RelationshipKind, NValue } from './nobject';
+import { BehaviorSubject, Observable, Subject, map } from 'rxjs';
+import { NObject, NObjectId, RelationshipKind, NValue } from './nobject';
 
 /**
  * Constraint for querying objects
@@ -70,7 +70,7 @@ export class NObjectGraph {
   
   constructor() {
     // Track all mutations for the ledger
-    this._mutations$.subscribe(mutation => {
+    this._mutations$.subscribe((mutation: NGraphMutation) => {
       console.log('[Graph Mutation]', mutation.type, mutation.objectId);
     });
   }
@@ -93,7 +93,7 @@ export class NObjectGraph {
     this._byType.get(obj.type)!.add(obj.id);
     
     // Subscribe to object changes
-    obj.propertyChanged$.subscribe(change => {
+    obj.propertyChanged$.subscribe((change: { name: string; value: NValue }) => {
       this._mutations$.next({
         type: 'update',
         objectId: obj.id,
@@ -138,7 +138,7 @@ export class NObjectGraph {
     // Handle cascading deletes for 'owns' relationships
     for (const otherObj of this._objects.values()) {
       const ownsRels = otherObj.getRelationships('owns')
-        .filter(r => r.targetId === id);
+        .filter((r: { targetId: NObjectId }) => r.targetId === id);
       for (const rel of ownsRels) {
         otherObj.removeRelationship(rel);
       }
@@ -258,7 +258,7 @@ export class NObjectGraph {
           }
           
           if (relConstraint.targetId) {
-            return rels.some(r => r.targetId === relConstraint.targetId);
+            return rels.some((r: { targetId: NObjectId }) => r.targetId === relConstraint.targetId);
           }
           
           return true;
@@ -292,8 +292,8 @@ export class NObjectGraph {
     
     const relatedIds = obj.getRelatedIds(kind);
     return relatedIds
-      .map(rid => this._objects.get(rid))
-      .filter((o): o is NObject => o !== undefined);
+      .map((rid: NObjectId) => this._objects.get(rid))
+      .filter((o: NObject | undefined): o is NObject => o !== undefined);
   }
   
   /**
@@ -304,7 +304,7 @@ export class NObjectGraph {
     
     for (const obj of this._objects.values()) {
       const rels = obj.getRelationships(kind);
-      if (rels.some(r => r.targetId === targetId)) {
+      if (rels.some((r: { targetId: NObjectId }) => r.targetId === targetId)) {
         results.push(obj);
       }
     }
@@ -376,7 +376,7 @@ export class NObjectGraph {
    */
   watch(id: NObjectId): Observable<NObject | undefined> {
     return this._objects$.pipe(
-      map(objects => objects.get(id))
+      map((objects: Map<NObjectId, NObject>) => objects.get(id))
     );
   }
   

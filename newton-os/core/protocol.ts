@@ -15,7 +15,7 @@
  */
 
 import { Subject, Observable, BehaviorSubject } from 'rxjs';
-import { NObject, NObjectId, NValue } from './nobject';
+import { NObject } from './nobject';
 import { NObjectGraph, NConstraint, NQueryResult } from './graph';
 
 /**
@@ -431,16 +431,14 @@ export class NewtonProtocol {
 export class VerifiedGraph {
   private _graph: NObjectGraph;
   private _protocol: NewtonProtocol;
-  private _autoVerify: boolean;
   
   constructor(graph: NObjectGraph, protocol: NewtonProtocol, autoVerify: boolean = true) {
     this._graph = graph;
     this._protocol = protocol;
-    this._autoVerify = autoVerify;
     
     // Auto-verify mutations
     if (autoVerify) {
-      this._graph.mutations$.subscribe(async (mutation) => {
+      this._graph.mutations$.subscribe(async (mutation: { type: string; objectId: string }) => {
         if (mutation.type === 'add' || mutation.type === 'update') {
           const obj = this._graph.get(mutation.objectId);
           if (obj) {
@@ -460,7 +458,6 @@ export class VerifiedGraph {
     
     // Build constraints from properties
     for (const name of obj.propertyNames) {
-      const value = obj.getProperty(name);
       constraints[name] = { exists: true };
     }
     

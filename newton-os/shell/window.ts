@@ -16,7 +16,7 @@
  */
 
 import { NBezierObject, NShapes, Point } from '../core/bezier';
-import { NObject, NObjectFactory, NObjectId, NValue } from '../core/nobject';
+import { NObject, NObjectFactory, NObjectId } from '../core/nobject';
 import { TheGraph } from '../core/graph';
 
 /**
@@ -110,9 +110,7 @@ export class NWindow {
       x + width / 2,
       y + height / 2,
       width,
-      height,
-      this._style.cornerRadius,
-      this._style.superellipseN
+      height
     );
   }
   
@@ -198,9 +196,7 @@ export class NWindow {
       this.x + this.width / 2,
       this.y + this.height / 2,
       this.width,
-      this.height,
-      this._style.cornerRadius,
-      this._style.superellipseN
+      this.height
     );
   }
   

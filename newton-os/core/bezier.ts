@@ -309,7 +309,7 @@ export class NBezierObject {
  * Utility: interpolate between two bezier objects
  * Smooth morphing - no snapping
  */
-export function interpolateBezier(a: NBezierObject, b: NBezierObject, t: number): NBezierObject {
+export function interpolateBezier(_a: NBezierObject, _b: NBezierObject, _t: number): NBezierObject {
   const result = new NBezierObject();
   // TODO: Implement bezier interpolation
   // This enables smooth animations between any shapes
