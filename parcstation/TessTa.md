@@ -10,13 +10,14 @@
 ```bash
 cd parcstation
 
-# Full test suite (smoke + contract + acid)
+# Full test suite (smoke + contract + acid + cartridge)
 python test.py
 
 # Individual tests
-python test.py smoke      # 5-8 seconds - "Does it boot?"
-python test.py contract   # 15-20 seconds - UI ↔ API boundaries
-python test.py acid       # 2-4 seconds - ACID compliance
+python test.py smoke      # 10s - "Does it boot?"
+python test.py contract   # 18s - UI ↔ API boundaries
+python test.py acid       # 4s  - ACID compliance
+python test.py cartridge  # 34s - Cartridge modules
 ```
 
 ---
@@ -47,13 +48,14 @@ From GPT's advice:
 
 ### 1. Smoke Test (`smoke.py`)
 
-**Purpose:** "Does it boot?" — 5 second answer
+**Purpose:** "Does it boot?" — 10 second answer
 
 **Checks:**
 | Check | What it validates |
 |-------|-------------------|
 | Newton API | Supercomputer running on :8000 |
 | Newton Agent | Agent running on :8091 |
+| Cartridges | Cartridge server on :8093 (optional) |
 | UI Server | HTTP server on :8082 serving HTML |
 | API /verify | Verification endpoint responds |
 | API /calculate | Calculation returns 1+1=2 |
@@ -72,9 +74,9 @@ From GPT's advice:
 
 > "Most bugs live at boundaries, and boundaries are where humans assume things."
 
-**Categories:**
+**Categories (45 checks):**
 
-#### HTML Structure
+#### HTML Structure (8 checks)
 - Has app container (`class="app"` or `id="app"`)
 - Has sidebar
 - Has main area
@@ -84,7 +86,7 @@ From GPT's advice:
 - Loads style.css
 - No inline onerror handlers
 
-#### CSS Contract
+#### CSS Contract (10 checks)
 - Has `--bg-primary` variable
 - Has `--glass-bg` variable
 - Has `--accent` variable
@@ -96,7 +98,7 @@ From GPT's advice:
 - Chat panel styled
 - Chat messages styled
 
-#### JavaScript Contract
+#### JavaScript Contract (12 checks)
 - `ParcStationApp` class exists
 - `NewtonClient` class exists
 - `NewtonAgentClient` class exists
@@ -110,19 +112,19 @@ From GPT's advice:
 - DOMContentLoaded handler
 - Reasonable console.error count
 
-#### API Contract (Newton)
+#### API Contract - Newton (6 checks)
 - `/verify` returns `{ verified: bool }`
 - `/calculate` returns `{ result: any }`
 - `/ground` returns `{ status: string }`
 - `/ledger` returns `{ entries: [] }`
 
-#### API Contract (Agent)
+#### API Contract - Agent (4 checks)
 - `/health` responds 200
 - `/stats` returns data
 - `/history` returns `{ turns: [] }`
 - `/models` returns list
 
-#### Boundary Wiring
+#### Boundary Wiring (5 checks)
 - JS has fetch to `/verify`
 - JS has fetch to `/ground`
 - JS has fetch to `/chat`
@@ -135,7 +137,7 @@ From GPT's advice:
 
 ### 3. ACID Test (`test_acid.py`)
 
-**Purpose:** Verify Newton compliance with database-level guarantees
+**Purpose:** Verify Newton compliance with database-level guarantees (11 checks)
 
 #### Atomicity (Complete or Nothing)
 - **Atomic Verification**: Verify operation completes fully or not at all
@@ -159,6 +161,61 @@ From GPT's advice:
 #### Integration
 - **Full Verification Pipeline**: claim → ground → verify → ledger
 - **Calculation Types**: Various expression operations work
+
+---
+
+### 4. Cartridge Test (`test_cartridges.py`)
+
+**Purpose:** Verify all cartridge modules work correctly (36 checks)
+
+#### Service Health (3 checks)
+- Service running on :8093
+- Cartridges endpoint responds
+- Has all expected cartridges
+
+#### Wikipedia Cartridge (7 checks)
+- Summary endpoint responds
+- Summary found for valid topics
+- Has title field
+- Has summary content (>50 chars)
+- Has Wikipedia URL
+- Search endpoint responds
+- Returns search results
+
+#### arXiv Cartridge (5 checks)
+- Search endpoint responds
+- Returns paper results
+- Papers have titles
+- Papers have authors
+- Papers have arXiv URLs
+
+#### Calendar Cartridge (8 checks)
+- Now endpoint returns datetime
+- Has day_of_week
+- Parse 'today'
+- Parse 'tomorrow'
+- Parse 'next friday'
+- Parse 'in 3 days'
+- Parse 'end of month'
+
+#### Export Cartridge (6 checks)
+- JSON export endpoint
+- JSON has content
+- JSON has filename
+- Markdown export endpoint
+- Markdown has content
+- Markdown has filename
+
+#### Code Cartridge (4 checks)
+- Code evaluate endpoint
+- Returns result
+- Result is verified
+- Complex math works
+
+#### Dictionary Cartridge (3 checks)
+- Dictionary endpoint responds
+- Word found
+- Has definitions
 
 ---
 
@@ -290,8 +347,9 @@ parcstation/
 ├── smoke.py          # Quick boot check
 ├── contract_test.py  # UI/API boundary tests  
 ├── test_acid.py      # ACID compliance tests
-├── TessTa.md         # This file
-└── StationReadMe.md  # Architecture docs
+├── test_cartridges.py  # Cartridge module tests (36 checks)
+├── TessTa.md           # This file
+└── StationReadMe.md    # Architecture docs
 ```
 
 ---
@@ -316,7 +374,17 @@ parcstation/
 ▶ Running Smoke Test...
    ✓ Newton API      PASS 2010ms
    ✓ Newton Agent    PASS 2034ms
+   ✓ Cartridges      PASS 2019ms
    ...
+
+▶ Running Contract Test...
+   ✓ 45/45 checks passed (100%)
+
+▶ Running ACID Test...
+   ✓ 11/11 tests passed
+
+▶ Running Cartridge Test...
+   ✓ 36/36 checks passed
 
 ═══════════════════════════════════════════════════════════════════════════
 
@@ -327,7 +395,7 @@ parcstation/
   ███████║██║  ██║██║     ███████╗
   ╚══════╝╚═╝  ╚═╝╚═╝     ╚══════╝
   
-  All 3 test suites passed in 29.1s
+  All 4 test suites passed in 67.1s
   
   → UI is safe to open
 ```

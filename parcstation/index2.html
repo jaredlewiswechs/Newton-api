@@ -27,6 +27,16 @@
                         <!-- Populated by JS -->
                     </div>
                 </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Documents</div>
+                    <div class="documents-nav" id="documents-nav">
+                        <div class="nav-item" id="nav-documents">
+                            <span class="nav-icon">📄</span>
+                            <span class="nav-text">All Documents</span>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="nav-section">
                     <div class="nav-section-title">Cartridges</div>
@@ -59,12 +69,13 @@
                     </div>
                 </div>
                 <div class="toolbar-center">
-                    <div class="search-box">
+                    <div class="search-box" id="spotlight-trigger">
                         <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8"/>
                             <path d="M21 21l-4.35-4.35"/>
                         </svg>
-                        <input type="text" placeholder="Ask Newton anything..." id="search-input">
+                        <input type="text" placeholder="Search... ⌘K" id="search-input" readonly>
+                        <span class="search-shortcut">⌘K</span>
                     </div>
                 </div>
                 <div class="toolbar-right">
@@ -158,6 +169,68 @@
                         <!-- Populated by JS -->
                     </div>
                 </div>
+
+                <!-- Documents List View -->
+                <div class="view view-documents hidden" id="view-documents">
+                    <div class="view-header">
+                        <div class="view-header-top">
+                            <div>
+                                <h1>Documents</h1>
+                                <p class="view-subtitle">Author knowledge before verification</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="app.showNewDocumentSheet()">
+                                <span class="btn-icon">+</span>
+                                New Document
+                            </button>
+                        </div>
+                    </div>
+                    <div class="documents-grid" id="documents-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Document Editor View -->
+                <div class="view view-document-editor hidden" id="view-document-editor">
+                    <div class="document-editor-layout">
+                        <div class="document-editor-main">
+                            <div class="editor-toolbar">
+                                <input type="text" class="doc-title-input" id="doc-editor-title" placeholder="Document Title">
+                                <div class="editor-actions">
+                                    <button class="btn btn-secondary btn-sm" id="btn-mark-claim" title="Mark Selection as Claim">
+                                        <span class="btn-icon">📌</span>
+                                        Mark as Claim
+                                    </button>
+                                    <button class="btn btn-primary btn-sm" id="btn-save-doc" title="Save Document">
+                                        <span class="btn-icon">💾</span>
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="editor-content-area">
+                                <textarea class="doc-content-textarea" id="doc-editor-content" placeholder="Start writing... 
+
+Select any text and click 'Mark as Claim' to extract verifiable statements.
+
+Your claims will appear in the sidebar where you can verify them with Newton and promote them to cards."></textarea>
+                            </div>
+                            <div class="editor-status">
+                                <span class="status-text" id="editor-status-text">Ready</span>
+                            </div>
+                        </div>
+                        <aside class="claims-sidebar">
+                            <div class="claims-header">
+                                <h3>📌 Claims</h3>
+                                <span class="claims-count" id="claims-count">0</span>
+                            </div>
+                            <div class="claims-list" id="doc-claims-list">
+                                <!-- Populated by JS -->
+                            </div>
+                            <div class="claims-footer">
+                                <p class="claims-hint">Select text → Mark as Claim → Verify → Promote to Card</p>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -233,6 +306,156 @@
             </div>
         </div>
 
+        <!-- New Document Sheet -->
+        <div class="sheet hidden" id="new-document-sheet">
+            <div class="sheet-header">
+                <h2>New Document</h2>
+                <button class="btn-icon sheet-close" onclick="app.hideSheet('new-document-sheet')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="sheet-body">
+                <p class="sheet-hint">Create a document to draft and organize knowledge before verification.</p>
+                <div class="form-group">
+                    <label for="new-doc-title">Title</label>
+                    <input type="text" id="new-doc-title" placeholder="e.g., Research Notes on Lewis Family">
+                </div>
+            </div>
+            <div class="sheet-footer">
+                <button class="btn btn-secondary" onclick="app.hideSheet('new-document-sheet')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.createNewDocument()">Create Document</button>
+            </div>
+        </div>
+
+        <!-- Promote Claim Sheet -->
+        <div class="sheet hidden" id="promote-claim-sheet">
+            <div class="sheet-header">
+                <h2>Promote to Card</h2>
+                <button class="btn-icon sheet-close" onclick="app.hideSheet('promote-claim-sheet')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="sheet-body">
+                <p class="sheet-hint">Convert this claim into a verified card in your knowledge base.</p>
+                <div class="form-group">
+                    <label>Claim</label>
+                    <div class="claim-preview glass" id="promote-claim-preview"></div>
+                </div>
+                <div class="form-group">
+                    <label for="promote-stack-select">Add to Stack</label>
+                    <select id="promote-stack-select">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="sheet-footer">
+                <button class="btn btn-secondary" onclick="app.hideSheet('promote-claim-sheet')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.promoteClaimToCard()">
+                    <span class="btn-icon">↗</span>
+                    Promote to Card
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Source Sheet -->
+        <div class="sheet sheet-large hidden" id="add-source-sheet">
+            <div class="sheet-header">
+                <h2>Add Source</h2>
+                <button class="btn-icon sheet-close" onclick="app.hideSheet('add-source-sheet')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="sheet-body">
+                <div class="source-tabs">
+                    <button class="source-tab active" data-tab="url">🔗 URL</button>
+                    <button class="source-tab" data-tab="wikipedia">📖 Wikipedia</button>
+                    <button class="source-tab" data-tab="arxiv">📄 arXiv</button>
+                    <button class="source-tab" data-tab="manual">✏️ Manual</button>
+                </div>
+                
+                <!-- URL Tab -->
+                <div class="source-tab-content active" id="source-tab-url">
+                    <div class="form-group">
+                        <label for="source-url">Enter URL</label>
+                        <input type="url" id="source-url" placeholder="https://example.com/article">
+                    </div>
+                    <button class="btn btn-primary" onclick="app.addSourceFromUrl()">Add URL</button>
+                </div>
+                
+                <!-- Wikipedia Tab -->
+                <div class="source-tab-content hidden" id="source-tab-wikipedia">
+                    <div class="form-group">
+                        <label for="source-wiki-search">Search Wikipedia</label>
+                        <div class="search-input-group">
+                            <input type="text" id="source-wiki-search" placeholder="Search topic...">
+                            <button class="btn btn-primary" onclick="app.searchWikipediaForSource()">Search</button>
+                        </div>
+                    </div>
+                    <div class="source-search-results" id="wiki-source-results"></div>
+                </div>
+                
+                <!-- arXiv Tab -->
+                <div class="source-tab-content hidden" id="source-tab-arxiv">
+                    <div class="form-group">
+                        <label for="source-arxiv-search">Search arXiv</label>
+                        <div class="search-input-group">
+                            <input type="text" id="source-arxiv-search" placeholder="Search papers...">
+                            <button class="btn btn-primary" onclick="app.searchArxivForSource()">Search</button>
+                        </div>
+                    </div>
+                    <div class="source-search-results" id="arxiv-source-results"></div>
+                </div>
+                
+                <!-- Manual Tab -->
+                <div class="source-tab-content hidden" id="source-tab-manual">
+                    <div class="form-group">
+                        <label for="source-manual-title">Title</label>
+                        <input type="text" id="source-manual-title" placeholder="Source title">
+                    </div>
+                    <div class="form-group">
+                        <label for="source-manual-desc">Description</label>
+                        <textarea id="source-manual-desc" placeholder="Describe the source..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.addManualSource()">Add Source</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cartridge Panel (Slide-in) -->
+        <div class="cartridge-panel hidden" id="cartridge-panel">
+            <div class="cartridge-panel-header">
+                <div class="cartridge-panel-title">
+                    <span class="cartridge-panel-icon" id="cartridge-panel-icon">📖</span>
+                    <h3 id="cartridge-panel-name">Wikipedia</h3>
+                </div>
+                <button class="btn-icon" onclick="app.closeCartridgePanel()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="cartridge-panel-search">
+                <input type="text" id="cartridge-search-input" placeholder="Search...">
+                <button class="btn btn-primary" id="cartridge-search-btn">Search</button>
+            </div>
+            <div class="cartridge-panel-results" id="cartridge-results">
+                <div class="cartridge-empty">
+                    <p>Enter a search term above</p>
+                </div>
+                <!-- Loading state (shown dynamically) -->
+                <div class="cartridge-loading hidden" id="cartridge-loading">
+                    <span class="loading-spinner"></span>
+                    <p>Searching...</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Newton Agent Chat Panel -->
         <div class="chat-panel" id="chat-panel">
             <div class="chat-header">
@@ -274,6 +497,65 @@
 
         <!-- Chat FAB -->
         <button class="chat-fab" id="chat-fab">💬</button>
+
+        <!-- Spotlight Search Modal (Cmd+K) -->
+        <div class="spotlight-overlay hidden" id="spotlight-overlay">
+            <div class="spotlight-modal">
+                <div class="spotlight-header">
+                    <svg class="spotlight-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <input type="text" class="spotlight-input" id="spotlight-input" placeholder="Search stacks, cards, Wikipedia, arXiv..." autofocus>
+                    <div class="spotlight-shortcut">ESC</div>
+                </div>
+                <div class="spotlight-results" id="spotlight-results">
+                    <div class="spotlight-section">
+                        <div class="spotlight-section-title">Quick Actions</div>
+                        <div class="spotlight-item" data-action="new-stack">
+                            <span class="spotlight-item-icon">📚</span>
+                            <span class="spotlight-item-text">Create New Stack</span>
+                            <span class="spotlight-item-hint">⌘N</span>
+                        </div>
+                        <div class="spotlight-item" data-action="new-card">
+                            <span class="spotlight-item-icon">📝</span>
+                            <span class="spotlight-item-text">Quick Card</span>
+                            <span class="spotlight-item-hint">⌘⇧N</span>
+                        </div>
+                        <div class="spotlight-item" data-action="new-document">
+                            <span class="spotlight-item-icon">📄</span>
+                            <span class="spotlight-item-text">New Document</span>
+                            <span class="spotlight-item-hint">⌘D</span>
+                        </div>
+                        <div class="spotlight-item" data-action="chat">
+                            <span class="spotlight-item-icon">🧠</span>
+                            <span class="spotlight-item-text">Ask Newton Agent</span>
+                            <span class="spotlight-item-hint">⌘J</span>
+                        </div>
+                    </div>
+                    <div class="spotlight-section">
+                        <div class="spotlight-section-title">Cartridges</div>
+                        <div class="spotlight-item" data-action="wikipedia">
+                            <span class="spotlight-item-icon">📖</span>
+                            <span class="spotlight-item-text">Search Wikipedia</span>
+                        </div>
+                        <div class="spotlight-item" data-action="arxiv">
+                            <span class="spotlight-item-icon">📄</span>
+                            <span class="spotlight-item-text">Search arXiv Papers</span>
+                        </div>
+                        <div class="spotlight-item" data-action="calculate">
+                            <span class="spotlight-item-icon">🔢</span>
+                            <span class="spotlight-item-text">Calculator</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="spotlight-footer">
+                    <span class="spotlight-footer-hint">↑↓ Navigate</span>
+                    <span class="spotlight-footer-hint">↵ Select</span>
+                    <span class="spotlight-footer-hint">⌘K Spotlight</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="app2.js"></script>

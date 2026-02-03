@@ -41,7 +41,15 @@ def smoke():
     except:
         checks.append(("Newton Agent", False, "DOWN"))
     
-    # 3. UI Server
+    # 3. Cartridges
+    try:
+        r = requests.get("http://localhost:8093/health", timeout=2)
+        ok = r.status_code == 200
+        checks.append(("Cartridges", ok, f"{r.elapsed.total_seconds()*1000:.0f}ms"))
+    except:
+        checks.append(("Cartridges", False, "DOWN (optional)"))
+    
+    # 4. UI Server
     try:
         r = requests.get("http://localhost:8082/index2.html", timeout=2)
         ok = r.status_code == 200 and "parcStation" in r.text
@@ -49,7 +57,7 @@ def smoke():
     except:
         checks.append(("UI Server", False, "DOWN"))
     
-    # 4. Critical API: Verify
+    # 5. Critical API: Verify
     try:
         r = requests.post("http://localhost:8000/verify", 
                          json={"input": "smoke"}, timeout=2)
@@ -58,7 +66,7 @@ def smoke():
     except:
         checks.append(("API /verify", False, "FAIL"))
     
-    # 5. Critical API: Calculate
+    # 6. Critical API: Calculate
     try:
         r = requests.post("http://localhost:8000/calculate",
                          json={"expression": {"op": "+", "args": [1, 1]}}, timeout=2)
@@ -67,7 +75,7 @@ def smoke():
     except:
         checks.append(("API /calculate", False, "FAIL"))
     
-    # 6. UI Contract: JS loads
+    # 7. UI Contract: JS loads
     try:
         r = requests.get("http://localhost:8082/app2.js", timeout=2)
         has_app = "ParcStationApp" in r.text

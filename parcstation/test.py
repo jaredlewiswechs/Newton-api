@@ -5,10 +5,11 @@ parcStation TEST RUNNER
 One command. Full verification. Before you look at the UI.
 
 Usage:
-    python test.py           # Full suite
-    python test.py smoke     # Just smoke test (5 seconds)
-    python test.py contract  # Just contract test
-    python test.py acid      # ACID compliance test
+    python test.py              # Full suite
+    python test.py smoke        # Just smoke test (5 seconds)
+    python test.py contract     # Just contract test
+    python test.py acid         # ACID compliance test
+    python test.py cartridges   # Cartridge system test
 ═══════════════════════════════════════════════════════════════════════════════
 """
 
@@ -70,6 +71,9 @@ def main():
     
     if mode in ("acid", "full"):
         results.append(("ACID Test", run_test("ACID Test", "test_acid.py")))
+    
+    if mode in ("cartridges", "full"):
+        results.append(("Cartridge Test", run_test("Cartridge Test", "test_cartridges.py")))
     
     # Summary
     elapsed = time.time() - start

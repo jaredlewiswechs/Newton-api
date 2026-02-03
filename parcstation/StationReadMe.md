@@ -1,5 +1,5 @@
 # StationReadMe
-## parcStation Architecture
+## parcStation Architecture & Deployment Guide
 
 > **The constraint IS the instruction. The verification IS the computation.**
 
@@ -14,90 +14,454 @@ parcStation is a **verified information environment** where:
 - Every piece of content is organized in **Stacks** (like HyperCard)
 - Every operation is logged to an immutable **Ledger**
 - An AI agent (Newton Agent) provides grounded, verifiable responses
+- **Cartridges** provide pluggable knowledge modules (Wikipedia, arXiv, etc.)
 
 Think of it as: **Notes app + HyperCard + Wolfram Alpha + immutable audit trail**
 
 ---
 
-## Architecture Diagram
+## Service Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              parcStation UI                                 │
-│                         (index2.html + app2.js)                             │
+│                      http://localhost:8082/index2.html                      │
 │                                                                             │
 │  ┌──────────────┐  ┌──────────────────────────┐  ┌────────────────────┐    │
 │  │   Sidebar    │  │      Main Content        │  │    Chat Panel      │    │
-│  │              │  │                          │  │                    │    │
-│  │  • Stacks    │  │  Stack Grid / Card View  │  │  Newton Agent      │    │
-│  │  • Cartridges│  │                          │  │  Conversations     │    │
-│  │  • Status    │  │  Trust Badges, Sources   │  │                    │    │
+│  │   Stacks     │  │  Stack Grid / Card View  │  │  Newton Agent      │    │
+│  │   Status     │  │  Trust Badges, Sources   │  │  Grounded Chat     │    │
 │  └──────────────┘  └──────────────────────────┘  └────────────────────┘    │
+│                                                                             │
+│                    ┌─────────────────────────────┐                          │
+│                    │   Spotlight Search (⌘K)     │                          │
+│                    │   Wikipedia, arXiv, Calc    │                          │
+│                    └─────────────────────────────┘                          │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
-                                    │ HTTP/REST
+                    ╔═══════════════╪═══════════════╗
+                    ║           HTTP/REST           ║
+                    ╚═══════════════╪═══════════════╝
                                     │
-         ┌──────────────────────────┴───────────────────────────┐
-         │                                                      │
-         ▼                                                      ▼
-┌─────────────────────────┐                      ┌─────────────────────────┐
-│   Newton Supercomputer  │                      │     Newton Agent        │
-│      (port 8000)        │                      │      (port 8091)        │
-│                         │                      │                         │
-│  /verify   - Content    │                      │  /chat    - AI chat     │
-│  /ground   - Claims     │◄────────────────────►│  /ground  - Verify      │
-│  /calculate- Math       │                      │  /history - Memory      │
-│  /ledger   - Audit      │                      │  /stats   - Metrics     │
-│  /ask      - Pipeline   │                      │  /models  - LLM list    │
-└─────────────────────────┘                      └─────────────────────────┘
-         │                                                      │
-         │                                                      │
-         ▼                                                      ▼
-┌─────────────────────────┐                      ┌─────────────────────────┐
-│    Core Components      │                      │    Ollama (qwen2.5)     │
-│                         │                      │      (port 11434)       │
-│  CDL   - Constraints    │                      │                         │
-│  Logic - Computation    │                      │  Local LLM inference    │
-│  Forge - Verification   │                      │  No cloud dependency    │
-│  Vault - Encryption     │                      │                         │
-│  Ledger- Immutability   │                      │                         │
-└─────────────────────────┘                      └─────────────────────────┘
+      ┌─────────────────────────────┼─────────────────────────────┐
+      │                             │                             │
+      ▼                             ▼                             ▼
+┌───────────────┐         ┌─────────────────┐         ┌───────────────────┐
+│    Newton     │         │  Newton Agent   │         │   Cartridges      │
+│ Supercomputer │         │   (port 8091)   │         │   (port 8093)     │
+│  (port 8000)  │         │                 │         │                   │
+│               │         │  /chat          │         │  /wikipedia/*     │
+│  /verify      │◄───────►│  /ground        │         │  /arxiv/*         │
+│  /ground      │         │  /history       │         │  /calendar/*      │
+│  /calculate   │         │  /stats         │         │  /code/*          │
+│  /ledger      │         │  /models        │         │  /dictionary/*    │
+│  /ask         │         │                 │         │  /export/*        │
+└───────┬───────┘         └────────┬────────┘         └───────────────────┘
+        │                          │                            │
+        │                          ▼                            │
+        │                 ┌─────────────────┐                   │
+        │                 │     Ollama      │                   │
+        │                 │  (port 11434)   │                   │
+        │                 │   qwen2.5:3b    │                   │
+        │                 └─────────────────┘                   │
+        │                                                       │
+        ▼                                                       ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                           External APIs (Free)                            │
+│  Wikipedia API (no key) │ arXiv API (no key) │ Dictionary API (no key)   │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Port Assignments
+
+| Service | Port | Purpose | Required |
+|---------|------|---------|----------|
+| **Newton Supercomputer** | 8000 | Verified computation, grounding, ledger | ✅ Yes |
+| **Newton Agent** | 8091 | AI chat with grounding | ✅ Yes |
+| **Cartridges** | 8093 | Knowledge modules (Wikipedia, arXiv, etc.) | Optional |
+| **UI Server** | 8082 | Static file serving | ✅ Yes |
+| **Ollama** | 11434 | Local LLM inference | ✅ Yes (for Agent) |
+
+---
+
+## Quick Start (Local Development)
+
+### Prerequisites
+```bash
+# Python 3.9+
+python --version
+
+# Ollama with qwen2.5
+ollama pull qwen2.5:3b
+ollama serve  # Keep running in background
+```
+
+### Start All Services (4 Terminals)
+
+**Terminal 1: Newton Supercomputer**
+```powershell
+cd c:\Users\jnlew\Newton-api
+python newton_supercomputer.py
+# Runs on http://localhost:8000
+```
+
+**Terminal 2: Newton Agent**
+```powershell
+cd c:\Users\jnlew\Newton-api
+python -m newton_agent.agent
+# Runs on http://localhost:8091
+```
+
+**Terminal 3: Cartridges (Optional)**
+```powershell
+cd c:\Users\jnlew\Newton-api\parcstation
+python cartridges.py
+# Runs on http://localhost:8093
+```
+
+**Terminal 4: UI Server**
+```powershell
+cd c:\Users\jnlew\Newton-api\parcstation
+python -m http.server 8082
+# Serves UI at http://localhost:8082/index2.html
+```
+
+### One-Line Startup (Windows PowerShell)
+```powershell
+# Start all services in separate windows
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd c:\Users\jnlew\Newton-api; python newton_supercomputer.py"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd c:\Users\jnlew\Newton-api; python -m newton_agent.agent"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd c:\Users\jnlew\Newton-api\parcstation; python cartridges.py"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd c:\Users\jnlew\Newton-api\parcstation; python -m http.server 8082"
+```
+
+### Verify Everything Works
+```powershell
+cd c:\Users\jnlew\Newton-api\parcstation
+python test.py
+# Should show: All 4 test suites passed
+```
+
+---
+
+## Test Suite (TessTa)
+
+The test suite validates all contracts before opening the UI:
+
+```powershell
+python test.py          # Run all tests
+python test.py smoke    # Quick smoke test only
+python test.py acid     # ACID compliance only
+```
+
+### Test Results Breakdown
+
+| Suite | Tests | Purpose |
+|-------|-------|---------|
+| **Smoke** | 8 | Service health, basic API responses |
+| **Contract** | 45 | HTML/CSS/JS structure, API contracts |
+| **ACID** | 11 | Atomicity, Consistency, Isolation, Durability |
+| **Cartridge** | 36 | Wikipedia, arXiv, Calendar, Export, Code, Dictionary |
+
+**Pass criteria:** All 4 suites must pass before UI is safe to use.
+
+---
+
+## Configuration
+
+### Frontend Config (`app2.js`)
+```javascript
+const CONFIG = {
+    NEWTON_URL: 'http://localhost:8000',    // Newton Supercomputer
+    AGENT_URL: 'http://localhost:8091',     // Newton Agent
+    CARTRIDGE_URL: 'http://localhost:8093', // Cartridges
+    STORAGE_KEY: 'parcstation_data'         // localStorage key
+};
+```
+
+### Environment Variables (Agent)
+```bash
+export OLLAMA_MODEL=qwen2.5:3b           # LLM model
+export OLLAMA_URL=http://localhost:11434 # Ollama endpoint
+```
+
+---
+
+## API Reference
+
+### Newton Supercomputer (port 8000)
+
+| Endpoint | Method | Input | Output |
+|----------|--------|-------|--------|
+| `/verify` | POST | `{ input: string }` | `{ verified: bool }` |
+| `/ground` | POST | `{ claim: string }` | `{ status, sources, confidence }` |
+| `/calculate` | POST | `{ expression: {...} }` | `{ result: any, verified: bool }` |
+| `/ledger` | GET | - | `{ entries: [], total_entries }` |
+| `/ask` | POST | `{ question: string }` | Full pipeline result |
+| `/health` | GET | - | `{ status: "healthy" }` |
+
+### Newton Agent (port 8091)
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/chat` | POST | `{ message, ground_claims }` → AI response |
+| `/chat/stream` | POST | Streaming response |
+| `/history` | GET | Conversation history |
+| `/stats` | GET | Agent statistics |
+| `/models` | GET | Available Ollama models |
+| `/health` | GET | Service health |
+
+### Cartridges (port 8093)
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/cartridge/wikipedia/summary` | POST | `{ query }` → Article summary |
+| `/cartridge/wikipedia/search` | POST | `{ query }` → Search results |
+| `/cartridge/arxiv/search` | POST | `{ query, max_results }` → Papers |
+| `/cartridge/calendar/now` | GET | Current datetime |
+| `/cartridge/calendar/parse` | POST | `{ text }` → Parsed date |
+| `/cartridge/code/evaluate` | POST | `{ code }` → Verified result |
+| `/cartridge/dictionary/define` | POST | `{ word }` → Definitions |
+| `/cartridge/export/json` | POST | `{ stacks }` → JSON export |
+| `/cartridge/export/markdown` | POST | `{ stacks }` → Markdown export |
+| `/health` | GET | Service health |
+| `/cartridges` | GET | List all cartridges |
+
+---
+
+## Spotlight Search (⌘K)
+
+Press `Cmd+K` (Mac) or `Ctrl+K` (Windows) to open Spotlight:
+
+| Prefix | Action | Example |
+|--------|--------|---------|
+| (none) | Search local stacks/cards | `research notes` |
+| `wiki ` | Search Wikipedia | `wiki python language` |
+| `arxiv ` | Search arXiv papers | `arxiv neural networks` |
+| `= ` | Calculator | `= 2 + 3 * 4` |
+
+**Keyboard navigation:**
+- `↑↓` Navigate results
+- `Enter` Select
+- `Esc` Close
+
+---
+
+## Server Deployment
+
+### Docker Compose (Recommended)
+
+Create `docker-compose.yml`:
+```yaml
+version: '3.8'
+
+services:
+  newton:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - GROUNDING_ENABLED=true
+    
+  agent:
+    build: ./newton_agent
+    ports:
+      - "8091:8091"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - NEWTON_URL=http://newton:8000
+    depends_on:
+      - newton
+      - ollama
+    
+  cartridges:
+    build: ./parcstation
+    command: python cartridges.py
+    ports:
+      - "8093:8093"
+    
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    
+  ui:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./parcstation:/usr/share/nginx/html:ro
+    depends_on:
+      - newton
+      - agent
+      - cartridges
+
+volumes:
+  ollama_data:
+```
+
+### Cloud Deployment (Render.com)
+
+**Newton Supercomputer** (`render.yaml`):
+```yaml
+services:
+  - type: web
+    name: newton-supercomputer
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn newton_supercomputer:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+```
+
+**Update CONFIG for production:**
+```javascript
+const CONFIG = {
+    NEWTON_URL: 'https://newton-supercomputer.onrender.com',
+    AGENT_URL: 'https://newton-agent.onrender.com',
+    CARTRIDGE_URL: 'https://parcstation-cartridges.onrender.com',
+};
+```
+
+### Vercel (Frontend Only)
+
+Deploy `parcstation/` directory as static site:
+```bash
+cd parcstation
+vercel --prod
+```
+
+Update `vercel.json`:
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index2.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## File Structure
+
+```
+parcstation/
+├── index2.html          # Main UI
+├── style.css            # Design system
+├── app2.js              # Application logic
+├── cartridges.py        # Cartridge server
+├── test.py              # Test runner
+├── smoke.py             # Smoke tests
+├── contract_test.py     # Contract tests
+├── test_acid.py         # ACID compliance tests
+├── test_cartridges.py   # Cartridge tests
+├── StationReadMe.md     # This file
+└── TessTa.md            # Test documentation
 ```
 
 ---
 
 ## Dependencies
 
-### Frontend (UI)
-
-| File | Purpose |
-|------|---------|
-| `index2.html` | Main HTML structure - sidebar, content area, chat panel |
-| `style.css` | Design system - CSS variables, glassmorphism, animations |
-| `app2.js` | Application logic - API clients, state management, rendering |
-
-**External:**
-- Google Fonts (Inter) - Typography
-- No frameworks (vanilla JS)
-
-### Backend Services
-
-| Service | Port | Purpose |
-|---------|------|---------|
-| Newton Supercomputer | 8000 | Verified computation, grounding, ledger |
-| Newton Agent | 8091 | AI chat with grounding, conversation memory |
-| Ollama | 11434 | Local LLM (qwen2.5:3b) |
-| UI Server | 8082 | Static file serving |
-
-### Python Dependencies
-
-**Newton Supercomputer:**
+### Python Requirements
 ```
+# requirements.txt (parcstation)
 fastapi>=0.109.0
 uvicorn>=0.27.0
 pydantic>=2.5.3
-googlesearch-python>=1.2.5
+aiohttp>=3.9.0
+requests>=2.31.0
 ```
+
+### System Requirements
+- Python 3.9+
+- Ollama (for Agent)
+- 4GB RAM minimum (8GB recommended for LLM)
+
+---
+
+## Troubleshooting
+
+### Service won't start
+```powershell
+# Check if port is in use
+netstat -ano | findstr :8000
+
+# Kill process on port
+Stop-Process -Id <PID> -Force
+```
+
+### Wikipedia/arXiv not working
+- Requires proper User-Agent header (handled in cartridges.py)
+- Check internet connectivity
+- Verify SSL certificates
+
+### Ollama not responding
+```powershell
+# Check Ollama status
+ollama list
+
+# Pull model if missing
+ollama pull qwen2.5:3b
+
+# Restart Ollama
+ollama serve
+```
+
+### Tests failing
+```powershell
+# Run individual test for details
+python smoke.py
+python contract_test.py
+python test_acid.py
+python test_cartridges.py
+```
+
+---
+
+## Security Considerations
+
+1. **Content Verification** - All content passes through Newton's safety checks
+2. **Grounding** - Claims verified against external sources
+3. **Immutable Audit** - Every operation logged to ledger
+4. **Local LLM** - No data sent to cloud (Ollama runs locally)
+5. **Bounded Execution** - All computations have hard limits
+6. **CORS** - Enabled for local development, restrict in production
+
+---
+
+## License
+
+- **Open Source (Non-Commercial)**: Personal projects, academic research, non-profit
+- **Commercial License Required**: SaaS, enterprise, revenue-generating applications
+
+---
+
+## Credits
+
+- **Newton Supercomputer**: Verified computation engine
+- **Newton Agent**: Self-verifying AI assistant  
+- **Ollama**: Local LLM inference
+- **Inspired by**: Apple HyperCard, OpenDoc, Apple Newton, Cyberdog
+
+---
+
+© 2026 Ada Computing Company · Houston, Texas
+
+> "1 == 1. The cloud is weather. We're building shelter."
 
 **Newton Agent:**
 ```
