@@ -34,6 +34,13 @@ from .memory import AgentMemory, ConversationTurn, TurnRole, ConstraintCheck, Gr
 from .knowledge_base import get_knowledge_base, VerifiedFact
 from .trajectory_verifier import get_trajectory_verifier, TrajectoryVerification
 
+# Import Logic Engine for math evaluation
+try:
+    from core.logic import LogicEngine, ExecutionBounds
+    _logic_engine = LogicEngine(ExecutionBounds(timeout_seconds=5.0, max_operations=10000))
+except ImportError:
+    _logic_engine = None
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -336,6 +343,56 @@ class NewtonAgent:
             return f"{fact.fact}\n\n📚 *Source: {fact.source}*"
         return None
     
+    def _try_math_evaluation(self, user_input: str) -> Optional[str]:
+        """Try to evaluate math expressions using the Logic Engine."""
+        if not _logic_engine:
+            return None
+        
+        # Patterns for math questions
+        math_patterns = [
+            # "What is 2 + 2?" or "what's 5 * 3"
+            r"what(?:'s| is)\s+(\d+(?:\.\d+)?)\s*([+\-*/×÷^])\s*(\d+(?:\.\d+)?)",
+            # "calculate 2 + 2" or "compute 5 * 3"
+            r"(?:calculate|compute|evaluate|solve)\s+(\d+(?:\.\d+)?)\s*([+\-*/×÷^])\s*(\d+(?:\.\d+)?)",
+            # Just "2 + 2" or "5 * 3"
+            r"^(\d+(?:\.\d+)?)\s*([+\-*/×÷^])\s*(\d+(?:\.\d+)?)\s*[?]?$",
+        ]
+        
+        text = user_input.lower().strip()
+        
+        for pattern in math_patterns:
+            match = re.search(pattern, text)
+            if match:
+                a, op, b = match.groups()
+                a, b = float(a), float(b)
+                
+                # Map operators
+                op_map = {
+                    '+': '+', '-': '-', '*': '*', '×': '*',
+                    '/': '/', '÷': '/', '^': '**'
+                }
+                newton_op = op_map.get(op, op)
+                
+                # Build expression
+                expr = {"op": newton_op, "args": [a, b]}
+                
+                try:
+                    result = _logic_engine.evaluate(expr)
+                    if result.verified and result.value.type.value != "error":
+                        val = result.value.data
+                        # Format nicely
+                        if float(val) == int(val):
+                            val = int(val)
+                        return (
+                            f"**{val}**\n\n"
+                            f"🔢 *Computed by Newton Logic Engine (verified: {result.verified}, "
+                            f"{result.operations} ops, {result.elapsed_us}μs)*"
+                        )
+                except Exception:
+                    pass
+        
+        return None
+    
     def _get_datetime_context(self) -> str:
         """Get current date/time context for the model."""
         now = datetime.now()
@@ -428,26 +485,35 @@ class NewtonAgent:
                 turn_hash=response_turn.hash,
             )
         
-        # 4. Generate response (knowledge base first, then LLM)
+        # 4. Generate response (knowledge base first, then math, then LLM)
         context = self.memory.get_context(max_turns=10)
         
         # Check if this is a knowledge base answer (already verified)
         kb_answer = self._try_knowledge_base(user_input)
         is_kb_response = kb_answer is not None
         
+        # Check if this is a math question (use Logic Engine)
+        math_answer = None
+        is_math_response = False
+        if not is_kb_response:
+            math_answer = self._try_math_evaluation(user_input)
+            is_math_response = math_answer is not None
+        
         if is_kb_response:
             response_content = kb_answer
+        elif is_math_response:
+            response_content = math_answer
         else:
             response_content = self._generate_response(user_input, context)
         
         # 5. Check constraints on response (self-check)
         response_passed, response_failed = self._check_constraints(response_content)
         
-        # 6. Ground factual claims in response (skip for KB answers - already verified)
+        # 6. Ground factual claims in response (skip for KB/math answers - already verified)
         grounding_results = []
         unverified_claims = []
         
-        if self.config.enable_grounding and not is_kb_response:
+        if self.config.enable_grounding and not is_kb_response and not is_math_response:
             claims = self._extract_claims(response_content)
             if claims:
                 grounding_results, unverified_claims = self._ground_claims(claims)
@@ -459,8 +525,8 @@ class NewtonAgent:
                         f"against official sources: {', '.join(unverified_claims[:2])}..."
                     )
         
-        # KB answers are always verified
-        is_verified = is_kb_response or (len(response_failed) == 0 and len(unverified_claims) == 0)
+        # KB and math answers are always verified
+        is_verified = is_kb_response or is_math_response or (len(response_failed) == 0 and len(unverified_claims) == 0)
         
         # 7. Log response with full metadata
         response_turn = self.memory.add_turn(

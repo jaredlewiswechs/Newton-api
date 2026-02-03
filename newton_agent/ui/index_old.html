@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d0d0d;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --bg-hover: #2a2a2a;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666;
+            --accent: #4ecdc4;
+            --accent-hover: #3dbdb5;
+            --accent-dim: rgba(78, 205, 196, 0.15);
+            --border: #333;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --info: #60a5fa;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--bg-primary);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .invariant {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* Kinematic Trajectory Panel */
+        .trajectory-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .trajectory-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .trajectory-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .trajectory-icon {
+            font-size: 16px;
+            color: var(--accent);
+        }
+
+        .trajectory-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--success);
+        }
+
+        .trajectory-status.outside {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--error);
+        }
+
+        .trajectory-body {
+            padding: 14px;
+            display: none;
+        }
+
+        .trajectory-panel.expanded .trajectory-body {
+            display: block;
+        }
+
+        .trajectory-meters {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .meter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meter-label {
+            width: 70px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meter-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.2s ease;
+        }
+
+        .meter-fill.curvature {
+            background: var(--warning);
+        }
+
+        .meter-fill.commit {
+            background: var(--success);
+        }
+
+        .meter-value {
+            width: 40px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        .trajectory-info {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Main Layout */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 24px;
+        }
+
+        /* Messages Area */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding-bottom: 24px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .message.assistant .message-avatar {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .message-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .message-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .message-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .message-text p {
+            margin-bottom: 12px;
+        }
+
+        .message-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-text code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Verification Panel */
+        .verification-panel {
+            margin-top: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .verification-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .verification-header:hover {
+            background: var(--bg-hover);
+        }
+
+        .verification-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .verification-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .verification-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .verification-badge.verified {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--success);
+        }
+
+        .verification-badge.unverified {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--error);
+        }
+
+        .verification-badge.partial {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--warning);
+        }
+
+        .verification-body {
+            padding: 14px;
+            display: none;
+            font-size: 13px;
+        }
+
+        .verification-panel.expanded .verification-body {
+            display: block;
+        }
+
+        .verification-section {
+            margin-bottom: 14px;
+        }
+
+        .verification-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .verification-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .constraint-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .constraint-tag {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .constraint-tag.passed {
+            background: rgba(74, 222, 128, 0.1);
+            color: var(--success);
+        }
+
+        .constraint-tag.failed {
+            background: rgba(248, 113, 113, 0.1);
+            color: var(--error);
+        }
+
+        .grounding-item {
+            background: var(--bg-tertiary);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .grounding-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .grounding-claim {
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .grounding-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .grounding-score {
+            font-weight: 600;
+        }
+
+        .grounding-score.good {
+            color: var(--success);
+        }
+
+        .grounding-score.moderate {
+            color: var(--warning);
+        }
+
+        .grounding-score.poor {
+            color: var(--error);
+        }
+
+        /* Welcome Screen */
+        .welcome {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 48px;
+        }
+
+        .welcome-logo {
+            width: 80px;
+            height: 80px;
+            background: var(--accent);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 40px;
+            color: var(--bg-primary);
+            margin-bottom: 24px;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .welcome-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-width: 600px;
+            margin-bottom: 32px;
+        }
+
+        .feature-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .feature-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .example-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .example-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--accent);
+        }
+
+        /* Input Area */
+        .input-area {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px;
+            margin-top: auto;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-field {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            min-height: 24px;
+            max-height: 200px;
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: var(--bg-tertiary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--bg-primary);
+        }
+
+        .input-options {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .option-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .option-toggle input {
+            accent-color: var(--accent);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Sidebar (Stats) */
+        .sidebar-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .model-select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .model-select:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .status-dot.offline {
+            background: var(--error);
+        }
+
+        .status-dot.warning {
+            background: var(--warning);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .welcome-features {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 12px 16px;
+            }
+
+            .main {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">N</div>
+            <div>
+                <div class="header-title">Newton Agent</div>
+                <div class="header-subtitle">Self-Verifying AI</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <select class="model-select" id="modelSelect" onchange="changeModel(this.value)">
+                <option value="llama3">llama3</option>
+            </select>
+            <div class="status-badge" id="statusBadge">
+                <span class="status-dot"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <code class="invariant">1 == 1</code>
+            <button class="sidebar-toggle" onclick="showStats()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 20V10M12 20V4M6 20v-6"/>
+                </svg>
+                Stats
+            </button>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="messages" id="messages">
+            <!-- Welcome screen -->
+            <div class="welcome" id="welcome">
+                <div class="welcome-logo">N</div>
+                <h1 class="welcome-title">Newton Agent</h1>
+                <p class="welcome-subtitle">
+                    A self-verifying AI assistant. Every claim is grounded against official sources. 
+                    Every action is logged to an immutable audit trail. The constraint IS the instruction.
+                </p>
+
+                <div class="welcome-features">
+                    <div class="feature-card">
+                        <div class="feature-icon">🛡️</div>
+                        <div class="feature-title">Constraint-Checked</div>
+                        <div class="feature-desc">Safety filters run before every response</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <div class="feature-title">Grounded</div>
+                        <div class="feature-desc">Claims verified against official sources</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📜</div>
+                        <div class="feature-title">Auditable</div>
+                        <div class="feature-desc">Hash-chained history for full transparency</div>
+                    </div>
+                </div>
+
+                <div class="example-prompts">
+                    <button class="example-btn" onclick="sendExample('What year was Python created?')">When was Python created?</button>
+                    <button class="example-btn" onclick="sendExample('Who founded Anthropic?')">Who founded Anthropic?</button>
+                    <button class="example-btn" onclick="sendExample('What is the capital of France?')">Capital of France?</button>
+                    <button class="example-btn" onclick="sendExample('Explain quantum computing')">Explain quantum computing</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <!-- Kinematic Trajectory Panel -->
+            <div class="trajectory-panel" id="trajectoryPanel" style="display: none;">
+                <div class="trajectory-header" onclick="this.parentElement.classList.toggle('expanded')">
+                    <div class="trajectory-title">
+                        <span class="trajectory-icon">✵</span>
+                        Kinematic Trajectory
+                    </div>
+                    <span class="trajectory-status" id="trajectoryStatus">Inside Ω</span>
+                </div>
+                <div class="trajectory-body">
+                    <div class="trajectory-meters">
+                        <div class="meter">
+                            <div class="meter-label">Weight</div>
+                            <div class="meter-bar"><div class="meter-fill" id="weightMeter" style="width: 0%"></div></div>
+                            <div class="meter-value" id="weightValue">0.0</div>
+                        </div>
+                        <div class="meter">
+                            <div class="meter-label">Curvature</div>
+                            <div class="meter-bar"><div class="meter-fill curvature" id="curvatureMeter" style="width: 50%"></div></div>
+                            <div class="meter-value" id="curvatureValue">0.0</div>
+                        </div>
+                        <div class="meter">
+                            <div class="meter-label">Commit</div>
+                            <div class="meter-bar"><div class="meter-fill commit" id="commitMeter" style="width: 0%"></div></div>
+                            <div class="meter-value" id="commitValue">0.0</div>
+                        </div>
+                    </div>
+                    <div class="trajectory-info">
+                        <span id="envelopeInfo">Balanced</span>
+                        <span id="commitInfo">Uncommitted</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <textarea 
+                    class="input-field" 
+                    id="input" 
+                    placeholder="Ask Newton anything..."
+                    rows="1"
+                    onkeydown="handleKeydown(event)"
+                    oninput="autoResize(this)"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-options">
+                <label class="option-toggle">
+                    <input type="checkbox" id="groundingToggle" checked>
+                    Verify claims
+                </label>
+                <label class="option-toggle">
+                    <input type="checkbox" id="showVerification" checked>
+                    Show verification details
+                </label>
+                <label class="option-toggle">
+                    <input type="checkbox" id="showTrajectory" onchange="toggleTrajectory()">
+                    Show trajectory
+                </label>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let isLoading = false;
+
+        // Auto-resize textarea
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+        }
+
+        // Handle Enter key
+        function handleKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Send example
+        function sendExample(text) {
+            document.getElementById('input').value = text;
+            sendMessage();
+        }
+
+        // Format timestamp
+        function formatTime(ts) {
+            return new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Create message element
+        function createMessage(role, content, data = null) {
+            const welcome = document.getElementById('welcome');
+            if (welcome) welcome.style.display = 'none';
+
+            const msg = document.createElement('div');
+            msg.className = `message ${role}`;
+
+            const avatar = role === 'user' ? 'U' : 'N';
+            const name = role === 'user' ? 'You' : 'Newton';
+            const time = formatTime(data?.meta?.timestamp || Date.now() / 1000);
+
+            let verificationHTML = '';
+            if (role === 'assistant' && data && document.getElementById('showVerification').checked) {
+                const verified = data.verified;
+                const badgeClass = verified ? 'verified' : (data.grounding?.unverified_claims?.length > 0 ? 'partial' : 'unverified');
+                const badgeText = verified ? 'Verified' : (badgeClass === 'partial' ? 'Partially Verified' : 'Unverified');
+
+                const constraintsPassed = data.constraints?.passed || [];
+                const constraintsFailed = data.constraints?.failed || [];
+                const groundingResults = data.grounding?.results || [];
+
+                verificationHTML = `
+                    <div class="verification-panel">
+                        <div class="verification-header" onclick="this.parentElement.classList.toggle('expanded')">
+                            <div class="verification-title">
+                                <svg class="verification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                                Verification Details
+                            </div>
+                            <span class="verification-badge ${badgeClass}">${badgeText}</span>
+                        </div>
+                        <div class="verification-body">
+                            <div class="verification-section">
+                                <div class="verification-section-title">Constraints</div>
+                                <div class="constraint-list">
+                                    ${constraintsPassed.map(c => `<span class="constraint-tag passed">✓ ${c}</span>`).join('')}
+                                    ${constraintsFailed.map(c => `<span class="constraint-tag failed">✗ ${c}</span>`).join('')}
+                                </div>
+                            </div>
+                            ${groundingResults.length > 0 ? `
+                                <div class="verification-section">
+                                    <div class="verification-section-title">Grounding</div>
+                                    ${groundingResults.map(g => {
+                                        const scoreClass = g.score <= 3 ? 'good' : (g.score <= 6 ? 'moderate' : 'poor');
+                                        return `
+                                            <div class="grounding-item">
+                                                <div class="grounding-claim">"${g.claim.substring(0, 100)}${g.claim.length > 100 ? '...' : ''}"</div>
+                                                <div class="grounding-meta">
+                                                    <span class="grounding-score ${scoreClass}">Score: ${g.score.toFixed(1)}</span>
+                                                    <span>Status: ${g.status}</span>
+                                                    <span>Sources: ${g.sources?.length || 0}</span>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            ` : ''}
+                            <div class="verification-section">
+                                <div class="verification-section-title">Meta</div>
+                                <div style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+                                    Hash: ${data.meta?.turn_hash || 'N/A'}<br>
+                                    Processing: ${data.elapsed_ms || data.meta?.processing_time_ms || 0}ms
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            msg.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-name">${name}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-text">${formatContent(content)}</div>
+                    ${verificationHTML}
+                </div>
+            `;
+
+            return msg;
+        }
+
+        // Format content (basic markdown)
+        function formatContent(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // Create loading indicator
+        function createLoading() {
+            const msg = document.createElement('div');
+            msg.className = 'message assistant';
+            msg.id = 'loading';
+            msg.innerHTML = `
+                <div class="message-avatar">N</div>
+                <div class="message-content">
+                    <div class="loading">
+                        <div class="loading-dots">
+                            <div class="loading-dot"></div>
+                            <div class="loading-dot"></div>
+                            <div class="loading-dot"></div>
+                        </div>
+                        <span>Thinking...</span>
+                    </div>
+                </div>
+            `;
+            return msg;
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const message = input.value.trim();
+
+            if (!message || isLoading) return;
+
+            isLoading = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            // Add user message
+            const messages = document.getElementById('messages');
+            messages.appendChild(createMessage('user', message));
+            input.value = '';
+            autoResize(input);
+
+            // Add loading
+            messages.appendChild(createLoading());
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const groundClaims = document.getElementById('groundingToggle').checked;
+
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, ground_claims: groundClaims })
+                });
+
+                const data = await response.json();
+
+                // Remove loading
+                document.getElementById('loading')?.remove();
+
+                // Add response
+                messages.appendChild(createMessage('assistant', data.content, data));
+
+            } catch (error) {
+                document.getElementById('loading')?.remove();
+                messages.appendChild(createMessage('assistant', `Error: ${error.message}`));
+            }
+
+            isLoading = false;
+            document.getElementById('sendBtn').disabled = false;
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Show stats
+        async function showStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const stats = await response.json();
+
+                alert(`Newton Agent Stats
+─────────────────────
+Total Requests: ${stats.total_requests}
+Blocked: ${stats.blocked_requests}
+Grounded Claims: ${stats.grounded_claims}
+Conversation Turns: ${stats.conversation_turns}
+Memory Chain Valid: ${stats.memory_chain_valid ? '✓' : '✗'}
+
+Grounding Stats
+─────────────────────
+Total Queries: ${stats.grounding_stats?.total_queries || 0}
+Cache Hits: ${stats.grounding_stats?.cache_hits || 0}
+Cache Hit Rate: ${((stats.grounding_stats?.cache_hit_rate || 0) * 100).toFixed(1)}%`);
+            } catch (error) {
+                alert('Failed to load stats');
+            }
+        }
+
+        // Load models and check status on startup
+        async function initializeApp() {
+            try {
+                // Check health
+                const healthRes = await fetch(`${API_BASE}/health`);
+                const health = await healthRes.json();
+                
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.getElementById('statusText');
+                
+                if (health.ollama_available) {
+                    statusDot.className = 'status-dot';
+                    statusText.textContent = 'Connected';
+                } else {
+                    statusDot.className = 'status-dot warning';
+                    statusText.textContent = 'No LLM';
+                }
+                
+                // Load models
+                const modelsRes = await fetch(`${API_BASE}/models`);
+                const modelsData = await modelsRes.json();
+                
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = modelsData.models.map(m => 
+                    `<option value="${m}" ${m === modelsData.current ? 'selected' : ''}>${m}</option>`
+                ).join('');
+                
+                if (modelsData.models.length === 0) {
+                    select.innerHTML = '<option value="">No models</option>';
+                }
+                
+            } catch (error) {
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.getElementById('statusText');
+                statusDot.className = 'status-dot offline';
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        // Change model
+        async function changeModel(model) {
+            if (!model) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/model`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model })
+                });
+                
+                if (response.ok) {
+                    console.log(`Switched to model: ${model}`);
+                }
+            } catch (error) {
+                console.error('Failed to switch model:', error);
+            }
+        }
+
+        // Initialize on load
+        initializeApp();
+        
+        // Focus input on load
+        document.getElementById('input').focus();
+
+        // Toggle trajectory panel
+        function toggleTrajectory() {
+            const show = document.getElementById('showTrajectory').checked;
+            document.getElementById('trajectoryPanel').style.display = show ? 'block' : 'none';
+            if (show) {
+                document.getElementById('trajectoryPanel').classList.add('expanded');
+                analyzeTrajectory();
+            }
+        }
+
+        // Analyze trajectory in real-time
+        let trajectoryTimeout = null;
+        document.getElementById('input').addEventListener('input', function() {
+            if (!document.getElementById('showTrajectory').checked) return;
+            
+            clearTimeout(trajectoryTimeout);
+            trajectoryTimeout = setTimeout(analyzeTrajectory, 100);
+        });
+
+        async function analyzeTrajectory() {
+            const text = document.getElementById('input').value;
+            if (!text) {
+                updateTrajectoryDisplay({ weight: 0, curvature: 0, commit: 0, envelope_depth: 0, needs_closure: false });
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/trajectory/compose`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await response.json();
+                updateTrajectoryDisplay(data);
+            } catch (error) {
+                console.error('Trajectory analysis failed:', error);
+            }
+        }
+
+        function updateTrajectoryDisplay(data) {
+            // Update meters (normalize to 0-100%)
+            const maxWeight = 50;
+            const weightPct = Math.min(100, (data.weight / maxWeight) * 100);
+            document.getElementById('weightMeter').style.width = weightPct + '%';
+            document.getElementById('weightValue').textContent = data.weight.toFixed(1);
+
+            // Curvature: -10 to 10 -> 0% to 100%
+            const curvaturePct = ((data.curvature + 10) / 20) * 100;
+            document.getElementById('curvatureMeter').style.width = Math.max(0, Math.min(100, curvaturePct)) + '%';
+            document.getElementById('curvatureValue').textContent = data.curvature.toFixed(1);
+
+            // Commit: 0-1 -> 0-100%
+            const commitPct = data.commit * 100;
+            document.getElementById('commitMeter').style.width = commitPct + '%';
+            document.getElementById('commitValue').textContent = data.commit.toFixed(2);
+
+            // Status
+            const status = document.getElementById('trajectoryStatus');
+            if (data.needs_closure) {
+                status.textContent = `Depth: ${data.envelope_depth}`;
+                status.className = 'trajectory-status outside';
+            } else {
+                status.textContent = 'Balanced';
+                status.className = 'trajectory-status';
+            }
+
+            // Info
+            document.getElementById('envelopeInfo').textContent = 
+                data.needs_closure ? `Unclosed (${data.envelope_depth} deep)` : 'Balanced';
+            document.getElementById('commitInfo').textContent = 
+                data.approaching_commit ? 'Approaching P₃' : (data.commit > 0.8 ? 'Committed' : 'Uncommitted');
+        }
+    </script>
+</body>
+</html>

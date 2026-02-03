@@ -427,6 +427,21 @@ class LogicEngine:
         return Value.error(f"Unknown expression type: {expr.type}")
 
     # ─────────────────────────────────────────────────────────────────────────
+    # HELPER: Extract name from possibly nested Expr
+    # ─────────────────────────────────────────────────────────────────────────
+    
+    def _extract_name(self, arg: Any) -> Optional[str]:
+        """Extract a string name from possibly nested Expr literals."""
+        if isinstance(arg, str):
+            return arg
+        if isinstance(arg, Expr):
+            if arg.type == ExprType.LITERAL and arg.args:
+                return self._extract_name(arg.args[0])
+            if arg.type == ExprType.VARIABLE and arg.args:
+                return self._extract_name(arg.args[0])
+        return None
+
+    # ─────────────────────────────────────────────────────────────────────────
     # LITERALS & VARIABLES
     # ─────────────────────────────────────────────────────────────────────────
 
@@ -434,6 +449,9 @@ class LogicEngine:
         val = expr.args[0]
         if isinstance(val, Value):
             return val
+        if isinstance(val, Expr):
+            # Nested expression - evaluate it
+            return self._eval(val, ctx)
         if isinstance(val, bool):
             return Value.boolean(val)
         if isinstance(val, (int, float, Decimal)):
@@ -447,7 +465,9 @@ class LogicEngine:
         return Value.error(f"Unknown literal type: {type(val)}")
 
     def _eval_variable(self, expr: Expr, ctx: ExecutionContext) -> Value:
-        name = expr.args[0]
+        name = self._extract_name(expr.args[0]) if expr.args else None
+        if name is None:
+            return Value.error("Variable requires a name")
         if name in ctx.variables:
             return ctx.variables[name]
         return Value.error(f"Undefined variable: {name}")
@@ -648,7 +668,12 @@ class LogicEngine:
         if len(expr.args) < 4:
             return Value.error("FOR requires var, start, end, body")
 
-        var_name = expr.args[0]
+        # Extract variable name (could be string or Expr literal, possibly nested)
+        var_name_arg = expr.args[0]
+        var_name = self._extract_name(var_name_arg)
+        if var_name is None:
+            return Value.error(f"FOR variable must be a name, got {type(var_name_arg)}")
+        
         start_val = self._eval(expr.args[1], ctx)
         end_val = self._eval(expr.args[2], ctx)
         body = expr.args[3]
@@ -864,13 +889,21 @@ class LogicEngine:
 
         params = fn.args[0]
         body = fn.args[1]
+        
+        # Extract param names from Expr literals if needed
+        param_names = []
+        for p in params:
+            name = self._extract_name(p)
+            if name is None:
+                return Value.error(f"Function parameter must be a name, got {type(p)}")
+            param_names.append(name)
 
-        if len(args) != len(params):
-            return Value.error(f"Function expects {len(params)} args, got {len(args)}")
+        if len(args) != len(param_names):
+            return Value.error(f"Function expects {len(param_names)} args, got {len(args)}")
 
         # Create new scope with bound parameters
         scope = ctx.push_scope()
-        for param, arg in zip(params, args):
+        for param, arg in zip(param_names, args):
             scope.variables[param] = arg
 
         return self._eval(body, scope)
@@ -884,7 +917,10 @@ class LogicEngine:
         if len(expr.args) < 2:
             return Value.error("LET requires name and value")
 
-        name = expr.args[0]
+        name = self._extract_name(expr.args[0])
+        if name is None:
+            return Value.error(f"LET variable must be a name, got {type(expr.args[0])}")
+        
         value = self._eval(expr.args[1], ctx)
 
         if value.type == ValueType.ERROR:
@@ -898,7 +934,10 @@ class LogicEngine:
         if len(expr.args) < 2:
             return Value.error("SET requires name and value")
 
-        name = expr.args[0]
+        name = self._extract_name(expr.args[0])
+        if name is None:
+            return Value.error(f"SET variable must be a name, got {type(expr.args[0])}")
+        
         if name not in ctx.variables:
             return Value.error(f"Cannot SET undefined variable: {name}")
 

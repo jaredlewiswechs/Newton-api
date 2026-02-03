@@ -466,8 +466,23 @@ async def get_kinematic_alphabet() -> Dict:
 
 if __name__ == "__main__":
     import uvicorn
+    import socket
     
-    port = int(os.environ.get("PORT", 8080))
+    # Default port, try alternatives if busy
+    default_port = int(os.environ.get("PORT", 8090))
+    port = default_port
+    
+    # Try to find an available port
+    for try_port in [default_port, 8091, 8092, 8093, 8080, 3000]:
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.bind(('0.0.0.0', try_port))
+            sock.close()
+            port = try_port
+            break
+        except OSError:
+            continue
+    
     print(f"""
 ═══════════════════════════════════════════════════════════════════════════════
 NEWTON AGENT SERVER
