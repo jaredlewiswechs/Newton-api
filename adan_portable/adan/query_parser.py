@@ -85,13 +85,14 @@ class ParsedQuery:
 # Pattern: (regex, QueryShape, slot_group_index, confidence)
 QUERY_PATTERNS: List[Tuple[str, QueryShape, int, float]] = [
     # === CAPITALS ===
-    (r"(?:what(?:'s| is) )?(?:the )?capital (?:of |for )?(.+?)(?:\?)?$", QueryShape.CAPITAL_OF, 1, 0.95),
+    # Note: (?:the )? after of/for to not capture articles in country name
+    (r"(?:what(?:'s| is) )?(?:the )?capital (?:of |for )?(?:the )?(.+?)(?:\?)?$", QueryShape.CAPITAL_OF, 1, 0.95),
     (r"(.+?)(?:'s| 's) capital(?:\?)?$", QueryShape.CAPITAL_OF, 1, 0.90),
-    (r"capital (?:city )?(?:of )?(.+?)(?:\?)?$", QueryShape.CAPITAL_OF, 1, 0.85),
+    (r"capital (?:city )?(?:of )?(?:the )?(.+?)(?:\?)?$", QueryShape.CAPITAL_OF, 1, 0.85),
     
     # === POPULATION ===
-    (r"(?:what(?:'s| is) )?(?:the )?population (?:of |for )?(.+?)(?:\?)?$", QueryShape.POPULATION_OF, 1, 0.95),
-    (r"how many people (?:live |are )?in (.+?)(?:\?)?$", QueryShape.POPULATION_OF, 1, 0.90),
+    (r"(?:what(?:'s| is) )?(?:the )?population (?:of |for )?(?:the )?(.+?)(?:\?)?$", QueryShape.POPULATION_OF, 1, 0.95),
+    (r"how many people (?:live |are )?in (?:the )?(.+?)(?:\?)?$", QueryShape.POPULATION_OF, 1, 0.90),
     
     # === LANGUAGE ===
     (r"(?:what )?language(?:s)? (?:do they |does |is )?(?:speak |spoken )?(?:in )?(.+?)(?:\?)?$", QueryShape.LANGUAGE_OF, 1, 0.90),

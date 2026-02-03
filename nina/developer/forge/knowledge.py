@@ -210,8 +210,14 @@ class NinaKnowledge:
     def _normalize_country(self, country: str) -> str:
         """Normalize country name for lookup."""
         country_lower = country.lower().strip()
-        # Remove common prefixes that parser might capture
-        for prefix in ["the ", "a ", "an "]:
+        # Remove common articles and prepositions that parser might capture
+        prefixes = [
+            "the ", "a ", "an ",           # articles
+            "of ", "of the ", "for ",      # prepositions
+            "in ", "in the ",              # prepositions
+            "from ", "from the ",          # prepositions
+        ]
+        for prefix in prefixes:
             if country_lower.startswith(prefix):
                 country_lower = country_lower[len(prefix):]
         return country_lower.strip()
