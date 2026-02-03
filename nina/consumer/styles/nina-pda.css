@@ -1,0 +1,860 @@
+/*
+═══════════════════════════════════════════════════════════════════════════════
+NINA PDA - Consumer Interface Styles
+A contemporary Apple Newton for verified computation
+
+© 2026 parcRI Research / Ada Computing Company
+═══════════════════════════════════════════════════════════════════════════════
+*/
+
+:root {
+    /* Newton-inspired palette */
+    --nina-black: #1a1a1a;
+    --nina-dark: #2d2d2d;
+    --nina-gray: #4a4a4a;
+    --nina-light: #e8e8e8;
+    --nina-white: #f5f5f5;
+    --nina-green: #00c853;
+    --nina-green-dim: #00a844;
+    --nina-amber: #ffab00;
+    --nina-red: #ff5252;
+    --nina-blue: #448aff;
+    
+    /* LCD-style green (Newton homage) */
+    --lcd-bg: #c5d6a7;
+    --lcd-text: #2d3a1e;
+    --lcd-dim: #8a9a6a;
+    
+    /* Sizing */
+    --device-width: 380px;
+    --device-height: 680px;
+    --bezel-radius: 40px;
+    --screen-radius: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEVICE FRAME
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.nina-device {
+    width: var(--device-width);
+    height: var(--device-height);
+    background: linear-gradient(145deg, #3d3d3d 0%, #1a1a1a 100%);
+    border-radius: var(--bezel-radius);
+    box-shadow: 
+        0 25px 80px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Top Bezel */
+.nina-bezel-top {
+    height: 50px;
+    background: var(--nina-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--nina-gray);
+}
+
+.nina-logo {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: var(--nina-light);
+}
+
+.nina-status {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--nina-light);
+}
+
+.status-verified {
+    color: var(--nina-green);
+}
+
+/* Main Screen */
+.nina-screen {
+    flex: 1;
+    background: var(--lcd-bg);
+    margin: 8px;
+    border-radius: var(--screen-radius);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Title Bar */
+.nina-titlebar {
+    height: 44px;
+    background: linear-gradient(to bottom, #d4e4b8 0%, #b8c89c 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--lcd-dim);
+}
+
+.nina-titlebar button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--lcd-text);
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.nina-titlebar button:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.app-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--lcd-text);
+}
+
+/* App Container */
+.nina-app-container {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Bottom Bezel */
+.nina-bezel-bottom {
+    height: 60px;
+    background: var(--nina-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-top: 1px solid var(--nina-gray);
+}
+
+.home-button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--nina-gray);
+    background: linear-gradient(145deg, #3d3d3d, #1a1a1a);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.home-button:hover {
+    border-color: var(--nina-light);
+}
+
+.home-button:active {
+    transform: scale(0.95);
+}
+
+.home-icon {
+    color: var(--nina-light);
+    font-size: 24px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOME SCREEN
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.nina-home {
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.app-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.app-icon:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.app-icon:active {
+    transform: translateY(0);
+}
+
+.app-icon .icon {
+    font-size: 32px;
+}
+
+.app-icon span {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--lcd-text);
+}
+
+.home-tagline {
+    margin-top: auto;
+    text-align: center;
+    color: var(--lcd-dim);
+}
+
+.home-tagline p {
+    font-size: 14px;
+    font-style: italic;
+}
+
+.home-tagline .sub {
+    font-size: 11px;
+    margin-top: 4px;
+    font-style: normal;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   APPS COMMON
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.nina-app {
+    padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.fab {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: var(--lcd-text);
+    color: var(--lcd-bg);
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTES APP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.notes-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.note-item {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.note-item:hover {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.note-item h4 {
+    font-size: 14px;
+    color: var(--lcd-text);
+    margin-bottom: 4px;
+}
+
+.note-item p {
+    font-size: 12px;
+    color: var(--lcd-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notes-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.notes-editor textarea {
+    flex: 1;
+    border: none;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--lcd-text);
+    resize: none;
+}
+
+.notes-editor textarea:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.note-meta {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--lcd-dim);
+}
+
+.note-verified {
+    display: inline-block;
+    padding: 4px 8px;
+    background: var(--nina-green);
+    color: white;
+    border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NAMES APP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.search-bar {
+    margin-bottom: 12px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    color: var(--lcd-text);
+}
+
+.search-bar input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.names-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.name-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.name-item:hover {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.name-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--lcd-dim);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: 600;
+}
+
+.name-info h4 {
+    font-size: 14px;
+    color: var(--lcd-text);
+}
+
+.name-info p {
+    font-size: 12px;
+    color: var(--lcd-dim);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DATES APP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.calendar-header button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--lcd-text);
+}
+
+.calendar-header span {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--lcd-text);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: var(--lcd-text);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.calendar-day:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.calendar-day.today {
+    background: var(--lcd-text);
+    color: var(--lcd-bg);
+    font-weight: 600;
+}
+
+.calendar-day.header {
+    font-weight: 600;
+    font-size: 10px;
+    color: var(--lcd-dim);
+    cursor: default;
+}
+
+.calendar-day.other-month {
+    color: var(--lcd-dim);
+    opacity: 0.5;
+}
+
+.events-today h3 {
+    font-size: 14px;
+    color: var(--lcd-text);
+    margin-bottom: 8px;
+}
+
+.event-item {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--lcd-text);
+    border-left: 3px solid var(--nina-blue);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CALCULATOR APP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.calc-display {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    text-align: right;
+}
+
+.calc-expression {
+    font-size: 14px;
+    color: var(--lcd-dim);
+    min-height: 20px;
+    font-family: 'SF Mono', monospace;
+}
+
+.calc-result {
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--lcd-text);
+    font-family: 'SF Mono', monospace;
+    word-break: break-all;
+}
+
+.calc-verified {
+    font-size: 10px;
+    color: var(--nina-green-dim);
+    margin-top: 8px;
+}
+
+.calc-keypad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.calc-key {
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.1s;
+    font-family: 'SF Pro Display', sans-serif;
+}
+
+.calc-key.num {
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--lcd-text);
+}
+
+.calc-key.func {
+    background: rgba(255, 255, 255, 0.4);
+    color: var(--lcd-text);
+}
+
+.calc-key.op {
+    background: var(--lcd-text);
+    color: var(--lcd-bg);
+}
+
+.calc-key.equals {
+    background: var(--nina-green-dim);
+    color: white;
+}
+
+.calc-key:hover {
+    transform: scale(1.05);
+}
+
+.calc-key:active {
+    transform: scale(0.95);
+}
+
+.calc-key.zero {
+    grid-column: span 2;
+    aspect-ratio: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VERIFY APP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.verify-intro {
+    font-size: 13px;
+    color: var(--lcd-dim);
+    margin-bottom: 12px;
+}
+
+.verify-input {
+    margin-bottom: 16px;
+}
+
+.verify-input textarea {
+    width: 100%;
+    height: 80px;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    color: var(--lcd-text);
+    resize: none;
+    margin-bottom: 8px;
+}
+
+.verify-input textarea:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.verify-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--lcd-text);
+    color: var(--lcd-bg);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.verify-btn:hover {
+    opacity: 0.9;
+}
+
+.verify-result {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.result-status {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.result-status.verified {
+    color: var(--nina-green-dim);
+}
+
+.result-status.unverified {
+    color: var(--nina-red);
+}
+
+.result-trace {
+    font-size: 12px;
+    font-family: 'SF Mono', monospace;
+    color: var(--lcd-dim);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.result-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+}
+
+.trust-label {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--nina-green);
+    color: white;
+}
+
+.trust-label.untrusted {
+    background: var(--nina-amber);
+}
+
+.bounds-report {
+    color: var(--lcd-dim);
+}
+
+.verify-history h3 {
+    font-size: 14px;
+    color: var(--lcd-text);
+    margin-bottom: 8px;
+}
+
+.history-item {
+    font-size: 12px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    color: var(--lcd-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ASSIST APP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.assist-chat {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.chat-message {
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    max-width: 85%;
+    font-size: 14px;
+}
+
+.chat-message.system {
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--lcd-text);
+}
+
+.chat-message.user {
+    background: var(--lcd-text);
+    color: var(--lcd-bg);
+    margin-left: auto;
+}
+
+.chat-message.nina {
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--lcd-text);
+    border-left: 3px solid var(--nina-green);
+}
+
+.chat-message .verified-badge {
+    font-size: 10px;
+    color: var(--nina-green-dim);
+    margin-top: 4px;
+}
+
+.assist-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.assist-input input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    color: var(--lcd-text);
+}
+
+.assist-input input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.assist-input button {
+    width: 44px;
+    border: none;
+    border-radius: 8px;
+    background: var(--lcd-text);
+    color: var(--lcd-bg);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.assist-regime {
+    font-size: 12px;
+    color: var(--lcd-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.assist-regime select {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    color: var(--lcd-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEVELOPER INDICATOR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dev-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: var(--nina-dark);
+    color: var(--nina-light);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.dev-indicator a {
+    color: var(--nina-green);
+    text-decoration: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--lcd-dim);
+    border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 420px) {
+    :root {
+        --device-width: 100vw;
+        --device-height: 100vh;
+        --bezel-radius: 0;
+    }
+    
+    body {
+        padding: 0;
+    }
+    
+    .nina-device {
+        box-shadow: none;
+    }
+}

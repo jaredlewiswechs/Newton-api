@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nina — Personal Digital Assistant</title>
+    <link rel="stylesheet" href="styles/nina-pda.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&family=SF+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- PDA Device Frame -->
+    <div class="nina-device">
+        <!-- Top Bezel with Status -->
+        <div class="nina-bezel-top">
+            <div class="nina-logo">NINA</div>
+            <div class="nina-status">
+                <span class="status-time" id="status-time">12:00</span>
+                <span class="status-verified">✓ Verified</span>
+            </div>
+        </div>
+
+        <!-- Main Screen -->
+        <div class="nina-screen">
+            <!-- Title Bar -->
+            <div class="nina-titlebar">
+                <button class="btn-back" id="btn-back" style="visibility: hidden;">←</button>
+                <h1 class="app-title" id="app-title">Nina</h1>
+                <button class="btn-menu" id="btn-menu">☰</button>
+            </div>
+
+            <!-- App Container -->
+            <div class="nina-app-container" id="app-container">
+                <!-- Home Screen (Launcher) -->
+                <div class="nina-home" id="home-screen">
+                    <div class="app-grid">
+                        <button class="app-icon" data-app="notes">
+                            <div class="icon">📝</div>
+                            <span>Notes</span>
+                        </button>
+                        <button class="app-icon" data-app="names">
+                            <div class="icon">👥</div>
+                            <span>Names</span>
+                        </button>
+                        <button class="app-icon" data-app="dates">
+                            <div class="icon">📅</div>
+                            <span>Dates</span>
+                        </button>
+                        <button class="app-icon" data-app="calc">
+                            <div class="icon">🔢</div>
+                            <span>Calc</span>
+                        </button>
+                        <button class="app-icon" data-app="verify">
+                            <div class="icon">✓</div>
+                            <span>Verify</span>
+                        </button>
+                        <button class="app-icon" data-app="assist">
+                            <div class="icon">💡</div>
+                            <span>Assist</span>
+                        </button>
+                    </div>
+                    
+                    <div class="home-tagline">
+                        <p>The constraint is the instruction.</p>
+                        <p class="sub">Newton Verified Computation</p>
+                    </div>
+                </div>
+
+                <!-- Notes App -->
+                <div class="nina-app" id="app-notes" style="display: none;">
+                    <div class="notes-list" id="notes-list">
+                        <!-- Notes populated by JS -->
+                    </div>
+                    <div class="notes-editor" id="notes-editor" style="display: none;">
+                        <textarea id="note-content" placeholder="Start writing..."></textarea>
+                        <div class="note-meta">
+                            <span class="note-verified" id="note-verified">⏳ Unverified</span>
+                        </div>
+                    </div>
+                    <button class="fab" id="new-note">+</button>
+                </div>
+
+                <!-- Names App -->
+                <div class="nina-app" id="app-names" style="display: none;">
+                    <div class="search-bar">
+                        <input type="text" id="names-search" placeholder="Search names...">
+                    </div>
+                    <div class="names-list" id="names-list">
+                        <!-- Names populated by JS -->
+                    </div>
+                    <button class="fab" id="new-name">+</button>
+                </div>
+
+                <!-- Dates App -->
+                <div class="nina-app" id="app-dates" style="display: none;">
+                    <div class="calendar-header">
+                        <button id="prev-month">‹</button>
+                        <span id="current-month">February 2026</span>
+                        <button id="next-month">›</button>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid">
+                        <!-- Calendar populated by JS -->
+                    </div>
+                    <div class="events-today" id="events-today">
+                        <h3>Today</h3>
+                        <div class="events-list" id="events-list"></div>
+                    </div>
+                </div>
+
+                <!-- Calculator App -->
+                <div class="nina-app" id="app-calc" style="display: none;">
+                    <div class="calc-display">
+                        <div class="calc-expression" id="calc-expression"></div>
+                        <div class="calc-result" id="calc-result">0</div>
+                        <div class="calc-verified" id="calc-verified">✓ Newton Verified</div>
+                    </div>
+                    <div class="calc-keypad">
+                        <button class="calc-key func" data-action="clear">C</button>
+                        <button class="calc-key func" data-action="backspace">⌫</button>
+                        <button class="calc-key func" data-action="percent">%</button>
+                        <button class="calc-key op" data-action="divide">÷</button>
+                        
+                        <button class="calc-key num" data-value="7">7</button>
+                        <button class="calc-key num" data-value="8">8</button>
+                        <button class="calc-key num" data-value="9">9</button>
+                        <button class="calc-key op" data-action="multiply">×</button>
+                        
+                        <button class="calc-key num" data-value="4">4</button>
+                        <button class="calc-key num" data-value="5">5</button>
+                        <button class="calc-key num" data-value="6">6</button>
+                        <button class="calc-key op" data-action="subtract">−</button>
+                        
+                        <button class="calc-key num" data-value="1">1</button>
+                        <button class="calc-key num" data-value="2">2</button>
+                        <button class="calc-key num" data-value="3">3</button>
+                        <button class="calc-key op" data-action="add">+</button>
+                        
+                        <button class="calc-key num zero" data-value="0">0</button>
+                        <button class="calc-key num" data-value=".">.</button>
+                        <button class="calc-key equals" data-action="equals">=</button>
+                    </div>
+                </div>
+
+                <!-- Verify App (Newton's Killer Feature) -->
+                <div class="nina-app" id="app-verify" style="display: none;">
+                    <div class="verify-intro">
+                        <p>Verify any statement against Newton's constraint engine.</p>
+                    </div>
+                    <div class="verify-input">
+                        <textarea id="verify-statement" placeholder="Enter a statement to verify..."></textarea>
+                        <button class="verify-btn" id="verify-btn">Verify</button>
+                    </div>
+                    <div class="verify-result" id="verify-result" style="display: none;">
+                        <div class="result-status" id="result-status"></div>
+                        <div class="result-trace" id="result-trace"></div>
+                        <div class="result-meta">
+                            <span class="trust-label" id="trust-label"></span>
+                            <span class="bounds-report" id="bounds-report"></span>
+                        </div>
+                    </div>
+                    <div class="verify-history" id="verify-history">
+                        <h3>History</h3>
+                        <div class="history-list" id="history-list"></div>
+                    </div>
+                </div>
+
+                <!-- Assist App (AI Assistant) -->
+                <div class="nina-app" id="app-assist" style="display: none;">
+                    <div class="assist-chat" id="assist-chat">
+                        <div class="chat-message system">
+                            <p>Hello! I'm Nina, your verified assistant. I can help with questions, calculations, and verification. Everything I say is checked.</p>
+                        </div>
+                    </div>
+                    <div class="assist-input">
+                        <input type="text" id="assist-query" placeholder="Ask Nina...">
+                        <button id="assist-send">→</button>
+                    </div>
+                    <div class="assist-regime">
+                        <span>Regime:</span>
+                        <select id="regime-select">
+                            <option value="factual">Factual</option>
+                            <option value="mathematical">Mathematical</option>
+                            <option value="conversational">Conversational</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Bezel with Home Button -->
+        <div class="nina-bezel-bottom">
+            <button class="home-button" id="home-button">
+                <div class="home-icon">◉</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Developer Mode Indicator (hidden by default) -->
+    <div class="dev-indicator" id="dev-indicator" style="display: none;">
+        <span>🔧 Developer Mode</span>
+        <a href="/developer" target="_blank">Open Forge</a>
+    </div>
+
+    <script type="module" src="scripts/nina-pda.js"></script>
+</body>
+</html>
