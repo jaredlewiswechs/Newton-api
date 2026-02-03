@@ -53,6 +53,13 @@ try:
 except ImportError:
     _knowledge_mesh = None
 
+# Import Identity - Newton's self-knowledge
+try:
+    from .identity import get_identity, Identity
+    _identity = get_identity()
+except ImportError:
+    _identity = None
+
 # Import Logic Engine for math evaluation
 try:
     from core.logic import LogicEngine, ExecutionBounds
@@ -149,10 +156,11 @@ SAFETY_CONSTRAINTS = {
         "name": "No Harm",
         "description": "Blocks requests that could cause physical harm",
         "patterns": [
-            r"(how to )?(make|build|create|construct).*\b(bomb|weapon|explosive|poison|grenade)\b",
+            r"(how to )?(make|build|create|construct).*\b(bomb|weapon|explosive|explosives|poison|grenade)\b",
             r"(how to )?(kill|murder|harm|hurt|injure|assassinate)",
             r"(how to )?(suicide|self.harm)",
             r"\b(i want to|i need to|help me) (kill|murder|harm|hurt)",
+            r"\b(bomb|explosive|explosives|weapon|poison|grenade)\b",
         ]
     },
     "medical": {
@@ -173,6 +181,8 @@ SAFETY_CONSTRAINTS = {
             r"(how to )?(launder|hide|offshore) money",
             r"(how to )?(forge|fake|counterfeit)",
             r"(how to )?(steal|rob|burgle)",
+            r"\billegal (activity|activities|action|actions)\b",
+            r"\binstructions for illegal\b",
         ]
     },
     "security": {
@@ -182,6 +192,11 @@ SAFETY_CONSTRAINTS = {
             r"(how to )?(hack|crack|break into|exploit|bypass)",
             r"\b(steal password|phishing|malware|ransomware)\b",
             r"(how to )?(ddos|denial of service)",
+            r"\bjailbreak (mode|enabled|activated)\b",
+            r"\bignore (filters|safety|rules|restrictions|your rules)\b",
+            r"\bno (restrictions|limitations|rules|filters)\b",
+            r"\boverride (safety|security|filters|rules)\b",
+            r"\bsystem prompt\b.*\b(ignore|bypass|override)\b",
         ]
     },
     "privacy": {
@@ -586,18 +601,29 @@ class NewtonAgent:
                 turn_hash=response_turn.hash,
             )
         
-        # 5. Generate response (knowledge base first, then mesh, then math, then LLM)
+        # 5. Generate response (identity first, then knowledge base, mesh, math, LLM)
         context = self.memory.get_context(max_turns=10)
         
+        # Check if this is an identity question (Newton knows himself)
+        identity_answer = None
+        is_identity_response = False
+        if _identity:
+            identity_answer = _identity.respond_to_identity_question(user_input)
+            is_identity_response = identity_answer is not None
+        operations += 1
+        
         # Check knowledge base (already verified)
-        kb_answer = self._try_knowledge_base(user_input)
-        is_kb_response = kb_answer is not None
+        kb_answer = None
+        is_kb_response = False
+        if not is_identity_response:
+            kb_answer = self._try_knowledge_base(user_input)
+            is_kb_response = kb_answer is not None
         operations += 1
         
         # Check knowledge mesh for expanded data
         mesh_answer = None
         is_mesh_response = False
-        if not is_kb_response and _knowledge_mesh:
+        if not is_identity_response and not is_kb_response and _knowledge_mesh:
             mesh_answer = self._try_knowledge_mesh(user_input)
             is_mesh_response = mesh_answer is not None
         operations += 1
@@ -605,12 +631,15 @@ class NewtonAgent:
         # Check if this is a math question (use Logic Engine)
         math_answer = None
         is_math_response = False
-        if not is_kb_response and not is_mesh_response:
+        if not is_identity_response and not is_kb_response and not is_mesh_response:
             math_answer = self._try_math_evaluation(user_input)
             is_math_response = math_answer is not None
         operations += 1
         
-        if is_kb_response:
+        if is_identity_response:
+            response_content = identity_answer
+            response_source = "identity"
+        elif is_kb_response:
             response_content = kb_answer
             response_source = "knowledge_base"
         elif is_mesh_response:
@@ -640,11 +669,11 @@ class NewtonAgent:
         response_passed, response_failed = self._check_constraints(response_content)
         operations += 1
         
-        # 8. Ground factual claims in response (skip for KB/mesh/math - already verified)
+        # 8. Ground factual claims in response (skip for identity/KB/mesh/math - already verified)
         grounding_results = []
         unverified_claims = []
         
-        if self.config.enable_grounding and not is_kb_response and not is_mesh_response and not is_math_response:
+        if self.config.enable_grounding and not is_identity_response and not is_kb_response and not is_mesh_response and not is_math_response:
             claims = self._extract_claims(response_content)
             if claims:
                 grounding_results, unverified_claims = self._ground_claims(claims)
@@ -672,12 +701,12 @@ class NewtonAgent:
             meta_result = _meta.quick_check(meta_context)
             meta_verified = meta_result[0]
         
-        # KB, mesh, and math answers are always verified
-        is_verified = (is_kb_response or is_mesh_response or is_math_response or 
+        # Identity, KB, mesh, and math answers are always verified (Newton trusts himself)
+        is_verified = (is_identity_response or is_kb_response or is_mesh_response or is_math_response or 
                       (len(response_failed) == 0 and len(unverified_claims) == 0)) and meta_verified
         
-        # Add Ada warnings if any
-        if ada_whispers and not is_kb_response and not is_mesh_response:
+        # Add Ada warnings if any (skip for identity - Newton knows himself)
+        if ada_whispers and not is_identity_response and not is_kb_response and not is_mesh_response:
             warning_count = len(ada_whispers)
             response_content += f"\n\n🐕 *Ada detected {warning_count} potential issue(s) - review recommended*"
         
