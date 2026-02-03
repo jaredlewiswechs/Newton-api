@@ -259,8 +259,17 @@ We're building shelter.
         """
         q = question.lower().strip()
         
+        # Exclude questions about other things (Python, Apple, etc.)
+        exclude_subjects = ["python", "apple", "microsoft", "google", "amazon", "java", "javascript"]
+        if any(subj in q for subj in exclude_subjects):
+            return None
+        
         # Who are you?
         if any(p in q for p in ["who are you", "what are you", "your name", "introduce yourself"]):
+            return self.whoami()
+        
+        # Are you an AI? (specific check)
+        if "are you an ai" in q or "are you ai" in q or "are you a bot" in q or "are you artificial" in q:
             return self.whoami()
         
         # Why trust?
@@ -271,8 +280,8 @@ We're building shelter.
         if any(p in q for p in ["what aren't you", "what are you not", "limitations", "what can't you"]):
             return self.what_am_i_not()
         
-        # Relationship to humans
-        if any(p in q for p in ["relationship", "humans", "creator", "who made you", "who created"]):
+        # Relationship to humans / who made Newton specifically
+        if any(p in q for p in ["who made you", "who created you", "who built you"]):
             return self.relationship_to_humans()
         
         # The law

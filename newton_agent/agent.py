@@ -67,6 +67,13 @@ try:
 except ImportError:
     _logic_engine = None
 
+# Import TI Calculator for full math expression parsing
+try:
+    from .ti_calculator import TICalculatorEngine
+    _ti_calculator = TICalculatorEngine()
+except ImportError:
+    _ti_calculator = None
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -444,11 +451,29 @@ class NewtonAgent:
         return None
 
     def _try_math_evaluation(self, user_input: str) -> Optional[str]:
-        """Try to evaluate math expressions using the Logic Engine."""
+        """
+        Try to evaluate math expressions using TI Calculator + Logic Engine.
+        
+        Supports TI-84 style calculations:
+        - Chained operations: 3*3*3, 2+3*4-5
+        - Parentheses: (2+3)*4
+        - Functions: sqrt(16), sin(0), log(100)
+        - Constants: pi, e
+        - Powers: 2^10
+        - Factorials: 5!
+        """
+        # Use TI Calculator if available
+        if _ti_calculator:
+            result = _ti_calculator.calculate(user_input)
+            if result:
+                val, meta = result
+                return _ti_calculator.format_result(val, meta)
+        
+        # Fallback to basic Logic Engine for simple expressions
         if not _logic_engine:
             return None
         
-        # Patterns for math questions
+        # Simple patterns for basic fallback
         math_patterns = [
             # "What is 2 + 2?" or "what's 5 * 3"
             r"what(?:'s| is)\s+(\d+(?:\.\d+)?)\s*([+\-*/×÷^])\s*(\d+(?:\.\d+)?)",

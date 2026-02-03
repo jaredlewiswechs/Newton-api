@@ -216,6 +216,91 @@ SCIENTIFIC_CONSTANTS: Dict[str, tuple[float, str, str]] = {
     "pi": (3.14159265358979323846, "", "Pi"),
     "e": (2.71828182845904523536, "", "Euler's number"),
     "golden ratio": (1.61803398874989484820, "", "Golden ratio (phi)"),
+    # Water properties
+    "boiling point of water": (100, "°C (212°F)", "Boiling point of water at standard pressure"),
+    "freezing point of water": (0, "°C (32°F)", "Freezing point of water at standard pressure"),
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GENERAL KNOWLEDGE FACTS
+# Source: Standard references
+# ═══════════════════════════════════════════════════════════════════════════════
+
+GENERAL_FACTS: Dict[str, tuple[Any, str, str]] = {
+    # Time units
+    "days in a year": (365, "days", "Days in a standard year (366 in leap year)"),
+    "days in year": (365, "days", "Days in a standard year (366 in leap year)"),
+    "hours in a day": (24, "hours", "Hours in one day"),
+    "hours in day": (24, "hours", "Hours in one day"),
+    "minutes in an hour": (60, "minutes", "Minutes in one hour"),
+    "minutes in hour": (60, "minutes", "Minutes in one hour"),
+    "seconds in a minute": (60, "seconds", "Seconds in one minute"),
+    "seconds in minute": (60, "seconds", "Seconds in one minute"),
+    "months in a year": (12, "months", "Months in one year"),
+    "months in year": (12, "months", "Months in one year"),
+    "weeks in a year": (52, "weeks", "Weeks in one year (approximately)"),
+    "days in a week": (7, "days", "Days in one week"),
+    # Solar system
+    "planets in solar system": (8, "planets", "Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune"),
+    "planets in our solar system": (8, "planets", "Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune"),
+    "largest planet": ("Jupiter", "", "Jupiter is the largest planet in our solar system"),
+    "smallest planet": ("Mercury", "", "Mercury is the smallest planet in our solar system"),
+    "closest planet to sun": ("Mercury", "", "Mercury is the closest planet to the Sun"),
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ACRONYMS & ABBREVIATIONS
+# Source: Standard definitions
+# ═══════════════════════════════════════════════════════════════════════════════
+
+ACRONYMS: Dict[str, tuple[str, str]] = {
+    # Computing
+    "html": ("HyperText Markup Language", "Standard markup language for web pages"),
+    "css": ("Cascading Style Sheets", "Style sheet language for web pages"),
+    "cpu": ("Central Processing Unit", "The main processor of a computer"),
+    "gpu": ("Graphics Processing Unit", "Specialized processor for graphics"),
+    "ram": ("Random Access Memory", "Computer's short-term memory"),
+    "api": ("Application Programming Interface", "Interface for software communication"),
+    "url": ("Uniform Resource Locator", "Web address"),
+    "http": ("HyperText Transfer Protocol", "Protocol for web communication"),
+    "https": ("HyperText Transfer Protocol Secure", "Secure web protocol"),
+    "sql": ("Structured Query Language", "Database query language"),
+    "json": ("JavaScript Object Notation", "Data interchange format"),
+    "xml": ("Extensible Markup Language", "Markup language for data"),
+    "ip": ("Internet Protocol", "Network addressing protocol"),
+    "tcp": ("Transmission Control Protocol", "Network communication protocol"),
+    "ai": ("Artificial Intelligence", "Machine intelligence"),
+    "ml": ("Machine Learning", "Subset of AI using statistical learning"),
+    "llm": ("Large Language Model", "AI model trained on text data"),
+    "os": ("Operating System", "System software managing hardware"),
+    "ide": ("Integrated Development Environment", "Software development tool"),
+    # General
+    "nasa": ("National Aeronautics and Space Administration", "US space agency"),
+    "fbi": ("Federal Bureau of Investigation", "US federal law enforcement"),
+    "cia": ("Central Intelligence Agency", "US intelligence agency"),
+    "nist": ("National Institute of Standards and Technology", "US standards agency"),
+    "iso": ("International Organization for Standardization", "International standards body"),
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHEMISTRY
+# Source: IUPAC, periodic table
+# ═══════════════════════════════════════════════════════════════════════════════
+
+CHEMICAL_FORMULAS: Dict[str, tuple[str, str]] = {
+    # Common compounds
+    "water": ("H₂O", "Dihydrogen monoxide"),
+    "carbon dioxide": ("CO₂", "Carbon dioxide"),
+    "oxygen": ("O₂", "Molecular oxygen"),
+    "nitrogen": ("N₂", "Molecular nitrogen"),
+    "salt": ("NaCl", "Sodium chloride"),
+    "table salt": ("NaCl", "Sodium chloride"),
+    "sugar": ("C₁₂H₂₂O₁₁", "Sucrose"),
+    "methane": ("CH₄", "Methane"),
+    "ammonia": ("NH₃", "Ammonia"),
 }
 
 
@@ -348,6 +433,9 @@ class KnowledgeBase:
             self._query_language(question_lower) or
             self._query_currency(question_lower) or
             self._query_scientific(question_lower) or
+            self._query_general(question_lower) or
+            self._query_acronym(question_lower) or
+            self._query_chemistry(question_lower) or
             self._query_historical(question_lower) or
             self._query_company(question_lower)
         )
@@ -453,7 +541,11 @@ class KnowledgeBase:
     def _query_scientific(self, question: str) -> Optional[VerifiedFact]:
         """Query for scientific constants."""
         # Only match if specifically asking about constants/values
-        if not any(word in question for word in ["constant", "value of", "what is pi", "what is e", "speed of light", "gravity", "number", "planck", "avogadro", "boltzmann"]):
+        if not any(word in question for word in [
+            "constant", "value of", "what is pi", "what is e", 
+            "speed of light", "gravity", "number", "planck", 
+            "avogadro", "boltzmann", "boiling", "freezing", "point"
+        ]):
             return None
             
         for const_name, (value, unit, desc) in SCIENTIFIC_CONSTANTS.items():
@@ -536,6 +628,60 @@ class KnowledgeBase:
                         source_url=f"https://en.wikipedia.org/wiki/{company.title()}",
                         confidence=1.0,
                     )
+        return None
+    
+    def _query_general(self, question: str) -> Optional[VerifiedFact]:
+        """Query for general knowledge facts."""
+        for fact_key, (value, unit, desc) in GENERAL_FACTS.items():
+            # Check if all key words from fact_key appear in question
+            key_words = fact_key.split()
+            if all(word in question for word in key_words):
+                if isinstance(value, str):
+                    fact_str = f"{desc}."
+                else:
+                    fact_str = f"There are {value} {unit}. {desc}."
+                return VerifiedFact(
+                    fact=fact_str,
+                    category="general",
+                    source="Standard Reference",
+                    source_url="https://en.wikipedia.org/",
+                    confidence=1.0,
+                )
+        return None
+    
+    def _query_acronym(self, question: str) -> Optional[VerifiedFact]:
+        """Query for acronym definitions."""
+        # Match "what does X stand for" or "what is X"
+        if not any(phrase in question for phrase in ["stand for", "what is", "what does", "meaning of"]):
+            return None
+        
+        for acronym, (expansion, desc) in ACRONYMS.items():
+            # Check if acronym is in question with word boundary
+            pattern = r'\b' + re.escape(acronym) + r'\b'
+            if re.search(pattern, question):
+                return VerifiedFact(
+                    fact=f"{acronym.upper()} stands for {expansion}. {desc}.",
+                    category="acronyms",
+                    source="Standard Definition",
+                    source_url="https://en.wikipedia.org/",
+                    confidence=1.0,
+                )
+        return None
+    
+    def _query_chemistry(self, question: str) -> Optional[VerifiedFact]:
+        """Query for chemical formulas."""
+        if not any(phrase in question for phrase in ["chemical", "formula", "symbol", "molecule"]):
+            return None
+        
+        for compound, (formula, name) in CHEMICAL_FORMULAS.items():
+            if compound in question:
+                return VerifiedFact(
+                    fact=f"The chemical formula for {compound} is {formula} ({name}).",
+                    category="chemistry",
+                    source="IUPAC",
+                    source_url="https://iupac.org/",
+                    confidence=1.0,
+                )
         return None
     
     def verify_statement(self, statement: str) -> Optional[tuple[bool, VerifiedFact]]:
