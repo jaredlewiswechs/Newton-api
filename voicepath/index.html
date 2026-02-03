@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoicePath — See What You Hear</title>
+    <link rel="stylesheet" href="voicepath.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">
+                <span class="logo-icon">◉</span>
+                VoicePath
+            </h1>
+            <p class="tagline">See what you hear</p>
+        </header>
+
+        <!-- Main Visualization -->
+        <main class="visualization-container">
+            <!-- Axis Labels -->
+            <div class="axis-label axis-top">Positive (+)</div>
+            <div class="axis-label axis-bottom">Negative (−)</div>
+            <div class="axis-label axis-left">Calm</div>
+            <div class="axis-label axis-right">Intense</div>
+            
+            <!-- Canvas -->
+            <canvas id="voicepath-canvas"></canvas>
+            
+            <!-- Current Lyric Display -->
+            <div class="current-lyric" id="current-lyric"></div>
+        </main>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="song-info">
+                <span class="song-title" id="song-title">—</span>
+                <span class="song-artist" id="song-artist">—</span>
+            </div>
+            
+            <div class="playback-controls">
+                <button class="btn btn-play" id="btn-play">
+                    <span class="play-icon">▶</span>
+                </button>
+                <button class="btn btn-stop" id="btn-stop">
+                    <span class="stop-icon">■</span>
+                </button>
+            </div>
+            
+            <div class="time-display">
+                <span id="time-current">0:00</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span id="time-total">0:00</span>
+            </div>
+            
+            <div class="demo-selector">
+                <label>Demo Song:</label>
+                <select id="demo-select">
+                    <option value="dayinthelife">A Day in the Life (Demo)</option>
+                    <option value="abstract">Abstract Journey</option>
+                    <option value="spiral">Descending Spiral</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-dot current"></span>
+                <span>Current position</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot trail"></span>
+                <span>Trajectory trail</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot envelope"></span>
+                <span>Semantic envelope</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                <strong>VoicePath</strong> by Newton — 
+                <em>The constraint IS the instruction</em>
+            </p>
+            <p class="footer-sub">
+                X: Tension (calm → intense) | Y: Valence (negative → positive)
+            </p>
+        </footer>
+    </div>
+
+    <script src="demo.js"></script>
+    <script src="voicepath.js"></script>
+</body>
+</html>
