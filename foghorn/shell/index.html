@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nina Desktop</title>
+    <link rel="stylesheet" href="desktop.css">
+</head>
+<body>
+    <!-- Desktop Container -->
+    <div id="desktop">
+        <!-- Menu Bar (NeXTSTEP-style) -->
+        <header id="menubar">
+            <div class="menubar-left">
+                <button class="menu-item apple-menu" id="apple-menu" data-menu="nina">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 1L6.5 4H2L5 6.5L4 10L8 7.5L12 10L11 6.5L14 4H9.5L8 1Z"/>
+                    </svg>
+                    <div class="dropdown-menu" id="menu-nina">
+                        <div class="dropdown-item">About Nina</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item">Preferences...<span class="dropdown-shortcut">⌘,</span></div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item">Hide Nina<span class="dropdown-shortcut">⌘H</span></div>
+                        <div class="dropdown-item">Hide Others<span class="dropdown-shortcut">⌥⌘H</span></div>
+                        <div class="dropdown-item">Show All</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item">Quit Nina<span class="dropdown-shortcut">⌘Q</span></div>
+                    </div>
+                </button>
+                <span class="app-name">Nina</span>
+                <button class="menu-item" data-menu="file">File
+                    <div class="dropdown-menu" id="menu-file">
+                        <div class="dropdown-item" data-action="new-card">New Card<span class="dropdown-shortcut">⌘N</span></div>
+                        <div class="dropdown-item" data-action="new-query">New Query<span class="dropdown-shortcut">⌘⇧N</span></div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="open">Open...<span class="dropdown-shortcut">⌘O</span></div>
+                        <div class="dropdown-item disabled">Open Recent</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="save">Save<span class="dropdown-shortcut">⌘S</span></div>
+                        <div class="dropdown-item" data-action="save-as">Save As...<span class="dropdown-shortcut">⌘⇧S</span></div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="export">Export...</div>
+                    </div>
+                </button>
+                <button class="menu-item" data-menu="edit">Edit
+                    <div class="dropdown-menu" id="menu-edit">
+                        <div class="dropdown-item" data-action="undo">Undo<span class="dropdown-shortcut">⌘Z</span></div>
+                        <div class="dropdown-item" data-action="redo">Redo<span class="dropdown-shortcut">⌘⇧Z</span></div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="cut">Cut<span class="dropdown-shortcut">⌘X</span></div>
+                        <div class="dropdown-item" data-action="copy">Copy<span class="dropdown-shortcut">⌘C</span></div>
+                        <div class="dropdown-item" data-action="paste">Paste<span class="dropdown-shortcut">⌘V</span></div>
+                        <div class="dropdown-item" data-action="delete">Delete</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="select-all">Select All<span class="dropdown-shortcut">⌘A</span></div>
+                    </div>
+                </button>
+                <button class="menu-item" data-menu="view">View
+                    <div class="dropdown-menu" id="menu-view">
+                        <div class="dropdown-item" data-action="toggle-sidebar">Toggle Sidebar<span class="dropdown-shortcut">⌘1</span></div>
+                        <div class="dropdown-item" data-action="toggle-inspector">Toggle Inspector<span class="dropdown-shortcut">⌘I</span></div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="zoom-in">Zoom In<span class="dropdown-shortcut">⌘+</span></div>
+                        <div class="dropdown-item" data-action="zoom-out">Zoom Out<span class="dropdown-shortcut">⌘-</span></div>
+                        <div class="dropdown-item" data-action="zoom-reset">Actual Size<span class="dropdown-shortcut">⌘0</span></div>
+                    </div>
+                </button>
+                <button class="menu-item" data-menu="objects">Objects
+                    <div class="dropdown-menu" id="menu-objects">
+                        <div class="dropdown-item" data-action="new-card">New Card</div>
+                        <div class="dropdown-item" data-action="new-query">New Query</div>
+                        <div class="dropdown-item" data-action="new-file">New File Asset</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="inspect">Inspect<span class="dropdown-shortcut">⌘I</span></div>
+                        <div class="dropdown-item" data-action="duplicate">Duplicate<span class="dropdown-shortcut">⌘D</span></div>
+                    </div>
+                </button>
+                <button class="menu-item" data-menu="services">Services
+                    <div class="dropdown-menu" id="menu-services">
+                        <div class="dropdown-item" data-action="verify">Verify Claim</div>
+                        <div class="dropdown-item" data-action="compute">Compute</div>
+                        <div class="dropdown-item" data-action="extract">Extract</div>
+                        <div class="dropdown-item" data-action="summarize">Summarize</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="all-services">All Services...<span class="dropdown-shortcut">⌘⇧S</span></div>
+                    </div>
+                </button>
+                <button class="menu-item" data-menu="window">Window
+                    <div class="dropdown-menu" id="menu-window">
+                        <div class="dropdown-item" data-action="minimize">Minimize<span class="dropdown-shortcut">⌘M</span></div>
+                        <div class="dropdown-item" data-action="zoom">Zoom</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="bring-all">Bring All to Front</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item disabled">No Windows</div>
+                    </div>
+                </button>
+                <button class="menu-item" data-menu="help">Help
+                    <div class="dropdown-menu" id="menu-help">
+                        <div class="dropdown-item" data-action="search-help">Search</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item" data-action="nina-help">Nina Help</div>
+                        <div class="dropdown-item" data-action="keyboard">Keyboard Shortcuts</div>
+                    </div>
+                </button>
+            </div>
+            <div class="menubar-right">
+                <span class="status-item" id="clock"></span>
+            </div>
+        </header>
+
+        <!-- Main Desktop Area -->
+        <main id="workspace-area">
+            <!-- Sidebar (Workspace Browser) -->
+            <aside id="sidebar" class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Workspace</span>
+                    <button class="panel-action" title="New Object">+</button>
+                </div>
+                <div class="panel-content">
+                    <!-- Object type filters -->
+                    <div class="filter-bar">
+                        <button class="filter-btn active" data-type="all">All</button>
+                        <button class="filter-btn" data-type="card">Cards</button>
+                        <button class="filter-btn" data-type="query">Queries</button>
+                        <button class="filter-btn" data-type="file">Files</button>
+                    </div>
+                    
+                    <!-- Object list -->
+                    <ul id="object-list" class="object-list">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Window Container -->
+            <div id="windows-container">
+                <!-- Windows created dynamically -->
+            </div>
+
+            <!-- Inspector Panel (always available, right side) -->
+            <aside id="inspector" class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Inspector</span>
+                    <button class="panel-action" id="inspector-pin" title="Pin">📌</button>
+                </div>
+                <div class="panel-content" id="inspector-content">
+                    <div class="inspector-empty">
+                        <p>Select an object to inspect</p>
+                        <p class="hint">Click any card, query, or file in the workspace</p>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Dock (bottom) -->
+        <footer id="dock">
+            <div class="dock-container">
+                <button class="dock-item" data-app="workspace" title="Workspace">
+                    <div class="dock-icon">📁</div>
+                    <span class="dock-label">Workspace</span>
+                </button>
+                <button class="dock-item" data-app="cards" title="Cards">
+                    <div class="dock-icon">🗂️</div>
+                    <span class="dock-label">Cards</span>
+                </button>
+                <button class="dock-item" data-app="search" title="Search">
+                    <div class="dock-icon">🔍</div>
+                    <span class="dock-label">Search</span>
+                </button>
+                <button class="dock-item" data-app="maps" title="Maps">
+                    <div class="dock-icon">🗺️</div>
+                    <span class="dock-label">Maps</span>
+                </button>
+                <div class="dock-separator"></div>
+                <button class="dock-item" data-app="inspector" title="Inspector">
+                    <div class="dock-icon">🔬</div>
+                    <span class="dock-label">Inspector</span>
+                </button>
+                <button class="dock-item" data-app="services" title="Services">
+                    <div class="dock-icon">⚙️</div>
+                    <span class="dock-label">Services</span>
+                </button>
+            </div>
+        </footer>
+
+        <!-- Command Palette (⌘K) -->
+        <div id="command-palette" class="modal hidden">
+            <div class="palette-container">
+                <input type="text" id="palette-input" placeholder="Type a command or search..." autofocus>
+                <ul id="palette-results" class="palette-results">
+                    <!-- Populated by JS -->
+                </ul>
+                <div class="palette-hint">
+                    <span>↑↓ Navigate</span>
+                    <span>↵ Select</span>
+                    <span>Esc Close</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Menu -->
+        <div id="services-menu" class="modal hidden">
+            <div class="services-container">
+                <div class="services-header">
+                    <span>Services</span>
+                    <span class="services-selection" id="services-selection">No selection</span>
+                </div>
+                <ul id="services-list" class="services-list">
+                    <!-- Populated by JS -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="desktop.js"></script>
+</body>
+</html>
