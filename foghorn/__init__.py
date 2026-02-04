@@ -26,6 +26,10 @@ from .objects import (
     Receipt,
     LinkCurve,
     Rule,
+    # Phase A additions
+    MapPlace,
+    Route,
+    Automation,
     ObjectStore,
     get_object_store,
 )
@@ -75,6 +79,11 @@ from .bezier import (
     CurveStore,
     get_curve_store,
     render_curves_svg,
+    # Phase A additions - Bézier primitives
+    Superellipse,
+    MotionCurve,
+    EasingType,
+    EnvelopeCurve,
 )
 
 __version__ = "0.1.0"

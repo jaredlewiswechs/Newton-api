@@ -540,6 +540,178 @@ class Rule(FoghornObject):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# MAP & ROUTE OBJECTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@dataclass
+class MapPlace(FoghornObject):
+    """
+    A geographic location.
+    
+    MapPlaces can be linked, searched, and turned into Routes.
+    """
+    name: str = ""
+    address: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    place_type: str = "point"  # point, area, region
+    tags: List[str] = field(default_factory=list)
+    
+    @property
+    def object_type(self) -> ObjectType:
+        return ObjectType.MAP_PLACE
+    
+    def get_content_for_hash(self) -> str:
+        return f"{self.name}:{self.latitude:.6f},{self.longitude:.6f}"
+    
+    def _get_type_specific_fields(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "address": self.address,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "place_type": self.place_type,
+            "tags": self.tags,
+        }
+    
+    def _get_inspector_sections(self) -> Dict[str, Dict]:
+        return {
+            "location": {
+                "Name": self.name,
+                "Address": self.address or "(none)",
+                "Coordinates": f"{self.latitude:.4f}, {self.longitude:.4f}",
+                "Type": self.place_type,
+            },
+            "metadata": {
+                "Tags": ", ".join(self.tags) if self.tags else "(none)",
+            }
+        }
+    
+    def distance_to(self, other: 'MapPlace') -> float:
+        """Haversine distance in kilometers."""
+        import math
+        R = 6371  # Earth radius in km
+        lat1, lon1 = math.radians(self.latitude), math.radians(self.longitude)
+        lat2, lon2 = math.radians(other.latitude), math.radians(other.longitude)
+        dlat, dlon = lat2 - lat1, lon2 - lon1
+        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+        return 2 * R * math.asin(math.sqrt(a))
+
+
+@dataclass
+class Route(FoghornObject):
+    """
+    A path between MapPlaces.
+    
+    Routes are ordered sequences of places with travel metadata.
+    """
+    name: str = ""
+    waypoints: List[str] = field(default_factory=list)  # MapPlace hashes
+    mode: str = "driving"  # driving, walking, transit, cycling
+    distance_km: float = 0.0
+    duration_minutes: float = 0.0
+    polyline: str = ""  # Encoded polyline for rendering
+    
+    @property
+    def object_type(self) -> ObjectType:
+        return ObjectType.ROUTE
+    
+    def get_content_for_hash(self) -> str:
+        return f"{self.name}:{self.mode}:{','.join(self.waypoints)}"
+    
+    def _get_type_specific_fields(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "waypoints": self.waypoints,
+            "mode": self.mode,
+            "distance_km": self.distance_km,
+            "duration_minutes": self.duration_minutes,
+            "polyline": self.polyline,
+        }
+    
+    def _get_inspector_sections(self) -> Dict[str, Dict]:
+        return {
+            "route": {
+                "Name": self.name,
+                "Mode": self.mode.capitalize(),
+                "Waypoints": len(self.waypoints),
+            },
+            "metrics": {
+                "Distance": f"{self.distance_km:.1f} km",
+                "Duration": f"{self.duration_minutes:.0f} min",
+            }
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AUTOMATION OBJECT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@dataclass
+class Automation(FoghornObject):
+    """
+    A repeatable workflow / automation.
+    
+    Automations chain services together:
+    trigger → condition → action(s) → output
+    """
+    name: str = ""
+    description: str = ""
+    
+    # Trigger
+    trigger_type: str = "manual"  # manual, schedule, event, change
+    trigger_config: Dict[str, Any] = field(default_factory=dict)
+    
+    # Conditions (optional)
+    conditions: List[Dict[str, Any]] = field(default_factory=list)
+    
+    # Actions (service calls in order)
+    actions: List[Dict[str, Any]] = field(default_factory=list)
+    
+    # State
+    enabled: bool = True
+    last_run: Optional[int] = None
+    run_count: int = 0
+    
+    @property
+    def object_type(self) -> ObjectType:
+        return ObjectType.AUTOMATION
+    
+    def get_content_for_hash(self) -> str:
+        return f"{self.name}:{self.trigger_type}:{len(self.actions)}"
+    
+    def _get_type_specific_fields(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "description": self.description,
+            "trigger_type": self.trigger_type,
+            "trigger_config": self.trigger_config,
+            "conditions": self.conditions,
+            "actions": self.actions,
+            "enabled": self.enabled,
+            "last_run": self.last_run,
+            "run_count": self.run_count,
+        }
+    
+    def _get_inspector_sections(self) -> Dict[str, Dict]:
+        return {
+            "automation": {
+                "Name": self.name,
+                "Trigger": self.trigger_type.capitalize(),
+                "Enabled": "✓ Yes" if self.enabled else "✗ No",
+            },
+            "workflow": {
+                "Conditions": len(self.conditions),
+                "Actions": len(self.actions),
+            },
+            "stats": {
+                "Run Count": self.run_count,
+                "Last Run": datetime.fromtimestamp(self.last_run / 1000).isoformat() if self.last_run else "Never",
+            }
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # OBJECT STORE
 # ═══════════════════════════════════════════════════════════════════════════════
 
