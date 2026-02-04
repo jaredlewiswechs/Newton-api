@@ -1412,7 +1412,10 @@ class StatsyInterpreter:
     
     def _std(self, x: Any, ddof: int = 1) -> float:
         """Calculate standard deviation."""
-        return math.sqrt(self._var(x, ddof))
+        v = self._var(x, ddof)
+        if v is NA:
+            return NA
+        return math.sqrt(v)
     
     def _var(self, x: Any, ddof: int = 1) -> float:
         """Calculate variance."""
