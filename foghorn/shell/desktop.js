@@ -936,6 +936,18 @@ function handleDockClick(app) {
         case 'maps':
             openMapsApp();
             break;
+        case 'calculator':
+            openCalculatorApp();
+            break;
+        case 'verifier':
+            openVerifierApp();
+            break;
+        case 'sentinel':
+            openSentinelApp();
+            break;
+        case 'grounding':
+            openGroundingApp();
+            break;
         case 'inspector':
             toggleInspector();
             break;
@@ -2423,5 +2435,355 @@ window.selectMapPlace = function(placeId) {
     const place = state.objects.find(o => o.id === placeId);
     if (place) {
         selectObject(place);
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALCULATOR APP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function openCalculatorApp() {
+    const content = '<div class="calculator-app">' +
+        '<div class="calculator-display">' +
+        '<div class="calculator-history" id="calc-history"></div>' +
+        '<input type="text" class="calculator-input" id="calc-input" placeholder="Enter expression..." autocomplete="off">' +
+        '</div>' +
+        '<div class="calculator-keypad">' +
+        '<button class="calc-btn func" onclick="calcInsert(\'sqrt(\')">sqrt</button>' +
+        '<button class="calc-btn func" onclick="calcInsert(\'sin(\')">sin</button>' +
+        '<button class="calc-btn func" onclick="calcInsert(\'cos(\')">cos</button>' +
+        '<button class="calc-btn func" onclick="calcInsert(\'tan(\')">tan</button>' +
+        '<button class="calc-btn op" onclick="calcClear()">C</button>' +
+        '<button class="calc-btn func" onclick="calcInsert(\'log(\')">log</button>' +
+        '<button class="calc-btn func" onclick="calcInsert(\'ln(\')">ln</button>' +
+        '<button class="calc-btn func" onclick="calcInsert(\'^\')">^</button>' +
+        '<button class="calc-btn func" onclick="calcInsert(\'!\')">!</button>' +
+        '<button class="calc-btn op" onclick="calcBackspace()">DEL</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'7\')">7</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'8\')">8</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'9\')">9</button>' +
+        '<button class="calc-btn op" onclick="calcInsert(\'/\')">/</button>' +
+        '<button class="calc-btn paren" onclick="calcInsert(\'(\')">(</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'4\')">4</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'5\')">5</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'6\')">6</button>' +
+        '<button class="calc-btn op" onclick="calcInsert(\'*\')">*</button>' +
+        '<button class="calc-btn paren" onclick="calcInsert(\')\')">)</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'1\')">1</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'2\')">2</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'3\')">3</button>' +
+        '<button class="calc-btn op" onclick="calcInsert(\'-\')">-</button>' +
+        '<button class="calc-btn const" onclick="calcInsert(\'pi\')">pi</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'0\')">0</button>' +
+        '<button class="calc-btn num" onclick="calcInsert(\'.\')">.</button>' +
+        '<button class="calc-btn op equals" onclick="calcEvaluate()">=</button>' +
+        '<button class="calc-btn op" onclick="calcInsert(\'+\')">+</button>' +
+        '<button class="calc-btn const" onclick="calcInsert(\'e\')">e</button>' +
+        '</div></div>';
+    
+    createWindow('Calculator', content, { width: 340, height: 420 });
+    
+    setTimeout(function() {
+        var input = document.getElementById('calc-input');
+        if (input) {
+            input.focus();
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') calcEvaluate();
+            });
+        }
+    }, 100);
+}
+
+window.calcInsert = function(text) {
+    var input = document.getElementById('calc-input');
+    if (input) {
+        input.value += text;
+        input.focus();
+    }
+};
+
+window.calcClear = function() {
+    var input = document.getElementById('calc-input');
+    if (input) input.value = '';
+};
+
+window.calcBackspace = function() {
+    var input = document.getElementById('calc-input');
+    if (input) input.value = input.value.slice(0, -1);
+};
+
+window.calcEvaluate = async function() {
+    var input = document.getElementById('calc-input');
+    var history = document.getElementById('calc-history');
+    if (!input || !input.value.trim()) return;
+    
+    var expr = input.value;
+    
+    try {
+        var response = await fetch(API_BASE + '/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ expression: expr }),
+        });
+        
+        var data = await response.json();
+        var result = data.result !== undefined ? data.result : 'Error';
+        
+        if (history) {
+            var entry = document.createElement('div');
+            entry.className = 'calc-history-entry';
+            entry.innerHTML = '<span class="calc-expr">' + escapeHtml(expr) + '</span> = <span class="calc-result">' + result + '</span>';
+            history.appendChild(entry);
+            history.scrollTop = history.scrollHeight;
+        }
+        
+        input.value = String(result);
+        
+    } catch (e) {
+        showNotification('Calculation failed: ' + e.message);
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VERIFIER APP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function openVerifierApp() {
+    var content = '<div class="verifier-app">' +
+        '<div class="verifier-input-area">' +
+        '<textarea id="verifier-claim" class="verifier-textarea" placeholder="Enter a claim to verify..."></textarea>' +
+        '<button class="verifier-btn" onclick="verifyClaim()">Verify Claim</button>' +
+        '</div>' +
+        '<div class="verifier-results" id="verifier-results">' +
+        '<div class="verifier-placeholder">Enter a claim above to check its validity.</div>' +
+        '</div>' +
+        '<div class="verifier-history" id="verifier-history">' +
+        '<h4>Recent Verifications</h4>' +
+        '<ul id="verifier-list"></ul>' +
+        '</div></div>';
+    
+    createWindow('Verifier', content, { width: 500, height: 450 });
+}
+
+window.verifyClaim = async function() {
+    var textarea = document.getElementById('verifier-claim');
+    var results = document.getElementById('verifier-results');
+    var list = document.getElementById('verifier-list');
+    
+    if (!textarea || !textarea.value.trim()) {
+        showNotification('Please enter a claim to verify');
+        return;
+    }
+    
+    var claim = textarea.value.trim();
+    results.innerHTML = '<div class="verifier-loading">Verifying...</div>';
+    
+    try {
+        var response = await fetch(API_BASE + '/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ claim: claim }),
+        });
+        
+        var data = await response.json();
+        
+        var statusClass = data.verified ? 'verified' : 'unverified';
+        var statusIcon = data.verified ? 'YES' : 'NO';
+        var statusText = data.verified ? 'VERIFIED' : 'NOT VERIFIED';
+        
+        results.innerHTML = '<div class="verifier-result ' + statusClass + '">' +
+            '<div class="verifier-status">' +
+            '<span class="status-icon">' + statusIcon + '</span> ' +
+            '<span class="status-text">' + statusText + '</span>' +
+            '</div>' +
+            '<div class="verifier-claim">' + escapeHtml(claim) + '</div>' +
+            '<div class="verifier-details">' +
+            '<div class="detail-row"><span>Confidence:</span> <span>' + ((data.confidence || 0) * 100) + '%</span></div>' +
+            '<div class="detail-row"><span>Hash:</span> <span class="mono">' + (data.hash || 'N/A') + '</span></div>' +
+            '<div class="detail-row"><span>Time:</span> <span>' + (data.elapsed_us || 0) + 'us</span></div>' +
+            '</div></div>';
+        
+        if (list) {
+            var li = document.createElement('li');
+            li.className = statusClass;
+            li.innerHTML = '<span class="status-icon">' + statusIcon + '</span> ' + escapeHtml(claim.substring(0, 50)) + '...';
+            list.insertBefore(li, list.firstChild);
+        }
+        
+    } catch (e) {
+        results.innerHTML = '<div class="verifier-error">Verification failed: ' + escapeHtml(e.message) + '</div>';
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SENTINEL APP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function openSentinelApp() {
+    var content = '<div class="sentinel-app">' +
+        '<div class="sentinel-header">' +
+        '<div class="sentinel-icon">ADA</div>' +
+        '<div class="sentinel-title">' +
+        '<h3>Ada Sentinel</h3>' +
+        '<p class="sentinel-subtitle">Continuous Awareness - Drift Detection</p>' +
+        '</div>' +
+        '<div class="sentinel-status" id="sentinel-status">' +
+        '<span class="status-dot quiet"></span>' +
+        '<span>Quiet</span>' +
+        '</div></div>' +
+        '<div class="sentinel-monitor">' +
+        '<div class="sentinel-baseline">' +
+        '<h4>Baseline Watch</h4>' +
+        '<div class="baseline-input">' +
+        '<input type="text" id="sentinel-baseline-key" placeholder="Key">' +
+        '<input type="text" id="sentinel-baseline-value" placeholder="Expected value">' +
+        '<button onclick="sentinelAddBaseline()">Add</button>' +
+        '</div>' +
+        '<ul id="sentinel-baselines" class="sentinel-list"></ul>' +
+        '</div>' +
+        '<div class="sentinel-anomalies">' +
+        '<h4>Anomalies</h4>' +
+        '<ul id="sentinel-anomalies" class="sentinel-list">' +
+        '<li class="empty">No anomalies detected</li>' +
+        '</ul></div></div>' +
+        '<div class="sentinel-whispers">' +
+        '<h4>Whispers</h4>' +
+        '<div id="sentinel-whispers" class="whispers-area">' +
+        '<div class="whisper quiet">Ada is watching...</div>' +
+        '</div></div></div>';
+    
+    createWindow('Sentinel', content, { width: 520, height: 480 });
+}
+
+window.sentinelAddBaseline = function() {
+    var keyInput = document.getElementById('sentinel-baseline-key');
+    var valueInput = document.getElementById('sentinel-baseline-value');
+    var list = document.getElementById('sentinel-baselines');
+    
+    if (!keyInput.value || !valueInput.value) {
+        showNotification('Enter both key and expected value');
+        return;
+    }
+    
+    var key = keyInput.value;
+    var val = valueInput.value;
+    
+    var li = document.createElement('li');
+    li.innerHTML = '<span class="baseline-key">' + escapeHtml(key) + '</span> ' +
+        '<span class="baseline-value">' + escapeHtml(val) + '</span> ' +
+        '<button onclick="sentinelCheck(\'' + escapeHtml(key) + '\', \'' + escapeHtml(val) + '\')">Check</button>';
+    list.appendChild(li);
+    
+    keyInput.value = '';
+    valueInput.value = '';
+};
+
+window.sentinelCheck = async function(key, expectedValue) {
+    var whispers = document.getElementById('sentinel-whispers');
+    var status = document.getElementById('sentinel-status');
+    
+    try {
+        var response = await fetch(API_BASE + '/sentinel/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: key, expected: expectedValue }),
+        });
+        
+        var data = await response.json();
+        var level = data.level || 'quiet';
+        
+        status.innerHTML = '<span class="status-dot ' + level + '"></span><span>' + level.charAt(0).toUpperCase() + level.slice(1) + '</span>';
+        
+        var whisper = document.createElement('div');
+        whisper.className = 'whisper ' + level;
+        whisper.textContent = data.message || ('Checked ' + key + ': ' + (data.drift ? 'drift detected' : 'stable'));
+        whispers.insertBefore(whisper, whispers.firstChild);
+        
+    } catch (e) {
+        var whisper = document.createElement('div');
+        whisper.className = 'whisper error';
+        whisper.textContent = 'Check failed: ' + e.message;
+        whispers.insertBefore(whisper, whispers.firstChild);
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GROUNDING APP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function openGroundingApp() {
+    var content = '<div class="grounding-app">' +
+        '<div class="grounding-search">' +
+        '<textarea id="grounding-claim" class="grounding-textarea" placeholder="Enter a claim to ground against authoritative sources..."></textarea>' +
+        '<button class="grounding-btn" onclick="groundClaim()">Ground Claim</button>' +
+        '</div>' +
+        '<div class="grounding-results" id="grounding-results">' +
+        '<div class="grounding-placeholder">Enter a claim to verify against official sources (.gov, .edu, tech docs).</div>' +
+        '</div>' +
+        '<div class="grounding-sources">' +
+        '<h4>Source Tiers</h4>' +
+        '<ul class="source-tiers">' +
+        '<li><span class="tier official">*</span> Tier 1: Official (.gov, .edu)</li>' +
+        '<li><span class="tier authoritative">*</span> Tier 2: Authoritative (Reuters, AP)</li>' +
+        '<li><span class="tier community">*</span> Tier 3: Community (Wikipedia)</li>' +
+        '</ul></div></div>';
+    
+    createWindow('Grounding', content, { width: 550, height: 480 });
+}
+
+window.groundClaim = async function() {
+    var textarea = document.getElementById('grounding-claim');
+    var results = document.getElementById('grounding-results');
+    
+    if (!textarea || !textarea.value.trim()) {
+        showNotification('Please enter a claim to ground');
+        return;
+    }
+    
+    var claim = textarea.value.trim();
+    results.innerHTML = '<div class="grounding-loading">Searching authoritative sources...</div>';
+    
+    try {
+        var response = await fetch(API_BASE + '/ground', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ claim: claim }),
+        });
+        
+        var data = await response.json();
+        
+        var score = data.score || 5;
+        var verdict, verdictClass;
+        if (score <= 2) { verdict = 'VERIFIED'; verdictClass = 'verified'; }
+        else if (score <= 5) { verdict = 'LIKELY'; verdictClass = 'likely'; }
+        else if (score <= 8) { verdict = 'UNCERTAIN'; verdictClass = 'uncertain'; }
+        else { verdict = 'UNVERIFIED'; verdictClass = 'unverified'; }
+        
+        var sources = data.sources || [];
+        var sourcesHtml = '';
+        if (sources.length) {
+            for (var i = 0; i < sources.length; i++) {
+                var s = sources[i];
+                sourcesHtml += '<div class="source-item tier-' + (s.tier || 3) + '">' +
+                    '<a href="' + (s.url || '#') + '" target="_blank">' + escapeHtml(s.title || s.url || 'Source') + '</a>' +
+                    '<span class="source-domain">' + (s.domain || '') + '</span></div>';
+            }
+        } else {
+            sourcesHtml = '<div class="no-sources">No authoritative sources found</div>';
+        }
+        
+        results.innerHTML = '<div class="grounding-result">' +
+            '<div class="grounding-verdict ' + verdictClass + '">' +
+            '<span class="verdict-text">' + verdict + '</span>' +
+            '<span class="verdict-score">Score: ' + score.toFixed(1) + '/10</span>' +
+            '</div>' +
+            '<div class="grounding-claim">' + escapeHtml(claim) + '</div>' +
+            '<div class="grounding-source-list">' +
+            '<h5>Sources Found (' + sources.length + ')</h5>' +
+            sourcesHtml +
+            '</div></div>';
+        
+    } catch (e) {
+        results.innerHTML = '<div class="grounding-error">Grounding failed: ' + escapeHtml(e.message) + '</div>';
     }
 };
