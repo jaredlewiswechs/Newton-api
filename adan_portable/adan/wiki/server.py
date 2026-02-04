@@ -19,13 +19,37 @@ import re
 import sys
 import os
 
-# Add parent paths
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# ═══════════════════════════════════════════════════════════════════════════════
+# USE CANONICAL NEWTON CONFIGURATION
+# This ensures Adanpedia uses the same knowledge store as ALL Newton components
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_newton_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(_newton_root))
+
+# Import canonical config (ensures single source of truth)
+try:
+    from newton_config import ensure_adan_in_path, CANONICAL_KNOWLEDGE_STORE_PATH
+    ensure_adan_in_path()
+except ImportError:
+    pass  # Fallback handled by individual modules
 
 from adan.knowledge_base import (
     get_knowledge_base, 
     COUNTRY_CAPITALS, 
     COUNTRY_POPULATIONS,
+    COUNTRY_LANGUAGES,
+    COUNTRY_CURRENCIES,
+    SCIENTIFIC_CONSTANTS,
+    GENERAL_FACTS,
+    ACRONYMS,
+    PERIODIC_TABLE,
+    BIOLOGY_FACTS,
+    MATH_NOTATION,
+    SI_UNITS,
+    PHYSICS_LAWS,
+    CHEMICAL_FORMULAS,
+    HISTORICAL_DATES,
     VerifiedFact
 )
 from adan.knowledge_store import get_knowledge_store, StoredFact
@@ -103,6 +127,176 @@ def build_facts_list() -> List[Dict]:
             "category": "Demographics",
             "source": "CIA World Factbook",
             "source_url": "https://www.cia.gov/the-world-factbook/",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Country languages
+    for country, langs in COUNTRY_LANGUAGES.items():
+        facts.append({
+            "id": fact_id,
+            "key": f"Languages of {country.title()}",
+            "fact": f"The official language(s) of {country.title()}: {', '.join(langs)}.",
+            "category": "Languages",
+            "source": "CIA World Factbook",
+            "source_url": "https://www.cia.gov/the-world-factbook/",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Country currencies
+    for country, curr_data in COUNTRY_CURRENCIES.items():
+        if isinstance(curr_data, tuple):
+            curr_name, curr_code = curr_data
+        else:
+            curr_name, curr_code = curr_data, ""
+        facts.append({
+            "id": fact_id,
+            "key": f"Currency of {country.title()}",
+            "fact": f"The currency of {country.title()} is {curr_name} ({curr_code}).",
+            "category": "Economics",
+            "source": "CIA World Factbook",
+            "source_url": "https://www.cia.gov/the-world-factbook/",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Scientific constants
+    for name, data in SCIENTIFIC_CONSTANTS.items():
+        value, unit, desc = data
+        facts.append({
+            "id": fact_id,
+            "key": name.replace("_", " ").title(),
+            "fact": f"{name.replace('_', ' ').title()}: {value} {unit}. {desc}",
+            "category": "Science",
+            "source": "NIST",
+            "source_url": "https://physics.nist.gov/cuu/Constants/",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # General facts
+    for key, data in GENERAL_FACTS.items():
+        value, source, url = data
+        facts.append({
+            "id": fact_id,
+            "key": key.replace("_", " ").title(),
+            "fact": f"{key.replace('_', ' ').title()}: {value}",
+            "category": "General",
+            "source": source,
+            "source_url": url,
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Acronyms
+    for acronym, data in ACRONYMS.items():
+        expansion, description = data
+        facts.append({
+            "id": fact_id,
+            "key": acronym.upper(),
+            "fact": f"{acronym.upper()} stands for {expansion}. {description}",
+            "category": "Acronyms",
+            "source": "Standard Reference",
+            "source_url": "#",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Periodic table
+    for element, data in PERIODIC_TABLE.items():
+        symbol, atomic_num, atomic_mass, element_category = data
+        facts.append({
+            "id": fact_id,
+            "key": element.title(),
+            "fact": f"{element.title()} ({symbol}): Atomic number {atomic_num}, atomic mass {atomic_mass}. Category: {element_category}.",
+            "category": "Chemistry",
+            "source": "IUPAC",
+            "source_url": "https://iupac.org/what-we-do/periodic-table-of-elements/",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Biology facts
+    for key, data in BIOLOGY_FACTS.items():
+        fact_text, source = data
+        facts.append({
+            "id": fact_id,
+            "key": key.replace("_", " ").title(),
+            "fact": fact_text,
+            "category": "Biology",
+            "source": source,
+            "source_url": "#",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Math notation
+    for symbol, data in MATH_NOTATION.items():
+        name, meaning = data
+        facts.append({
+            "id": fact_id,
+            "key": name,
+            "fact": f"{name} ({symbol}): {meaning}",
+            "category": "Mathematics",
+            "source": "ISO 80000-2",
+            "source_url": "https://www.iso.org/standard/64973.html",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # SI Units
+    for unit, data in SI_UNITS.items():
+        name, symbol, quantity = data
+        facts.append({
+            "id": fact_id,
+            "key": name,
+            "fact": f"{name} ({symbol}): SI unit of {quantity}.",
+            "category": "Physics",
+            "source": "BIPM",
+            "source_url": "https://www.bipm.org/en/measurement-units",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Physics laws
+    for law, data in PHYSICS_LAWS.items():
+        statement, formula = data
+        facts.append({
+            "id": fact_id,
+            "key": law.replace("_", " ").title(),
+            "fact": f"{law.replace('_', ' ').title()}: {statement} Formula: {formula}",
+            "category": "Physics",
+            "source": "Physics Textbook",
+            "source_url": "#",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Chemical formulas
+    for compound, data in CHEMICAL_FORMULAS.items():
+        formula, name = data
+        facts.append({
+            "id": fact_id,
+            "key": name,
+            "fact": f"{name}: Chemical formula {formula}.",
+            "category": "Chemistry",
+            "source": "IUPAC",
+            "source_url": "https://iupac.org/",
+            "confidence": 1.0
+        })
+        fact_id += 1
+    
+    # Historical dates
+    for event, data in HISTORICAL_DATES.items():
+        date, description = data
+        facts.append({
+            "id": fact_id,
+            "key": event.replace("_", " ").title(),
+            "fact": f"{event.replace('_', ' ').title()} ({date}): {description}",
+            "category": "History",
+            "source": "Encyclopedia Britannica",
+            "source_url": "https://www.britannica.com/",
             "confidence": 1.0
         })
         fact_id += 1

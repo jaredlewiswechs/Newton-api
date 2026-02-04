@@ -27,8 +27,18 @@ try:
 except ImportError:
     HAS_LANGUAGE_MECHANICS = False
 
-# Store file location
-STORE_PATH = Path(__file__).parent / ".knowledge_store.json"
+# Store file location - USE CANONICAL PATH
+# This ensures ALL Newton components share the same knowledge store
+try:
+    import sys
+    _newton_root = Path(__file__).parent.parent
+    if str(_newton_root) not in sys.path:
+        sys.path.insert(0, str(_newton_root))
+    from newton_config import CANONICAL_KNOWLEDGE_STORE_PATH
+    STORE_PATH = CANONICAL_KNOWLEDGE_STORE_PATH
+except ImportError:
+    # Fallback to local path if newton_config not available
+    STORE_PATH = Path(__file__).parent / ".knowledge_store.json"
 
 # Thread-safe lock
 _lock = Lock()

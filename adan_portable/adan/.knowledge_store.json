@@ -1,0 +1,28 @@
+{
+  "facts": {
+    "dd04dfcbd75c": {
+      "id": "dd04dfcbd75c",
+      "key": "Donald Trump",
+      "fact": "Donald John Trump (born June 14, 1946) is an American politician, media personality, and businessman who is the 47th president of the United States. A member of the Republican Party, he served as the 45th president from 2017 to 2021.\nBorn into a wealthy New York City family, Trump originally attended Fordham University before transferring to the University of Pennsylvania, graduating in 1968 with a bachelor's degree in economics. He became the president of his family's real estate business in 19...",
+      "category": "Geography",
+      "source": "Wikipedia",
+      "source_url": "https://en.wikipedia.org/wiki/Donald_Trump",
+      "confidence": 0.85,
+      "added_at": 1770173384.7361288,
+      "added_by": "wikipedia"
+    },
+    "dcf6566604ff": {
+      "id": "dcf6566604ff",
+      "key": "Birth date of Donald Trump",
+      "fact": "Donald Trump was born on June 14, 1946.",
+      "category": "Geography",
+      "source": "Wikipedia",
+      "source_url": "https://en.wikipedia.org/wiki/Donald_Trump",
+      "confidence": 0.85,
+      "added_at": 1770173384.7382941,
+      "added_by": "wikipedia"
+    }
+  },
+  "updated_at": 1770173384.7383344,
+  "count": 2
+}
