@@ -1,0 +1,31 @@
+// Hello World in realTinyTalk
+
+let name = "World"
+show("Hello" name)
+
+// Numbers and math
+let x = 10
+let y = 20
+show(x "+" y "=" (x + y))
+
+// Lists with step chains
+let nums = [5, 3, 8, 1, 9, 2]
+show("Original:" nums)
+show("Sorted:" nums _sort)
+show("Sum:" nums _sum)
+
+// Functions
+law square(n)
+    reply n * n
+end
+
+show("5 squared is" square(5))
+
+// Control flow
+for i in range(5) {
+    if i > 2 {
+        show(i "is greater than 2")
+    }
+}
+
+show("Done!")
