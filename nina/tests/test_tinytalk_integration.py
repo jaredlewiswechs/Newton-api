@@ -1,21 +1,21 @@
 """
 ═══════════════════════════════════════════════════════════════════════════════
-TINYTALK + FOGHORN INTEGRATION TESTS
+TINYTALK + NINA INTEGRATION TESTS
 ═══════════════════════════════════════════════════════════════════════════════
 """
 
 import pytest
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from realTinyTalk.runtime import Runtime, TinyFunction
 from realTinyTalk.parser import Parser
 from realTinyTalk.lexer import Lexer
 from realTinyTalk.types import Value, ValueType
-from realTinyTalk.foghorn_stdlib import register_foghorn_stdlib, FOGHORN_BUILTINS
+from nina.stdlib import register_nina_stdlib, FOGHORN_BUILTINS
 
-from foghorn import get_object_store, Card
+from nina.kernel import get_object_store, Card
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -24,16 +24,16 @@ from foghorn import get_object_store, Card
 
 @pytest.fixture
 def runtime():
-    """Create a TinyTalk runtime with Foghorn stdlib."""
+    """Create a TinyTalk runtime with Nina stdlib."""
     rt = Runtime()
-    register_foghorn_stdlib(rt)
+    register_nina_stdlib(rt)
     return rt
 
 
 @pytest.fixture(autouse=True)
 def clear_store():
     """Clear object store between tests."""
-    from foghorn.objects import ObjectType
+    from nina.kernel.objects import ObjectType
     store = get_object_store()
     store._objects.clear()
     # Reset _by_type to empty lists
@@ -54,8 +54,8 @@ def run_tinytalk(runtime, code: str) -> Value:
 # REGISTRATION TESTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-class TestFoghornRegistration:
-    """Test that Foghorn builtins are registered correctly."""
+class TestNinaRegistration:
+    """Test that Nina builtins are registered correctly."""
     
     def test_all_builtins_defined(self):
         """All expected builtins exist."""

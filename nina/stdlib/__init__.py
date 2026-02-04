@@ -17,34 +17,25 @@ from .foghorn_bindings import (
     # Card builtins
     builtin_card_new,
     builtin_card_get,
-    builtin_card_set,
-    builtin_card_save,
-    builtin_card_delete,
-    builtin_card_props,
+    builtin_card_all,
     
     # Query builtins
-    builtin_query_all,
-    builtin_query_where,
-    builtin_query_select,
-    builtin_query_first,
-    builtin_query_count,
-    builtin_query_sort,
-    builtin_query_distinct,
+    builtin_query_new,
     
     # Services builtins
-    builtin_services_register,
-    builtin_services_get,
-    builtin_services_call,
     builtin_services_list,
+    builtin_services_run,
+    builtin_services_for,
     
     # Inspector builtins
-    builtin_inspector_type,
-    builtin_inspector_props,
-    builtin_inspector_validate,
-    builtin_inspector_diff,
+    builtin_inspect,
+    
+    # Command history builtins
+    builtin_undo,
+    builtin_redo,
+    builtin_history,
     
     # Workspace builtins
-    builtin_workspace_list,
     builtin_workspace_count,
     builtin_workspace_all,
     builtin_workspace_delete,
