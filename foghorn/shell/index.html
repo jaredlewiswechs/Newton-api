@@ -137,6 +137,21 @@
             <!-- Window Container -->
             <div id="windows-container">
                 <!-- Windows created dynamically -->
+                
+                <!-- Bézier Curves Canvas (SVG overlay) -->
+                <svg id="curves-canvas" class="curves-canvas">
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#666"/>
+                        </marker>
+                    </defs>
+                    <!-- Curves rendered here -->
+                </svg>
+                
+                <!-- Object Placeholders on Canvas -->
+                <div id="canvas-objects">
+                    <!-- Dragged objects appear here -->
+                </div>
             </div>
 
             <!-- Inspector Panel (always available, right side) -->
@@ -211,6 +226,24 @@
                     <!-- Populated by JS -->
                 </ul>
             </div>
+        </div>
+
+        <!-- Context Menu (Right-Click) -->
+        <div id="context-menu" class="context-menu hidden">
+            <div class="context-item" data-action="open">Open</div>
+            <div class="context-item" data-action="inspect">Inspect</div>
+            <div class="context-separator"></div>
+            <div class="context-item" data-action="link">Link To...</div>
+            <div class="context-item" data-action="duplicate">Duplicate</div>
+            <div class="context-separator"></div>
+            <div class="context-submenu" data-menu="services">
+                Services ▸
+                <div class="context-submenu-items" id="context-services">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <div class="context-separator"></div>
+            <div class="context-item danger" data-action="delete">Delete</div>
         </div>
     </div>
 
