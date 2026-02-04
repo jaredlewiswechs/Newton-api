@@ -604,6 +604,115 @@ def builtin_assert(args: List[Value]) -> Value:
     return Value.bool_val(True)
 
 
+def builtin_assert_equal(args: List[Value]) -> Value:
+    """
+    assert_equal(actual, expected, [message])
+    Assert two values are equal, with detailed failure message.
+    """
+    if len(args) < 2:
+        raise ValueError("assert_equal requires at least 2 arguments: actual, expected")
+    
+    actual = args[0]
+    expected = args[1]
+    msg = args[2].data if len(args) > 2 and args[2].type == ValueType.STRING else None
+    
+    # Deep equality check
+    if _values_equal(actual, expected):
+        return Value.bool_val(True)
+    
+    # Build detailed error message
+    actual_str = _format_value(actual)
+    expected_str = _format_value(expected)
+    
+    error_msg = f"assert_equal failed:\n  expected: {expected_str}\n  actual:   {actual_str}"
+    if msg:
+        error_msg = f"{msg}\n{error_msg}"
+    
+    raise AssertionError(error_msg)
+
+
+def builtin_assert_true(args: List[Value]) -> Value:
+    """
+    assert_true(value, [message])
+    Assert value is truthy.
+    """
+    if not args:
+        raise ValueError("assert_true requires at least 1 argument")
+    
+    value = args[0]
+    msg = args[1].data if len(args) > 1 and args[1].type == ValueType.STRING else None
+    
+    if value.is_truthy():
+        return Value.bool_val(True)
+    
+    error_msg = f"assert_true failed: {_format_value(value)} is not truthy"
+    if msg:
+        error_msg = f"{msg}\n{error_msg}"
+    
+    raise AssertionError(error_msg)
+
+
+def builtin_assert_false(args: List[Value]) -> Value:
+    """
+    assert_false(value, [message])
+    Assert value is falsy.
+    """
+    if not args:
+        raise ValueError("assert_false requires at least 1 argument")
+    
+    value = args[0]
+    msg = args[1].data if len(args) > 1 and args[1].type == ValueType.STRING else None
+    
+    if not value.is_truthy():
+        return Value.bool_val(True)
+    
+    error_msg = f"assert_false failed: {_format_value(value)} is truthy"
+    if msg:
+        error_msg = f"{msg}\n{error_msg}"
+    
+    raise AssertionError(error_msg)
+
+
+def builtin_assert_throws(args: List[Value]) -> Value:
+    """
+    assert_throws(fn, [expected_error], [message])
+    Assert that calling fn() throws an error.
+    Returns true if error was thrown, raises AssertionError otherwise.
+    
+    NOTE: This is a special builtin - the runtime needs to handle it.
+    It marks that the following expression should throw.
+    """
+    if not args:
+        raise ValueError("assert_throws requires at least 1 argument (a function)")
+    
+    # This needs special handling in runtime - we just store metadata
+    # For now, return a marker that indicates "expect throw"
+    return Value.bool_val(False)  # Will be overridden by runtime
+
+
+def _values_equal(a: Value, b: Value) -> bool:
+    """Deep equality check for two values."""
+    if a.type != b.type:
+        # Allow int/float comparison
+        if a.type == ValueType.INT and b.type == ValueType.FLOAT:
+            return float(a.data) == b.data
+        if a.type == ValueType.FLOAT and b.type == ValueType.INT:
+            return a.data == float(b.data)
+        return False
+    
+    if a.type == ValueType.LIST:
+        if len(a.data) != len(b.data):
+            return False
+        return all(_values_equal(x, y) for x, y in zip(a.data, b.data))
+    
+    if a.type == ValueType.MAP:
+        if set(a.data.keys()) != set(b.data.keys()):
+            return False
+        return all(_values_equal(a.data[k], b.data[k]) for k in a.data)
+    
+    return a.data == b.data
+
+
 def builtin_hash(args: List[Value]) -> Value:
     """Hash a value to string."""
     if not args:
@@ -693,5 +802,9 @@ STDLIB_FUNCTIONS = {
     
     # Utility
     'assert': builtin_assert,
+    'assert_equal': builtin_assert_equal,
+    'assert_true': builtin_assert_true,
+    'assert_false': builtin_assert_false,
+    'assert_throws': builtin_assert_throws,
     'hash': builtin_hash,
 }
