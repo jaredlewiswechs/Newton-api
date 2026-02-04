@@ -835,7 +835,46 @@ class Runtime:
         if callee.type != ValueType.FUNCTION:
             raise TinyTalkError(f"Cannot call {callee.type.value}", node.line)
         
-        return self._call_function(callee.data, args, scope, node.line)
+        fn_or_bound = callee.data
+        
+        # Handle bound methods
+        if isinstance(fn_or_bound, BoundMethod):
+            return self._call_bound_method(fn_or_bound, args, scope, node.line)
+        
+        return self._call_function(fn_or_bound, args, scope, node.line)
+    
+    def _call_bound_method(self, bound: BoundMethod, args: List[Value], scope: Scope, line: int) -> Value:
+        """Call a bound method with self automatically injected."""
+        self.recursion_depth += 1
+        
+        if self.recursion_depth > self.bounds.max_recursion:
+            raise TinyTalkError(f"Exceeded maximum recursion depth ({self.bounds.max_recursion})", line)
+        
+        try:
+            fn = bound.method
+            instance = bound.instance
+            
+            # Create method scope with closure as parent
+            fn_scope = Scope(fn.closure)
+            
+            # Inject 'self' as the instance
+            fn_scope.define('self', Value(ValueType.STRUCT_INSTANCE, instance))
+            
+            # Bind parameters
+            for i, (param_name, _) in enumerate(fn.params):
+                if i < len(args):
+                    fn_scope.define(param_name, args[i])
+                else:
+                    fn_scope.define(param_name, Value.null_val())
+            
+            # Execute body
+            try:
+                result = self._eval(fn.body, fn_scope)
+                return result
+            except ReturnException as e:
+                return e.value
+        finally:
+            self.recursion_depth -= 1
     
     def _call_function(self, fn: TinyFunction, args: List[Value], scope: Scope, line: int) -> Value:
         """Call a function."""
