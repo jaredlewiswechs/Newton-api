@@ -55,6 +55,23 @@ except ImportError:
     HAS_ADA = False
     print("⚠ Ada Sentinel not available")
 
+# Import Ollama for Qwen
+try:
+    import requests
+    OLLAMA_URL = "http://localhost:11434/api/generate"
+    # Test if Ollama is running
+    try:
+        test_resp = requests.post(OLLAMA_URL, json={"model": "qwen2.5:latest", "prompt": "test", "stream": False}, timeout=5)
+        HAS_OLLAMA = test_resp.status_code == 200
+        if HAS_OLLAMA:
+            print("✓ Ollama + Qwen loaded")
+    except:
+        HAS_OLLAMA = False
+        print("⚠ Ollama not running (start with: ollama serve)")
+except ImportError:
+    HAS_OLLAMA = False
+    print("⚠ requests not installed for Ollama")
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SERVER CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
