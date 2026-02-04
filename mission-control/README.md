@@ -53,6 +53,9 @@ Mission Control monitors these Newton service categories:
 - **Gumroad**: License management
 - **parcCloud**: Authentication gateway
 - **System**: Health checks and metrics
+- **Nina PDA**: Newton Intelligence & Natural Assistant - 9-stage verified computation with regime-aware pipeline
+- **Adan Agent**: Ada + Newton self-verifying autonomous agent with kinematic linguistics
+- **Newton Agent**: The verification engine - 10-step pipeline with Ada sentinel and TI calculator
 
 ## Quick Start
 
