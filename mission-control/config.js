@@ -917,7 +917,7 @@ export const ENDPOINTS = {
                 path: '/adan/chat',
                 method: 'POST',
                 name: 'Chat',
-                description: 'Send message to the Newton Agent with full verification pipeline',
+                description: 'Send message to Adan with full verification pipeline',
                 sampleData: {
                     message: "What is the capital of France?",
                     ground_claims: true
