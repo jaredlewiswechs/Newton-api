@@ -847,6 +847,263 @@ export const ENDPOINTS = {
                 description: 'Get feedback summary'
             }
         ]
+    },
+
+    nina: {
+        name: 'Nina PDA',
+        description: 'Newton Intelligence & Natural Assistant - Verified computation with regime-aware pipeline',
+        endpoints: [
+            {
+                path: '/nina/api/query',
+                method: 'POST',
+                name: 'Query Nina',
+                description: 'Process query through 9-stage verified pipeline',
+                sampleData: {
+                    query: "What is the capital of France?",
+                    regime: "factual"
+                }
+            },
+            {
+                path: '/nina/api/verify',
+                method: 'POST',
+                name: 'Verify Statement',
+                description: 'Verify a claim/statement',
+                sampleData: {
+                    statement: "Paris is the capital of France",
+                    regime: "factual"
+                }
+            },
+            {
+                path: '/nina/api/calculate',
+                method: 'POST',
+                name: 'Nina Calculate',
+                description: 'Newton-verified calculation',
+                sampleData: {
+                    expression: "2 + 2 * 3"
+                }
+            },
+            {
+                path: '/nina/api/ledger',
+                method: 'GET',
+                name: 'Nina Ledger',
+                description: 'Get provenance ledger entries'
+            },
+            {
+                path: '/nina/api/stats',
+                method: 'GET',
+                name: 'Nina Stats',
+                description: 'Get system statistics'
+            },
+            {
+                path: '/nina/api/regimes',
+                method: 'GET',
+                name: 'List Regimes',
+                description: 'List available computation regimes'
+            },
+            {
+                path: '/nina/api/health',
+                method: 'GET',
+                name: 'Nina Health',
+                description: 'Health check for Nina service'
+            }
+        ]
+    },
+
+    adan: {
+        name: 'Adan Agent',
+        description: 'Ada + Newton: Self-verifying autonomous agent with kinematic linguistics',
+        endpoints: [
+            {
+                path: '/adan/chat',
+                method: 'POST',
+                name: 'Chat',
+                description: 'Send message to the Newton Agent with full verification pipeline',
+                sampleData: {
+                    message: "What is the capital of France?",
+                    ground_claims: true
+                }
+            },
+            {
+                path: '/adan/ground',
+                method: 'POST',
+                name: 'Ground Claim',
+                description: 'Verify a specific claim against external sources',
+                sampleData: {
+                    claim: "Paris is the capital of France",
+                    require_official: false
+                }
+            },
+            {
+                path: '/adan/calculate',
+                method: 'POST',
+                name: 'Adan Calculate',
+                description: 'Math expression using Newton Logic Engine',
+                sampleData: {
+                    expression: "sqrt(16) + 2^3"
+                }
+            },
+            {
+                path: '/adan/history',
+                method: 'GET',
+                name: 'Conversation History',
+                description: 'Get conversation history'
+            },
+            {
+                path: '/adan/audit',
+                method: 'GET',
+                name: 'Audit Trail',
+                description: 'Export full audit trail'
+            },
+            {
+                path: '/adan/stats',
+                method: 'GET',
+                name: 'Adan Stats',
+                description: 'Get agent statistics'
+            },
+            {
+                path: '/adan/clear',
+                method: 'POST',
+                name: 'Clear Conversation',
+                description: 'Clear conversation history',
+                sampleData: {}
+            },
+            {
+                path: '/adan/models',
+                method: 'GET',
+                name: 'List Models',
+                description: 'List available Ollama models'
+            },
+            {
+                path: '/adan/trajectory/verify',
+                method: 'POST',
+                name: 'Verify Trajectory',
+                description: 'Verify text as kinematic trajectory through meaning space',
+                sampleData: {
+                    text: "The quick brown fox jumps over the lazy dog."
+                }
+            },
+            {
+                path: '/adan/trajectory/analyze',
+                method: 'POST',
+                name: 'Analyze Trajectory',
+                description: 'Full kinematic analysis of text',
+                sampleData: {
+                    text: "Hello world"
+                }
+            },
+            {
+                path: '/adan/trajectory/compose',
+                method: 'POST',
+                name: 'Compose Trajectory',
+                description: 'Get composition state for real-time typing feedback',
+                sampleData: {
+                    text: "Hello"
+                }
+            },
+            {
+                path: '/adan/trajectory/alphabet',
+                method: 'GET',
+                name: 'Kinematic Alphabet',
+                description: 'Get the full kinematic alphabet'
+            },
+            {
+                path: '/adan/health',
+                method: 'GET',
+                name: 'Adan Health',
+                description: 'Health check for Adan service'
+            }
+        ]
+    },
+
+    newtonAgent: {
+        name: 'Newton Agent',
+        description: 'The verification engine that knows what it is - 10-step verified pipeline',
+        endpoints: [
+            {
+                path: '/agent/chat',
+                method: 'POST',
+                name: 'Agent Chat',
+                description: 'Send message through the full verification pipeline',
+                sampleData: {
+                    message: "What is 2+2?",
+                    ground_claims: true
+                }
+            },
+            {
+                path: '/agent/ground',
+                method: 'POST',
+                name: 'Agent Ground',
+                description: 'Verify a claim against external sources',
+                sampleData: {
+                    claim: "The Earth orbits the Sun",
+                    require_official: false
+                }
+            },
+            {
+                path: '/agent/calculate',
+                method: 'POST',
+                name: 'Agent Calculate',
+                description: 'TI Calculator verified computation',
+                sampleData: {
+                    expression: "5! + sin(pi/2)"
+                }
+            },
+            {
+                path: '/agent/history',
+                method: 'GET',
+                name: 'Agent History',
+                description: 'Get conversation history'
+            },
+            {
+                path: '/agent/audit',
+                method: 'GET',
+                name: 'Agent Audit',
+                description: 'Export full hash-chained audit trail'
+            },
+            {
+                path: '/agent/stats',
+                method: 'GET',
+                name: 'Agent Stats',
+                description: 'Get agent statistics'
+            },
+            {
+                path: '/agent/clear',
+                method: 'POST',
+                name: 'Clear Agent',
+                description: 'Clear conversation and reset memory chain',
+                sampleData: {}
+            },
+            {
+                path: '/agent/models',
+                method: 'GET',
+                name: 'Agent Models',
+                description: 'List available Ollama models'
+            },
+            {
+                path: '/agent/trajectory/verify',
+                method: 'POST',
+                name: 'Verify Trajectory',
+                description: 'Verify text trajectory through meaning space',
+                sampleData: {
+                    text: "Colorless green ideas sleep furiously"
+                }
+            },
+            {
+                path: '/agent/trajectory/analyze',
+                method: 'POST',
+                name: 'Analyze Trajectory',
+                description: 'Full kinematic text analysis',
+                sampleData: {
+                    text: "The constraint IS the instruction."
+                }
+            },
+            {
+                path: '/agent/health',
+                method: 'GET',
+                name: 'Agent Health',
+                description: 'Health check with memory chain validation'
+            }
+        ]
     }
 };
 
