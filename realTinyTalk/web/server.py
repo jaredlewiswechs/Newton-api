@@ -660,4 +660,4 @@ if __name__ == '__main__':
     print("Starting server at http://localhost:5555")
     print("Press Ctrl+C to stop\n")
     
-    app.run(host='0.0.0.0', port=5555, debug=True)
+    app.run(host='0.0.0.0', port=5555, debug=True, use_reloader=False)
