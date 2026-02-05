@@ -812,10 +812,13 @@ async function loadTEKS() {
   resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div> Loading TEKS...</div>';
 
   try {
-    const result = await apiRequest('/education/teks');
-    displayTEKS(result.standards);
+    // Fetch from Wild Garden
+    const response = await fetch('http://localhost:8091/teks');
+    if (!response.ok) throw new Error('Failed to load TEKS');
+    const result = await response.json();
+    displayTEKS(result.teks);
   } catch (error) {
-    resultsEl.innerHTML = `<p>Error loading TEKS: ${error.message}</p>`;
+    resultsEl.innerHTML = `<p>Error loading TEKS: ${error.message} - Check Wild Garden server.</p>`;
   }
 }
 

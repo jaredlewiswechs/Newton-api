@@ -39,6 +39,13 @@ from pydantic import BaseModel
 import aiohttp
 import urllib.parse
 
+# TEKS import
+try:
+    from tinytalk_py.teks_database import get_extended_teks_library
+    TEKS_AVAILABLE = True
+except ImportError:
+    TEKS_AVAILABLE = False
+
 # Add parent to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -759,6 +766,21 @@ async def get_session(session_id: str):
 # ═══════════════════════════════════════════════════════════════════════════════
 # CARTRIDGES — Knowledge Modules (Wikipedia, arXiv)
 # ═══════════════════════════════════════════════════════════════════════════════
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEKS ENDPOINT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/teks")
+async def get_teks():
+    """Return the full TEKS standards library."""
+    if not TEKS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="TEKS database not available")
+    lib = get_extended_teks_library()
+    # Return as list of dicts for JS
+    return {
+        "teks": [s.to_dict() for s in lib.all_standards()]
+    }
 
 @app.post("/cartridge/wikipedia")
 async def wikipedia_search(request: WikipediaRequest):
