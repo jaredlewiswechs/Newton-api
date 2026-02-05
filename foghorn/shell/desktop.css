@@ -33,7 +33,7 @@ Design Tokens:
     /* Vibrancy layers */
     --bg-vibrancy: rgba(255, 255, 255, 0.72);
     --bg-vibrancy-dark: rgba(40, 40, 40, 0.75);
-    --bg-dock: rgba(255, 255, 255, 0.65);
+    --bg-dock: transparent;
     --bg-3d-light: rgba(255, 255, 255, 0.9);
     --bg-3d-mid: rgba(240, 240, 240, 0.85);
     --bg-3d-dark: rgba(200, 200, 200, 0.7);
@@ -94,7 +94,7 @@ Design Tokens:
     
     /* Layout — compact dock */
     --menubar-height: 28px;
-    --dock-height: 72px;
+    --dock-height: 56px;
     --sidebar-width: 220px;
     --inspector-width: 280px;
     
@@ -117,7 +117,7 @@ Design Tokens:
         --bg-window: rgba(44, 44, 46, 0.88);
         --bg-panel: rgba(58, 58, 60, 0.85);
         --bg-vibrancy: rgba(50, 50, 52, 0.75);
-        --bg-dock: rgba(60, 60, 62, 0.65);
+        --bg-dock: transparent;
         
         --bg-3d-light: rgba(100, 100, 102, 0.6);
         --bg-3d-mid: rgba(70, 70, 72, 0.7);
@@ -334,8 +334,8 @@ ul {
     flex: 1;
     display: flex;
     position: relative;
-    overflow: hidden;
-    margin-bottom: calc(var(--dock-height) + 24px);  /* Room for bottom dock */
+    overflow: visible;
+    margin-bottom: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -557,7 +557,7 @@ ul {
 #windows-container {
     flex: 1;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -706,20 +706,19 @@ ul {
 
 #dock {
     position: fixed;
-    bottom: var(--space-md);
+    bottom: var(--space-sm);
     left: 50%;
     transform: translateX(-50%);
     height: var(--dock-height);
     display: flex;
     align-items: center;
-    background: var(--bg-dock);
-    backdrop-filter: blur(30px) saturate(200%);
-    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    background: transparent;
     border-radius: var(--radius-dock);
-    border: 1px solid var(--border-3d-light);
-    box-shadow: var(--shadow-dock);
+    border: none;
+    box-shadow: none;
     z-index: 500;
-    padding: 0 var(--space-sm);
+    padding: 0 var(--space-xs);
+    pointer-events: none;
 }
 
 .dock-container {
@@ -728,6 +727,12 @@ ul {
     align-items: center;
     gap: var(--space-xs);
     padding: var(--space-sm);
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    pointer-events: none;
 }
 
 .dock-item {
@@ -735,15 +740,16 @@ ul {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 52px;
-    height: 52px;
-    padding: var(--space-xs);
+    width: 44px;
+    height: 44px;
+    padding: 2px;
     border-radius: var(--radius-icon);
     cursor: pointer;
     transition: all var(--duration-normal) var(--ease-spring);
     background: transparent;
     border: none;
     box-shadow: none;
+    pointer-events: auto;
 }
 
 .dock-item:hover {
@@ -757,20 +763,20 @@ ul {
 }
 
 .dock-icon {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
-    background: var(--bg-vibrancy);
+    font-size: 32px;
+    background: transparent;
     border-radius: var(--radius-icon);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
     transition: all var(--duration-normal) var(--ease-spring);
 }
 
 .dock-item:hover .dock-icon {
-    box-shadow: var(--shadow-md);
+    transform: scale(1.1);
 }
 
 .dock-label {

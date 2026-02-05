@@ -17,11 +17,11 @@ from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
-# Add project root and nina to path
+# Add project root and nina to path (PROJECT_ROOT must come first for core.*)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
-sys.path.insert(0, str(PROJECT_ROOT / "nina"))
 sys.path.insert(0, str(PROJECT_ROOT / "adan_portable"))
+sys.path.insert(0, str(PROJECT_ROOT / "nina"))
+sys.path.insert(0, str(PROJECT_ROOT))  # Must be first so core.logic finds core.cdl
 
 from foghorn import Card, Query, ResultSet, FileAsset, Task, Receipt, LinkCurve, Rule
 from foghorn import MapPlace, Route, Automation
@@ -42,9 +42,9 @@ try:
     from core.logic import LogicEngine, ExecutionBounds
     HAS_NEWTON = True
     print("✓ Newton Logic Engine loaded")
-except ImportError:
+except ImportError as e:
     HAS_NEWTON = False
-    print("⚠ Newton Logic Engine not available")
+    print(f"⚠ Newton Logic Engine not available: {e}")
 
 # Import Ada sentinel
 try:
@@ -442,7 +442,7 @@ class NinaHandler(SimpleHTTPRequestHandler):
             })
     
     def api_ground_claim(self, data: dict):
-        """POST /foghorn/ground - Ground claim using Ollama + Qwen AI."""
+        """POST /foghorn/ground - Ground claim: local checks FIRST, then AI if needed."""
         claim = data.get("claim", "")
         start = time.perf_counter_ns()
         
@@ -451,17 +451,69 @@ class NinaHandler(SimpleHTTPRequestHandler):
             verdict = "UNCERTAIN"
             score = 5.0
             reasoning = ""
+            used_ai = False
             
-            if HAS_OLLAMA:
-                # Use Qwen to fact-check the claim
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 1: Fast local checks (Adanpedia, patterns, kinematics)
+            # ═══════════════════════════════════════════════════════════════
+            
+            claim_lower = claim.lower()
+            
+            # Check Adanpedia knowledge base first
+            if HAS_SEMANTIC and knowledge_store:
+                facts = knowledge_store.search(claim, limit=5)
+                for fact in facts:
+                    if fact.confidence > 0.7:
+                        sources.append({
+                            "url": f"adanpedia://{fact.key}",
+                            "title": fact.key,
+                            "domain": "Adanpedia",
+                            "tier": 1
+                        })
+                        # Check if fact contradicts or supports claim
+                        if any(word in claim_lower for word in fact.fact.lower().split()[:5]):
+                            reasoning = f"Found in Adanpedia: {fact.fact[:100]}"
+            
+            # Geographic sanity checks (instant)
+            geo_facts = {
+                ("texas", "france"): (False, "Texas is a US state, not in France"),
+                ("texas", "united states"): (True, "Texas is a state in the USA"),
+                ("paris", "france"): (True, "Paris is the capital of France"),
+                ("london", "england"): (True, "London is in England"),
+                ("london", "uk"): (True, "London is in the UK"),
+                ("tokyo", "japan"): (True, "Tokyo is in Japan"),
+                ("berlin", "germany"): (True, "Berlin is the capital of Germany"),
+            }
+            
+            for (place, region), (is_true, explanation) in geo_facts.items():
+                if place in claim_lower and region in claim_lower:
+                    # Check if claim asserts this relationship
+                    if " in " in claim_lower or " is " in claim_lower:
+                        verdict = "TRUE" if is_true else "FALSE"
+                        score = 1.0 if is_true else 9.0
+                        reasoning = explanation
+                        sources.append({
+                            "url": "https://www.cia.gov/the-world-factbook/",
+                            "title": "CIA World Factbook",
+                            "domain": "cia.gov",
+                            "tier": 1
+                        })
+                        break
+            
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 2: Only call Ollama AI if still uncertain
+            # ═══════════════════════════════════════════════════════════════
+            
+            if verdict == "UNCERTAIN" and HAS_OLLAMA:
+                used_ai = True
                 prompt = f"""You are a fact-checker. Evaluate this claim and respond with ONLY a JSON object.
 
 Claim: "{claim}"
 
 Respond with this exact JSON format (no other text):
-{{"verdict": "TRUE" or "FALSE" or "UNCERTAIN", "confidence": 0-10, "reasoning": "brief explanation", "sources": ["source1", "source2"]}}
+{{"verdict": "TRUE" or "FALSE" or "UNCERTAIN", "confidence": 0-10, "reasoning": "brief explanation"}}
 
-Be strict. If the claim is factually wrong, say FALSE. Common knowledge counts."""
+Be strict. If factually wrong, say FALSE."""
 
                 try:
                     resp = requests.post(
@@ -479,30 +531,18 @@ Be strict. If the claim is factually wrong, say FALSE. Common knowledge counts."
                         result = resp.json()
                         response_text = result.get("response", "")
                         
-                        # Parse JSON from response
                         try:
-                            # Find JSON in response
                             json_match = re.search(r'\{[^{}]*\}', response_text, re.DOTALL)
                             if json_match:
                                 ai_result = json.loads(json_match.group())
                                 verdict = ai_result.get("verdict", "UNCERTAIN").upper()
-                                score = 10 - ai_result.get("confidence", 5)  # Invert: high confidence = low score
+                                score = 10 - ai_result.get("confidence", 5)
                                 reasoning = ai_result.get("reasoning", "")
-                                
-                                # Add sources from AI
-                                for src in ai_result.get("sources", []):
-                                    sources.append({
-                                        "url": f"https://en.wikipedia.org/wiki/{src.replace(' ', '_')}",
-                                        "title": src,
-                                        "domain": "AI-cited",
-                                        "tier": 2
-                                    })
                         except json.JSONDecodeError:
-                            # AI didn't return valid JSON, parse text
-                            if "false" in response_text.lower() or "incorrect" in response_text.lower():
+                            if "false" in response_text.lower():
                                 verdict = "FALSE"
                                 score = 9.0
-                            elif "true" in response_text.lower() or "correct" in response_text.lower():
+                            elif "true" in response_text.lower():
                                 verdict = "TRUE"
                                 score = 2.0
                             reasoning = response_text[:200]
@@ -511,22 +551,6 @@ Be strict. If the claim is factually wrong, say FALSE. Common knowledge counts."
                     reasoning = "AI check timed out"
                 except Exception as e:
                     reasoning = f"AI error: {str(e)}"
-            
-            # Fallback: Add reference sources based on topic
-            if not sources:
-                claim_lower = claim.lower()
-                countries = ["france", "germany", "spain", "italy", "uk", "japan", "china", 
-                            "india", "brazil", "canada", "mexico", "russia", "australia", "texas", "usa"]
-                cities = ["paris", "london", "tokyo", "berlin", "rome", "madrid", "beijing",
-                         "houston", "austin", "dallas", "new york"]
-                
-                if any(c in claim_lower for c in countries + cities):
-                    sources.append({
-                        "url": "https://www.cia.gov/the-world-factbook/",
-                        "title": "CIA World Factbook",
-                        "domain": "cia.gov", 
-                        "tier": 1
-                    })
             
             elapsed = (time.perf_counter_ns() - start) // 1000
             
@@ -537,7 +561,7 @@ Be strict. If the claim is factually wrong, say FALSE. Common knowledge counts."
                 "reasoning": reasoning,
                 "sources": sources,
                 "source_count": len(sources),
-                "ai_powered": HAS_OLLAMA,
+                "ai_powered": used_ai,
                 "elapsed_us": elapsed
             })
             
