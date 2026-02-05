@@ -668,6 +668,7 @@
                         <button class="btn-icon" onclick="browserRefresh()">🔄</button>
                         <input type="text" class="url-input" id="url-input" placeholder="Enter URL (e.g. google.com)..." value="">
                         <button class="btn btn-primary" onclick="browserNavigate()">Go</button>
+                        <button class="btn btn-secondary" onclick="toggleTextMode()" id="text-mode-btn" title="Text-only mode (safe preview)">📝</button>
                         <button class="btn btn-secondary" onclick="addBookmarkFromBrowser()">🔖</button>
                     </div>
                     
@@ -682,10 +683,20 @@
                     </div>
                     
                     <!-- Verification Hash Display (Woz's "show the math" idea) -->
-                    <div id="hash-display" style="display: none; margin-top: var(--space-sm); padding: var(--space-sm); background: linear-gradient(90deg, var(--system-green-bg, #e8f5e9) 0%, var(--system-bg) 100%); border-radius: var(--radius-sm); font-family: monospace; font-size: 11px;">
+                    <div id="hash-display" style="display: none; margin-top: var(--space-sm); padding: var(--space-sm); background: linear-gradient(90deg, var(--system-green-bg, #e8f5e9) 0%, var(--system-bg) 100%); border-radius: var(--radius-sm); font-family: monospace; font-size: 11px; cursor: pointer;" onclick="showVerificationChain()">
                         <span style="color: var(--system-green);">✓ Verified</span> 
                         <span id="hash-value" style="color: var(--system-text-secondary);"></span>
                         <span id="hash-changed" style="color: var(--system-orange, #ff9800); display: none; margin-left: 8px;">⚠️ Page changed since last visit</span>
+                        <span style="float: right; color: var(--system-blue);">🔗 View Chain</span>
+                    </div>
+                    
+                    <!-- Verification Chain Modal (hidden by default) -->
+                    <div id="hash-chain-display" style="display: none; margin-top: var(--space-sm); padding: var(--space-md); background: var(--system-bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); max-height: 200px; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
+                            <span style="font-weight: 600;">🔗 Verification Chain</span>
+                            <button onclick="document.getElementById('hash-chain-display').style.display='none'" style="border: none; background: none; cursor: pointer;">✕</button>
+                        </div>
+                        <div id="hash-chain-list" style="font-family: monospace; font-size: 11px;"></div>
                     </div>
                     
                     <div class="browser-status" id="browser-status" style="padding: var(--space-sm); background: var(--system-bg); border-radius: var(--radius-sm); margin-top: var(--space-sm); font-size: 12px; display: none;">
@@ -1064,6 +1075,17 @@
                 // Update URL input with actual URL (may have redirected)
                 urlInput.value = data.resource.url;
                 
+                // Show hash display with change detection
+                const hashDisplay = document.getElementById('hash-display');
+                const hashValue = document.getElementById('hash-value');
+                const hashChanged = document.getElementById('hash-changed');
+                
+                if (data.resource.content_hash) {
+                    hashDisplay.style.display = 'block';
+                    hashValue.textContent = `Content Hash: ${data.resource.content_hash}`;
+                    hashChanged.style.display = data.resource.changed ? 'inline' : 'none';
+                }
+                
                 // Show status bar with verification info
                 const statusColor = data.resource.verified ? 'var(--system-green)' : 'var(--system-orange)';
                 const statusIcon = data.resource.verified ? '✓ Verified' : '○ Unverified';
@@ -1076,6 +1098,9 @@
                 
                 // Display content in iframe using srcdoc
                 if (data.resource.content && data.resource.status_code === 200) {
+                    // Store for text mode toggle
+                    currentPageContent = data.resource.content;
+                    
                     // Inject base tag to fix relative URLs
                     let content = data.resource.content;
                     const baseUrl = new URL(data.resource.url).origin;
@@ -1085,10 +1110,17 @@
                         content = content.replace(/<head[^>]*>/i, `$&<base href="${baseUrl}/" target="_blank">`);
                     }
                     
-                    iframeEl.srcdoc = content;
-                    iframeEl.style.display = 'block';
-                    contentEl.style.display = 'none';
+                    // If text mode is enabled, show text instead of HTML
+                    if (isTextMode) {
+                        document.getElementById('command-input').value = 'get text';
+                        runHyperCardCommand();
+                    } else {
+                        iframeEl.srcdoc = content;
+                        iframeEl.style.display = 'block';
+                        contentEl.style.display = 'none';
+                    }
                 } else {
+                    currentPageContent = null;
                     // Error - show in content div
                     iframeEl.style.display = 'none';
                     contentEl.style.display = 'block';
@@ -1125,6 +1157,30 @@
             browserNavigate();
         }
         
+        // Text-only mode state
+        let isTextMode = false;
+        let currentPageContent = null;
+        
+        function toggleTextMode() {
+            isTextMode = !isTextMode;
+            const btn = document.getElementById('text-mode-btn');
+            btn.style.background = isTextMode ? 'var(--system-blue)' : '';
+            btn.style.color = isTextMode ? 'white' : '';
+            
+            const iframeEl = document.getElementById('browser-iframe');
+            const contentEl = document.getElementById('browser-content');
+            
+            if (isTextMode && currentPageContent) {
+                // Extract and show text only (Woz's "safety first" idea)
+                document.getElementById('command-input').value = 'get text';
+                runHyperCardCommand();
+            } else if (currentPageContent) {
+                // Show full HTML
+                iframeEl.style.display = 'block';
+                contentEl.style.display = 'none';
+            }
+        }
+        
         async function loadBrowserHistory() {
             const data = await api('/api/browser/history');
             if (data && data.history) {
@@ -1150,6 +1206,47 @@
             document.getElementById('bookmark-url').value = url;
             document.getElementById('bookmark-title').value = url;
             showModal('modal-bookmark');
+        }
+        
+        // ═══════════════════ VERIFICATION CHAIN ═══════════════════
+        // Woz's idea: "Show the math, let people see the chain"
+        
+        async function showVerificationChain() {
+            const chainDisplay = document.getElementById('hash-chain-display');
+            const chainList = document.getElementById('hash-chain-list');
+            
+            if (chainDisplay.style.display !== 'none') {
+                chainDisplay.style.display = 'none';
+                return;
+            }
+            
+            // Get hash chain via HyperCard command
+            const data = await api('/api/browser/script', {
+                method: 'POST',
+                body: JSON.stringify({ script: 'get hash' })
+            });
+            
+            if (data && data.chain) {
+                let html = `<div style="margin-bottom: 8px;"><span style="color: var(--system-green);">Current:</span> <code>${data.current_hash || 'none'}</code></div>`;
+                html += '<div style="border-left: 2px solid var(--system-blue); padding-left: 12px; margin-left: 4px;">';
+                
+                data.chain.forEach((h, i) => {
+                    const shortUrl = h.url.length > 50 ? h.url.substring(0, 47) + '...' : h.url;
+                    html += `
+                        <div style="margin: 4px 0; display: flex; align-items: center;">
+                            <span style="color: var(--system-blue); margin-right: 8px;">→</span>
+                            <span style="flex: 1;">${shortUrl}</span>
+                            <code style="color: var(--system-green);">${h.hash}</code>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                html += `<div style="margin-top: 12px; font-size: 10px; color: var(--system-text-secondary);">Each hash cryptographically verifies the page content at time of visit.</div>`;
+                
+                chainList.innerHTML = html;
+                chainDisplay.style.display = 'block';
+            }
         }
         
         // ═══════════════════ HYPERCARD-STYLE COMMANDS ═══════════════════

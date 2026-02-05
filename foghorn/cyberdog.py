@@ -1285,5 +1285,66 @@ def create_bookmarks(name: str = "Bookmarks") -> BookmarksPart:
     return BookmarksPart(name=name)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# SIMPLIFIED ONE-LINERS — Woz's "make it fun"
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def browse(url: str) -> Dict[str, Any]:
+    """
+    One-liner to browse a URL and get results.
+    
+    Returns the resource and text content.
+    
+    Example:
+        result = browse("google.com")
+        print(result['text'])  # Plain text content
+    """
+    browser = create_web_browser()
+    resource = browser.navigate(url)
+    result = browser.execute_script("get text")
+    
+    return {
+        "url": resource.url,
+        "status": resource.status_code,
+        "html": resource.content,
+        "text": result.get("text", ""),
+        "hash": resource.content_hash,
+        "changed": resource.changed,
+        "verified": resource.verified,
+    }
+
+
+def fetch_and_verify(url: str) -> bool:
+    """
+    Fetch a URL and return whether it was successfully verified.
+    
+    Example:
+        if fetch_and_verify("example.com"):
+            print("Page is verified!")
+    """
+    browser = create_web_browser()
+    resource = browser.navigate(url)
+    return resource.verified and resource.status_code == 200
+
+
+def quick_suite() -> Dict[str, Any]:
+    """
+    Create a complete CyberDog suite in one line.
+    
+    Example:
+        suite = quick_suite()
+        suite['browser'].navigate("google.com")
+        suite['email'].compose("to@example.com", "Hello")
+    """
+    return {
+        "browser": create_web_browser(),
+        "email": create_email_client(),
+        "news": create_news_reader(),
+        "ftp": create_ftp_client(),
+        "contacts": create_address_book(),
+        "bookmarks": create_bookmarks(),
+    }
+
+
 # Initialize handlers on import
 register_cyberdog_handlers()
