@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberDog — Newton-Verified Internet Suite</title>
+    <style>
+        /* ═══════════════════════════════════════════════════════════════════
+           CYBERDOG UI — Apple HIG 2025 Inspired Design
+           ═══════════════════════════════════════════════════════════════════ */
+        
+        :root {
+            /* System Colors */
+            --system-bg: #f5f5f7;
+            --system-bg-secondary: #ffffff;
+            --system-text: #1d1d1f;
+            --system-text-secondary: #86868b;
+            --system-blue: #007aff;
+            --system-green: #34c759;
+            --system-red: #ff3b30;
+            --system-orange: #ff9500;
+            --system-purple: #af52de;
+            --system-teal: #5ac8fa;
+            
+            /* UI Elements */
+            --sidebar-width: 240px;
+            --header-height: 52px;
+            --border-color: #d2d2d7;
+            --hover-bg: rgba(0, 122, 255, 0.1);
+            --active-bg: rgba(0, 122, 255, 0.15);
+            
+            /* Typography */
+            --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SF Mono", Monaco, "Cascadia Code", monospace;
+            
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            
+            /* Radius */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background: var(--system-bg);
+            color: var(--system-text);
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* ═══════════════════ LAYOUT ═══════════════════ */
+        
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--system-bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-header {
+            height: var(--header-height);
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-header .logo {
+            font-size: 24px;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--space-md);
+            overflow-y: auto;
+        }
+        
+        .nav-section {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--system-text-secondary);
+            padding: var(--space-xs) var(--space-sm);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 14px;
+        }
+        
+        .nav-item:hover {
+            background: var(--hover-bg);
+        }
+        
+        .nav-item.active {
+            background: var(--active-bg);
+            color: var(--system-blue);
+        }
+        
+        .nav-item .icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .nav-item .badge {
+            margin-left: auto;
+            background: var(--system-blue);
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .main-header {
+            height: var(--header-height);
+            padding: 0 var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            background: var(--system-bg-secondary);
+        }
+        
+        .main-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: var(--space-lg);
+            overflow-y: auto;
+            background: var(--system-bg);
+        }
+        
+        /* ═══════════════════ COMPONENTS ═══════════════════ */
+        
+        /* Cards */
+        .card {
+            background: var(--system-bg-secondary);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-md);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+        
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-sm) var(--space-md);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .btn-primary {
+            background: var(--system-blue);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0066d6;
+        }
+        
+        .btn-secondary {
+            background: var(--system-bg);
+            color: var(--system-text);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: #e8e8ed;
+        }
+        
+        .btn-icon {
+            padding: var(--space-sm);
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .btn-icon:hover {
+            background: var(--hover-bg);
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: var(--space-md);
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: var(--space-xs);
+            color: var(--system-text-secondary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: var(--font-family);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--system-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+        
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* Lists */
+        .list {
+            list-style: none;
+        }
+        
+        .list-item {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        
+        .list-item:hover {
+            background: var(--hover-bg);
+        }
+        
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        
+        .list-item-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--system-bg);
+            border-radius: var(--radius-sm);
+        }
+        
+        .list-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .list-item-title {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .list-item-subtitle {
+            font-size: 13px;
+            color: var(--system-text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .list-item-meta {
+            font-size: 12px;
+            color: var(--system-text-secondary);
+        }
+        
+        /* Browser Bar */
+        .browser-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm);
+            background: var(--system-bg-secondary);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+        }
+        
+        .browser-bar .url-input {
+            flex: 1;
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+        }
+        
+        .browser-content {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            min-height: 400px;
+            padding: var(--space-lg);
+        }
+        
+        /* Status bar */
+        .status-bar {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--system-bg-secondary);
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--system-text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .status-verified {
+            color: var(--system-green);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-xl);
+            color: var(--system-text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-md);
+        }
+        
+        /* Grid */
+        .grid {
+            display: grid;
+            gap: var(--space-md);
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        /* Section hidden by default */
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: var(--space-xs);
+            margin-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: var(--space-sm);
+        }
+        
+        .tab {
+            padding: var(--space-sm) var(--space-md);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s;
+        }
+        
+        .tab:hover {
+            background: var(--hover-bg);
+        }
+        
+        .tab.active {
+            background: var(--system-blue);
+            color: white;
+        }
+        
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: var(--space-md) var(--space-lg);
+            background: var(--system-text);
+            color: white;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast.success {
+            background: var(--system-green);
+        }
+        
+        .toast.error {
+            background: var(--system-red);
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal {
+            background: var(--system-bg-secondary);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: var(--space-md) var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-body {
+            padding: var(--space-lg);
+            overflow-y: auto;
+        }
+        
+        .modal-footer {
+            padding: var(--space-md) var(--space-lg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-sm);
+        }
+        
+        /* Welcome */
+        .welcome {
+            text-align: center;
+            padding: var(--space-xl);
+        }
+        
+        .welcome-logo {
+            font-size: 64px;
+            margin-bottom: var(--space-md);
+        }
+        
+        .welcome h2 {
+            font-size: 24px;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .welcome p {
+            color: var(--system-text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
+        }
+        
+        .stat-card {
+            background: var(--system-bg-secondary);
+            padding: var(--space-lg);
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--system-blue);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--system-text-secondary);
+            margin-top: var(--space-xs);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="logo">🐕</span>
+                <h1>CyberDog</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Internet</div>
+                    <div class="nav-item active" data-section="home">
+                        <span class="icon">🏠</span>
+                        <span>Home</span>
+                    </div>
+                    <div class="nav-item" data-section="browser">
+                        <span class="icon">🌐</span>
+                        <span>Browser</span>
+                    </div>
+                    <div class="nav-item" data-section="email">
+                        <span class="icon">✉️</span>
+                        <span>Email</span>
+                        <span class="badge" id="email-badge">0</span>
+                    </div>
+                    <div class="nav-item" data-section="news">
+                        <span class="icon">📰</span>
+                        <span>News</span>
+                        <span class="badge" id="news-badge">0</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Personal</div>
+                    <div class="nav-item" data-section="contacts">
+                        <span class="icon">👤</span>
+                        <span>Contacts</span>
+                    </div>
+                    <div class="nav-item" data-section="bookmarks">
+                        <span class="icon">🔖</span>
+                        <span>Bookmarks</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Documents</div>
+                    <div class="nav-item" data-section="documents">
+                        <span class="icon">📄</span>
+                        <span>Documents</span>
+                    </div>
+                </div>
+            </nav>
+            <div class="status-bar">
+                <span class="status-verified">● Verified</span>
+                <span>v2.0</span>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Home Section -->
+            <section id="section-home" class="section active">
+                <div class="main-header">
+                    <h2>Welcome to CyberDog</h2>
+                </div>
+                <div class="main-content">
+                    <div class="welcome">
+                        <div class="welcome-logo">🐕</div>
+                        <h2>Newton-Verified Internet Suite</h2>
+                        <p>OpenDoc reimagined for 2026. Browse, email, read news, manage contacts — all verified.</p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-contacts">0</div>
+                            <div class="stat-label">Contacts</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-bookmarks">0</div>
+                            <div class="stat-label">Bookmarks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-feeds">0</div>
+                            <div class="stat-label">News Feeds</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Browser Section -->
+            <section id="section-browser" class="section">
+                <div class="main-header">
+                    <h2>Web Browser</h2>
+                </div>
+                <div class="main-content">
+                    <div class="browser-bar">
+                        <button class="btn-icon" onclick="browserBack()">⬅️</button>
+                        <button class="btn-icon" onclick="browserForward()">➡️</button>
+                        <button class="btn-icon" onclick="browserRefresh()">🔄</button>
+                        <input type="text" class="url-input" id="url-input" placeholder="Enter URL (e.g. google.com)..." value="">
+                        <button class="btn btn-primary" onclick="browserNavigate()">Go</button>
+                        <button class="btn btn-secondary" onclick="addBookmarkFromBrowser()">🔖</button>
+                    </div>
+                    
+                    <!-- HyperCard-style Command Bar (Bill Atkinson's vision) -->
+                    <div class="command-bar" style="display: flex; gap: var(--space-sm); margin-top: var(--space-sm); padding: var(--space-sm); background: var(--system-bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                        <span style="color: var(--system-text-secondary); font-family: monospace; font-size: 13px;">🃏</span>
+                        <input type="text" id="command-input" 
+                               placeholder='HyperCard commands: go to "url", back, history, get text, check changes, help' 
+                               style="flex: 1; border: none; background: transparent; font-family: monospace; font-size: 13px; outline: none; color: var(--system-text);"
+                               onkeydown="if(event.key==='Enter')runHyperCardCommand()">
+                        <button class="btn btn-secondary" onclick="runHyperCardCommand()" style="font-size: 12px; padding: 4px 8px;">Run</button>
+                    </div>
+                    
+                    <!-- Verification Hash Display (Woz's "show the math" idea) -->
+                    <div id="hash-display" style="display: none; margin-top: var(--space-sm); padding: var(--space-sm); background: linear-gradient(90deg, var(--system-green-bg, #e8f5e9) 0%, var(--system-bg) 100%); border-radius: var(--radius-sm); font-family: monospace; font-size: 11px;">
+                        <span style="color: var(--system-green);">✓ Verified</span> 
+                        <span id="hash-value" style="color: var(--system-text-secondary);"></span>
+                        <span id="hash-changed" style="color: var(--system-orange, #ff9800); display: none; margin-left: 8px;">⚠️ Page changed since last visit</span>
+                    </div>
+                    
+                    <div class="browser-status" id="browser-status" style="padding: var(--space-sm); background: var(--system-bg); border-radius: var(--radius-sm); margin-top: var(--space-sm); font-size: 12px; display: none;">
+                    </div>
+                    <iframe id="browser-iframe" 
+                            sandbox="allow-same-origin allow-scripts allow-forms" 
+                            style="width: 100%; height: 500px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: white; display: none;">
+                    </iframe>
+                    <div class="browser-content" id="browser-content">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🌐</div>
+                            <p>Enter a URL to browse the real web</p>
+                            <p style="font-size: 13px; color: var(--system-text-secondary)">Try: google.com, wikipedia.org, news.ycombinator.com</p>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top: var(--space-md)">
+                        <div class="card-header">
+                            <span class="card-title">History</span>
+                        </div>
+                        <ul class="list" id="browser-history"></ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Email Section -->
+            <section id="section-email" class="section">
+                <div class="main-header">
+                    <h2>Email</h2>
+                    <button class="btn btn-primary" onclick="showComposeModal()">✏️ Compose</button>
+                </div>
+                <div class="main-content">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="inbox">Inbox</button>
+                        <button class="tab" data-tab="drafts">Drafts</button>
+                        <button class="tab" data-tab="sent">Sent</button>
+                    </div>
+                    <div class="card">
+                        <ul class="list" id="email-list">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <p>No emails yet</p>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- News Section -->
+            <section id="section-news" class="section">
+                <div class="main-header">
+                    <h2>News Reader</h2>
+                    <button class="btn btn-primary" onclick="showSubscribeModal()">➕ Subscribe</button>
+                    <button class="btn btn-secondary" onclick="refreshNews()">🔄 Refresh</button>
+                </div>
+                <div class="main-content">
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Feeds</span>
+                            </div>
+                            <ul class="list" id="feeds-list"></ul>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Unread Items</span>
+                            </div>
+                            <ul class="list" id="news-items-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Contacts Section -->
+            <section id="section-contacts" class="section">
+                <div class="main-header">
+                    <h2>Contacts</h2>
+                    <button class="btn btn-primary" onclick="showAddContactModal()">➕ Add Contact</button>
+                </div>
+                <div class="main-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <input type="text" class="form-input" id="contacts-search" placeholder="Search contacts..." style="max-width: 300px;">
+                        </div>
+                        <ul class="list" id="contacts-list"></ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Bookmarks Section -->
+            <section id="section-bookmarks" class="section">
+                <div class="main-header">
+                    <h2>Bookmarks</h2>
+                    <button class="btn btn-primary" onclick="showAddBookmarkModal()">➕ Add Bookmark</button>
+                </div>
+                <div class="main-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <input type="text" class="form-input" id="bookmarks-search" placeholder="Search bookmarks..." style="max-width: 300px;">
+                        </div>
+                        <ul class="list" id="bookmarks-list"></ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Documents Section -->
+            <section id="section-documents" class="section">
+                <div class="main-header">
+                    <h2>Documents</h2>
+                    <button class="btn btn-primary" onclick="showCreateDocModal()">➕ New Document</button>
+                </div>
+                <div class="main-content">
+                    <p style="margin-bottom: var(--space-md); color: var(--system-text-secondary);">
+                        OpenDoc compound documents — embed browser views, emails, tables, and text in a single verified document.
+                    </p>
+                    <div class="grid grid-3" id="documents-grid">
+                        <div class="empty-state" style="grid-column: 1 / -1">
+                            <div class="empty-state-icon">📄</div>
+                            <p>No documents yet. Create one to get started!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal-compose">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Compose Email</h3>
+                <button class="btn-icon" onclick="closeModal('modal-compose')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">To</label>
+                    <input type="email" class="form-input" id="compose-to" placeholder="recipient@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Subject</label>
+                    <input type="text" class="form-input" id="compose-subject" placeholder="Subject">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-input" id="compose-body" placeholder="Write your message..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-compose')">Cancel</button>
+                <button class="btn btn-secondary" onclick="saveDraft()">Save Draft</button>
+                <button class="btn btn-primary" onclick="sendEmail()">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modal-contact">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Contact</h3>
+                <button class="btn-icon" onclick="closeModal('modal-contact')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-input" id="contact-name" placeholder="Full name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="contact-email" placeholder="email@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" class="form-input" id="contact-phone" placeholder="555-1234">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-contact')">Cancel</button>
+                <button class="btn btn-primary" onclick="addContact()">Add Contact</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modal-bookmark">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Bookmark</h3>
+                <button class="btn-icon" onclick="closeModal('modal-bookmark')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">URL</label>
+                    <input type="url" class="form-input" id="bookmark-url" placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="bookmark-title" placeholder="Website Name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Folder</label>
+                    <input type="text" class="form-input" id="bookmark-folder" placeholder="Optional folder">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-bookmark')">Cancel</button>
+                <button class="btn btn-primary" onclick="addBookmark()">Add Bookmark</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modal-subscribe">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Subscribe to Feed</h3>
+                <button class="btn-icon" onclick="closeModal('modal-subscribe')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Feed URL</label>
+                    <input type="url" class="form-input" id="feed-url" placeholder="https://example.com/rss">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="feed-title" placeholder="Feed Name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-subscribe')">Cancel</button>
+                <button class="btn btn-primary" onclick="subscribeFeed()">Subscribe</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modal-document">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Create Document</h3>
+                <button class="btn-icon" onclick="closeModal('modal-document')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Document Title</label>
+                    <input type="text" class="form-input" id="doc-title" placeholder="My Document">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Initial Content (Text Part)</label>
+                    <textarea class="form-input" id="doc-content" rows="8" placeholder="Write your document content here..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-document')">Cancel</button>
+                <button class="btn btn-primary" onclick="createDocument()">Create</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Document Editor Modal -->
+    <div class="modal-overlay" id="modal-doc-editor">
+        <div class="modal" style="max-width: 800px; max-height: 90vh;">
+            <div class="modal-header">
+                <h3 id="editor-doc-title">Edit Document</h3>
+                <button class="btn-icon" onclick="closeModal('modal-doc-editor')">✕</button>
+            </div>
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <div id="editor-parts-list">
+                    <!-- Parts will be populated here -->
+                </div>
+                <div class="card" style="margin-top: var(--space-md); background: var(--system-bg);">
+                    <div class="card-header">
+                        <span class="card-title">Add Part</span>
+                    </div>
+                    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap; padding: var(--space-sm);">
+                        <button class="btn btn-secondary" onclick="addDocPart('text')">📝 Text</button>
+                        <button class="btn btn-secondary" onclick="addDocPart('browser')">🌐 Browser</button>
+                        <button class="btn btn-secondary" onclick="addDocPart('email')">📧 Email</button>
+                        <button class="btn btn-secondary" onclick="addDocPart('table')">📊 Table</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span id="editor-status" style="flex: 1; font-size: 12px; color: var(--system-text-secondary);"></span>
+                <button class="btn btn-secondary" onclick="closeModal('modal-doc-editor')">Close</button>
+                <button class="btn btn-primary" onclick="saveDocument()">Save & Verify</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        // CYBERDOG UI — JavaScript Controller
+        // ═══════════════════════════════════════════════════════════════════
+        
+        const API = '';  // Same origin
+        
+        // ═══════════════════ NAVIGATION ═══════════════════
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                // Update nav
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Show section
+                const section = item.dataset.section;
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`section-${section}`).classList.add('active');
+                
+                // Load data
+                loadSectionData(section);
+            });
+        });
+        
+        function loadSectionData(section) {
+            switch(section) {
+                case 'home': loadStatus(); break;
+                case 'browser': loadBrowserHistory(); break;
+                case 'email': loadEmails('inbox'); break;
+                case 'news': loadFeeds(); loadUnread(); break;
+                case 'contacts': loadContacts(); break;
+                case 'bookmarks': loadBookmarks(); break;
+                case 'documents': loadDocuments(); break;
+            }
+        }
+        
+        // ═══════════════════ API HELPERS ═══════════════════
+        
+        async function api(path, options = {}) {
+            try {
+                const res = await fetch(API + path, {
+                    headers: { 'Content-Type': 'application/json' },
+                    ...options
+                });
+                return await res.json();
+            } catch (err) {
+                console.error('API Error:', err);
+                showToast('Error connecting to server', 'error');
+                return null;
+            }
+        }
+        
+        // ═══════════════════ STATUS ═══════════════════
+        
+        async function loadStatus() {
+            const data = await api('/api/status');
+            if (data) {
+                document.getElementById('stat-contacts').textContent = data.components.contacts.count;
+                document.getElementById('stat-bookmarks').textContent = data.components.bookmarks.count;
+                document.getElementById('stat-feeds').textContent = data.components.news.feed_count;
+                document.getElementById('email-badge').textContent = data.components.email.drafts_count;
+                document.getElementById('news-badge').textContent = data.components.news.unread_count;
+            }
+        }
+        
+        // ═══════════════════ BROWSER ═══════════════════
+        
+        async function browserNavigate() {
+            const urlInput = document.getElementById('url-input');
+            let url = urlInput.value.trim();
+            if (!url) return;
+            
+            // Show loading
+            const statusEl = document.getElementById('browser-status');
+            const iframeEl = document.getElementById('browser-iframe');
+            const contentEl = document.getElementById('browser-content');
+            
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = `<span style="color: var(--system-blue)">⏳ Loading ${url}...</span>`;
+            
+            const data = await api('/api/browser/navigate', {
+                method: 'POST',
+                body: JSON.stringify({ url })
+            });
+            
+            if (data && data.resource) {
+                // Update URL input with actual URL (may have redirected)
+                urlInput.value = data.resource.url;
+                
+                // Show status bar with verification info
+                const statusColor = data.resource.verified ? 'var(--system-green)' : 'var(--system-orange)';
+                const statusIcon = data.resource.verified ? '✓ Verified' : '○ Unverified';
+                statusEl.innerHTML = `
+                    <span><strong>${data.resource.status_code}</strong> | ${data.resource.content_type || 'text/html'}</span>
+                    <span style="margin-left: 16px;">Hash: <code style="font-size: 11px;">${data.resource.hash}</code></span>
+                    <span style="margin-left: 16px; color: ${statusColor}">${statusIcon}</span>
+                    <span style="margin-left: 16px; color: var(--system-text-secondary)">${(data.resource.content_length / 1024).toFixed(1)} KB</span>
+                `;
+                
+                // Display content in iframe using srcdoc
+                if (data.resource.content && data.resource.status_code === 200) {
+                    // Inject base tag to fix relative URLs
+                    let content = data.resource.content;
+                    const baseUrl = new URL(data.resource.url).origin;
+                    
+                    // Add base tag if not present
+                    if (!content.includes('<base')) {
+                        content = content.replace(/<head[^>]*>/i, `$&<base href="${baseUrl}/" target="_blank">`);
+                    }
+                    
+                    iframeEl.srcdoc = content;
+                    iframeEl.style.display = 'block';
+                    contentEl.style.display = 'none';
+                } else {
+                    // Error - show in content div
+                    iframeEl.style.display = 'none';
+                    contentEl.style.display = 'block';
+                    contentEl.innerHTML = `
+                        <div style="padding: var(--space-lg); text-align: center; color: var(--system-red);">
+                            <div style="font-size: 48px; margin-bottom: var(--space-md);">❌</div>
+                            <h3>Error ${data.resource.status_code}</h3>
+                            <p>${data.resource.content}</p>
+                        </div>
+                    `;
+                }
+                
+                loadBrowserHistory();
+            }
+        }
+        
+        async function browserBack() {
+            const data = await api('/api/browser/back', { method: 'POST' });
+            if (data && data.resource) {
+                document.getElementById('url-input').value = data.current_url;
+                browserNavigate();
+            }
+        }
+        
+        async function browserForward() {
+            const data = await api('/api/browser/forward', { method: 'POST' });
+            if (data && data.resource) {
+                document.getElementById('url-input').value = data.current_url;
+                browserNavigate();
+            }
+        }
+        
+        function browserRefresh() {
+            browserNavigate();
+        }
+        
+        async function loadBrowserHistory() {
+            const data = await api('/api/browser/history');
+            if (data && data.history) {
+                const list = document.getElementById('browser-history');
+                if (data.history.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><p>No history yet</p></div>';
+                } else {
+                    list.innerHTML = data.history.map((url, i) => `
+                        <li class="list-item" onclick="document.getElementById('url-input').value='${url}';browserNavigate()">
+                            <div class="list-item-icon">🌐</div>
+                            <div class="list-item-content">
+                                <div class="list-item-title">${url}</div>
+                            </div>
+                            ${i === data.current_index ? '<span style="color: var(--system-blue)">●</span>' : ''}
+                        </li>
+                    `).join('');
+                }
+            }
+        }
+        
+        function addBookmarkFromBrowser() {
+            const url = document.getElementById('url-input').value;
+            document.getElementById('bookmark-url').value = url;
+            document.getElementById('bookmark-title').value = url;
+            showModal('modal-bookmark');
+        }
+        
+        // ═══════════════════ HYPERCARD-STYLE COMMANDS ═══════════════════
+        // Bill Atkinson's vision: One-line commands that feel like conversation
+        
+        async function runHyperCardCommand() {
+            const input = document.getElementById('command-input');
+            const script = input.value.trim();
+            if (!script) return;
+            
+            const statusEl = document.getElementById('browser-status');
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = `<span style="color: var(--system-blue)">🃏 ${script}...</span>`;
+            
+            const data = await api('/api/browser/script', {
+                method: 'POST',
+                body: JSON.stringify({ script })
+            });
+            
+            if (data) {
+                const hashDisplay = document.getElementById('hash-display');
+                const hashValue = document.getElementById('hash-value');
+                const hashChanged = document.getElementById('hash-changed');
+                
+                switch (data.command) {
+                    case 'go':
+                        // Update URL and display page
+                        document.getElementById('url-input').value = data.current_url;
+                        const iframeEl = document.getElementById('browser-iframe');
+                        const contentEl = document.getElementById('browser-content');
+                        
+                        if (data.content) {
+                            // Show hash and change detection
+                            hashDisplay.style.display = 'block';
+                            hashValue.textContent = `Content Hash: ${data.content_hash}`;
+                            hashChanged.style.display = data.changed ? 'inline' : 'none';
+                            
+                            // Display in iframe
+                            let content = data.content;
+                            const baseUrl = new URL(data.url || data.current_url).origin;
+                            if (!content.includes('<base')) {
+                                content = content.replace(/<head[^>]*>/i, `$&<base href="${baseUrl}/" target="_blank">`);
+                            }
+                            iframeEl.srcdoc = content;
+                            iframeEl.style.display = 'block';
+                            contentEl.style.display = 'none';
+                        }
+                        statusEl.innerHTML = `<span style="color: var(--system-green)">✓ Navigated to ${data.current_url}</span>`;
+                        loadBrowserHistory();
+                        break;
+                        
+                    case 'back':
+                    case 'forward':
+                        if (data.resource) {
+                            document.getElementById('url-input').value = data.current_url;
+                            browserNavigate();
+                        }
+                        break;
+                        
+                    case 'history':
+                        statusEl.innerHTML = `<span style="color: var(--system-text)">📜 History (${data.history.length} pages):</span><br>` +
+                            data.history.map((h, i) => 
+                                `<code style="font-size: 11px; margin-left: 16px;">${i+1}. ${h.url} [${h.hash}]</code><br>`
+                            ).join('');
+                        break;
+                        
+                    case 'text':
+                        // Show extracted text (Woz's "safety first" idea)
+                        statusEl.innerHTML = `<span style="color: var(--system-green)">📝 Plain text extracted:</span>`;
+                        contentEl.style.display = 'block';
+                        contentEl.innerHTML = `<div style="padding: var(--space-md); background: #fff; border-radius: var(--radius-md); max-height: 400px; overflow-y: auto; font-family: Georgia, serif; line-height: 1.6;">${data.text || 'No text extracted'}</div>`;
+                        iframeEl.style.display = 'none';
+                        break;
+                        
+                    case 'changes':
+                        if (data.changed) {
+                            statusEl.innerHTML = `<span style="color: var(--system-orange)">⚠️ Page CHANGED since last visit!</span><br>
+                                <code style="font-size: 11px;">Old: ${data.old_hash}</code><br>
+                                <code style="font-size: 11px;">New: ${data.new_hash}</code>`;
+                        } else {
+                            statusEl.innerHTML = `<span style="color: var(--system-green)">✓ Page unchanged since last visit</span>`;
+                        }
+                        break;
+                        
+                    case 'hash':
+                        statusEl.innerHTML = `<span style="color: var(--system-text)">🔗 Verification Chain:</span><br>
+                            <code style="font-size: 11px; color: var(--system-green);">Current: ${data.current_hash || 'none'}</code><br>` +
+                            data.chain.map((h, i) => 
+                                `<code style="font-size: 11px; margin-left: 16px;">${i+1}. ${h.url.substring(0, 40)}... → ${h.hash}</code><br>`
+                            ).join('');
+                        break;
+                        
+                    case 'help':
+                        statusEl.innerHTML = `<span style="color: var(--system-blue)">🃏 HyperCard Commands:</span><br>` +
+                            data.commands.map(c => `<code style="font-size: 11px; margin-left: 16px;">• ${c}</code><br>`).join('');
+                        break;
+                        
+                    default:
+                        statusEl.innerHTML = `<span style="color: var(--system-red)">❌ ${data.error || 'Unknown command'}</span>`;
+                }
+                
+                input.value = '';  // Clear input after execution
+            }
+        }
+        
+        // ═══════════════════ EMAIL ═══════════════════
+        
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                loadEmails(tab.dataset.tab);
+            });
+        });
+        
+        async function loadEmails(folder) {
+            const data = await api(`/api/email/${folder}`);
+            if (data) {
+                const list = document.getElementById('email-list');
+                if (data.messages.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No emails in ' + folder + '</p></div>';
+                } else {
+                    list.innerHTML = data.messages.map(m => `
+                        <li class="list-item">
+                            <div class="list-item-icon">✉️</div>
+                            <div class="list-item-content">
+                                <div class="list-item-title">${m.subject || '(No subject)'}</div>
+                                <div class="list-item-subtitle">${m.from || m.to.join(', ')}</div>
+                            </div>
+                            <div class="list-item-meta">${m.hash.substring(0, 8)}</div>
+                        </li>
+                    `).join('');
+                }
+            }
+        }
+        
+        function showComposeModal() {
+            showModal('modal-compose');
+        }
+        
+        async function saveDraft() {
+            const to = document.getElementById('compose-to').value.split(',').map(s => s.trim());
+            const subject = document.getElementById('compose-subject').value;
+            const body = document.getElementById('compose-body').value;
+            
+            const data = await api('/api/email/compose', {
+                method: 'POST',
+                body: JSON.stringify({ to, subject, body })
+            });
+            
+            if (data && data.success) {
+                closeModal('modal-compose');
+                showToast('Draft saved');
+                loadEmails('drafts');
+                loadStatus();
+            }
+        }
+        
+        async function sendEmail() {
+            await saveDraft();
+            // In a real app, we'd send the draft
+            showToast('Email saved to drafts');
+        }
+        
+        // ═══════════════════ NEWS ═══════════════════
+        
+        async function loadFeeds() {
+            const data = await api('/api/news/feeds');
+            if (data) {
+                const list = document.getElementById('feeds-list');
+                if (data.feeds.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><p>No feeds subscribed</p></div>';
+                } else {
+                    list.innerHTML = data.feeds.map(f => `
+                        <li class="list-item">
+                            <div class="list-item-icon">📡</div>
+                            <div class="list-item-content">
+                                <div class="list-item-title">${f.title}</div>
+                                <div class="list-item-subtitle">${f.item_count} items</div>
+                            </div>
+                        </li>
+                    `).join('');
+                }
+            }
+        }
+        
+        async function loadUnread() {
+            const data = await api('/api/news/unread');
+            if (data) {
+                const list = document.getElementById('news-items-list');
+                if (data.items.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><p>No unread items</p></div>';
+                } else {
+                    list.innerHTML = data.items.map(item => `
+                        <li class="list-item">
+                            <div class="list-item-icon">📰</div>
+                            <div class="list-item-content">
+                                <div class="list-item-title">${item.title}</div>
+                                <div class="list-item-subtitle">${item.source}</div>
+                            </div>
+                        </li>
+                    `).join('');
+                }
+            }
+        }
+        
+        function showSubscribeModal() {
+            showModal('modal-subscribe');
+        }
+        
+        async function subscribeFeed() {
+            const url = document.getElementById('feed-url').value;
+            const title = document.getElementById('feed-title').value;
+            
+            const data = await api('/api/news/subscribe', {
+                method: 'POST',
+                body: JSON.stringify({ url, title })
+            });
+            
+            if (data && data.success) {
+                closeModal('modal-subscribe');
+                showToast('Subscribed to feed');
+                loadFeeds();
+                loadStatus();
+            }
+        }
+        
+        async function refreshNews() {
+            const data = await api('/api/news/refresh', { method: 'POST' });
+            if (data) {
+                showToast(`${data.count} new items`);
+                loadUnread();
+                loadStatus();
+            }
+        }
+        
+        // ═══════════════════ CONTACTS ═══════════════════
+        
+        async function loadContacts() {
+            const data = await api('/api/contacts');
+            if (data) {
+                const list = document.getElementById('contacts-list');
+                if (data.contacts.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><p>No contacts yet</p></div>';
+                } else {
+                    list.innerHTML = data.contacts.map(c => `
+                        <li class="list-item">
+                            <div class="list-item-icon">👤</div>
+                            <div class="list-item-content">
+                                <div class="list-item-title">${c.name}</div>
+                                <div class="list-item-subtitle">${c.email} ${c.phone ? '• ' + c.phone : ''}</div>
+                            </div>
+                            <button class="btn-icon" onclick="deleteContact('${c.id}')">🗑️</button>
+                        </li>
+                    `).join('');
+                }
+            }
+        }
+        
+        document.getElementById('contacts-search').addEventListener('input', async (e) => {
+            const q = e.target.value;
+            if (q.length < 2) return loadContacts();
+            
+            const data = await api(`/api/contacts/search?q=${encodeURIComponent(q)}`);
+            if (data) {
+                const list = document.getElementById('contacts-list');
+                list.innerHTML = data.results.map(c => `
+                    <li class="list-item">
+                        <div class="list-item-icon">👤</div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">${c.name}</div>
+                            <div class="list-item-subtitle">${c.email}</div>
+                        </div>
+                    </li>
+                `).join('');
+            }
+        });
+        
+        function showAddContactModal() {
+            showModal('modal-contact');
+        }
+        
+        async function addContact() {
+            const name = document.getElementById('contact-name').value;
+            const email = document.getElementById('contact-email').value;
+            const phone = document.getElementById('contact-phone').value;
+            
+            const data = await api('/api/contacts', {
+                method: 'POST',
+                body: JSON.stringify({ name, email, phone })
+            });
+            
+            if (data && data.success) {
+                closeModal('modal-contact');
+                showToast('Contact added');
+                loadContacts();
+                loadStatus();
+                // Clear form
+                document.getElementById('contact-name').value = '';
+                document.getElementById('contact-email').value = '';
+                document.getElementById('contact-phone').value = '';
+            }
+        }
+        
+        async function deleteContact(id) {
+            const data = await api(`/api/contacts/${id}`, { method: 'DELETE' });
+            if (data && data.success) {
+                showToast('Contact deleted');
+                loadContacts();
+                loadStatus();
+            }
+        }
+        
+        // ═══════════════════ BOOKMARKS ═══════════════════
+        
+        async function loadBookmarks() {
+            const data = await api('/api/bookmarks');
+            if (data) {
+                const list = document.getElementById('bookmarks-list');
+                if (data.bookmarks.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><p>No bookmarks yet</p></div>';
+                } else {
+                    list.innerHTML = data.bookmarks.map(b => `
+                        <li class="list-item" onclick="window.open('${b.url}', '_blank')">
+                            <div class="list-item-icon">🔖</div>
+                            <div class="list-item-content">
+                                <div class="list-item-title">${b.title}</div>
+                                <div class="list-item-subtitle">${b.url}</div>
+                            </div>
+                            ${b.folder ? `<span class="list-item-meta">${b.folder}</span>` : ''}
+                        </li>
+                    `).join('');
+                }
+            }
+        }
+        
+        document.getElementById('bookmarks-search').addEventListener('input', async (e) => {
+            const q = e.target.value;
+            if (q.length < 2) return loadBookmarks();
+            
+            const data = await api(`/api/bookmarks/search?q=${encodeURIComponent(q)}`);
+            if (data) {
+                const list = document.getElementById('bookmarks-list');
+                list.innerHTML = data.results.map(b => `
+                    <li class="list-item" onclick="window.open('${b.url}', '_blank')">
+                        <div class="list-item-icon">🔖</div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">${b.title}</div>
+                            <div class="list-item-subtitle">${b.url}</div>
+                        </div>
+                    </li>
+                `).join('');
+            }
+        });
+        
+        function showAddBookmarkModal() {
+            showModal('modal-bookmark');
+        }
+        
+        async function addBookmark() {
+            const url = document.getElementById('bookmark-url').value;
+            const title = document.getElementById('bookmark-title').value;
+            const folder = document.getElementById('bookmark-folder').value;
+            
+            const data = await api('/api/bookmarks', {
+                method: 'POST',
+                body: JSON.stringify({ url, title, folder })
+            });
+            
+            if (data && data.success) {
+                closeModal('modal-bookmark');
+                showToast('Bookmark added');
+                loadBookmarks();
+                loadStatus();
+                // Clear form
+                document.getElementById('bookmark-url').value = '';
+                document.getElementById('bookmark-title').value = '';
+                document.getElementById('bookmark-folder').value = '';
+            }
+        }
+        
+        // ═══════════════════ DOCUMENTS ═══════════════════
+        
+        let currentDocHash = null;
+        let currentDocParts = [];
+        
+        async function loadDocuments() {
+            const data = await api('/api/documents');
+            if (data) {
+                const grid = document.getElementById('documents-grid');
+                if (data.documents.length === 0) {
+                    grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1"><div class="empty-state-icon">📄</div><p>No documents yet</p></div>';
+                } else {
+                    grid.innerHTML = data.documents.map(d => `
+                        <div class="card" style="cursor: pointer;" onclick="openDocEditor('${d.hash}')">
+                            <div class="card-header">
+                                <span class="card-title">${d.title}</span>
+                            </div>
+                            <p style="font-size: 13px; color: var(--system-text-secondary)">
+                                ${Object.keys(d.parts || {}).length} parts<br>
+                                ${d.verified ? '<span style="color: var(--system-green)">✓ Verified</span>' : '<span style="color: var(--system-orange)">○ Unverified</span>'}
+                            </p>
+                            <div style="margin-top: var(--space-md); display: flex; gap: var(--space-sm);">
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); openDocEditor('${d.hash}')">✏️ Edit</button>
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); verifyDocument('${d.hash}')">✓ Verify</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+        
+        function showCreateDocModal() {
+            showModal('modal-document');
+        }
+        
+        async function createDocument() {
+            const title = document.getElementById('doc-title').value;
+            const content = document.getElementById('doc-content').value;
+            
+            const data = await api('/api/documents', {
+                method: 'POST',
+                body: JSON.stringify({ title, content })
+            });
+            
+            if (data && data.success) {
+                closeModal('modal-document');
+                showToast('Document created');
+                loadDocuments();
+                document.getElementById('doc-title').value = '';
+                document.getElementById('doc-content').value = '';
+            }
+        }
+        
+        async function openDocEditor(hash) {
+            currentDocHash = hash;
+            
+            const data = await api(`/api/documents/${hash}`);
+            if (data && data.document) {
+                const doc = data.document;
+                document.getElementById('editor-doc-title').textContent = doc.title;
+                document.getElementById('editor-status').textContent = `Hash: ${doc.hash}`;
+                
+                currentDocParts = Object.entries(doc.parts || {}).map(([name, part]) => ({
+                    name,
+                    ...part
+                }));
+                
+                renderDocParts();
+                showModal('modal-doc-editor');
+            }
+        }
+        
+        function renderDocParts() {
+            const container = document.getElementById('editor-parts-list');
+            
+            if (currentDocParts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <p>No parts yet. Add a text, browser, or email part.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = currentDocParts.map((part, idx) => `
+                <div class="card" style="margin-bottom: var(--space-md);">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="card-title">${getPartIcon(part.type)} ${part.name}</span>
+                        <button class="btn-icon" onclick="removePart(${idx})">🗑️</button>
+                    </div>
+                    <div style="padding: var(--space-md);">
+                        ${renderPartEditor(part, idx)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function getPartIcon(type) {
+            const icons = { text: '📝', browser: '🌐', email: '📧', table: '📊', image: '🖼️' };
+            return icons[type] || '📄';
+        }
+        
+        function renderPartEditor(part, idx) {
+            switch (part.type) {
+                case 'text':
+                    return `<textarea class="form-input" rows="5" onchange="updatePartContent(${idx}, this.value)">${part.content || ''}</textarea>`;
+                case 'browser':
+                    return `
+                        <div style="display: flex; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+                            <input type="text" class="form-input" placeholder="URL" value="${part.url || ''}" 
+                                   onchange="updatePartContent(${idx}, this.value, 'url')">
+                            <button class="btn btn-secondary" onclick="embedUrl(${idx})">Embed</button>
+                        </div>
+                        <div style="background: var(--system-bg); padding: var(--space-md); border-radius: var(--radius-sm); min-height: 100px;">
+                            ${part.content || '<em>Enter URL and click Embed</em>'}
+                        </div>
+                    `;
+                case 'email':
+                    return `
+                        <div class="form-group"><input type="text" class="form-input" placeholder="To" value="${part.to || ''}" onchange="updatePartContent(${idx}, this.value, 'to')"></div>
+                        <div class="form-group"><input type="text" class="form-input" placeholder="Subject" value="${part.subject || ''}" onchange="updatePartContent(${idx}, this.value, 'subject')"></div>
+                        <textarea class="form-input" rows="3" placeholder="Body" onchange="updatePartContent(${idx}, this.value, 'body')">${part.body || ''}</textarea>
+                    `;
+                case 'table':
+                    return `<textarea class="form-input" rows="4" placeholder="CSV data: col1,col2,col3" onchange="updatePartContent(${idx}, this.value)">${part.content || ''}</textarea>`;
+                default:
+                    return `<pre>${JSON.stringify(part, null, 2)}</pre>`;
+            }
+        }
+        
+        function addDocPart(type) {
+            const name = prompt(`Enter name for ${type} part:`, `${type}_${currentDocParts.length + 1}`);
+            if (!name) return;
+            
+            currentDocParts.push({ name, type, content: '' });
+            renderDocParts();
+        }
+        
+        function removePart(idx) {
+            if (confirm('Remove this part?')) {
+                currentDocParts.splice(idx, 1);
+                renderDocParts();
+            }
+        }
+        
+        function updatePartContent(idx, value, field = 'content') {
+            currentDocParts[idx][field] = value;
+        }
+        
+        async function embedUrl(idx) {
+            const url = currentDocParts[idx].url;
+            if (!url) return;
+            
+            showToast('Fetching page...');
+            const data = await api('/api/browser/navigate', {
+                method: 'POST',
+                body: JSON.stringify({ url })
+            });
+            
+            if (data && data.resource) {
+                currentDocParts[idx].content = `<p><strong>Embedded:</strong> ${data.resource.url}</p><p>Status: ${data.resource.status_code} | Hash: ${data.resource.hash}</p>`;
+                renderDocParts();
+                showToast('Page embedded');
+            }
+        }
+        
+        async function saveDocument() {
+            if (!currentDocHash) return;
+            
+            const data = await api(`/api/documents/${currentDocHash}`, {
+                method: 'PUT',
+                body: JSON.stringify({ parts: currentDocParts })
+            });
+            
+            if (data && data.success) {
+                showToast('Document saved & verified!', 'success');
+                closeModal('modal-doc-editor');
+                loadDocuments();
+            }
+        }
+        
+        async function verifyDocument(hash) {
+            const data = await api(`/api/documents/${hash}/verify`, { method: 'POST' });
+            if (data) {
+                showToast(data.success ? 'Document verified!' : 'Verification failed', data.success ? 'success' : 'error');
+                loadDocuments();
+            }
+        }
+        
+        // ═══════════════════ MODALS ═══════════════════
+        
+        function showModal(id) {
+            document.getElementById(id).classList.add('show');
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+        
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('show');
+                }
+            });
+        });
+        
+        // ═══════════════════ TOAST ═══════════════════
+        
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // ═══════════════════ INIT ═══════════════════
+        
+        // Load initial data
+        loadStatus();
+        
+        // Enter key on URL input
+        document.getElementById('url-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') browserNavigate();
+        });
+    </script>
+</body>
+</html>
