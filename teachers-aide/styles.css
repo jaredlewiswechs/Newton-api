@@ -2876,3 +2876,160 @@ select:focus {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   WILD GARDEN MONITOR
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.wild-garden-container {
+  padding: 1.5rem;
+}
+
+.wild-garden-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.wg-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wg-status .status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--warning);
+}
+
+.wg-status .status-dot.connected {
+  background: var(--verified);
+}
+
+.wg-status .status-dot.disconnected {
+  background: var(--danger);
+}
+
+.wild-garden-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.wg-stat {
+  background: var(--white);
+  padding: 1.25rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.wg-stat .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.wg-stat .stat-label {
+  font-size: 0.85rem;
+  color: var(--slate);
+  margin-top: 0.25rem;
+}
+
+.wild-garden-panels {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.wg-panel {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.wg-panel h3 {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--light);
+  font-size: 1rem;
+}
+
+.wg-audit-log,
+.wg-sessions-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.audit-entry,
+.session-entry {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--light);
+  margin-bottom: 0.5rem;
+}
+
+.audit-meta,
+.session-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--slate);
+  margin-bottom: 0.5rem;
+}
+
+.audit-query {
+  font-size: 0.9rem;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.session-id {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--blue);
+}
+
+.verification-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.verification-badge.verified {
+  background: var(--mint);
+  color: var(--navy);
+}
+
+.verification-badge.partial {
+  background: var(--warning);
+  color: var(--white);
+}
+
+.placeholder {
+  color: var(--slate);
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .wild-garden-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .wild-garden-panels {
+    grid-template-columns: 1fr;
+  }
+}
+

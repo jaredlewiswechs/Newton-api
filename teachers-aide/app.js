@@ -2366,3 +2366,152 @@ window.regenerateSlide = regenerateSlide;
 window.exportSlidesToPPTX = exportSlidesToPPTX;
 window.exportSlidesToPDF = exportSlidesToPDF;
 window.exportSlidesToGoogleSlides = exportSlidesToGoogleSlides;
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WILD GARDEN INTEGRATION
+// Monitor student AI interactions with Newton verification
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const WILD_GARDEN_URL = 'http://localhost:8091';
+
+async function initWildGarden() {
+  try {
+    const response = await fetch(`${WILD_GARDEN_URL}/health`);
+    if (response.ok) {
+      const data = await response.json();
+      updateWildGardenStatus(true, data);
+      loadWildGardenData();
+    } else {
+      updateWildGardenStatus(false);
+    }
+  } catch (error) {
+    updateWildGardenStatus(false);
+  }
+}
+
+function updateWildGardenStatus(connected, data = null) {
+  const status = document.getElementById('wg-status');
+  if (!status) return;
+  
+  if (connected) {
+    status.innerHTML = `
+      <span class="status-dot connected"></span>
+      <span class="status-text">Connected to Wild Garden | Ollama: ${data?.ollama || 'unknown'}</span>
+    `;
+  } else {
+    status.innerHTML = `
+      <span class="status-dot disconnected"></span>
+      <span class="status-text">Wild Garden not running (Start on port 8091)</span>
+    `;
+  }
+}
+
+async function loadWildGardenData() {
+  try {
+    // Load audit log
+    const auditResponse = await fetch(`${WILD_GARDEN_URL}/audit?limit=20`);
+    if (auditResponse.ok) {
+      const auditData = await auditResponse.json();
+      displayAuditLog(auditData);
+      
+      // Update stats
+      document.getElementById('wg-entries').textContent = auditData.total || 0;
+      
+      // Count blocked and verified
+      let blocked = 0, verified = 0;
+      auditData.entries.forEach(entry => {
+        if (entry.query && entry.query.includes('blocked')) blocked++;
+        entry.claims?.forEach(c => { if (c.status === 'verified') verified++; });
+      });
+      document.getElementById('wg-blocked').textContent = blocked;
+      document.getElementById('wg-verified').textContent = verified;
+    }
+    
+    // Load sessions
+    const sessionsResponse = await fetch(`${WILD_GARDEN_URL}/sessions`);
+    if (sessionsResponse.ok) {
+      const sessionsData = await sessionsResponse.json();
+      displaySessions(sessionsData);
+      document.getElementById('wg-sessions').textContent = sessionsData.total || 0;
+    }
+  } catch (error) {
+    console.error('Failed to load Wild Garden data:', error);
+  }
+}
+
+function displayAuditLog(data) {
+  const container = document.getElementById('wg-audit-log');
+  if (!container) return;
+  
+  if (!data.entries || data.entries.length === 0) {
+    container.innerHTML = '<p class="placeholder">No activity yet</p>';
+    return;
+  }
+  
+  container.innerHTML = data.entries.slice(0, 10).map(entry => {
+    const time = new Date(entry.timestamp * 1000).toLocaleTimeString();
+    const verifiedCount = entry.claims?.filter(c => c.status === 'verified').length || 0;
+    const totalClaims = entry.claims?.length || 0;
+    
+    return `
+      <div class="audit-entry">
+        <div class="audit-meta">
+          <span class="audit-time">${time}</span>
+          <span class="audit-student">Student: ${entry.student_id?.slice(0, 8) || 'anon'}</span>
+        </div>
+        <div class="audit-query">${escapeHtml(entry.query?.slice(0, 80) || '')}...</div>
+        <div class="audit-verification">
+          <span class="verification-badge ${verifiedCount === totalClaims ? 'verified' : 'partial'}">
+            ${verifiedCount}/${totalClaims} claims verified
+          </span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function displaySessions(data) {
+  const container = document.getElementById('wg-sessions-list');
+  if (!container) return;
+  
+  if (!data.sessions || data.sessions.length === 0) {
+    container.innerHTML = '<p class="placeholder">No active sessions</p>';
+    return;
+  }
+  
+  container.innerHTML = data.sessions.map(session => {
+    const started = new Date(session.started_at * 1000).toLocaleTimeString();
+    return `
+      <div class="session-entry">
+        <div class="session-id">${session.session_id?.slice(0, 12) || 'unknown'}...</div>
+        <div class="session-meta">
+          <span>Started: ${started}</span>
+          <span>${session.turns || 0} turns</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+async function refreshWildGarden() {
+  await initWildGarden();
+}
+
+// Initialize Wild Garden when view is shown
+document.addEventListener('DOMContentLoaded', () => {
+  const wildGardenNav = document.querySelector('[data-view="wild-garden"]');
+  if (wildGardenNav) {
+    wildGardenNav.addEventListener('click', () => {
+      initWildGarden();
+    });
+  }
+});
+
+window.refreshWildGarden = refreshWildGarden;

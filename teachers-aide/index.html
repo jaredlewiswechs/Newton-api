@@ -73,6 +73,14 @@
         </button>
       </div>
 
+      <div class="nav-section">
+        <div class="nav-label">Wild Garden</div>
+        <button class="nav-item" data-view="wild-garden">
+          <span class="nav-icon">🌱</span>
+          <span class="nav-text">Student Monitor</span>
+        </button>
+      </div>
+
       <div class="sidebar-footer">
         <div class="moad-badge" id="moad-status">
           <span class="moad-icon">◈</span>
@@ -748,6 +756,61 @@ SlideDeck {
                 </div>
               </section>
             </article>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wild Garden Monitor View -->
+      <div id="view-wild-garden" class="view">
+        <div class="view-header">
+          <h1>🌱 Wild Garden Monitor</h1>
+          <p class="view-description">Monitor student AI interactions with Newton verification</p>
+        </div>
+
+        <div class="wild-garden-container">
+          <div class="wild-garden-controls">
+            <div class="wg-status" id="wg-status">
+              <span class="status-dot"></span>
+              <span class="status-text">Connecting to Wild Garden...</span>
+            </div>
+            <button class="btn-secondary" onclick="refreshWildGarden()">
+              <span class="btn-icon">🔄</span> Refresh
+            </button>
+          </div>
+
+          <div class="wild-garden-stats" id="wg-stats">
+            <div class="wg-stat">
+              <div class="stat-value" id="wg-sessions">-</div>
+              <div class="stat-label">Active Sessions</div>
+            </div>
+            <div class="wg-stat">
+              <div class="stat-value" id="wg-entries">-</div>
+              <div class="stat-label">Audit Entries</div>
+            </div>
+            <div class="wg-stat">
+              <div class="stat-value" id="wg-blocked">-</div>
+              <div class="stat-label">Blocked Queries</div>
+            </div>
+            <div class="wg-stat">
+              <div class="stat-value" id="wg-verified">-</div>
+              <div class="stat-label">Verified Claims</div>
+            </div>
+          </div>
+
+          <div class="wild-garden-panels">
+            <div class="wg-panel">
+              <h3>📋 Recent Activity</h3>
+              <div class="wg-audit-log" id="wg-audit-log">
+                <p class="placeholder">Loading audit log...</p>
+              </div>
+            </div>
+
+            <div class="wg-panel">
+              <h3>👥 Active Sessions</h3>
+              <div class="wg-sessions-list" id="wg-sessions-list">
+                <p class="placeholder">Loading sessions...</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
