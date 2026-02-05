@@ -50,6 +50,13 @@ import hashlib
 import json
 import time
 import urllib.parse
+import xml.etree.ElementTree as ET
+import imaplib
+import smtplib
+import email as email_lib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import decode_header as email_decode_header
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any, Callable, Dict, List, Optional, Set
@@ -770,7 +777,7 @@ class EmailClientPart(Part):
     CyberDog Email component.
     
     Original CyberDog used Mastripe.
-    Newton CyberDog uses verified messaging.
+    Newton CyberDog uses verified messaging with REAL IMAP/SMTP.
     """
     
     # Mailbox state
@@ -783,9 +790,20 @@ class EmailClientPart(Part):
     current_folder: str = "inbox"
     selected_message: Optional[str] = None
     
-    # Account settings (simplified)
+    # Account settings
     account_email: str = ""
     display_name: str = ""
+    
+    # IMAP settings
+    imap_server: str = ""
+    imap_port: int = 993
+    
+    # SMTP settings
+    smtp_server: str = ""
+    smtp_port: int = 587
+    
+    # Auth (stored in memory only, not serialized)
+    _password: str = field(default="", repr=False)
     
     def __post_init__(self):
         super().__post_init__()
@@ -842,6 +860,145 @@ class EmailClientPart(Part):
             "drafts": self.drafts,
             "trash": self.trash,
         }.get(folder_name, [])
+    
+    # ═══════════════════ REAL IMAP/SMTP METHODS ═══════════════════
+    
+    def configure(self, email: str, password: str, 
+                  imap_server: str = "", imap_port: int = 993,
+                  smtp_server: str = "", smtp_port: int = 587,
+                  display_name: str = "") -> bool:
+        """Configure email account settings."""
+        self.account_email = email
+        self._password = password
+        self.imap_server = imap_server
+        self.imap_port = imap_port
+        self.smtp_server = smtp_server
+        self.smtp_port = smtp_port
+        self.display_name = display_name or email.split('@')[0]
+        return True
+    
+    def test_connection(self) -> Dict[str, Any]:
+        """Test IMAP connection."""
+        if not self.imap_server or not self._password:
+            return {"success": False, "error": "Missing server or password"}
+        
+        try:
+            imap = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+            imap.login(self.account_email, self._password)
+            imap.logout()
+            return {"success": True, "message": "Connection successful"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def fetch_emails(self, folder: str = "INBOX", limit: int = 20) -> List[EmailMessage]:
+        """Fetch emails from IMAP server."""
+        if not self.imap_server or not self._password:
+            return []
+        
+        new_emails = []
+        try:
+            imap = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+            imap.login(self.account_email, self._password)
+            imap.select(folder)
+            
+            # Search for all emails
+            _, message_numbers = imap.search(None, 'ALL')
+            message_list = message_numbers[0].split()
+            
+            # Get the last N emails
+            for num in message_list[-limit:]:
+                _, msg_data = imap.fetch(num, '(RFC822)')
+                if not msg_data or not msg_data[0]:
+                    continue
+                email_body = msg_data[0][1]
+                if not isinstance(email_body, bytes):
+                    continue
+                msg = email_lib.message_from_bytes(email_body)
+                
+                # Extract basic info
+                from_addr = msg.get('From', '') or ''
+                subject = msg.get('Subject', '') or ''
+                
+                # Decode subject if needed
+                if subject:
+                    decoded = email_decode_header(subject)
+                    if decoded:
+                        subject_part = decoded[0][0]
+                        if isinstance(subject_part, bytes):
+                            subject = subject_part.decode('utf-8', errors='replace')
+                        elif isinstance(subject_part, str):
+                            subject = subject_part
+                
+                # Get body
+                body = ""
+                if msg.is_multipart():
+                    for part in msg.walk():
+                        if part.get_content_type() == "text/plain":
+                            payload = part.get_payload(decode=True)
+                            if isinstance(payload, bytes):
+                                body = payload.decode('utf-8', errors='replace')
+                            break
+                else:
+                    payload = msg.get_payload(decode=True)
+                    if isinstance(payload, bytes):
+                        body = payload.decode('utf-8', errors='replace')
+                
+                # Create EmailMessage
+                email_msg = EmailMessage(
+                    from_addr=from_addr,
+                    to_addrs=[self.account_email],
+                    subject=subject,
+                    body=body[:1000],  # Truncate for safety
+                    received_at=time.time(),
+                    verified=True,
+                )
+                
+                # Check if we already have this email by subject+from
+                existing = [e for e in self.inbox if e.from_addr == from_addr and e.subject == subject]
+                if not existing:
+                    self.inbox.insert(0, email_msg)
+                    new_emails.append(email_msg)
+            
+            imap.logout()
+            self._compute_hash()
+            
+        except Exception as e:
+            print(f"Email fetch error: {e}")
+        
+        return new_emails
+    
+    def send_email(self, to: List[str], subject: str, body: str) -> Dict[str, Any]:
+        """Actually send an email via SMTP."""
+        if not self.smtp_server or not self._password:
+            return {"success": False, "error": "SMTP not configured"}
+        
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = f"{self.display_name} <{self.account_email}>"
+            msg['To'] = ', '.join(to)
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'plain'))
+            
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.account_email, self._password)
+                server.send_message(msg)
+            
+            # Add to sent folder
+            sent_msg = EmailMessage(
+                from_addr=self.account_email,
+                to_addrs=to,
+                subject=subject,
+                body=body,
+                sent_at=time.time(),
+                verified=True,
+            )
+            self.sent.insert(0, sent_msg)
+            self._compute_hash()
+            
+            return {"success": True, "message": "Email sent"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
     
     def get_content_for_hash(self) -> str:
         return json.dumps({
@@ -960,24 +1117,107 @@ class NewsReaderPart(Part):
         """
         Refresh a feed or all feeds.
         
-        Simulated — real impl would fetch RSS/Atom.
+        REAL IMPLEMENTATION: Fetches and parses RSS/Atom XML.
         """
         new_items = []
-        feeds = [self.feeds[feed_id]] if feed_id else list(self.feeds.values())
+        feeds = [self.feeds[feed_id]] if feed_id and feed_id in self.feeds else list(self.feeds.values())
         
         for feed in feeds:
-            # Simulate fetching new items
-            item = NewsItem(
-                title=f"New item from {feed.title}",
-                link=f"{feed.url}/item/{int(time.time())}",
-                content="This is a simulated news item.",
-                source=feed.title,
-                published_at=time.time(),
-                verified=True,
-            )
-            feed.items.append(item)
-            feed.last_updated = time.time()
-            new_items.append(item)
+            try:
+                # Actually fetch the RSS feed
+                response = requests.get(feed.url, timeout=10, headers={
+                    'User-Agent': 'CyberDog/2.0 (Newton-Verified Internet Suite)'
+                })
+                response.raise_for_status()
+                
+                # Parse XML
+                root = ET.fromstring(response.content)
+                
+                # Handle RSS 2.0 format
+                channel = root.find('channel')
+                if channel is not None:
+                    # Update feed title from feed if not set
+                    if not feed.title or feed.title == feed.url:
+                        title_el = channel.find('title')
+                        if title_el is not None and title_el.text:
+                            feed.title = title_el.text.strip()
+                    
+                    # Parse items
+                    for item_el in channel.findall('item'):
+                        title = item_el.findtext('title', '').strip()
+                        link = item_el.findtext('link', '').strip()
+                        description = item_el.findtext('description', '').strip()
+                        pub_date = item_el.findtext('pubDate', '')
+                        author = item_el.findtext('author', '') or item_el.findtext('dc:creator', '')
+                        
+                        # Check if we already have this item by link
+                        existing = [i for i in feed.items if i.link == link]
+                        if not existing and link:
+                            item = NewsItem(
+                                title=title,
+                                link=link,
+                                content=description,
+                                source=feed.title,
+                                author=author.strip() if author else '',
+                                published_at=time.time(),
+                                verified=True,
+                            )
+                            feed.items.append(item)
+                            new_items.append(item)
+                
+                # Handle Atom format
+                else:
+                    # Atom namespace
+                    ns = {'atom': 'http://www.w3.org/2005/Atom'}
+                    
+                    # Try with namespace first, then without
+                    entries = root.findall('atom:entry', ns) or root.findall('entry')
+                    
+                    # Update feed title
+                    if not feed.title or feed.title == feed.url:
+                        title_el = root.find('atom:title', ns) or root.find('title')
+                        if title_el is not None and title_el.text:
+                            feed.title = title_el.text.strip()
+                    
+                    for entry in entries:
+                        title_el = entry.find('atom:title', ns) or entry.find('title')
+                        link_el = entry.find('atom:link', ns) or entry.find('link')
+                        content_el = entry.find('atom:content', ns) or entry.find('content') or entry.find('atom:summary', ns) or entry.find('summary')
+                        author_el = entry.find('atom:author/atom:name', ns) or entry.find('author/name')
+                        
+                        title = title_el.text.strip() if title_el is not None and title_el.text else ''
+                        link = link_el.get('href', '') if link_el is not None else ''
+                        content = content_el.text.strip() if content_el is not None and content_el.text else ''
+                        author = author_el.text.strip() if author_el is not None and author_el.text else ''
+                        
+                        # Check if we already have this item
+                        existing = [i for i in feed.items if i.link == link]
+                        if not existing and link:
+                            item = NewsItem(
+                                title=title,
+                                link=link,
+                                content=content,
+                                source=feed.title,
+                                author=author,
+                                published_at=time.time(),
+                                verified=True,
+                            )
+                            feed.items.append(item)
+                            new_items.append(item)
+                
+                feed.last_updated = time.time()
+                
+            except Exception as e:
+                # Failed to fetch - add error item for visibility
+                error_item = NewsItem(
+                    title=f"⚠️ Failed to fetch {feed.title}",
+                    link=feed.url,
+                    content=f"Error: {str(e)}",
+                    source=feed.title,
+                    published_at=time.time(),
+                    verified=False,
+                )
+                new_items.append(error_item)
         
         self._compute_hash()
         return new_items

@@ -88,8 +88,10 @@ bookmarks.add("https://newton.dev", "Newton - Verified Computing", "Newton")
 bookmarks.add("https://github.com", "GitHub", "Development")
 bookmarks.add("https://news.ycombinator.com", "Hacker News", "News")
 
-news.subscribe("https://newton.dev/feed.xml", "Newton Updates")
-news.subscribe("https://ycombinator.com/rss", "Hacker News")
+# Real RSS feeds that work
+news.subscribe("https://hnrss.org/frontpage", "Hacker News")
+news.subscribe("https://feeds.arstechnica.com/arstechnica/index", "Ars Technica")
+news.subscribe("https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml", "NYT Tech")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -255,6 +257,56 @@ async def email_send(message_id: str):
     }
 
 
+class EmailSettingsRequest(BaseModel):
+    email: str
+    displayName: str = ""
+    imapServer: str
+    imapPort: int = 993
+    smtpServer: str = ""
+    smtpPort: int = 587
+    password: str = ""
+
+
+@app.post("/api/email/settings")
+async def email_settings(req: EmailSettingsRequest):
+    """Configure email account."""
+    email.configure(
+        email=req.email,
+        password=req.password,
+        imap_server=req.imapServer,
+        imap_port=req.imapPort,
+        smtp_server=req.smtpServer,
+        smtp_port=req.smtpPort,
+        display_name=req.displayName,
+    )
+    return {"success": True, "message": "Settings saved"}
+
+
+@app.post("/api/email/test")
+async def email_test(req: EmailSettingsRequest):
+    """Test email connection."""
+    # Temporarily configure for test
+    email.configure(
+        email=req.email,
+        password=req.password,
+        imap_server=req.imapServer,
+        imap_port=req.imapPort,
+    )
+    result = email.test_connection()
+    return result
+
+
+@app.post("/api/email/fetch")
+async def email_fetch():
+    """Fetch new emails from IMAP."""
+    new_emails = email.fetch_emails()
+    return {
+        "success": True,
+        "count": len(new_emails),
+        "total": len(email.inbox),
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # NEWS ROUTES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -294,6 +346,12 @@ async def news_unread():
         "items": [i.to_dict() for i in unread],
         "count": len(unread),
     }
+
+@app.post("/api/news/read/{item_id}")
+async def news_mark_read(item_id: str):
+    """Mark an item as read."""
+    success = news.mark_read(item_id)
+    return {"success": success}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

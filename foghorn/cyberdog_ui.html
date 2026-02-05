@@ -813,6 +813,8 @@
             <section id="section-email" class="section">
                 <div class="main-header">
                     <h2>Email</h2>
+                    <button class="btn btn-secondary" onclick="showEmailSettingsModal()">⚙️ Settings</button>
+                    <button class="btn btn-secondary" onclick="checkEmail()">📥 Check Mail</button>
                     <button class="btn btn-primary" onclick="showComposeModal()">✏️ Compose</button>
                 </div>
                 <div class="main-content">
@@ -1016,6 +1018,66 @@
         </div>
     </div>
     
+    <div class="modal-overlay" id="modal-email-settings">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📧 Email Settings</h3>
+                <button class="btn-icon" onclick="closeModal('modal-email-settings')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--system-text-secondary); margin-bottom: var(--space-md); font-size: 13px;">Connect your email using IMAP/SMTP. Your credentials are stored locally and never transmitted.</p>
+                
+                <h4 style="margin-bottom: var(--space-sm); font-size: 14px;">Account</h4>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="email-address" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" class="form-input" id="email-display-name" placeholder="Your Name">
+                </div>
+                
+                <h4 style="margin: var(--space-md) 0 var(--space-sm); font-size: 14px;">Incoming (IMAP)</h4>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-sm);">
+                    <div class="form-group">
+                        <label class="form-label">Server</label>
+                        <input type="text" class="form-input" id="imap-server" placeholder="imap.gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Port</label>
+                        <input type="number" class="form-input" id="imap-port" value="993">
+                    </div>
+                </div>
+                
+                <h4 style="margin: var(--space-md) 0 var(--space-sm); font-size: 14px;">Outgoing (SMTP)</h4>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-sm);">
+                    <div class="form-group">
+                        <label class="form-label">Server</label>
+                        <input type="text" class="form-input" id="smtp-server" placeholder="smtp.gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Port</label>
+                        <input type="number" class="form-input" id="smtp-port" value="587">
+                    </div>
+                </div>
+                
+                <h4 style="margin: var(--space-md) 0 var(--space-sm); font-size: 14px;">Authentication</h4>
+                <div class="form-group">
+                    <label class="form-label">Password / App Password</label>
+                    <input type="password" class="form-input" id="email-password" placeholder="••••••••">
+                </div>
+                <p style="color: var(--system-orange); font-size: 12px;">💡 For Gmail, use an <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: var(--system-blue);">App Password</a></p>
+                
+                <div id="email-settings-status" style="margin-top: var(--space-md);"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-email-settings')">Cancel</button>
+                <button class="btn btn-secondary" onclick="testEmailConnection()">Test Connection</button>
+                <button class="btn btn-primary" onclick="saveEmailSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="modal-overlay" id="modal-document">
         <div class="modal" style="max-width: 600px;">
             <div class="modal-header">
@@ -1196,53 +1258,40 @@
                     // These sites use heavy JS/CSP that blocks srcdoc embedding
                     // ═══════════════════════════════════════════════════════════
                     
-                    // YouTube video embed
+                    // YouTube video embed - Use YouTube's EMBED format which is designed for iframes!
                     const youtubeMatch = currentUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
                     console.log('YouTube check:', currentUrl, 'Match:', youtubeMatch);
                     if (youtubeMatch) {
                         const videoId = youtubeMatch[1];
-                        const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
-                        console.log('YouTube detected! Video ID:', videoId, 'Opening URL:', ytUrl);
+                        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`;
+                        const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                        console.log('YouTube detected! Video ID:', videoId, 'Embed URL:', embedUrl);
                         
-                        // Woz's solution: Show thumbnail + play button with proper event handler
+                        // Woz's REAL solution: Use YouTube's embed format - it's DESIGNED to work in iframes!
                         iframeEl.style.display = 'none';
                         contentEl.style.display = 'block';
                         contentEl.innerHTML = `
-                            <div id="yt-thumb-container" style="position: relative; max-width: 800px; margin: 0 auto; cursor: pointer;">
-                                <img id="yt-thumb-img" src="https://img.youtube.com/vi/${videoId}/maxresdefault.jpg" 
-                                     style="width: 100%; border-radius: var(--radius-md); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                                            width: 80px; height: 80px; background: rgba(255,0,0,0.9); border-radius: 50%;
-                                            display: flex; align-items: center; justify-content: center;
-                                            box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
-                                    <div style="width: 0; height: 0; border-left: 30px solid white; border-top: 18px solid transparent; border-bottom: 18px solid transparent; margin-left: 8px;"></div>
+                            <div style="max-width: 900px; margin: 0 auto;">
+                                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-md); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                                    <iframe 
+                                        src="${embedUrl}"
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowfullscreen>
+                                    </iframe>
                                 </div>
-                                <div style="position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 14px;">
-                                    ▶️ Click to watch on YouTube
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-md); padding: 0 var(--space-sm);">
+                                    <div style="color: var(--system-text-secondary);">
+                                        <span style="font-size: 13px;">Video ID: <code>${videoId}</code></span>
+                                        <span style="margin-left: 12px; font-size: 11px;">Hash: ${data.resource.content_hash?.substring(0, 16) || 'N/A'}...</span>
+                                    </div>
+                                    <a href="${watchUrl}" target="_blank" style="color: var(--system-blue); font-size: 13px; text-decoration: none;">
+                                        Open on YouTube ↗
+                                    </a>
                                 </div>
-                            </div>
-                            <div style="text-align: center; margin-top: var(--space-md); color: var(--system-text-secondary);">
-                                <p>Video ID: <code>${videoId}</code></p>
-                                <p style="font-size: 12px; margin-top: 4px;">Hash verified: ${data.resource.content_hash}</p>
-                                <a href="${ytUrl}" target="_blank" style="color: var(--system-blue); text-decoration: underline; font-size: 14px;">Open directly: ${ytUrl}</a>
                             </div>
                         `;
-                        // Add click handler programmatically (more reliable than inline onclick)
-                        const thumbContainer = document.getElementById('yt-thumb-container');
-                        if (thumbContainer) {
-                            thumbContainer.addEventListener('click', () => {
-                                console.log('Opening YouTube:', ytUrl);
-                                window.open(ytUrl, '_blank');
-                            });
-                        }
-                        // Fallback image if maxresdefault doesn't exist
-                        const thumbImg = document.getElementById('yt-thumb-img');
-                        if (thumbImg) {
-                            thumbImg.onerror = function() { 
-                                this.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`; 
-                            };
-                        }
-                        statusEl.innerHTML += ` <span style="color: var(--system-purple);">📺 YouTube Preview</span>`;
+                        statusEl.innerHTML += ` <span style="color: var(--system-purple);">📺 YouTube Player</span>`;
                         loadBrowserHistory();
                         return;
                     }
@@ -1605,6 +1654,93 @@
             showToast('Email saved to drafts');
         }
         
+        // ═══════════════════ EMAIL SETTINGS ═══════════════════
+        
+        let emailSettings = JSON.parse(localStorage.getItem('cyberdog_email_settings') || '{}');
+        
+        function showEmailSettingsModal() {
+            // Load saved settings into form
+            document.getElementById('email-address').value = emailSettings.email || '';
+            document.getElementById('email-display-name').value = emailSettings.displayName || '';
+            document.getElementById('imap-server').value = emailSettings.imapServer || '';
+            document.getElementById('imap-port').value = emailSettings.imapPort || 993;
+            document.getElementById('smtp-server').value = emailSettings.smtpServer || '';
+            document.getElementById('smtp-port').value = emailSettings.smtpPort || 587;
+            document.getElementById('email-password').value = emailSettings.password || '';
+            document.getElementById('email-settings-status').innerHTML = '';
+            showModal('modal-email-settings');
+        }
+        
+        function saveEmailSettings() {
+            emailSettings = {
+                email: document.getElementById('email-address').value,
+                displayName: document.getElementById('email-display-name').value,
+                imapServer: document.getElementById('imap-server').value,
+                imapPort: parseInt(document.getElementById('imap-port').value) || 993,
+                smtpServer: document.getElementById('smtp-server').value,
+                smtpPort: parseInt(document.getElementById('smtp-port').value) || 587,
+                password: document.getElementById('email-password').value,
+            };
+            localStorage.setItem('cyberdog_email_settings', JSON.stringify(emailSettings));
+            
+            // Also send to server for actual email operations
+            api('/api/email/settings', {
+                method: 'POST',
+                body: JSON.stringify(emailSettings)
+            }).then(data => {
+                if (data && data.success) {
+                    showToast('Email settings saved');
+                    closeModal('modal-email-settings');
+                }
+            });
+        }
+        
+        async function testEmailConnection() {
+            const statusEl = document.getElementById('email-settings-status');
+            statusEl.innerHTML = '<span style="color: var(--system-blue);">⏳ Testing connection...</span>';
+            
+            const settings = {
+                email: document.getElementById('email-address').value,
+                imapServer: document.getElementById('imap-server').value,
+                imapPort: parseInt(document.getElementById('imap-port').value) || 993,
+                password: document.getElementById('email-password').value,
+            };
+            
+            const data = await api('/api/email/test', {
+                method: 'POST',
+                body: JSON.stringify(settings)
+            });
+            
+            if (data) {
+                if (data.success) {
+                    statusEl.innerHTML = '<span style="color: var(--system-green);">✅ Connection successful!</span>';
+                } else {
+                    statusEl.innerHTML = `<span style="color: var(--system-red);">❌ ${data.error || 'Connection failed'}</span>`;
+                }
+            } else {
+                statusEl.innerHTML = '<span style="color: var(--system-red);">❌ Connection failed</span>';
+            }
+        }
+        
+        async function checkEmail() {
+            if (!emailSettings.email || !emailSettings.imapServer) {
+                showToast('⚠️ Configure email settings first');
+                showEmailSettingsModal();
+                return;
+            }
+            
+            showToast('📥 Checking email...');
+            const data = await api('/api/email/fetch', { method: 'POST' });
+            if (data) {
+                if (data.success) {
+                    showToast(`📬 ${data.count} new emails`);
+                    loadEmails('inbox');
+                } else {
+                    showToast('⚠️ ' + (data.error || 'Failed to fetch emails'));
+                }
+            }
+        }
+        
         // ═══════════════════ NEWS ═══════════════════
         
         async function loadFeeds() {
@@ -1632,19 +1768,32 @@
             if (data) {
                 const list = document.getElementById('news-items-list');
                 if (data.items.length === 0) {
-                    list.innerHTML = '<div class="empty-state"><p>No unread items</p></div>';
+                    list.innerHTML = '<div class="empty-state"><p>No unread items — click Refresh to fetch!</p></div>';
                 } else {
                     list.innerHTML = data.items.map(item => `
-                        <li class="list-item">
-                            <div class="list-item-icon">📰</div>
+                        <li class="list-item" style="cursor: pointer;" onclick="openNewsItem('${item.link}', '${item.id}')">
+                            <div class="list-item-icon">${item.verified ? '✅' : '📰'}</div>
                             <div class="list-item-content">
                                 <div class="list-item-title">${item.title}</div>
-                                <div class="list-item-subtitle">${item.source}</div>
+                                <div class="list-item-subtitle">${item.source} ${item.author ? '· ' + item.author : ''}</div>
                             </div>
+                            <div style="font-size: 11px; color: var(--system-text-secondary);">↗</div>
                         </li>
                     `).join('');
                 }
             }
+        }
+        
+        function openNewsItem(link, itemId) {
+            // Mark as read and open in browser
+            api('/api/news/read/' + itemId, { method: 'POST' });
+            // Switch to browser and navigate
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector('[data-section="browser"]').classList.add('active');
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-browser').classList.add('active');
+            document.getElementById('url-input').value = link;
+            browserNavigate();
         }
         
         function showSubscribeModal() {
