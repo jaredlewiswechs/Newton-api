@@ -7,6 +7,7 @@ import re
 from datetime import datetime
 
 from core.schemas import Omega, CitationRequirement
+from core.audit import log_event
 from core.ollama_extractor import llm_extract_omega, _HAS_OLLAMA
 
 router = APIRouter()
@@ -83,6 +84,12 @@ async def intake(req: IntakeRequest, use_llm: bool = False):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    # Audit the intake
+    try:
+        log_event("intake", payload={"prompt": req.prompt}, result="ok", metadata={"word_count_min": o.word_count_min, "word_count_max": o.word_count_max})
+    except Exception:
+        pass
+
     return o
 
 

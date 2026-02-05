@@ -596,6 +596,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve Stefan UI static files
+try:
+    ui_path = os.path.join(os.path.dirname(__file__), "foghorn", "stefan_ui")
+    if os.path.isdir(ui_path):
+        app.mount("/stefan", StaticFiles(directory=ui_path, html=True), name="stefan_ui")
+except Exception:
+    pass
+
 # --- Stefan integration routers (Assignment intake and Frame generator)
 try:
     from core.intake_api import router as intake_router

@@ -8,6 +8,7 @@ from core.schemas import Omega
 from core.frame_generator import generate_handles_from_omega, generate_handles_from_prompt
 from core.ollama_extractor import _HAS_OLLAMA as _HAS_OLLAMA_EXTRACTOR
 from core.ollama_frame import llm_suggest_handles, _HAS_OLLAMA as _HAS_OLLAMA_FRAME
+from core.audit import log_event
 
 router = APIRouter()
 
@@ -39,7 +40,13 @@ async def frames(req: FrameRequest, use_llm: bool = False) -> Dict[str, Any]:
         else:
             raise HTTPException(status_code=400, detail="Provide `prompt` or `omega` in request body")
 
+    try:
+        log_event("frames", payload={"prompt": req.prompt}, result="ok", metadata={"use_llm": use_llm})
+    except Exception:
+        pass
+
     return {"handles": handles}
+
 
 
 __all__ = ["router", "FrameRequest"]

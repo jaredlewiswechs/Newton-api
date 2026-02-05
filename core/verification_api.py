@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from core.schemas import Omega
 from core.live_checker import compute_envelope_distance
 from core.adanpedia import fetch_witness_examples
+from core.audit import log_event
 
 router = APIRouter()
 
@@ -20,6 +21,7 @@ class LiveVerifyRequest(BaseModel):
 async def verify_live(req: LiveVerifyRequest):
     try:
         result = compute_envelope_distance(req.omega, req.draft_text)
+        log_event("verify_live", payload={"word_count": result.get("word_count")}, result="ok", metadata={"overall": result.get("overall_percentage")})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return result
@@ -34,6 +36,7 @@ class WitnessRequest(BaseModel):
 async def witnesses(req: WitnessRequest):
     try:
         examples = fetch_witness_examples(req.handles, req.max_examples)
+        log_event("witnesses", payload={"handles": req.handles}, result="ok", metadata={"count": len(examples)})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {"examples": examples}
