@@ -2238,84 +2238,177 @@ function escapeHtml(text) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function openSearchApp() {
-    const content = `
-        <div class="search-app">
-            <div class="search-header">
-                <input type="text" id="search-query" class="search-input" 
-                       placeholder="Search all objects..." autofocus
-                       oninput="performSearch(this.value)">
-                <div class="search-filters">
-                    <label><input type="checkbox" checked onchange="searchFilterChange()"> Cards</label>
-                    <label><input type="checkbox" checked onchange="searchFilterChange()"> Queries</label>
-                    <label><input type="checkbox" checked onchange="searchFilterChange()"> Files</label>
-                </div>
-            </div>
-            <div class="search-results" id="search-results">
-                <div class="search-empty">
-                    <p style="font-size: 32px; margin-bottom: 8px;">🔍</p>
-                    <p>Start typing to search</p>
-                </div>
-            </div>
-            <div class="search-footer">
-                <span id="search-count">0 results</span>
-                <button onclick="saveSearchAsQuery()">Save as Query</button>
-            </div>
-        </div>
-    `;
+    var content = '<div class="search-app">' +
+        '<div class="search-header">' +
+        '<input type="text" id="search-query" class="search-input" ' +
+        'placeholder="Semantic search with Adanpedia + Kinematics..." autofocus ' +
+        'onkeydown="if(event.key===\'Enter\')performSemanticSearch(this.value)">' +
+        '<div class="search-mode-toggle">' +
+        '<button class="search-mode active" data-mode="semantic" onclick="setSearchMode(\'semantic\')">🧠 Semantic</button>' +
+        '<button class="search-mode" data-mode="local" onclick="setSearchMode(\'local\')">📁 Local</button>' +
+        '<button class="search-mode" data-mode="kinematic" onclick="setSearchMode(\'kinematic\')">📐 Kinematic</button>' +
+        '</div></div>' +
+        '<div class="search-results" id="search-results">' +
+        '<div class="search-empty">' +
+        '<p style="font-size: 32px; margin-bottom: 8px;">🧠</p>' +
+        '<p>Search Adanpedia knowledge base</p>' +
+        '<p style="font-size: 12px; color: var(--text-tertiary);">Uses Datamuse API for semantic similarity</p>' +
+        '</div></div>' +
+        '<div class="search-footer">' +
+        '<span id="search-count">Ready</span>' +
+        '</div></div>';
     
-    createWindow('Search', content, { width: 500, height: 450 });
+    createWindow('Search', content, { width: 520, height: 480 });
 }
 
-let lastSearchQuery = '';
+var searchMode = 'semantic';
+
+window.setSearchMode = function(mode) {
+    searchMode = mode;
+    var buttons = document.querySelectorAll('.search-mode');
+    buttons.forEach(function(btn) {
+        btn.classList.remove('active');
+        if (btn.dataset.mode === mode) btn.classList.add('active');
+    });
+    
+    var placeholder = {
+        semantic: 'Semantic search with Adanpedia + Kinematics...',
+        local: 'Search local objects...',
+        kinematic: 'Analyze text through Bézier trajectories...'
+    };
+    var input = document.getElementById('search-query');
+    if (input) input.placeholder = placeholder[mode];
+};
+
+window.performSemanticSearch = async function(query) {
+    var results = document.getElementById('search-results');
+    var count = document.getElementById('search-count');
+    
+    if (!query.trim()) return;
+    
+    if (searchMode === 'local') {
+        performSearch(query);
+        return;
+    }
+    
+    results.innerHTML = '<div class="search-loading">Searching...</div>';
+    
+    try {
+        var endpoint = searchMode === 'kinematic' ? '/kinematics' : '/semantic';
+        var bodyKey = searchMode === 'kinematic' ? 'text' : 'query';
+        var bodyData = {};
+        bodyData[bodyKey] = query;
+        
+        var response = await fetch(API_BASE + endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData)
+        });
+        
+        var data = await response.json();
+        
+        if (searchMode === 'kinematic') {
+            var trajectory = data.trajectory || [];
+            var html = '<div class="kinematic-result">' +
+                '<h4>Kinematic Analysis</h4>' +
+                '<div class="kinematic-viz">';
+            
+            trajectory.forEach(function(t) {
+                var hue = Math.round(t.curvature * 60 + 180);
+                html += '<span class="kinematic-char" style="background: hsl(' + hue + ', 60%, 70%)" title="' +
+                    'Weight: ' + t.weight.toFixed(2) + ', Curve: ' + t.curvature.toFixed(2) + ', Commit: ' + t.commit.toFixed(2) + '">' +
+                    t.char + '</span>';
+            });
+            
+            html += '</div>' +
+                '<div class="kinematic-stats">' +
+                '<span><strong>Anchors (P₀):</strong> ' + (data.anchors || []).join(', ') + '</span>' +
+                '<span><strong>Terminals (P₃):</strong> ' + (data.terminals || []).join(', ') + '</span>' +
+                '<span><strong>Handles:</strong> ' + (data.handles || []).join(', ') + '</span>' +
+                '</div></div>';
+            
+            results.innerHTML = html;
+            count.textContent = trajectory.length + ' characters analyzed';
+        } else {
+            var items = data.results || [];
+            if (items.length === 0) {
+                results.innerHTML = '<div class="search-empty"><p>No results for "' + escapeHtml(query) + '"</p></div>';
+                count.textContent = '0 results';
+                return;
+            }
+            
+            var html = '';
+            items.forEach(function(item) {
+                if (item.type === 'fact') {
+                    html += '<div class="search-result semantic-fact">' +
+                        '<span class="result-icon">📚</span>' +
+                        '<div class="result-info">' +
+                        '<div class="result-title">' + escapeHtml(item.key) + '</div>' +
+                        '<div class="result-snippet">' + escapeHtml(item.content) + '</div>' +
+                        '<div class="result-meta">Source: ' + escapeHtml(item.source) + ' • Confidence: ' + (item.confidence * 100).toFixed(0) + '%</div>' +
+                        '</div></div>';
+                } else {
+                    html += '<div class="search-result semantic-word">' +
+                        '<span class="result-icon">🔗</span>' +
+                        '<div class="result-info">' +
+                        '<div class="result-title">' + escapeHtml(item.word) + '</div>' +
+                        '<div class="result-snippet">Semantic similarity score: ' + item.score + '</div>' +
+                        '</div></div>';
+                }
+            });
+            
+            results.innerHTML = html;
+            count.textContent = items.length + ' results (' + (data.elapsed_us / 1000).toFixed(1) + 'ms)';
+        }
+    } catch (e) {
+        results.innerHTML = '<div class="search-error">Search failed: ' + escapeHtml(e.message) + '</div>';
+    }
+};
+
+var lastSearchQuery = '';
 
 window.performSearch = function(query) {
     lastSearchQuery = query;
-    const results = document.getElementById('search-results');
+    var results = document.getElementById('search-results');
     
     if (!query.trim()) {
-        results.innerHTML = `
-            <div class="search-empty">
-                <p style="font-size: 32px; margin-bottom: 8px;">🔍</p>
-                <p>Start typing to search</p>
-            </div>
-        `;
+        results.innerHTML = '<div class="search-empty">' +
+            '<p style="font-size: 32px; margin-bottom: 8px;">🔍</p>' +
+            '<p>Start typing to search</p></div>';
         document.getElementById('search-count').textContent = '0 results';
         return;
     }
     
-    const q = query.toLowerCase();
-    const matches = state.objects.filter(obj => {
-        const title = (obj.title || obj.text || obj.name || '').toLowerCase();
-        const content = (obj.content || '').toLowerCase();
-        const tags = (obj.tags || []).join(' ').toLowerCase();
+    var q = query.toLowerCase();
+    var matches = state.objects.filter(function(obj) {
+        var title = (obj.title || obj.text || obj.name || '').toLowerCase();
+        var content = (obj.content || '').toLowerCase();
+        var tags = (obj.tags || []).join(' ').toLowerCase();
         return title.includes(q) || content.includes(q) || tags.includes(q);
     });
     
-    document.getElementById('search-count').textContent = `${matches.length} result${matches.length !== 1 ? 's' : ''}`;
+    document.getElementById('search-count').textContent = matches.length + ' result' + (matches.length !== 1 ? 's' : '');
     
     if (matches.length === 0) {
-        results.innerHTML = `
-            <div class="search-empty">
-                <p>No results for "${escapeHtml(query)}"</p>
-            </div>
-        `;
+        results.innerHTML = '<div class="search-empty"><p>No results for "' + escapeHtml(query) + '"</p></div>';
         return;
     }
     
-    results.innerHTML = matches.map(obj => `
-        <div class="search-result" onclick="openSearchResult('${obj.id}')">
-            <span class="result-icon">${getObjectIcon(obj.type)}</span>
-            <div class="result-info">
-                <div class="result-title">${escapeHtml(getObjectTitle(obj))}</div>
-                <div class="result-snippet">${escapeHtml((obj.content || obj.text || '').slice(0, 80))}...</div>
-            </div>
-            <span class="result-type">${obj.type}</span>
-        </div>
-    `).join('');
+    var html = '';
+    matches.forEach(function(obj) {
+        html += '<div class="search-result" onclick="openSearchResult(\'' + obj.id + '\')">' +
+            '<span class="result-icon">' + getObjectIcon(obj.type) + '</span>' +
+            '<div class="result-info">' +
+            '<div class="result-title">' + escapeHtml(getObjectTitle(obj)) + '</div>' +
+            '<div class="result-snippet">' + escapeHtml((obj.content || obj.text || '').slice(0, 80)) + '...</div>' +
+            '</div>' +
+            '<span class="result-type">' + obj.type + '</span></div>';
+    });
+    results.innerHTML = html;
 };
 
 window.openSearchResult = function(objId) {
-    const obj = state.objects.find(o => o.id === objId);
+    var obj = state.objects.find(function(o) { return o.id === objId; });
     if (obj) {
         selectObject(obj);
         openObjectWindow(obj);
@@ -2325,12 +2418,12 @@ window.openSearchResult = function(objId) {
 window.saveSearchAsQuery = function() {
     if (!lastSearchQuery.trim()) return;
     
-    const query = {
-        id: `query-${Date.now()}`,
+    var query = {
+        id: 'query-' + Date.now(),
         hash: Math.random().toString(36).slice(2),
         type: 'query',
         text: lastSearchQuery,
-        created_at: Date.now(),
+        created_at: Date.now()
     };
     
     state.objects.push(query);
@@ -2714,21 +2807,21 @@ window.sentinelCheck = async function(key, expectedValue) {
 function openGroundingApp() {
     var content = '<div class="grounding-app">' +
         '<div class="grounding-search">' +
-        '<textarea id="grounding-claim" class="grounding-textarea" placeholder="Enter a claim to ground against authoritative sources..."></textarea>' +
-        '<button class="grounding-btn" onclick="groundClaim()">Ground Claim</button>' +
+        '<textarea id="grounding-claim" class="grounding-textarea" placeholder="Enter a claim to fact-check with AI..."></textarea>' +
+        '<button class="grounding-btn" onclick="groundClaim()">🔍 Fact Check</button>' +
         '</div>' +
         '<div class="grounding-results" id="grounding-results">' +
-        '<div class="grounding-placeholder">Enter a claim to verify against official sources (.gov, .edu, tech docs).</div>' +
+        '<div class="grounding-placeholder">Enter a claim to verify using Ollama + Qwen AI.</div>' +
         '</div>' +
         '<div class="grounding-sources">' +
-        '<h4>Source Tiers</h4>' +
+        '<h4>Powered by Qwen AI</h4>' +
         '<ul class="source-tiers">' +
-        '<li><span class="tier official">*</span> Tier 1: Official (.gov, .edu)</li>' +
-        '<li><span class="tier authoritative">*</span> Tier 2: Authoritative (Reuters, AP)</li>' +
-        '<li><span class="tier community">*</span> Tier 3: Community (Wikipedia)</li>' +
+        '<li><span class="tier official">✓</span> TRUE: Factually correct</li>' +
+        '<li><span class="tier community">?</span> UNCERTAIN: Cannot verify</li>' +
+        '<li><span class="tier authoritative">✗</span> FALSE: Factually incorrect</li>' +
         '</ul></div></div>';
     
-    createWindow('Grounding', content, { width: 550, height: 480 });
+    createWindow('Grounding', content, { width: 550, height: 520 });
 }
 
 window.groundClaim = async function() {
@@ -2736,12 +2829,12 @@ window.groundClaim = async function() {
     var results = document.getElementById('grounding-results');
     
     if (!textarea || !textarea.value.trim()) {
-        showNotification('Please enter a claim to ground');
+        showNotification('Please enter a claim to check');
         return;
     }
     
     var claim = textarea.value.trim();
-    results.innerHTML = '<div class="grounding-loading">Searching authoritative sources...</div>';
+    results.innerHTML = '<div class="grounding-loading">🤖 Asking Qwen AI...</div>';
     
     try {
         var response = await fetch(API_BASE + '/ground', {
@@ -2752,12 +2845,16 @@ window.groundClaim = async function() {
         
         var data = await response.json();
         
+        // Use AI verdict if available
+        var verdict = data.verdict || 'UNCERTAIN';
         var score = data.score || 5;
-        var verdict, verdictClass;
-        if (score <= 2) { verdict = 'VERIFIED'; verdictClass = 'verified'; }
-        else if (score <= 5) { verdict = 'LIKELY'; verdictClass = 'likely'; }
-        else if (score <= 8) { verdict = 'UNCERTAIN'; verdictClass = 'uncertain'; }
-        else { verdict = 'UNVERIFIED'; verdictClass = 'unverified'; }
+        var reasoning = data.reasoning || '';
+        var aiPowered = data.ai_powered || false;
+        
+        var verdictClass;
+        if (verdict === 'TRUE') { verdictClass = 'verified'; }
+        else if (verdict === 'FALSE') { verdictClass = 'unverified'; }
+        else { verdictClass = 'uncertain'; }
         
         var sources = data.sources || [];
         var sourcesHtml = '';
@@ -2769,21 +2866,24 @@ window.groundClaim = async function() {
                     '<span class="source-domain">' + (s.domain || '') + '</span></div>';
             }
         } else {
-            sourcesHtml = '<div class="no-sources">No authoritative sources found</div>';
+            sourcesHtml = '<div class="no-sources">No external sources cited</div>';
         }
+        
+        var aiLabel = aiPowered ? '🤖 AI-Verified' : '📚 Keyword Match';
         
         results.innerHTML = '<div class="grounding-result">' +
             '<div class="grounding-verdict ' + verdictClass + '">' +
             '<span class="verdict-text">' + verdict + '</span>' +
-            '<span class="verdict-score">Score: ' + score.toFixed(1) + '/10</span>' +
+            '<span class="verdict-score">' + aiLabel + '</span>' +
             '</div>' +
-            '<div class="grounding-claim">' + escapeHtml(claim) + '</div>' +
+            '<div class="grounding-claim">"' + escapeHtml(claim) + '"</div>' +
+            (reasoning ? '<div class="grounding-reasoning"><strong>Reasoning:</strong> ' + escapeHtml(reasoning) + '</div>' : '') +
             '<div class="grounding-source-list">' +
-            '<h5>Sources Found (' + sources.length + ')</h5>' +
+            '<h5>References (' + sources.length + ')</h5>' +
             sourcesHtml +
             '</div></div>';
         
     } catch (e) {
-        results.innerHTML = '<div class="grounding-error">Grounding failed: ' + escapeHtml(e.message) + '</div>';
+        results.innerHTML = '<div class="grounding-error">Fact-check failed: ' + escapeHtml(e.message) + '</div>';
     }
 };

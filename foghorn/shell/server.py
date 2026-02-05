@@ -55,21 +55,44 @@ except ImportError:
     HAS_ADA = False
     print("⚠ Ada Sentinel not available")
 
+# Import Kinematic Linguistics + Semantic Resolver + Knowledge Store
+try:
+    from adan.kinematic_linguistics import KinematicAnalyzer
+    HAS_KINEMATICS = True
+    print("✓ Kinematic Linguistics loaded")
+except ImportError:
+    HAS_KINEMATICS = False
+
+try:
+    from adan_portable.adan.semantic_resolver import SemanticResolver
+    from adan_portable.adan.knowledge_store import KnowledgeStore, get_knowledge_store
+    HAS_SEMANTIC = True
+    semantic_resolver = SemanticResolver()
+    knowledge_store = get_knowledge_store()
+    print("✓ Semantic Resolver + Adanpedia loaded")
+except ImportError as e:
+    HAS_SEMANTIC = False
+    semantic_resolver = None
+    knowledge_store = None
+    print(f"⚠ Semantic search not available: {e}")
+
 # Import Ollama for Qwen
 try:
     import requests
     OLLAMA_URL = "http://localhost:11434/api/generate"
+    OLLAMA_MODEL = "qwen2.5:3b"  # Use qwen2.5:3b model
     # Test if Ollama is running
     try:
-        test_resp = requests.post(OLLAMA_URL, json={"model": "qwen2.5:latest", "prompt": "test", "stream": False}, timeout=5)
+        test_resp = requests.post(OLLAMA_URL, json={"model": OLLAMA_MODEL, "prompt": "hi", "stream": False}, timeout=10)
         HAS_OLLAMA = test_resp.status_code == 200
         if HAS_OLLAMA:
-            print("✓ Ollama + Qwen loaded")
+            print(f"✓ Ollama + {OLLAMA_MODEL} loaded")
     except:
         HAS_OLLAMA = False
         print("⚠ Ollama not running (start with: ollama serve)")
 except ImportError:
     HAS_OLLAMA = False
+    OLLAMA_MODEL = None
     print("⚠ requests not installed for Ollama")
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -141,6 +164,10 @@ class NinaHandler(SimpleHTTPRequestHandler):
             self.api_sentinel_check(data)
         elif path == "/foghorn/ground":
             self.api_ground_claim(data)
+        elif path == "/foghorn/semantic":
+            self.api_semantic_search(data)
+        elif path == "/foghorn/kinematics":
+            self.api_kinematic_analyze(data)
         else:
             self.send_error(404, "Not found")
     
@@ -415,106 +442,193 @@ class NinaHandler(SimpleHTTPRequestHandler):
             })
     
     def api_ground_claim(self, data: dict):
-        """POST /foghorn/ground - Ground claim using Nina knowledge bridge."""
+        """POST /foghorn/ground - Ground claim using Ollama + Qwen AI."""
         claim = data.get("claim", "")
         start = time.perf_counter_ns()
         
         try:
             sources = []
+            verdict = "UNCERTAIN"
+            score = 5.0
+            reasoning = ""
             
-            if HAS_NINA:
-                # Use Nina's knowledge system
-                knowledge = get_nina_knowledge()
-                result = knowledge.query(claim)
-                
-                if result:
-                    sources = [{
-                        "url": result.source_url,
-                        "title": result.source,
-                        "domain": result.source,
-                        "tier": 1 if "gov" in result.source or "edu" in result.source else 2
-                    }]
+            if HAS_OLLAMA:
+                # Use Qwen to fact-check the claim
+                prompt = f"""You are a fact-checker. Evaluate this claim and respond with ONLY a JSON object.
+
+Claim: "{claim}"
+
+Respond with this exact JSON format (no other text):
+{{"verdict": "TRUE" or "FALSE" or "UNCERTAIN", "confidence": 0-10, "reasoning": "brief explanation", "sources": ["source1", "source2"]}}
+
+Be strict. If the claim is factually wrong, say FALSE. Common knowledge counts."""
+
+                try:
+                    resp = requests.post(
+                        OLLAMA_URL,
+                        json={
+                            "model": OLLAMA_MODEL,
+                            "prompt": prompt,
+                            "stream": False,
+                            "options": {"temperature": 0.1}
+                        },
+                        timeout=30
+                    )
+                    
+                    if resp.status_code == 200:
+                        result = resp.json()
+                        response_text = result.get("response", "")
+                        
+                        # Parse JSON from response
+                        try:
+                            # Find JSON in response
+                            json_match = re.search(r'\{[^{}]*\}', response_text, re.DOTALL)
+                            if json_match:
+                                ai_result = json.loads(json_match.group())
+                                verdict = ai_result.get("verdict", "UNCERTAIN").upper()
+                                score = 10 - ai_result.get("confidence", 5)  # Invert: high confidence = low score
+                                reasoning = ai_result.get("reasoning", "")
+                                
+                                # Add sources from AI
+                                for src in ai_result.get("sources", []):
+                                    sources.append({
+                                        "url": f"https://en.wikipedia.org/wiki/{src.replace(' ', '_')}",
+                                        "title": src,
+                                        "domain": "AI-cited",
+                                        "tier": 2
+                                    })
+                        except json.JSONDecodeError:
+                            # AI didn't return valid JSON, parse text
+                            if "false" in response_text.lower() or "incorrect" in response_text.lower():
+                                verdict = "FALSE"
+                                score = 9.0
+                            elif "true" in response_text.lower() or "correct" in response_text.lower():
+                                verdict = "TRUE"
+                                score = 2.0
+                            reasoning = response_text[:200]
+                            
+                except requests.exceptions.Timeout:
+                    reasoning = "AI check timed out"
+                except Exception as e:
+                    reasoning = f"AI error: {str(e)}"
             
-            # Fallback keyword matching for common topics
+            # Fallback: Add reference sources based on topic
             if not sources:
                 claim_lower = claim.lower()
-                
-                if any(w in claim_lower for w in ["python", "javascript", "code", "programming"]):
-                    sources.append({
-                        "url": "https://docs.python.org/3/",
-                        "title": "Python Documentation",
-                        "domain": "docs.python.org",
-                        "tier": 1
-                    })
-                
-                if any(w in claim_lower for w in ["earth", "planet", "space", "science", "nasa"]):
-                    sources.append({
-                        "url": "https://www.nasa.gov/",
-                        "title": "NASA",
-                        "domain": "nasa.gov",
-                        "tier": 1
-                    })
-                
-                # Geographic/country facts - expanded list
                 countries = ["france", "germany", "spain", "italy", "uk", "japan", "china", 
-                            "india", "brazil", "canada", "mexico", "russia", "australia"]
+                            "india", "brazil", "canada", "mexico", "russia", "australia", "texas", "usa"]
                 cities = ["paris", "london", "tokyo", "berlin", "rome", "madrid", "beijing",
-                         "delhi", "moscow", "sydney", "toronto", "new york", "houston"]
+                         "houston", "austin", "dallas", "new york"]
                 
-                if any(w in claim_lower for w in ["capital", "country", "population", "language", "currency"]):
-                    sources.append({
-                        "url": "https://www.cia.gov/the-world-factbook/",
-                        "title": "CIA World Factbook",
-                        "domain": "cia.gov",
-                        "tier": 1
-                    })
-                elif any(c in claim_lower for c in countries) or any(c in claim_lower for c in cities):
+                if any(c in claim_lower for c in countries + cities):
                     sources.append({
                         "url": "https://www.cia.gov/the-world-factbook/",
                         "title": "CIA World Factbook",
                         "domain": "cia.gov", 
                         "tier": 1
                     })
-                    sources.append({
-                        "url": "https://en.wikipedia.org/",
-                        "title": "Wikipedia",
-                        "domain": "wikipedia.org",
-                        "tier": 3
-                    })
-            
-            # Calculate score
-            score = 5.0
-            if len(sources) >= 2:
-                score = 2.0
-            elif len(sources) == 1:
-                score = 4.0
             
             elapsed = (time.perf_counter_ns() - start) // 1000
             
             self.send_json({
                 "claim": claim,
+                "verdict": verdict,
                 "score": score,
+                "reasoning": reasoning,
                 "sources": sources,
                 "source_count": len(sources),
+                "ai_powered": HAS_OLLAMA,
                 "elapsed_us": elapsed
             })
             
         except Exception as e:
             self.send_json({
                 "claim": claim,
+                "verdict": "ERROR",
                 "score": 10.0,
                 "sources": [],
                 "error": str(e),
                 "elapsed_us": (time.perf_counter_ns() - start) // 1000
             })
+
+    def api_semantic_search(self, data: dict):
+        """POST /foghorn/semantic - Semantic search using Datamuse + Adanpedia."""
+        query = data.get("query", "")
+        start = time.perf_counter_ns()
         
+        results = []
+        
+        # Search Adanpedia (knowledge store)
+        if HAS_SEMANTIC and knowledge_store:
+            facts = knowledge_store.search(query, limit=10)
+            for fact in facts:
+                results.append({
+                    "type": "fact",
+                    "key": fact.key,
+                    "content": fact.fact,
+                    "source": fact.source,
+                    "confidence": fact.confidence
+                })
+        
+        # Get semantic relatives from Datamuse
+        if HAS_SEMANTIC and semantic_resolver:
+            try:
+                similar = semantic_resolver.means_like(query.split()[0] if query else "", max_results=5)
+                for word in similar[:5]:
+                    results.append({
+                        "type": "semantic",
+                        "word": word.word,
+                        "score": word.score,
+                        "tags": word.tags
+                    })
+            except:
+                pass
+        
+        elapsed = (time.perf_counter_ns() - start) // 1000
         self.send_json({
-            "claim": claim,
-            "score": score,
-            "sources": sources,
-            "source_count": len(sources),
+            "query": query,
+            "results": results,
+            "has_semantic": HAS_SEMANTIC,
             "elapsed_us": elapsed
         })
+
+    def api_kinematic_analyze(self, data: dict):
+        """POST /foghorn/kinematics - Analyze text through kinematic linguistics."""
+        text = data.get("text", "")
+        start = time.perf_counter_ns()
+        
+        analysis = {
+            "text": text,
+            "trajectory": [],
+            "anchors": [],
+            "terminals": [],
+            "handles": []
+        }
+        
+        # Always use SIGNATURES directly - it's more reliable
+        try:
+            from adan.kinematic_linguistics import SIGNATURES
+            for char in text.lower():
+                if char in SIGNATURES:
+                    sig = SIGNATURES[char]
+                    analysis["trajectory"].append({
+                        "char": char,
+                        "weight": sig.weight,
+                        "curvature": sig.curvature,
+                        "commit": sig.commit_strength
+                    })
+                    if sig.is_anchor:
+                        analysis["anchors"].append(char)
+                    if sig.is_terminus:
+                        analysis["terminals"].append(char)
+                    if sig.is_handle:
+                        analysis["handles"].append(char)
+        except Exception as e:
+            analysis["error"] = str(e)
+        
+        elapsed = (time.perf_counter_ns() - start) // 1000
+        analysis["elapsed_us"] = elapsed
+        self.send_json(analysis)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
