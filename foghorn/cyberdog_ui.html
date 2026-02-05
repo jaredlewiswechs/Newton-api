@@ -158,6 +158,8 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-width: 0; /* Prevent flex blowout */
+            height: 100vh;
         }
         
         .main-header {
@@ -412,10 +414,19 @@
         /* Section hidden by default */
         .section {
             display: none;
+            height: 100%;
+            overflow: hidden;
         }
         
         .section.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .section .main-content {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0; /* Critical for flex scroll */
         }
         
         /* Tabs */
@@ -569,6 +580,81 @@
             color: var(--system-text-secondary);
             margin-top: var(--space-xs);
         }
+        
+        /* ═══════════════════ RESPONSIVE ═══════════════════ */
+        
+        /* Tablet and smaller */
+        @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 200px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            .app {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .sidebar-nav {
+                display: flex;
+                overflow-x: auto;
+                padding: var(--space-sm);
+            }
+            
+            .nav-section {
+                display: flex;
+                gap: var(--space-xs);
+                margin-bottom: 0;
+            }
+            
+            .nav-section-title {
+                display: none;
+            }
+            
+            .nav-item {
+                flex-shrink: 0;
+                padding: var(--space-sm);
+            }
+            
+            .nav-item span:not(.icon) {
+                display: none;
+            }
+            
+            .main {
+                height: calc(100vh - 120px);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            #browser-iframe {
+                height: calc(100vh - 300px) !important;
+                min-height: 200px !important;
+            }
+        }
+        
+        /* Ensure content doesn't overflow */
+        .browser-content, .list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -703,7 +789,7 @@
                     </div>
                     <iframe id="browser-iframe" 
                             sandbox="allow-same-origin allow-scripts allow-forms" 
-                            style="width: 100%; height: 500px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: white; display: none;">
+                            style="width: 100%; height: calc(100vh - 380px); min-height: 300px; max-height: 600px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: white; display: none;">
                     </iframe>
                     <div class="browser-content" id="browser-content">
                         <div class="empty-state">

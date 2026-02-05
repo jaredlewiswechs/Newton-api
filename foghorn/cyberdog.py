@@ -148,6 +148,11 @@ class WebBrowserPart(Part):
     
     Original CyberDog used NetSprocket.
     Newton CyberDog uses verified fetch.
+    
+    HyperCard-style event handlers:
+    - on_new_page: Called when navigating to a new URL
+    - on_page_changed: Called when a revisited page has different content
+    - on_verified: Called when content is verified
     """
     
     # Browser state
@@ -164,6 +169,29 @@ class WebBrowserPart(Part):
     
     # Page change detection - stores URL -> content hash
     page_hashes: Dict[str, str] = field(default_factory=dict)
+    
+    # ═══════════════════════════════════════════════════════════════════════════
+    # HYPERCARD EVENT HANDLERS — Bill Atkinson's vision
+    # "The script should live WITH the object"
+    # ═══════════════════════════════════════════════════════════════════════════
+    
+    # Event handlers (callable or script strings)
+    on_new_page: Optional[Callable[[str, 'WebResource'], None]] = None
+    on_page_changed: Optional[Callable[[str, str, str], None]] = None  # url, old_hash, new_hash
+    on_verified: Optional[Callable[[str, 'WebResource'], None]] = None
+    
+    # Script-per-part: HyperTalk-style script attached to this browser
+    attached_script: str = ""
+    
+    # Time travel: URL -> List of (timestamp, content_hash, content) snapshots
+    page_snapshots: Dict[str, List[tuple]] = field(default_factory=dict)
+    max_snapshots_per_url: int = 10
+    
+    # Verified bookmarks: URL -> {hash, title, saved_at, content_preview}
+    verified_bookmarks: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    
+    # Event log for debugging
+    event_log: List[Dict[str, Any]] = field(default_factory=list)
     
     def __post_init__(self):
         super().__post_init__()
@@ -250,9 +278,66 @@ class WebBrowserPart(Part):
             resource.previous_hash = old_hash
             resource.content_hash = content_hash
             self.page_hashes[url] = content_hash
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TIME TRAVEL — Save snapshot for later retrieval
+            # ═══════════════════════════════════════════════════════════════
+            if url not in self.page_snapshots:
+                self.page_snapshots[url] = []
+            
+            # Only save if content changed or first visit
+            if not old_hash or old_hash != content_hash:
+                snapshot = (time.time(), content_hash, resource.content)
+                self.page_snapshots[url].append(snapshot)
+                # Keep only last N snapshots per URL
+                if len(self.page_snapshots[url]) > self.max_snapshots_per_url:
+                    self.page_snapshots[url] = self.page_snapshots[url][-self.max_snapshots_per_url:]
+            
+            # ═══════════════════════════════════════════════════════════════
+            # EVENT HANDLERS — Bill Atkinson's vision
+            # "The script lives with the object"
+            # ═══════════════════════════════════════════════════════════════
+            
+            # Fire on_new_page if first visit
+            if not old_hash:
+                self._fire_event("new_page", url=url, resource=resource)
+                if self.on_new_page:
+                    try:
+                        self.on_new_page(url, resource)
+                    except Exception as e:
+                        self.event_log.append({"event": "on_new_page_error", "error": str(e)})
+            
+            # Fire on_page_changed if content changed
+            if resource.changed and old_hash:
+                self._fire_event("page_changed", url=url, old_hash=old_hash, new_hash=content_hash)
+                if self.on_page_changed:
+                    try:
+                        self.on_page_changed(url, old_hash, content_hash)
+                    except Exception as e:
+                        self.event_log.append({"event": "on_page_changed_error", "error": str(e)})
+            
+            # Fire on_verified if verified
+            if resource.verified:
+                self._fire_event("verified", url=url, hash=content_hash)
+                if self.on_verified:
+                    try:
+                        self.on_verified(url, resource)
+                    except Exception as e:
+                        self.event_log.append({"event": "on_verified_error", "error": str(e)})
         
         self._compute_hash()
         return resource
+    
+    def _fire_event(self, event_name: str, **kwargs):
+        """Log an event for the event log."""
+        self.event_log.append({
+            "event": event_name,
+            "timestamp": time.time(),
+            **kwargs
+        })
+        # Keep log manageable
+        if len(self.event_log) > 100:
+            self.event_log = self.event_log[-100:]
     
     def back(self) -> Optional[WebResource]:
         """Navigate back in history."""
@@ -321,39 +406,48 @@ class WebBrowserPart(Part):
             url = script[6:].strip().strip('"').strip("'")
             if not url.startswith("http"):
                 url = "https://" + url
-            result = self.navigate(url)
-            # Store hash for change detection
-            if result.get("content"):
-                content_hash = hashlib.sha256(result["content"].encode()).hexdigest()[:16]
-                old_hash = self.page_hashes.get(url)
-                self.page_hashes[url] = content_hash
-                result["changed"] = old_hash is not None and old_hash != content_hash
-                result["content_hash"] = content_hash
-            return {"ok": True, "command": "go", **result}
+            resource = self.navigate(url)
+            # Return resource info with change detection (already computed in navigate)
+            return {
+                "ok": True, 
+                "command": "go", 
+                "url": resource.url,
+                "content": resource.content,
+                "status_code": resource.status_code,
+                "content_hash": resource.content_hash,
+                "changed": resource.changed,
+                "verified": resource.verified,
+            }
         
         # back
         elif script == "back":
             result = self.back()
-            return {"ok": result is not None, "command": "back", "resource": result}
+            return {"ok": result is not None, "command": "back", "resource": result.to_dict() if result else None}
         
         # forward
         elif script == "forward":
             result = self.forward()
-            return {"ok": result is not None, "command": "forward", "resource": result}
+            return {"ok": result is not None, "command": "forward", "resource": result.to_dict() if result else None}
         
         # show history
         elif script in ("show history", "history"):
+            history_list = []
+            for url in self.history[-10:]:
+                resource = self.cache.get(url)
+                if resource:
+                    history_list.append({"url": url, "title": url, "hash": resource.content_hash})
+                else:
+                    history_list.append({"url": url, "title": url, "hash": "?"})
             return {
                 "ok": True,
                 "command": "history",
-                "history": [{"url": r.url, "title": r.title, "hash": r.content_hash} 
-                           for r in self.history]
+                "history": history_list
             }
         
         # check changes - compare current page hash to stored
         elif script in ("check changes", "changes"):
             if self.current_url and self.current_url in self.page_hashes:
-                current = self.resources.get(self.current_url)
+                current = self.cache.get(self.current_url)
                 if current and current.content:
                     new_hash = hashlib.sha256(current.content.encode()).hexdigest()[:16]
                     old_hash = self.page_hashes[self.current_url]
@@ -370,7 +464,7 @@ class WebBrowserPart(Part):
         # get text - extract plain text from HTML (Woz's "safety first" idea)
         elif script in ("get text", "text only", "text"):
             if self.current_url:
-                resource = self.resources.get(self.current_url)
+                resource = self.cache.get(self.current_url)
                 if resource and resource.content:
                     text = self._extract_text(resource.content)
                     return {"ok": True, "command": "text", "text": text}
@@ -379,14 +473,195 @@ class WebBrowserPart(Part):
         # get hash - show verification chain
         elif script in ("get hash", "hash", "verify"):
             chain = []
-            for r in self.history[-10:]:  # Last 10 pages
-                chain.append({"url": r.url, "hash": r.content_hash})
+            for url in self.history[-10:]:  # Last 10 pages
+                resource = self.cache.get(url)
+                if resource:
+                    chain.append({"url": url, "hash": resource.content_hash})
+            current_resource = self.cache.get(self.current_url) if self.current_url else None
             return {
                 "ok": True,
                 "command": "hash",
-                "current_hash": self.resources.get(self.current_url).content_hash if self.current_url and self.current_url in self.resources else None,
+                "current_hash": current_resource.content_hash if current_resource else None,
                 "chain": chain
             }
+        
+        # ═══════════════════════════════════════════════════════════════
+        # VERIFIED BOOKMARKS — Woz's idea: bookmark URL + hash together
+        # ═══════════════════════════════════════════════════════════════
+        
+        # bookmark - save current page with its hash
+        elif script in ("bookmark", "save bookmark", "add bookmark"):
+            if self.current_url:
+                resource = self.cache.get(self.current_url)
+                if resource:
+                    self.verified_bookmarks[self.current_url] = {
+                        "url": self.current_url,
+                        "hash": resource.content_hash,
+                        "title": self._extract_title(resource.content) or self.current_url,
+                        "saved_at": time.time(),
+                        "content_preview": self._extract_text(resource.content)[:200],
+                        "verified": resource.verified,
+                    }
+                    return {
+                        "ok": True,
+                        "command": "bookmark",
+                        "message": f"Bookmarked {self.current_url} with hash {resource.content_hash}",
+                        "bookmark": self.verified_bookmarks[self.current_url]
+                    }
+            return {"ok": False, "command": "bookmark", "error": "No page to bookmark"}
+        
+        # show bookmarks
+        elif script in ("show bookmarks", "bookmarks", "list bookmarks"):
+            return {
+                "ok": True,
+                "command": "bookmarks",
+                "bookmarks": list(self.verified_bookmarks.values())
+            }
+        
+        # check bookmark - verify if bookmarked page still matches
+        elif script.startswith("check bookmark"):
+            url = script[14:].strip().strip('"').strip("'") or self.current_url
+            if url in self.verified_bookmarks:
+                bookmark = self.verified_bookmarks[url]
+                current = self.cache.get(url)
+                if current:
+                    matches = current.content_hash == bookmark["hash"]
+                    return {
+                        "ok": True,
+                        "command": "check_bookmark",
+                        "url": url,
+                        "matches": matches,
+                        "saved_hash": bookmark["hash"],
+                        "current_hash": current.content_hash,
+                        "saved_at": bookmark["saved_at"],
+                    }
+                else:
+                    return {"ok": False, "command": "check_bookmark", "error": "Page not loaded. Use 'go to' first."}
+            return {"ok": False, "command": "check_bookmark", "error": f"No bookmark for {url}"}
+        
+        # ═══════════════════════════════════════════════════════════════
+        # TIME TRAVEL — "Show me what this page looked like before"
+        # ═══════════════════════════════════════════════════════════════
+        
+        # show snapshots - list saved versions of current page
+        elif script in ("show snapshots", "snapshots", "time travel"):
+            if self.current_url and self.current_url in self.page_snapshots:
+                snapshots = []
+                for ts, hash, content in self.page_snapshots[self.current_url]:
+                    snapshots.append({
+                        "timestamp": ts,
+                        "date": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)),
+                        "hash": hash,
+                        "size": len(content),
+                    })
+                return {
+                    "ok": True,
+                    "command": "snapshots",
+                    "url": self.current_url,
+                    "count": len(snapshots),
+                    "snapshots": snapshots
+                }
+            return {"ok": False, "command": "snapshots", "error": "No snapshots for this page"}
+        
+        # show version N - display a specific snapshot
+        elif script.startswith("show version "):
+            try:
+                version = int(script[13:].strip())
+                if self.current_url and self.current_url in self.page_snapshots:
+                    snapshots = self.page_snapshots[self.current_url]
+                    if 0 <= version < len(snapshots):
+                        ts, hash, content = snapshots[version]
+                        return {
+                            "ok": True,
+                            "command": "show_version",
+                            "version": version,
+                            "timestamp": ts,
+                            "date": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)),
+                            "hash": hash,
+                            "content": content,
+                        }
+                    return {"ok": False, "command": "show_version", "error": f"Version {version} not found. Use 'snapshots' to see available."}
+                return {"ok": False, "command": "show_version", "error": "No snapshots for current page"}
+            except ValueError:
+                return {"ok": False, "command": "show_version", "error": "Usage: show version <number>"}
+        
+        # compare versions
+        elif script.startswith("compare "):
+            parts = script[8:].split(" and ")
+            if len(parts) == 2:
+                try:
+                    v1, v2 = int(parts[0].strip()), int(parts[1].strip())
+                    if self.current_url and self.current_url in self.page_snapshots:
+                        snapshots = self.page_snapshots[self.current_url]
+                        if 0 <= v1 < len(snapshots) and 0 <= v2 < len(snapshots):
+                            t1, h1, c1 = snapshots[v1]
+                            t2, h2, c2 = snapshots[v2]
+                            return {
+                                "ok": True,
+                                "command": "compare",
+                                "version_a": v1,
+                                "version_b": v2,
+                                "hash_a": h1,
+                                "hash_b": h2,
+                                "size_a": len(c1),
+                                "size_b": len(c2),
+                                "changed": h1 != h2,
+                                "text_a": self._extract_text(c1)[:500],
+                                "text_b": self._extract_text(c2)[:500],
+                            }
+                except ValueError:
+                    pass
+            return {"ok": False, "command": "compare", "error": "Usage: compare <n> and <m>"}
+        
+        # ═══════════════════════════════════════════════════════════════
+        # EVENTS — Show event log
+        # ═══════════════════════════════════════════════════════════════
+        
+        elif script in ("show events", "events", "event log"):
+            return {
+                "ok": True,
+                "command": "events",
+                "events": self.event_log[-20:]  # Last 20 events
+            }
+        
+        # ═══════════════════════════════════════════════════════════════
+        # SCRIPT-PER-PART — Set/run attached script
+        # ═══════════════════════════════════════════════════════════════
+        
+        # set script "..."
+        elif script.startswith("set script "):
+            self.attached_script = script[11:].strip().strip('"').strip("'")
+            return {
+                "ok": True,
+                "command": "set_script",
+                "script": self.attached_script,
+                "message": "Script attached to this browser part"
+            }
+        
+        # show script
+        elif script in ("show script", "get script"):
+            return {
+                "ok": True,
+                "command": "show_script",
+                "script": self.attached_script or "(no script attached)",
+            }
+        
+        # run script - execute the attached script
+        elif script in ("run script", "run"):
+            if self.attached_script:
+                # Execute each line of the attached script
+                results = []
+                for line in self.attached_script.split(";"):
+                    line = line.strip()
+                    if line:
+                        result = self.execute_script(line)
+                        results.append({"command": line, "result": result})
+                return {
+                    "ok": True,
+                    "command": "run_script",
+                    "results": results
+                }
+            return {"ok": False, "command": "run_script", "error": "No script attached. Use 'set script' first."}
         
         # help
         elif script in ("help", "?"):
@@ -401,6 +676,20 @@ class WebBrowserPart(Part):
                     'check changes - See if page changed since last visit',
                     'get text - Extract plain text from page',
                     'get hash - Show verification chain',
+                    '--- VERIFIED BOOKMARKS ---',
+                    'bookmark - Save current page with hash',
+                    'bookmarks - List all verified bookmarks',
+                    'check bookmark - Verify bookmarked page matches',
+                    '--- TIME TRAVEL ---',
+                    'snapshots - Show saved versions of current page',
+                    'show version N - Display snapshot N',
+                    'compare N and M - Compare two versions',
+                    '--- EVENTS ---',
+                    'events - Show event log',
+                    '--- SCRIPTING ---',
+                    'set script "..." - Attach a script to this browser',
+                    'show script - Display attached script',
+                    'run script - Execute attached script',
                     'help - Show this message'
                 ]
             }
@@ -421,6 +710,14 @@ class WebBrowserPart(Part):
         # Clean whitespace
         text = re.sub(r'\s+', ' ', text).strip()
         return text
+    
+    def _extract_title(self, html: str) -> Optional[str]:
+        """Extract page title from HTML."""
+        import re
+        match = re.search(r'<title[^>]*>([^<]+)</title>', html, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
