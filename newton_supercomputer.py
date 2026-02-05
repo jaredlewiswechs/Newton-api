@@ -596,6 +596,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Stefan integration routers (Assignment intake and Frame generator)
+try:
+    from core.intake_api import router as intake_router
+    from core.frame_api import router as frame_router
+    app.include_router(intake_router, prefix="/api")
+    app.include_router(frame_router, prefix="/api")
+except Exception:
+    # If integration fails at import time, continue without these routes
+    pass
+try:
+    from core.verification_api import router as verification_router
+    app.include_router(verification_router, prefix="/api")
+except Exception:
+    pass
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # RATE LIMITING - Protect against abuse while allowing 1000s of iPhone users
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -833,8 +833,15 @@ async function searchTEKS() {
   resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div> Searching...</div>';
 
   try {
-    const result = await apiRequest('/education/teks/search', 'POST', { query });
-    displayTEKS(result.results);
+    // Query Wild Garden TEKS search
+    const resp = await fetch('http://localhost:8091/teks/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    if (!resp.ok) throw new Error('TEKS search failed');
+    const result = await resp.json();
+    displayTEKS(result.results || result.teks || []);
   } catch (error) {
     resultsEl.innerHTML = `<p>Error searching TEKS: ${error.message}</p>`;
   }
@@ -848,14 +855,15 @@ async function filterTEKS() {
   resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
 
   try {
-    let endpoint = '/education/teks';
+    let endpoint = 'http://localhost:8091/teks';
     const params = new URLSearchParams();
     if (grade) params.append('grade', grade);
     if (subject) params.append('subject', subject);
     if (params.toString()) endpoint += '?' + params.toString();
-
-    const result = await apiRequest(endpoint);
-    displayTEKS(result.standards);
+    const resp = await fetch(endpoint);
+    if (!resp.ok) throw new Error('Failed to load filtered TEKS');
+    const result = await resp.json();
+    displayTEKS(result.results || result.teks || result.standards || []);
   } catch (error) {
     resultsEl.innerHTML = `<p>Error loading TEKS: ${error.message}</p>`;
   }

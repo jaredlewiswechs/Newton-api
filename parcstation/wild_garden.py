@@ -772,15 +772,44 @@ async def get_session(session_id: str):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/teks")
-async def get_teks():
-    """Return the full TEKS standards library."""
+async def get_teks(grade: Optional[int] = None, subject: Optional[str] = None):
+    """Return the full TEKS standards library. Optional filters: grade, subject."""
     if not TEKS_AVAILABLE:
         raise HTTPException(status_code=503, detail="TEKS database not available")
     lib = get_extended_teks_library()
-    # Return as list of dicts for JS
+    # lib stores standards in _standards dict
+    standards = list(lib._standards.values())
+
+    # Apply filters
+    if grade is not None:
+        standards = [s for s in standards if getattr(s, 'grade', None) == int(grade)]
+    if subject:
+        subj = subject.lower()
+        standards = [s for s in standards if getattr(s, 'subject', None) and s.subject.value == subj]
+
     return {
-        "teks": [s.to_dict() for s in lib.all_standards()]
+        "teks": [s.to_dict() for s in standards],
+        "count": len(standards)
     }
+
+
+@app.post("/teks/search")
+async def teks_search(payload: Dict[str, Any]):
+    """Search TEKS standards by keyword or code. POST body: {"query": "..."} """
+    if not TEKS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="TEKS database not available")
+    query = (payload.get('query') if isinstance(payload, dict) else None) or ''
+    query = query.strip()
+    lib = get_extended_teks_library()
+    standards = list(lib._standards.values())
+
+    if not query:
+        results = standards
+    else:
+        q = query.lower()
+        results = [s for s in standards if s.matches_keywords(q) or q in s.code.lower()]
+
+    return {"results": [s.to_dict() for s in results], "count": len(results)}
 
 @app.post("/cartridge/wikipedia")
 async def wikipedia_search(request: WikipediaRequest):
