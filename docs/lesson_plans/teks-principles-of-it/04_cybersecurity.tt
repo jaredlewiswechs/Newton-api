@@ -1,0 +1,19 @@
+// Lesson 04: Cybersecurity Fundamentals
+
+law strength_score(pw)
+    let score = 0
+    if pw.len >= 10 { score = score + 1 }
+    if pw has "!" { score = score + 1 }
+    if pw has "@" { score = score + 1 }
+    if pw has "1" { score = score + 1 }
+    reply score
+end
+
+let passwords = ["password", "River!2026", "Lunch@1", "S3cure!Key"]
+
+for pw in passwords {
+    let score = strength_score(pw)
+    show("Password" pw "score" score)
+}
+
+show("Use MFA to protect accounts")

@@ -1,0 +1,23 @@
+// Lesson 05: Networking & the Web
+
+let requests = [
+    {"path": "/", "status": 200},
+    {"path": "/login", "status": 200},
+    {"path": "/profile", "status": 403},
+    {"path": "/settings", "status": 500}
+]
+
+let ok = 0
+let errors = 0
+
+for req in requests {
+    if req.status >= 400 {
+        errors = errors + 1
+    } else {
+        ok = ok + 1
+    }
+}
+
+show("Requests OK" ok)
+show("Requests with errors" errors)
+show("Protocols like HTTP move data between clients and servers")

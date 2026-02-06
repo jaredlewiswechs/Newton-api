@@ -1,0 +1,25 @@
+// Lesson 01: Digital Citizenship & Ethics
+
+let profile = {
+    "name": "Jordan Lee",
+    "email": "jordan@example.com",
+    "phone": "555-1234",
+    "photo_consent": "no",
+    "favorite_color": "blue"
+}
+
+show("Digital footprint check for" profile.name)
+
+if profile has "email" {
+    show("Remove email before sharing")
+}
+
+if profile has "phone" {
+    show("Remove phone number before sharing")
+}
+
+if profile.photo_consent is "no" {
+    show("Get consent before sharing photos")
+}
+
+show("Safe to share after redaction")

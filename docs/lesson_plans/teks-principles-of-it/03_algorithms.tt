@@ -1,0 +1,23 @@
+// Lesson 03: Algorithms & Programming
+
+let scores = [92, 76, 88, 59, 100, 67]
+
+law is_passing(score)
+    reply score >= 70
+end
+
+let passing = []
+for s in scores {
+    if is_passing(s) {
+        push(passing, s)
+    }
+}
+
+show("Passing scores" passing)
+
+let total = 0
+for s in scores {
+    total = total + s
+}
+let avg = total / scores.len
+show("Class average" avg)

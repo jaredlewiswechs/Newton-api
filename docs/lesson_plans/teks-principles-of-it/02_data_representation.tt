@@ -1,0 +1,13 @@
+// Lesson 02: Data Representation
+
+let student = {"name": "Avery", "age": "16", "id": "0042"}
+
+show("Name" student.name "type" student.name.type)
+show("Age text" student.age "type" student.age.type)
+show("Age number" student.age.num "type" student.age.num.type)
+show("ID text" student.id "type" student.id.type)
+show("ID number" student.id.num "type" student.id.num.type)
+
+let bytes_per_char = 1
+let name_bytes = student.name.len * bytes_per_char
+show("Estimated bytes for name" name_bytes)

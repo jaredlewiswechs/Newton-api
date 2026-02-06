@@ -1,0 +1,23 @@
+// Lesson 06: Project Planning & Collaboration
+
+let tasks = [
+    {"title": "Define requirements", "status": "done"},
+    {"title": "Create wireframes", "status": "in-progress"},
+    {"title": "Build prototype", "status": "todo"},
+    {"title": "Collect feedback", "status": "todo"}
+]
+
+let done = 0
+let todo = 0
+
+for task in tasks {
+    if task.status is "done" {
+        done = done + 1
+    } else {
+        todo = todo + 1
+    }
+}
+
+show("Completed tasks" done)
+show("Remaining tasks" todo)
+show("Review feedback and update the plan")
