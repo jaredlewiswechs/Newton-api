@@ -1,0 +1,69 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Literals & Types
+// Tests basic value types and their behavior
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Integer literals
+// EXPECT: 42
+show(42)
+// END
+
+// TEST: Negative integers
+// EXPECT: -17
+show(-17)
+// END
+
+// TEST: Float literals
+// EXPECT: 3.14159
+show(3.14159)
+// END
+
+// TEST: String literals
+// EXPECT: Hello, World!
+show("Hello, World!")
+// END
+
+// TEST: Boolean true
+// EXPECT: true
+show(true)
+// END
+
+// TEST: Boolean false
+// EXPECT: false
+show(false)
+// END
+
+// TEST: Null value
+// EXPECT: null
+show(null)
+// END
+
+// TEST: Empty list
+// EXPECT: []
+show([])
+// END
+
+// TEST: List with values
+// EXPECT: [1, 2, 3]
+show([1, 2, 3])
+// END
+
+// TEST: Nested list
+// EXPECT: [[1, 2], [3, 4]]
+show([[1, 2], [3, 4]])
+// END
+
+// TEST: Empty map
+// EXPECT: {}
+show({})
+// END
+
+// TEST: Map with values
+// EXPECT: {a: 1, b: 2}
+show({"a": 1, "b": 2})
+// END
+
+// TEST: Mixed type list
+// EXPECT: [1, hello, true, null]
+show([1, "hello", true, null])
+// END

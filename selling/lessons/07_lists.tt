@@ -1,0 +1,113 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Lists
+// Tests list operations, indexing, and methods
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: List creation
+// EXPECT: [1, 2, 3]
+show([1, 2, 3])
+// END
+
+// TEST: List index access
+// EXPECT: 2
+let nums = [1, 2, 3]
+show(nums[1])
+// END
+
+// TEST: List negative index
+// EXPECT: 3
+let nums = [1, 2, 3]
+show(nums[-1])
+// END
+
+// TEST: List index assignment
+// EXPECT: [1, 99, 3]
+let nums = [1, 2, 3]
+nums[1] = 99
+show(nums)
+// END
+
+// TEST: List length
+// EXPECT: 4
+show(len([10, 20, 30, 40]))
+// END
+
+// TEST: List .len property
+// EXPECT: 3
+let arr = [1, 2, 3]
+show(arr.len)
+// END
+
+// TEST: List .first property
+// EXPECT: 10
+let arr = [10, 20, 30]
+show(arr.first)
+// END
+
+// TEST: List .last property
+// EXPECT: 30
+let arr = [10, 20, 30]
+show(arr.last)
+// END
+
+// TEST: List append (push)
+// EXPECT: [1, 2, 3, 4]
+let nums = [1, 2, 3]
+push(nums, 4)
+show(nums)
+// END
+
+// TEST: List pop
+// EXPECT: 3
+//   [1, 2]
+let nums = [1, 2, 3]
+let last = pop(nums)
+show(last)
+show(nums)
+// END
+
+// TEST: List concatenation
+// EXPECT: [1, 2, 3, 4]
+show([1, 2] + [3, 4])
+// END
+
+// TEST: List reference semantics
+// EXPECT: [99, 2, 3]
+let a = [1, 2, 3]
+let b = a
+b[0] = 99
+show(a)
+// END
+
+// TEST: List in for loop
+// EXPECT: 6
+let total = 0
+for x in [1, 2, 3] { total += x }
+show(total)
+// END
+
+// TEST: Nested list access
+// EXPECT: 5
+let matrix = [[1, 2], [3, 4], [5, 6]]
+show(matrix[2][0])
+// END
+
+// TEST: List contains check (isin)
+// EXPECT: true
+show(3 isin [1, 2, 3, 4])
+// END
+
+// TEST: List does not contain
+// EXPECT: false
+show(5 isin [1, 2, 3, 4])
+// END
+
+// TEST: Empty list is falsy
+// EXPECT: empty
+if [] { show("has items") } else { show("empty") }
+// END
+
+// TEST: Non-empty list is truthy
+// EXPECT: has items
+if [1] { show("has items") } else { show("empty") }
+// END

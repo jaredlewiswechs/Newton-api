@@ -1,0 +1,59 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Space-Separated Arguments
+// Tests the unique space-separated function call syntax
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: show with multiple args
+// EXPECT: hello world
+show("hello" "world")
+// END
+
+// TEST: show with mixed types
+// EXPECT: count: 42
+show("count:" 42)
+// END
+
+// TEST: show with variable
+// EXPECT: value is 10
+let x = 10
+show("value is" x)
+// END
+
+// TEST: show with expression
+// EXPECT: sum is 15
+show("sum is" 5 + 10)
+// END
+
+// TEST: show list inline
+// EXPECT: items: [1, 2, 3]
+let items = [1, 2, 3]
+show("items:" items)
+// END
+
+// TEST: Multiple values auto-joined
+// EXPECT: a b c d
+show("a" "b" "c" "d")
+// END
+
+// TEST: Expression results
+// EXPECT: 2 + 3 = 5
+show("2 + 3 =" 2 + 3)
+// END
+
+// TEST: Function result in show
+// EXPECT: double of 5 is 10
+law double(n) reply n * 2 end
+show("double of 5 is" double(5))
+// END
+
+// TEST: Nested computation
+// EXPECT: result: 25
+law square(n) reply n * n end
+show("result:" square(3 + 2))
+// END
+
+// TEST: Boolean in show
+// EXPECT: is valid: true
+let valid = true
+show("is valid:" valid)
+// END

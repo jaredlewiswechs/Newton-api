@@ -1,0 +1,151 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Edge Cases
+// Tests boundary conditions and special cases
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Zero factorial
+// EXPECT: 1
+law fact(n)
+    if n <= 1 { reply 1 }
+    reply n * fact(n - 1)
+end
+show(fact(0))
+// END
+
+// TEST: Empty list sum
+// EXPECT: 0
+show([] _sum)
+// END
+
+// TEST: Single element list
+// EXPECT: [42]
+show([42] _sort)
+// END
+
+// TEST: Negative index wrap
+// EXPECT: 3
+let arr = [1, 2, 3]
+show(arr[-1])
+// END
+
+// TEST: Deeply nested list
+// EXPECT: 5
+let deep = [[[[5]]]]
+show(deep[0][0][0][0])
+// END
+
+// TEST: Empty string length
+// EXPECT: 0
+show("".len)
+// END
+
+// TEST: Whitespace string
+// EXPECT: 3
+show("   ".len)
+// END
+
+// TEST: Unicode in string (basic)
+// EXPECT: hello
+show("hello")
+// END
+
+// TEST: Null equality
+// EXPECT: true
+show(null == null)
+// END
+
+// TEST: Null in list
+// EXPECT: [null, 1, null]
+show([null, 1, null])
+// END
+
+// TEST: Boolean arithmetic (true as 1)
+// EXPECT: 2
+show(true + true)
+// END
+
+// TEST: Boolean arithmetic (false as 0)
+// EXPECT: 0
+show(false + false)
+// END
+
+// TEST: Large number
+// EXPECT: 1000000
+show(1000000)
+// END
+
+// TEST: Float precision
+// EXPECT: 0.30000000000000004
+show(0.1 + 0.2)
+// END
+
+// TEST: Division by expression
+// EXPECT: 2.0
+show(10 / (2 + 3))
+// END
+
+// TEST: Chained comparisons via and
+// EXPECT: true
+let x = 5
+show(1 < x and x < 10)
+// END
+
+// TEST: Self-referencing list (indirect)
+// EXPECT: [[1, 2]]
+let inner = [1, 2]
+let outer = [inner]
+show(outer)
+// END
+
+// TEST: Map with numeric-ish string key
+// EXPECT: value
+let obj = {"123": "value"}
+show(obj["123"])
+// END
+
+// TEST: Function returns last expression value
+// EXPECT: 1
+law nothing()
+    let x = 1
+end
+show(nothing())
+// END
+
+// TEST: Multiple returns (early exit)
+// EXPECT: first
+law test()
+    reply "first"
+    reply "second"
+end
+show(test())
+// END
+
+// TEST: Loop variable is scoped inside loop
+// EXPECT: done
+for i in range(3) {
+    let inner = i
+}
+show("done")
+// END
+
+// TEST: Recursive countdown
+// EXPECT: 3
+//   2
+//   1
+//   0
+law countdown(n)
+    show(n)
+    if n > 0 { countdown(n - 1) }
+end
+countdown(3)
+// END
+
+// TEST: Empty map is falsy
+// EXPECT: no
+if {} { show("yes") } else { show("no") }
+// END
+
+// TEST: Zero is falsy
+// EXPECT: no
+if 0 { show("yes") } else { show("no") }
+// END

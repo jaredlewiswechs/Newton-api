@@ -1,0 +1,109 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Comparisons & Logic
+// Tests comparison operators and boolean logic
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Equal (true)
+// EXPECT: true
+show(5 == 5)
+// END
+
+// TEST: Equal (false)
+// EXPECT: false
+show(5 == 6)
+// END
+
+// TEST: Not equal (true)
+// EXPECT: true
+show(5 != 6)
+// END
+
+// TEST: Less than (true)
+// EXPECT: true
+show(3 < 5)
+// END
+
+// TEST: Less than (false)
+// EXPECT: false
+show(5 < 3)
+// END
+
+// TEST: Greater than
+// EXPECT: true
+show(7 > 4)
+// END
+
+// TEST: Less than or equal
+// EXPECT: true
+show(5 <= 5)
+// END
+
+// TEST: Greater than or equal
+// EXPECT: true
+show(6 >= 5)
+// END
+
+// TEST: Natural 'is' comparison (equal)
+// EXPECT: true
+show(5 is 5)
+// END
+
+// TEST: Natural 'isnt' comparison
+// EXPECT: true
+show(5 isnt 6)
+// END
+
+// TEST: Logical and (true)
+// EXPECT: true
+show(true and true)
+// END
+
+// TEST: Logical and (false)
+// EXPECT: false
+show(true and false)
+// END
+
+// TEST: Logical or (true)
+// EXPECT: true
+show(false or true)
+// END
+
+// TEST: Logical or (false)
+// EXPECT: false
+show(false or false)
+// END
+
+// TEST: Logical not (true)
+// EXPECT: true
+show(not false)
+// END
+
+// TEST: Logical not (false)
+// EXPECT: false
+show(not true)
+// END
+
+// TEST: Complex boolean
+// EXPECT: true
+show((5 > 3) and (2 < 4))
+// END
+
+// TEST: String 'has' (contains)
+// EXPECT: true
+show("hello world" has "world")
+// END
+
+// TEST: String 'hasnt' (not contains)
+// EXPECT: true
+show("hello" hasnt "xyz")
+// END
+
+// TEST: List 'isin' membership
+// EXPECT: true
+show(3 isin [1, 2, 3, 4])
+// END
+
+// TEST: String 'islike' pattern (contains)
+// EXPECT: true
+show("hello123" has "hello")
+// END

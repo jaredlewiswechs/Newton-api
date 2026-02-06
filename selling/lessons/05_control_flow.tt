@@ -1,0 +1,123 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Control Flow
+// Tests if/else, loops, and branching
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Simple if (true branch)
+// EXPECT: yes
+if true { show("yes") }
+// END
+
+// TEST: Simple if (false - no output)
+// EXPECT: done
+if false { show("no") }
+show("done")
+// END
+
+// TEST: If-else (true branch)
+// EXPECT: bigger
+if 5 > 3 { show("bigger") } else { show("smaller") }
+// END
+
+// TEST: If-else (false branch)
+// EXPECT: smaller
+if 2 > 5 { show("bigger") } else { show("smaller") }
+// END
+
+// TEST: Nested if
+// EXPECT: both
+if true {
+    if true {
+        show("both")
+    }
+}
+// END
+
+// TEST: For loop range
+// EXPECT: 0
+//   1
+//   2
+for i in range(3) { show(i) }
+// END
+
+// TEST: For loop list
+// EXPECT: a
+//   b
+//   c
+for x in ["a", "b", "c"] { show(x) }
+// END
+
+// TEST: For loop with computation
+// EXPECT: 15
+let total = 0
+for i in range(6) { total += i }
+show(total)
+// END
+
+// TEST: While loop
+// EXPECT: 5
+let n = 0
+while n < 5 { n += 1 }
+show(n)
+// END
+
+// TEST: While loop with accumulator
+// EXPECT: 10
+let total = 0
+let idx = 1
+while idx <= 4 {
+    total += idx
+    idx += 1
+}
+show(total)
+// END
+
+// TEST: Break in loop
+// EXPECT: stopped at 3
+for i in range(10) {
+    if i == 3 { 
+        show("stopped at 3")
+        break 
+    }
+}
+// END
+
+// TEST: Continue in loop
+// EXPECT: 1
+//   3
+//   5
+for i in range(6) {
+    if i % 2 == 0 { continue }
+    show(i)
+}
+// END
+
+// TEST: Truthiness - non-empty string
+// EXPECT: truthy
+if "hello" { show("truthy") }
+// END
+
+// TEST: Truthiness - empty string
+// EXPECT: falsy
+if "" { show("truthy") } else { show("falsy") }
+// END
+
+// TEST: Truthiness - non-zero
+// EXPECT: truthy
+if 1 { show("truthy") }
+// END
+
+// TEST: Truthiness - zero
+// EXPECT: falsy
+if 0 { show("truthy") } else { show("falsy") }
+// END
+
+// TEST: Truthiness - non-empty list
+// EXPECT: truthy
+if [1] { show("truthy") }
+// END
+
+// TEST: Truthiness - empty list
+// EXPECT: falsy
+if [] { show("truthy") } else { show("falsy") }
+// END

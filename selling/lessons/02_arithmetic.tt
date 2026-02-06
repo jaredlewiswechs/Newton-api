@@ -1,0 +1,69 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Arithmetic
+// Tests mathematical operations
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Addition
+// EXPECT: 7
+show(3 + 4)
+// END
+
+// TEST: Subtraction
+// EXPECT: 5
+show(12 - 7)
+// END
+
+// TEST: Multiplication
+// EXPECT: 24
+show(6 * 4)
+// END
+
+// TEST: Division
+// EXPECT: 5.0
+show(15 / 3)
+// END
+
+// TEST: Float division
+// EXPECT: 2.5
+show(5 / 2)
+// END
+
+// TEST: Modulo
+// EXPECT: 1
+show(7 % 3)
+// END
+
+// TEST: Exponentiation (pow function)
+// EXPECT: 8.0
+show(pow(2, 3))
+// END
+
+// TEST: Negative numbers
+// EXPECT: -3
+show(-1 + -2)
+// END
+
+// TEST: Order of operations
+// EXPECT: 14
+show(2 + 3 * 4)
+// END
+
+// TEST: Parentheses
+// EXPECT: 20
+show((2 + 3) * 4)
+// END
+
+// TEST: Complex expression
+// EXPECT: 20.0
+show(3 + 4 * 5 - 6 / 2)
+// END
+
+// TEST: Chained addition
+// EXPECT: 15
+show(1 + 2 + 3 + 4 + 5)
+// END
+
+// TEST: Mixed int and float
+// EXPECT: 5.5
+show(3 + 2.5)
+// END

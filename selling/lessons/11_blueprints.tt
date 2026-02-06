@@ -1,0 +1,181 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Blueprints (OOP)
+// Tests class-like blueprints with fields and methods
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Blueprint with field
+// EXPECT: 10
+blueprint Point
+    field x
+end
+let p = Point(10)
+show(p.x)
+// END
+
+// TEST: Blueprint with multiple fields
+// EXPECT: 3
+//   4
+blueprint Point2D
+    field x
+    field y
+end
+let p = Point2D(3, 4)
+show(p.x)
+show(p.y)
+// END
+
+// TEST: Blueprint field assignment
+// EXPECT: 99
+blueprint Box
+    field value
+end
+let b = Box(0)
+b.value = 99
+show(b.value)
+// END
+
+// TEST: Blueprint with forge method
+// EXPECT: 1
+//   2
+blueprint Counter
+    field x
+    forge inc()
+        self.x = self.x + 1
+        reply self.x
+    end
+end
+let c = Counter(0)
+show(c.inc())
+show(c.inc())
+// END
+
+// TEST: Blueprint with law method
+// EXPECT: 50
+blueprint Rectangle
+    field width
+    field height
+    law area()
+        reply self.width * self.height
+    end
+end
+let r = Rectangle(5, 10)
+show(r.area())
+// END
+
+// TEST: Blueprint method with parameter
+// EXPECT: 15
+blueprint Adder
+    field base
+    law add(n)
+        reply self.base + n
+    end
+end
+let a = Adder(10)
+show(a.add(5))
+// END
+
+// TEST: Multiple instances are independent
+// EXPECT: 1
+//   1
+blueprint Counter
+    field n
+    forge bump()
+        self.n = self.n + 1
+        reply self.n
+    end
+end
+let c1 = Counter(0)
+let c2 = Counter(0)
+show(c1.bump())
+show(c2.bump())
+// END
+
+// TEST: Bound method as value
+// EXPECT: 3
+//   4
+blueprint Counter
+    field x
+    forge inc()
+        self.x = self.x + 1
+        reply self.x
+    end
+end
+let c = Counter(2)
+let f = c.inc
+show(f())
+show(f())
+// END
+
+// TEST: Blueprint with computed property
+// EXPECT: Hello, Alice!
+blueprint Greeter
+    field name
+    law greet()
+        reply "Hello, " + self.name + "!"
+    end
+end
+let g = Greeter("Alice")
+show(g.greet())
+// END
+
+// TEST: Blueprint method calling another method
+// EXPECT: 10.0
+blueprint Math
+    field value
+    law double()
+        reply self.value * 2
+    end
+    law quadruple()
+        reply self.double() * 2
+    end
+end
+let m = Math(2.5)
+show(m.quadruple())
+// END
+
+// TEST: Blueprint with default-ish pattern
+// EXPECT: 0
+blueprint Stack
+    field items
+    law size()
+        reply len(self.items)
+    end
+end
+let s = Stack([])
+show(s.size())
+// END
+
+// TEST: Blueprint method modifying list field
+// EXPECT: [1, 2, 3]
+blueprint Stack
+    field items
+    forge push(val)
+        push(self.items, val)
+    end
+end
+let s = Stack([])
+s.push(1)
+s.push(2)
+s.push(3)
+show(s.items)
+// END
+
+// TEST: Blueprint with conditional in method
+// EXPECT: true
+//   false
+blueprint Toggle
+    field on
+    forge flip()
+        if self.on {
+            self.on = false
+        } else {
+            self.on = true
+        }
+    end
+end
+let t = Toggle(false)
+t.flip()
+show(t.on)
+t.flip()
+show(t.on)
+// END

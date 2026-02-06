@@ -1,0 +1,125 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Step Chains
+// Tests the _operation pipeline system
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: _sort ascending
+// EXPECT: [1, 2, 3, 4, 5]
+show([3, 1, 4, 5, 2] _sort)
+// END
+
+// TEST: _reverse list
+// EXPECT: [3, 2, 1]
+show([1, 2, 3] _reverse)
+// END
+
+// TEST: _unique removes duplicates
+// EXPECT: [1, 2, 3]
+show([1, 2, 2, 3, 3, 3] _unique)
+// END
+
+// TEST: _sum numbers
+// EXPECT: 15
+show([1, 2, 3, 4, 5] _sum)
+// END
+
+// TEST: _avg (average)
+// EXPECT: 3.0
+show([1, 2, 3, 4, 5] _avg)
+// END
+
+// TEST: _min value
+// EXPECT: 1
+show([5, 3, 1, 4, 2] _min)
+// END
+
+// TEST: _max value
+// EXPECT: 5
+show([1, 3, 5, 2, 4] _max)
+// END
+
+// TEST: _count elements
+// EXPECT: 4
+show([10, 20, 30, 40] _count)
+// END
+
+// TEST: _first element
+// EXPECT: 10
+show([10, 20, 30] _first)
+// END
+
+// TEST: _last element
+// EXPECT: 30
+show([10, 20, 30] _last)
+// END
+
+// TEST: _filter with predicate
+// EXPECT: [2, 4, 6]
+law isEven(x) reply x % 2 == 0 end
+show([1, 2, 3, 4, 5, 6] _filter(isEven))
+// END
+
+// TEST: _map with transform
+// EXPECT: [1, 4, 9]
+law square(x) reply x * x end
+show([1, 2, 3] _map(square))
+// END
+
+// TEST: Manual reduce with loop
+// EXPECT: 24
+law mult(a, b) reply a * b end
+let arr = [1, 2, 3, 4]
+let acc = 1
+for x in arr { acc = mult(acc, x) }
+show(acc)
+// END
+
+// TEST: Chained steps
+// EXPECT: [1, 2, 3, 4, 5]
+show([3, 1, 4, 1, 5, 9, 2, 6] _unique _sort _take(5))
+// END
+
+// TEST: Filter then map
+// EXPECT: [1, 9, 25]
+law isOdd(x) reply x % 2 == 1 end
+law sq(x) reply x * x end
+show([1, 2, 3, 4, 5] _filter(isOdd) _map(sq))
+// END
+
+// TEST: Sort then reverse
+// EXPECT: [5, 4, 3, 2, 1]
+show([3, 1, 4, 5, 2] _sort _reverse)
+// END
+
+// TEST: Complex pipeline
+// EXPECT: 165
+law odd(x) reply x % 2 is 1 end
+law squared(x) reply x * x end
+let data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+show(data _filter(odd) _map(squared) _sum)
+// END
+
+// TEST: _take first n
+// EXPECT: [1, 2, 3]
+show([1, 2, 3, 4, 5] _take(3))
+// END
+
+// TEST: _drop first n
+// EXPECT: [4, 5]
+show([1, 2, 3, 4, 5] _drop(3))
+// END
+
+// TEST: _flatten nested
+// EXPECT: [1, 2, 3, 4]
+show([[1, 2], [3, 4]] _flatten)
+// END
+
+// TEST: join strings
+// EXPECT: a,b,c
+show(join(["a", "b", "c"], ","))
+// END
+
+// TEST: String upcase
+// EXPECT: HELLO
+show("hello".upcase)
+// END

@@ -1,0 +1,180 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Builtins
+// Tests built-in functions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: len() on string
+// EXPECT: 5
+show(len("hello"))
+// END
+
+// TEST: len() on list
+// EXPECT: 3
+show(len([1, 2, 3]))
+// END
+
+// TEST: len() on map
+// EXPECT: 2
+show(len({"a": 1, "b": 2}))
+// END
+
+// TEST: typeof int
+// EXPECT: int
+show(typeof(42))
+// END
+
+// TEST: typeof string
+// EXPECT: string
+show(typeof("hi"))
+// END
+
+// TEST: typeof list
+// EXPECT: list
+show(typeof([1, 2]))
+// END
+
+// TEST: typeof map
+// EXPECT: map
+show(typeof({"a": 1}))
+// END
+
+// TEST: typeof function
+// EXPECT: function
+law f() reply 1 end
+show(typeof(f))
+// END
+
+// TEST: str() conversion
+// EXPECT: 42
+show(str(42))
+// END
+
+// TEST: int() conversion from float
+// EXPECT: 3
+show(int(3.7))
+// END
+
+// TEST: int() conversion from string
+// EXPECT: 42
+show(int("42"))
+// END
+
+// TEST: float() conversion
+// EXPECT: 3.0
+show(float(3))
+// END
+
+// TEST: bool() truthy
+// EXPECT: true
+show(bool(1))
+// END
+
+// TEST: bool() falsy
+// EXPECT: false
+show(bool(0))
+// END
+
+// TEST: abs() positive
+// EXPECT: 5
+show(abs(5))
+// END
+
+// TEST: abs() negative
+// EXPECT: 5
+show(abs(-5))
+// END
+
+// TEST: min() of two
+// EXPECT: 3
+show(min(5, 3))
+// END
+
+// TEST: max() of two
+// EXPECT: 7
+show(max(7, 4))
+// END
+
+// TEST: sum() of list
+// EXPECT: 10
+show(sum([1, 2, 3, 4]))
+// END
+
+// TEST: round() down
+// EXPECT: 3
+show(round(3.4))
+// END
+
+// TEST: round() up
+// EXPECT: 4
+show(round(3.6))
+// END
+
+// TEST: floor()
+// EXPECT: 3
+show(floor(3.9))
+// END
+
+// TEST: ceil()
+// EXPECT: 4
+show(ceil(3.1))
+// END
+
+// TEST: sqrt()
+// EXPECT: 4.0
+show(sqrt(16))
+// END
+
+// TEST: pow()
+// EXPECT: 8.0
+show(pow(2, 3))
+// END
+
+// TEST: range() with end
+// EXPECT: [0, 1, 2, 3, 4]
+show(range(5))
+// END
+
+// TEST: range() with start and end
+// EXPECT: [2, 3, 4]
+show(range(2, 5))
+// END
+
+// TEST: range() with step
+// EXPECT: [0, 2, 4, 6, 8]
+show(range(0, 10, 2))
+// END
+
+// TEST: reverse() list
+// EXPECT: [3, 2, 1]
+show(reverse([1, 2, 3]))
+// END
+
+// TEST: sort() list
+// EXPECT: [1, 2, 3, 4, 5]
+show(sort([3, 1, 4, 5, 2]))
+// END
+
+// TEST: contains() true
+// EXPECT: true
+show(contains([1, 2, 3], 2))
+// END
+
+// TEST: contains() false
+// EXPECT: false
+show(contains([1, 2, 3], 5))
+// END
+
+// TEST: slice() list
+// EXPECT: [2, 3]
+show(slice([1, 2, 3, 4], 1, 3))
+// END
+
+// TEST: keys() of map
+// EXPECT: [a, b]
+show(keys({"a": 1, "b": 2}))
+// END
+
+// TEST: values() of map
+// EXPECT: [1, 2]
+show(values({"a": 1, "b": 2}))
+// END

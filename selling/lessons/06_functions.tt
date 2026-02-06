@@ -1,0 +1,116 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Functions (law)
+// Tests function definition, parameters, return values
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Simple function
+// EXPECT: hello
+law greet() reply "hello" end
+show(greet())
+// END
+
+// TEST: Function with parameter
+// EXPECT: 10
+law double(x) reply x * 2 end
+show(double(5))
+// END
+
+// TEST: Function with two parameters
+// EXPECT: 7
+law add(a, b) reply a + b end
+show(add(3, 4))
+// END
+
+// TEST: Function calling function
+// EXPECT: 20
+law square(n) reply n * n end
+law addSquares(a, b) reply square(a) + square(b) end
+show(addSquares(2, 4))
+// END
+
+// TEST: Recursion - factorial
+// EXPECT: 120
+law fact(n)
+    if n <= 1 { reply 1 }
+    reply n * fact(n - 1)
+end
+show(fact(5))
+// END
+
+// TEST: Recursion - fibonacci
+// EXPECT: 13
+law fib(n)
+    if n <= 1 { reply n }
+    reply fib(n - 1) + fib(n - 2)
+end
+show(fib(7))
+// END
+
+// TEST: Function returns function
+// EXPECT: 8
+law makeAdder(n)
+    law inner(x) reply n + x end
+    reply inner
+end
+let add5 = makeAdder(5)
+show(add5(3))
+// END
+
+// TEST: Closure captures variable
+// EXPECT: 15
+law makeMultiplier(factor)
+    law mult(x) reply x * factor end
+    reply mult
+end
+let triple = makeMultiplier(3)
+show(triple(5))
+// END
+
+// TEST: Nested closures
+// EXPECT: 60
+law outer(a)
+    law middle(b)
+        law inner(c) reply a * b * c end
+        reply inner
+    end
+    reply middle
+end
+show(outer(3)(4)(5))
+// END
+
+// TEST: Function as argument
+// EXPECT: 9
+law apply(f, x) reply f(x) end
+law sq(n) reply n * n end
+show(apply(sq, 3))
+// END
+
+// TEST: Function stored in variable
+// EXPECT: 27
+law cube(n) reply n * n * n end
+let f = cube
+show(f(3))
+// END
+
+// TEST: Function stored in list
+// EXPECT: 8
+law dbl(x) reply x * 2 end
+let funcs = [dbl]
+show(funcs[0](4))
+// END
+
+// TEST: Multiple returns via early reply
+// EXPECT: positive
+law classify(n)
+    if n > 0 { reply "positive" }
+    if n < 0 { reply "negative" }
+    reply "zero"
+end
+show(classify(5))
+// END
+
+// TEST: Function without explicit reply returns last value
+// EXPECT: 5
+law noReturn() let x = 5 end
+show(noReturn())
+// END

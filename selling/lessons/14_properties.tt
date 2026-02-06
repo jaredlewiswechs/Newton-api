@@ -1,0 +1,100 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Property Magic
+// Tests automatic type conversions via .property syntax
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: .str on integer
+// EXPECT: 42
+show((42).str)
+// END
+
+// TEST: .str on float
+// EXPECT: 3.14
+show((3.14).str)
+// END
+
+// TEST: .str on boolean
+// EXPECT: true
+show(true.str)
+// END
+
+// TEST: .int from string
+// EXPECT: 123
+show("123".int)
+// END
+
+// TEST: .int from float
+// EXPECT: 3
+show((3.9).int)
+// END
+
+// TEST: .float from string
+// EXPECT: 3.14
+show("3.14".float)
+// END
+
+// TEST: .float from int
+// EXPECT: 5.0
+show((5).float)
+// END
+
+// TEST: .bool truthy int
+// EXPECT: true
+show((1).bool)
+// END
+
+// TEST: .bool falsy int
+// EXPECT: false
+show((0).bool)
+// END
+
+// TEST: .bool truthy string
+// EXPECT: true
+show("hello".bool)
+// END
+
+// TEST: .bool falsy string
+// EXPECT: false
+show("".bool)
+// END
+
+// TEST: .type of int
+// EXPECT: int
+show((42).type)
+// END
+
+// TEST: .type of string
+// EXPECT: string
+show("hi".type)
+// END
+
+// TEST: .type of list
+// EXPECT: list
+show([1, 2].type)
+// END
+
+// TEST: .len on string
+// EXPECT: 5
+show("hello".len)
+// END
+
+// TEST: .len on list
+// EXPECT: 3
+show([1, 2, 3].len)
+// END
+
+// TEST: len() on map
+// EXPECT: 2
+show(len({"a": 1, "b": 2}))
+// END
+
+// TEST: Chained conversions
+// EXPECT: 42
+let n = 42
+show(n.str.int)
+// END
+
+// TEST: Property on expression result
+// EXPECT: 100
+show((50 + 50).str.int)
+// END

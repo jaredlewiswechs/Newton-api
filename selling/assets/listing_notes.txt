@@ -1,0 +1,16 @@
+Gumroad listing notes
+
+Title suggestion: realTinyTalk — Tiny coding playground for educators
+Price suggestion: $29 (teacher pack)
+
+Short blurb:
+Teach programming with TinyTalk — a beginner-friendly language that transpiles to JavaScript and Python. This pack includes a deployable editor, two demo lessons, and a teacher guide for 4 lessons.
+
+Screenshots: record editor showing a lesson running (code left, output right). Create a GIF (15s) of running `mandelbrot.tt` then `neighborhood.tt`.
+
+Files to include in the package:
+- README.md
+- TeacherGuide.md
+- lessons/*.tt
+- start scripts
+- simple LICENSE (MIT or custom)

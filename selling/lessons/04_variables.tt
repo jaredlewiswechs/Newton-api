@@ -1,0 +1,83 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Variables & Assignment
+// Tests let, const, and assignment behavior
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Let declaration
+// EXPECT: 42
+let x = 42
+show(x)
+// END
+
+// TEST: Let reassignment
+// EXPECT: 100
+let y = 10
+y = 100
+show(y)
+// END
+
+// TEST: Multiple variables
+// EXPECT: 30
+let a = 10
+let b = 20
+show(a + b)
+// END
+
+// TEST: Variable in expression
+// EXPECT: 25
+let n = 5
+show(n * n)
+// END
+
+// TEST: Chained assignment
+// EXPECT: 7
+let p = 3
+let q = p + 4
+show(q)
+// END
+
+// TEST: Self-referencing update
+// EXPECT: 15
+let count = 10
+count = count + 5
+show(count)
+// END
+
+// TEST: Compound assignment +=
+// EXPECT: 13
+let val = 10
+val += 3
+show(val)
+// END
+
+// TEST: Compound assignment -=
+// EXPECT: 7
+let v = 10
+v -= 3
+show(v)
+// END
+
+// TEST: Compound assignment *=
+// EXPECT: 30
+let m = 10
+m *= 3
+show(m)
+// END
+
+// TEST: String variable
+// EXPECT: hello
+let greeting = "hello"
+show(greeting)
+// END
+
+// TEST: List variable
+// EXPECT: [1, 2, 3]
+let nums = [1, 2, 3]
+show(nums)
+// END
+
+// TEST: Map variable
+// EXPECT: {name: Alice}
+let person = {"name": "Alice"}
+show(person)
+// END

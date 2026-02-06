@@ -1,0 +1,132 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Strings
+// Tests string operations and properties
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: String concatenation
+// EXPECT: hello world
+show("hello" + " " + "world")
+// END
+
+// TEST: String length
+// EXPECT: 5
+show(len("hello"))
+// END
+
+// TEST: String .len property
+// EXPECT: 6
+show("newton".len)
+// END
+
+// TEST: String index access
+// EXPECT: e
+show("hello"[1])
+// END
+
+// TEST: String negative index
+// EXPECT: o
+show("hello"[-1])
+// END
+
+// TEST: String .upcase
+// EXPECT: HELLO
+show("hello".upcase)
+// END
+
+// TEST: String .lowcase
+// EXPECT: world
+show("WORLD".lowcase)
+// END
+
+// TEST: String .upper (alias)
+// EXPECT: TEST
+show("test".upper)
+// END
+
+// TEST: String .lower (alias)
+// EXPECT: test
+show("TEST".lower)
+// END
+
+// TEST: String .trim
+// EXPECT: hello
+show("  hello  ".trim)
+// END
+
+// TEST: String .chars
+// EXPECT: [a, b, c]
+show("abc".chars)
+// END
+
+// TEST: String .words
+// EXPECT: [hello, world]
+show("hello world".words)
+// END
+
+// TEST: String .lines
+// EXPECT: [line1, line2]
+let text = "line1\nline2"
+show(text.lines)
+// END
+
+// TEST: String .reversed
+// EXPECT: olleh
+show("hello".reversed)
+// END
+
+// TEST: String contains (has)
+// EXPECT: true
+show("hello world" has "world")
+// END
+
+// TEST: String not contains (hasnt)
+// EXPECT: true
+show("hello" hasnt "xyz")
+// END
+
+// TEST: String split
+// EXPECT: [a, b, c]
+show(split("a,b,c", ","))
+// END
+
+// TEST: String join
+// EXPECT: a-b-c
+show(join(["a", "b", "c"], "-"))
+// END
+
+// TEST: String repetition
+// EXPECT: abcabcabc
+show("abc" * 3)
+// END
+
+// TEST: String equality
+// EXPECT: true
+show("test" == "test")
+// END
+
+// TEST: String comparison
+// EXPECT: true
+show("apple" < "banana")
+// END
+
+// TEST: Empty string is falsy
+// EXPECT: empty
+if "" { show("has text") } else { show("empty") }
+// END
+
+// TEST: Non-empty string is truthy
+// EXPECT: has text
+if "x" { show("has text") }
+// END
+
+// TEST: String interpolation via concat
+// EXPECT: Hello, Alice!
+let name = "Alice"
+show("Hello, " + name + "!")
+// END
+
+// TEST: String .str conversion
+// EXPECT: 42
+let n = 42
+show(n.str)
+// END

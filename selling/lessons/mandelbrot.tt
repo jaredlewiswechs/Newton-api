@@ -1,0 +1,47 @@
+// Mandelbrot — TinyTalk version (ASCII)
+law mandelbrot(width, height, max_iter, x0, x1, y0, y1)
+    let lines = []
+    let charset = " .:-=+*#%@"
+    let chars = charset.chars
+    let buckets = len(chars)
+
+    for py in range(height) {
+        let y = y0 + (py * (y1 - y0) / (height - 1))
+        let row = ""
+        for px in range(width) {
+            let x = x0 + (px * (x1 - x0) / (width - 1))
+            let zx = 0
+            let zy = 0
+            let iter = 0
+            while iter < max_iter {
+                let zx2 = zx * zx
+                let zy2 = zy * zy
+                if zx2 + zy2 > 4 { break }
+                let new_zx = zx2 - zy2 + x
+                let new_zy = 2 * zx * zy + y
+                zx = new_zx
+                zy = new_zy
+                iter = iter + 1
+            }
+
+            let bucket_size = (max_iter + 0.0) / buckets
+            let ci = 0
+            while ci < buckets {
+                if iter <= (ci + 1) * bucket_size { break }
+                ci = ci + 1
+            }
+            if ci >= buckets { ci = buckets - 1 }
+
+            row = row + chars[ci]
+        }
+        push(lines, row)
+    }
+    reply lines
+end
+
+let W = 80
+let H = 30
+let maxIt = 40
+let out = mandelbrot(W, H, maxIt, -2.2, 1.0, -1.2, 1.2)
+show("Mandelbrot set — " + W + "x" + H + "  iter=" + maxIt)
+for line in out { show(line) }

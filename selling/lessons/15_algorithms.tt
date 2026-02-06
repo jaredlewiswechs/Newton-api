@@ -1,0 +1,221 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Algorithms
+// Tests implementation of classic CS algorithms
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Factorial iterative
+// EXPECT: 120
+law factorial(n)
+    let result = 1
+    for i in range(1, n + 1) {
+        result = result * i
+    }
+    reply result
+end
+show(factorial(5))
+// END
+
+// TEST: Fibonacci recursive
+// EXPECT: 55
+law fib(n)
+    if n <= 1 { reply n }
+    reply fib(n - 1) + fib(n - 2)
+end
+show(fib(10))
+// END
+
+// TEST: Fibonacci iterative
+// EXPECT: 55
+law fibIter(n)
+    if n <= 1 { reply n }
+    let a = 0
+    let b = 1
+    for i in range(2, n + 1) {
+        let temp = a + b
+        a = b
+        b = temp
+    }
+    reply b
+end
+show(fibIter(10))
+// END
+
+// TEST: Sum of squares
+// EXPECT: 55
+law sumSquares(n)
+    let total = 0
+    for i in range(1, n + 1) {
+        total = total + i * i
+    }
+    reply total
+end
+show(sumSquares(5))
+// END
+
+// TEST: Prime check
+// EXPECT: true
+//   false
+law isPrime(n)
+    if n < 2 { reply false }
+    for i in range(2, n) {
+        if n % i == 0 { reply false }
+    }
+    reply true
+end
+show(isPrime(17))
+show(isPrime(15))
+// END
+
+// TEST: GCD (Euclidean)
+// EXPECT: 6
+law gcd(a, b)
+    while b != 0 {
+        let temp = b
+        b = a % b
+        a = temp
+    }
+    reply a
+end
+show(gcd(48, 18))
+// END
+
+// TEST: Linear search
+// EXPECT: 2
+law linearSearch(arr, target)
+    for i in range(len(arr)) {
+        if arr[i] == target { reply i }
+    }
+    reply -1
+end
+show(linearSearch([5, 3, 8, 1, 9], 8))
+// END
+
+// TEST: Bubble sort (manual)
+// EXPECT: [1, 2, 3, 4, 5]
+law bubbleSort(arr)
+    let n = len(arr)
+    for i in range(n) {
+        for j in range(0, n - i - 1) {
+            if arr[j] > arr[j + 1] {
+                let temp = arr[j]
+                arr[j] = arr[j + 1]
+                arr[j + 1] = temp
+            }
+        }
+    }
+    reply arr
+end
+let nums = [5, 3, 1, 4, 2]
+show(bubbleSort(nums))
+// END
+
+// TEST: Count occurrences
+// EXPECT: 3
+law countOccurrences(arr, target)
+    let count = 0
+    for item in arr {
+        if item == target { count = count + 1 }
+    }
+    reply count
+end
+show(countOccurrences([1, 2, 3, 2, 4, 2, 5], 2))
+// END
+
+// TEST: Reverse list (manual)
+// EXPECT: [5, 4, 3, 2, 1]
+law reverseList(arr)
+    let result = []
+    for i in range(len(arr) - 1, -1, -1) {
+        push(result, arr[i])
+    }
+    reply result
+end
+show(reverseList([1, 2, 3, 4, 5]))
+// END
+
+// TEST: Map function implementation
+// EXPECT: [2, 4, 6, 8, 10]
+law myMap(arr, func)
+    let result = []
+    for item in arr {
+        push(result, func(item))
+    }
+    reply result
+end
+law double(x) reply x * 2 end
+show(myMap([1, 2, 3, 4, 5], double))
+// END
+
+// TEST: Filter function implementation
+// EXPECT: [2, 4, 6]
+law myFilter(arr, pred)
+    let result = []
+    for item in arr {
+        if pred(item) { push(result, item) }
+    }
+    reply result
+end
+law isEven(x) reply x % 2 == 0 end
+show(myFilter([1, 2, 3, 4, 5, 6], isEven))
+// END
+
+// TEST: Reduce function implementation
+// EXPECT: 15
+law myReduce(arr, func, init)
+    let acc = init
+    for item in arr {
+        acc = func(acc, item)
+    }
+    reply acc
+end
+law add(a, b) reply a + b end
+show(myReduce([1, 2, 3, 4, 5], add, 0))
+// END
+
+// TEST: String palindrome check
+// EXPECT: true
+//   false
+law isPalindrome(s)
+    let chars = s.chars
+    let n = len(chars)
+    for i in range(n / 2) {
+        if chars[i] != chars[n - 1 - i] { reply false }
+    }
+    reply true
+end
+show(isPalindrome("racecar"))
+show(isPalindrome("hello"))
+// END
+
+// TEST: FizzBuzz (first 15)
+// EXPECT: 1
+//   2
+//   Fizz
+//   4
+//   Buzz
+//   Fizz
+//   7
+//   8
+//   Fizz
+//   Buzz
+//   11
+//   Fizz
+//   13
+//   14
+//   FizzBuzz
+for i in range(1, 16) {
+    if i % 15 == 0 {
+        show("FizzBuzz")
+    } else {
+        if i % 3 == 0 {
+            show("Fizz")
+        } else {
+            if i % 5 == 0 {
+                show("Buzz")
+            } else {
+                show(i)
+            }
+        }
+    }
+}
+// END

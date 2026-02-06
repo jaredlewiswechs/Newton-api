@@ -1,0 +1,104 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// realTinyTalk CONFORMANCE TESTS: Maps (Dictionaries)
+// Tests map operations, key access, and methods
+// Note: Map keys must be quoted strings
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// TEST: Map creation
+// EXPECT: {a: 1, b: 2}
+show({"a": 1, "b": 2})
+// END
+
+// TEST: Map dot access
+// EXPECT: Alice
+let person = {"name": "Alice", "age": 30}
+show(person.name)
+// END
+
+// TEST: Map bracket access
+// EXPECT: 30
+let person = {"name": "Alice", "age": 30}
+show(person["age"])
+// END
+
+// TEST: Map dot assignment
+// EXPECT: {name: Bob}
+let person = {"name": "Alice"}
+person.name = "Bob"
+show(person)
+// END
+
+// TEST: Map bracket assignment
+// EXPECT: {x: 100}
+let point = {"x": 0}
+point["x"] = 100
+show(point)
+// END
+
+// TEST: Map add new key
+// EXPECT: {a: 1, b: 2}
+let obj = {"a": 1}
+obj.b = 2
+show(obj)
+// END
+
+// TEST: Map nested access
+// EXPECT: NYC
+let data = {"user": {"address": {"city": "NYC"}}}
+show(data.user.address.city)
+// END
+
+// TEST: Map missing key returns null
+// EXPECT: null
+let obj = {"a": 1}
+show(obj.missing)
+// END
+
+// TEST: Map keys function
+// EXPECT: [name, age]
+let person = {"name": "Alice", "age": 30}
+show(keys(person))
+// END
+
+// TEST: Map values function
+// EXPECT: [Alice, 30]
+let person = {"name": "Alice", "age": 30}
+show(values(person))
+// END
+
+// TEST: Map length
+// EXPECT: 2
+let obj = {"a": 1, "b": 2}
+show(len(obj))
+// END
+
+// TEST: Map length via len function
+// EXPECT: 3
+let obj = {"x": 1, "y": 2, "z": 3}
+show(len(obj))
+// END
+
+// TEST: Map with string keys containing spaces
+// EXPECT: value
+let obj = {"my key": "value"}
+show(obj["my key"])
+// END
+
+// TEST: Map reference semantics
+// EXPECT: {x: 99}
+let a = {"x": 1}
+let b = a
+b.x = 99
+show(a)
+// END
+
+// TEST: Map in condition
+// EXPECT: has data
+let obj = {"a": 1}
+if obj { show("has data") }
+// END
+
+// TEST: Empty map
+// EXPECT: {}
+show({})
+// END

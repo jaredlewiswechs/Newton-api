@@ -1,0 +1,178 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// CYBERDOG — Example Internet Suite Application
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// This demonstrates CyberDog internet components in TinyTalk.
+// CyberDog was Apple's 1996 OpenDoc-based internet suite.
+// Newton CyberDog brings it back with verified computation.
+//
+// Components:
+//   - Browser (NetSprocket reimagined)
+//   - Email (Mastripe reimagined)
+//   - News Reader
+//   - FTP Client
+//   - Address Book (Contacts)
+//   - Bookmarks
+//
+// Run with: POST /foghorn/tinytalk { "code": "<contents>" }
+//
+// © 2026 Jared Lewis · Ada Computing Company · Houston, Texas
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ---------------------------------------------------------------------------
+// 1. CREATE A COMPLETE CYBERDOG SUITE
+// ---------------------------------------------------------------------------
+
+// This creates all components in one verified package
+let suite = CyberDog.new()
+
+// Or create components individually:
+// let browser = Browser.new()
+// let email = Email.new("me@example.com")
+
+// ---------------------------------------------------------------------------
+// 2. WEB BROWSING
+// ---------------------------------------------------------------------------
+
+let browser = Browser.new("Newton Browser")
+
+// Navigate to a page
+let page = Browser.navigate(browser, "https://newton.dev")
+
+// Navigate to more pages to build history
+Browser.navigate(browser, "https://newton.dev/docs")
+Browser.navigate(browser, "https://newton.dev/api")
+
+// Go back
+Browser.back(browser)
+
+// Get browsing history
+let history = Browser.history(browser)
+
+// ---------------------------------------------------------------------------
+// 3. EMAIL
+// ---------------------------------------------------------------------------
+
+let email = Email.new("user@newton.dev")
+
+// Compose a draft
+let draft = Email.compose(
+    email,
+    ["colleague@example.com"],
+    "Newton Update",
+    "Hi! Just wanted to share the latest Newton verification results."
+)
+
+// Check drafts
+let drafts = Email.drafts(email)
+
+// Send the email (would use draft.id in real app)
+// Email.send(email, draft["id"])
+
+// Check inbox
+let inbox = Email.inbox(email)
+
+// ---------------------------------------------------------------------------
+// 4. NEWS READER
+// ---------------------------------------------------------------------------
+
+let news = News.new()
+
+// Subscribe to feeds
+News.subscribe(news, "https://newton.dev/feed.xml", "Newton News")
+News.subscribe(news, "https://ycombinator.com/rss", "Hacker News")
+
+// Refresh to get new items
+let new_items = News.refresh(news)
+
+// Get unread items
+let unread = News.unread(news)
+
+// ---------------------------------------------------------------------------
+// 5. FTP CLIENT
+// ---------------------------------------------------------------------------
+
+let ftp = FTP.new()
+
+// Connect to server (simulated)
+FTP.connect(ftp, "ftp.newton.dev", 21, "anonymous", "")
+
+// List files
+let files = FTP.list(ftp)
+
+// Download a file
+let transfer = FTP.download(ftp, "/pub/readme.txt", "/local/readme.txt")
+
+// ---------------------------------------------------------------------------
+// 6. ADDRESS BOOK (CONTACTS)
+// ---------------------------------------------------------------------------
+
+let contacts = Contacts.new()
+
+// Add contacts
+let alice = Contacts.add(contacts, "Alice Newton", "alice@newton.dev", "555-0001")
+let bob = Contacts.add(contacts, "Bob Leibniz", "bob@calculus.org", "555-0002")
+let charles = Contacts.add(contacts, "Charles Babbage", "charles@engines.io", "555-0003")
+
+// Search contacts
+let found = Contacts.search(contacts, "newton")
+
+// Get all contacts
+let all_contacts = Contacts.all(contacts)
+
+// ---------------------------------------------------------------------------
+// 7. BOOKMARKS
+// ---------------------------------------------------------------------------
+
+let bookmarks = Bookmarks.new()
+
+// Add bookmarks
+Bookmarks.add(bookmarks, "https://newton.dev", "Newton - Home", "Newton")
+Bookmarks.add(bookmarks, "https://newton.dev/docs", "Newton - Docs", "Newton")
+Bookmarks.add(bookmarks, "https://github.com", "GitHub", "Dev")
+Bookmarks.add(bookmarks, "https://news.ycombinator.com", "Hacker News", "News")
+
+// Search bookmarks
+let newton_bookmarks = Bookmarks.search(bookmarks, "newton")
+
+// Get recent bookmarks
+let recent = Bookmarks.recent(bookmarks, 5)
+
+// ---------------------------------------------------------------------------
+// 8. VERIFY ALL CYBERDOG COMPONENTS
+// ---------------------------------------------------------------------------
+
+let verification = CyberDog.verify(suite)
+
+// ---------------------------------------------------------------------------
+// OUTPUT
+// ---------------------------------------------------------------------------
+
+{
+    "suite": suite,
+    "browser": {
+        "history": history,
+        "current_page": page
+    },
+    "email": {
+        "drafts": drafts,
+        "inbox": inbox
+    },
+    "news": {
+        "new_items": new_items,
+        "unread_count": 0  // unread is a list
+    },
+    "ftp": {
+        "files": files,
+        "transfer": transfer
+    },
+    "contacts": {
+        "all": all_contacts,
+        "search_results": found
+    },
+    "bookmarks": {
+        "recent": recent,
+        "newton": newton_bookmarks
+    },
+    "verified": verification
+}
