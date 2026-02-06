@@ -43,6 +43,8 @@ All computations are bounded, deterministic, and cryptographically verifiable.
 
 See the main [Newton README](../README.md) for comprehensive documentation, API reference, and guides.
 
+- **iOS Blueprint (2026)** - `IOS_APP_BLUEPRINT_2026.md` for building a SwiftUI-first Apple app from this codebase
+
 ## License
 
 See [LICENSE](../LICENSE) and [USAGE_AGREEMENT.md](../USAGE_AGREEMENT.md) for licensing terms.
