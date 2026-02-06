@@ -1,0 +1,11 @@
+// Fibonacci - clean and simple
+
+law fib(n)
+    if n <= 1 { reply n }
+    reply fib(n - 1) + fib(n - 2)
+end
+
+show("=== Fibonacci Sequence ===")
+for i in range(12) {
+    show("fib(" i.str ") =" fib(i))
+}
