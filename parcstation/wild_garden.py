@@ -43,60 +43,44 @@ import urllib.parse
 try:
     from tinytalk_py.teks_database import get_extended_teks_library
     TEKS_AVAILABLE = True
-except ImportError:
-    TEKS_AVAILABLE = False
+async def get_teks(grade: Optional[int] = None, subject: Optional[str] = None):
+    """Return the full TEKS standards library. Optional filters: grade, subject."""
+    if not TEKS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="TEKS database not available")
+    lib = get_extended_teks_library()
+    # lib stores standards in _standards dict
+    standards = list(lib._standards.values())
 
-# Add parent to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    # Apply filters
+    if grade is not None:
+        standards = [s for s in standards if getattr(s, 'grade', None) == int(grade)]
+    if subject:
+        subj = subject.lower()
+        standards = [s for s in standards if getattr(s, 'subject', None) and s.subject.value == subj]
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# IMPORTS FROM EXISTING COMPONENTS
-# ═══════════════════════════════════════════════════════════════════════════════
-
-try:
-    from newton_agent.llm_ollama import OllamaBackend, OllamaConfig
-    OLLAMA_AVAILABLE = True
-except ImportError:
-    OLLAMA_AVAILABLE = False
-
-try:
-    from newton_agent.grounding_enhanced import EnhancedGroundingEngine
-    GROUNDING_AVAILABLE = True
-except ImportError:
-    GROUNDING_AVAILABLE = False
-
-try:
-    from core.logic import LogicEngine
-    from core.cdl import CDLEvaluator
-    NEWTON_CORE_AVAILABLE = True
-except ImportError:
-    NEWTON_CORE_AVAILABLE = False
+    return {
+        "teks": [s.to_dict() for s in standards],
+        "count": len(standards)
+    }
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# DATA MODELS
-# ═══════════════════════════════════════════════════════════════════════════════
+@app.post("/teks/search")
+async def teks_search(payload: Dict[str, Any]):
+    """Search TEKS standards by keyword or code. POST body: {"query": "..."} """
+    if not TEKS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="TEKS database not available")
+    query = (payload.get('query') if isinstance(payload, dict) else None) or ''
+    query = query.strip()
+    lib = get_extended_teks_library()
+    standards = list(lib._standards.values())
 
-class VerificationStatus(Enum):
-    """Status of a verified claim."""
-    VERIFIED = "verified"
-    CORRECTED = "corrected"
-    UNVERIFIED = "unverified"
-    BLOCKED = "blocked"
+    if not query:
+        results = standards
+    else:
+        q = query.lower()
+        results = [s for s in standards if s.matches_keywords(q) or q in s.code.lower()]
 
-
-@dataclass
-class VerifiedClaim:
-    """A claim with verification status."""
-    text: str
-    status: VerificationStatus
-    confidence: float
-    sources: List[Dict] = field(default_factory=list)
-    correction: Optional[str] = None
-    reason: Optional[str] = None
-
-
-@dataclass
+    return {"results": [s.to_dict() for s in results], "count": len(results)}
 class AuditEntry:
     """An immutable audit log entry."""
     id: str
@@ -772,6 +756,7 @@ async def get_session(session_id: str):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/teks")
+<<<<<<< HEAD
 async def get_teks(grade: Optional[int] = None, subject: Optional[str] = None):
     """Return the full TEKS standards library. Optional filters: grade, subject."""
     if not TEKS_AVAILABLE:
@@ -811,6 +796,18 @@ async def teks_search(payload: Dict[str, Any]):
 
     return {"results": [s.to_dict() for s in results], "count": len(results)}
 
+=======
+async def get_teks():
+    """Return the full TEKS standards library."""
+    if not TEKS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="TEKS database not available")
+    lib = get_extended_teks_library()
+    # Return as list of dicts for JS
+    return {
+        "teks": [s.to_dict() for s in lib.all_standards()]
+    }
+
+>>>>>>> origin/main
 @app.post("/cartridge/wikipedia")
 async def wikipedia_search(request: WikipediaRequest):
     """Search Wikipedia for educational content."""
