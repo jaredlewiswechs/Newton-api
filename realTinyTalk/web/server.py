@@ -13,11 +13,491 @@ from pathlib import Path
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, session
 from realTinyTalk import run, ExecutionBounds
 from realTinyTalk.runtime import TinyTalkError
+from pathlib import Path
+from datetime import datetime
+from difflib import SequenceMatcher
+import hashlib
+import re
 
 app = Flask(__name__, static_folder='static')
+app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')
+
+# Storage root for server-side data
+STORAGE_ROOT = Path(__file__).parent / 'storage'
+STORAGE_ROOT.mkdir(parents=True, exist_ok=True)
+
+# Limits
+MAX_SCRIPT_BYTES = 100 * 1024  # 100 KB
+
+
+def _safe_user(name: str) -> str:
+    if not name:
+        return 'anonymous'
+    # allow simple usernames, replace unsafe chars
+    name = re.sub(r'[^A-Za-z0-9_\-]', '-', name)
+    name = name.strip('-')
+    if len(name) > 32:
+        name = name[:32]
+    if name == '':
+        return 'anonymous'
+    return name
+
+
+def get_user() -> str:
+    # Priority: session, X-User header, fallback anonymous
+    uname = session.get('user') or request.headers.get('X-User') or 'anonymous'
+    return _safe_user(uname)
+
+
+def current_user_root() -> Path:
+    return STORAGE_ROOT / 'users' / get_user()
+
+
+def ensure_user_dirs():
+    r = current_user_root()
+    (r / 'scripts').mkdir(parents=True, exist_ok=True)
+    (r / 'projects').mkdir(parents=True, exist_ok=True)
+    return r
+
+
+def _safe_name(name: str) -> str:
+    # Keep only safe chars for filenames, enforce .tt
+    if not name:
+        name = 'untitled.tt'
+    # strip path parts
+    name = Path(name).name
+    name = re.sub(r"[^A-Za-z0-9._-]", "-", name)
+    # avoid leading dots
+    name = name.lstrip('.')
+    if not name.lower().endswith('.tt'):
+        name = name + '.tt'
+    if len(name) > 64:
+        base, ext = os.path.splitext(name)
+        name = base[:64 - len(ext)] + ext
+    return name
+
+
+def _script_dir(name: str) -> Path:
+    ensure_user_dirs()
+    return current_user_root() / 'scripts' / _safe_name(name)
+
+
+def _auth_path(user: str) -> Path:
+    return STORAGE_ROOT / 'users' / user / 'auth.json'
+
+
+def _user_exists(user: str) -> bool:
+    return (STORAGE_ROOT / 'users' / user).exists()
+
+
+def require_auth():
+    u = get_user()
+    if u == 'anonymous':
+        return None
+    return u
+
+
+
+def _meta_path(script_dir: Path) -> Path:
+    return script_dir / 'meta.json'
+
+
+def _now_ts() -> str:
+    return datetime.utcnow().isoformat() + 'Z'
+
+
+def _read_meta(script_dir: Path) -> dict:
+    meta_p = _meta_path(script_dir)
+    if not meta_p.exists():
+        return {'versions': []}
+    try:
+        return json.loads(meta_p.read_text())
+    except Exception:
+        return {'versions': []}
+
+
+def _write_meta(script_dir: Path, meta: dict):
+    meta_p = _meta_path(script_dir)
+    meta_p.write_text(json.dumps(meta, indent=2))
+
+
+def _save_version(script_dir: Path, code: str, message: str = '') -> dict:
+    script_dir.mkdir(parents=True, exist_ok=True)
+    ts = _now_ts()
+    # version id uses hash for uniqueness
+    vid = hashlib.sha1(f"{ts}:{code}".encode('utf-8')).hexdigest()
+    versions_dir = script_dir / 'versions'
+    versions_dir.mkdir(parents=True, exist_ok=True)
+    fname = versions_dir / f"{vid}.tt"
+    fname.write_text(code)
+    meta = _read_meta(script_dir)
+    meta.setdefault('versions', []).append({'id': vid, 'ts': ts, 'message': message})
+    _write_meta(script_dir, meta)
+    return {'id': vid, 'ts': ts, 'message': message}
+
+
+def _latest_version(script_dir: Path):
+    meta = _read_meta(script_dir)
+    if not meta.get('versions'):
+        return None
+    return meta['versions'][-1]
+
+
+# API: list scripts
+@app.route('/api/scripts', methods=['GET'])
+def list_scripts():
+    ensure_user_dirs()
+    user_scripts_root = current_user_root() / 'scripts'
+    scripts = []
+    for d in user_scripts_root.iterdir():
+        if d.is_dir():
+            meta = _read_meta(d)
+            latest = meta.get('versions', [])[-1] if meta.get('versions') else None
+            scripts.append({'name': d.name, 'versions': len(meta.get('versions', [])), 'latest': latest})
+    return jsonify(scripts)
+
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.get_json() or {}
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'error': 'username and password required'}), 400
+    uname = _safe_user(username)
+    user_dir = STORAGE_ROOT / 'users' / uname
+    user_dir.mkdir(parents=True, exist_ok=True)
+    authp = _auth_path(uname)
+    if authp.exists():
+        return jsonify({'error': 'user exists'}), 400
+    # create salted hash
+    salt = os.urandom(16).hex()
+    h = hashlib.sha256((salt + password).encode('utf-8')).hexdigest()
+    authp.write_text(json.dumps({'salt': salt, 'hash': h}))
+    return jsonify({'created': uname})
+
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json() or {}
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'error': 'username and password required'}), 400
+    uname = _safe_user(username)
+    authp = _auth_path(uname)
+    if not authp.exists():
+        return jsonify({'error': 'user not found'}), 404
+    auth = json.loads(authp.read_text())
+    salt = auth.get('salt')
+    expected = auth.get('hash')
+    got = hashlib.sha256((salt + password).encode('utf-8')).hexdigest()
+    if got != expected:
+        return jsonify({'error': 'invalid credentials'}), 401
+    session['user'] = uname
+    return jsonify({'logged_in': uname})
+
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    session.pop('user', None)
+    return jsonify({'logged_out': True})
+
+
+# API: get script metadata and latest content
+@app.route('/api/scripts/<name>', methods=['GET'])
+def get_script(name):
+    dirp = _script_dir(name)
+    if not dirp.exists():
+        return jsonify({'error': 'not found'}), 404
+    meta = _read_meta(dirp)
+    latest = _latest_version(dirp)
+    content = ''
+    if latest:
+        vpath = dirp / 'versions' / f"{latest['id']}.tt"
+        if vpath.exists():
+            content = vpath.read_text()
+    return jsonify({'name': name, 'content': content, 'versions': meta.get('versions', [])})
+
+
+# API: get specific version content
+@app.route('/api/scripts/<name>/version/<vid>', methods=['GET'])
+def get_script_version(name, vid):
+    dirp = _script_dir(name)
+    vpath = dirp / 'versions' / f"{vid}.tt"
+    if not vpath.exists():
+        return jsonify({'error': 'not found'}), 404
+    return jsonify({'id': vid, 'content': vpath.read_text()})
+
+
+# API: save new script (create or new version)
+@app.route('/api/scripts', methods=['POST'])
+def save_script():
+    data = request.get_json() or {}
+    name = data.get('name') or f"untitled-{int(time.time())}.tt"
+    code = data.get('code', '')
+    message = data.get('message', '')
+    # enforce size limits
+    if len(code.encode('utf-8')) > MAX_SCRIPT_BYTES:
+        return jsonify({'error': 'script too large'}), 400
+    dirp = _script_dir(name)
+    saved = _save_version(dirp, code, message)
+    return jsonify({'saved': saved, 'name': dirp.name})
+
+
+# API: restore a version (create new version from old)
+@app.route('/api/scripts/<name>/restore', methods=['POST'])
+def restore_script(name):
+    data = request.get_json() or {}
+    vid = data.get('version_id')
+    dirp = _script_dir(name)
+    vpath = dirp / 'versions' / f"{vid}.tt"
+    if not vpath.exists():
+        return jsonify({'error': 'version not found'}), 404
+    code = vpath.read_text()
+    # enforce size
+    if len(code.encode('utf-8')) > MAX_SCRIPT_BYTES:
+        return jsonify({'error': 'version too large'}), 400
+    saved = _save_version(dirp, code, f"restore:{vid}")
+    return jsonify({'restored': saved})
+
+
+# API: delete script
+@app.route('/api/scripts/<name>', methods=['DELETE'])
+def delete_script(name):
+    dirp = _script_dir(name)
+    if not dirp.exists():
+        return jsonify({'error': 'not found'}), 404
+    # delete recursively
+    for p in dirp.rglob('*'):
+        if p.is_file():
+            p.unlink()
+    for p in sorted(dirp.rglob('*'), reverse=True):
+        try:
+            if p.is_dir():
+                p.rmdir()
+        except Exception:
+            pass
+    try:
+        dirp.rmdir()
+    except Exception:
+        pass
+    return jsonify({'deleted': name})
+
+
+@app.route('/api/scripts/<name>/merge', methods=['POST'])
+def merge_script(name):
+    # Accept merged code from client and create a new version
+    user = require_auth()
+    if not user:
+        return jsonify({'error': 'authentication required'}), 401
+    data = request.get_json() or {}
+    merged = data.get('merged')
+    message = data.get('message', 'merged from UI')
+    if merged is None:
+        return jsonify({'error': 'merged content required'}), 400
+    if len(merged.encode('utf-8')) > MAX_SCRIPT_BYTES:
+        return jsonify({'error': 'merged too large'}), 400
+    dirp = _script_dir(name)
+    if not dirp.exists():
+        return jsonify({'error': 'script not found'}), 404
+    saved = _save_version(dirp, merged, message)
+    return jsonify({'merged': saved})
+
+
+@app.route('/api/scripts/<name>/diff/<vid1>/<vid2>', methods=['GET'])
+def diff_versions(name, vid1, vid2):
+    import difflib
+    dirp = _script_dir(name)
+    v1 = dirp / 'versions' / f"{vid1}.tt"
+    v2 = dirp / 'versions' / f"{vid2}.tt"
+    if not v1.exists() or not v2.exists():
+        return jsonify({'error': 'version not found'}), 404
+    a = v1.read_text().splitlines()
+    b = v2.read_text().splitlines()
+    ud = list(difflib.unified_diff(a, b, fromfile=vid1, tofile=vid2, lineterm=''))
+    return jsonify({'diff': '\n'.join(ud)})
+
+
+@app.route('/api/scripts/<name>/ancestor', methods=['GET'])
+def find_ancestor(name):
+    # Query params: v1, v2
+    v1 = request.args.get('v1')
+    v2 = request.args.get('v2')
+    dirp = _script_dir(name)
+    if not dirp.exists():
+        return jsonify({'error': 'not found'}), 404
+    meta = _read_meta(dirp)
+    versions = meta.get('versions', [])
+    ids = [v['id'] for v in versions]
+    try:
+        i1 = ids.index(v1) if v1 in ids else None
+        i2 = ids.index(v2) if v2 in ids else None
+    except ValueError:
+        return jsonify({'error': 'version id not found'}), 404
+    if i1 is None or i2 is None:
+        return jsonify({'error': 'version id not found'}), 404
+    base_idx = min(i1, i2) - 1
+    if base_idx < 0:
+        # no earlier common ancestor; return first version as base
+        base_idx = 0
+    base_id = ids[base_idx]
+    return jsonify({'base_id': base_id})
+
+
+def _three_way_merge_lines(base, a, b):
+    """
+    Three-way merge on lists of lines (base, a, b).
+    Returns (merged_lines, conflicts_bool).
+    Algorithm: compute opcodes for base->a and base->b, split base into boundary ranges
+    from those opcodes, then for each range collect the corresponding a/b target slices
+    and apply merge rules: prefer identical edits, prefer single-sided edits, otherwise mark conflict.
+    """
+    merged = []
+    conflicts = False
+
+    base_lines = base
+    a_lines = a
+    b_lines = b
+
+    sma = SequenceMatcher(None, base_lines, a_lines)
+    smb = SequenceMatcher(None, base_lines, b_lines)
+    op_a = sma.get_opcodes()
+    op_b = smb.get_opcodes()
+
+    # collect boundaries from base ranges and insertion points
+    bounds = {0, len(base_lines)}
+    for tag, i1, i2, j1, j2 in op_a:
+        bounds.add(i1); bounds.add(i2)
+        if tag == 'insert': bounds.add(i1)
+    for tag, i1, i2, j1, j2 in op_b:
+        bounds.add(i1); bounds.add(i2)
+        if tag == 'insert': bounds.add(i1)
+    bounds = sorted(bounds)
+
+    def collect_target_for_range(opcodes, target_lines, start, end):
+        out = []
+        for tag, i1, i2, j1, j2 in opcodes:
+            # insertion at position i1 (i1==i2)
+            if tag == 'insert':
+                if start <= i1 <= end:
+                    out.extend(target_lines[j1:j2])
+                continue
+            if i2 <= start or i1 >= end:
+                continue
+            # overlap
+            overlap_start = max(i1, start)
+            overlap_end = min(i2, end)
+            if overlap_end > overlap_start:
+                off = overlap_start - i1
+                out.extend(target_lines[j1 + off: j1 + off + (overlap_end - overlap_start)])
+        return out
+
+    # iterate ranges
+    for k in range(len(bounds)-1):
+        s = bounds[k]; e = bounds[k+1]
+        base_seg = base_lines[s:e]
+        a_seg = collect_target_for_range(op_a, a_lines, s, e)
+        b_seg = collect_target_for_range(op_b, b_lines, s, e)
+
+        # If both sides same -> accept
+        if a_seg == b_seg:
+            merged.extend(a_seg)
+            continue
+        # If one side unchanged from base -> take the other
+        if a_seg == base_seg and b_seg != base_seg:
+            merged.extend(b_seg)
+            continue
+        if b_seg == base_seg and a_seg != base_seg:
+            merged.extend(a_seg)
+            continue
+        # If both differ from base and each other -> conflict
+        conflicts = True
+        merged.append('<<<<<<< A')
+        merged.extend(a_seg)
+        merged.append('=======')
+        merged.extend(b_seg)
+        merged.append('>>>>>>> B')
+
+    return merged, conflicts
+
+
+@app.route('/api/scripts/<name>/merge3', methods=['POST'])
+def merge_three_way(name):
+    """Perform a simple server-side 3-way merge using an ancestor/base version.
+    JSON body: { "v1": "<id>", "v2": "<id>", "base_id": "<id>" (optional) }
+    If base_id omitted, an approximate ancestor is chosen from history.
+    Returns merged content and conflict indicator, and saves merged result as a new version.
+    """
+    data = request.get_json() or {}
+    v1 = data.get('v1')
+    v2 = data.get('v2')
+    base_id = data.get('base_id')
+    if not v1 or not v2:
+        return jsonify({'error': 'v1 and v2 are required'}), 400
+
+    dirp = _script_dir(name)
+    if not dirp.exists():
+        return jsonify({'error': 'script not found'}), 404
+
+    meta = _read_meta(dirp)
+    versions = meta.get('versions', [])
+    ids = [v['id'] for v in versions]
+    if v1 not in ids or v2 not in ids:
+        return jsonify({'error': 'version id not found'}), 404
+
+    if not base_id:
+        i1 = ids.index(v1)
+        i2 = ids.index(v2)
+        base_idx = min(i1, i2) - 1
+        if base_idx < 0:
+            base_idx = 0
+        base_id = ids[base_idx]
+
+    def _read_version(vid):
+        p = dirp / 'versions' / f"{vid}.tt"
+        if not p.exists():
+            return ''
+        return p.read_text(encoding='utf-8')
+
+    base = _read_version(base_id).splitlines()
+    a = _read_version(v1).splitlines()
+    b = _read_version(v2).splitlines()
+
+    # Attempt to use git's merge-file for a more battle-tested merge when available
+    merged_text = None
+    conflicts = False
+    try:
+        from shutil import which
+        import subprocess, tempfile
+        if which('git'):
+            with tempfile.TemporaryDirectory() as td:
+                basef = Path(td) / 'base.tt'
+                af = Path(td) / 'a.tt'
+                bf = Path(td) / 'b.tt'
+                basef.write_text('\n'.join(base), encoding='utf-8')
+                af.write_text('\n'.join(a), encoding='utf-8')
+                bf.write_text('\n'.join(b), encoding='utf-8')
+                # git merge-file current base other -> print to stdout with -p
+                proc = subprocess.run(['git', 'merge-file', '-p', str(af), str(basef), str(bf)], capture_output=True, text=True)
+                if proc.returncode in (0, 1):
+                    merged_text = proc.stdout
+                    conflicts = '<<<<<<<' in merged_text or '>>>>>>>' in merged_text
+    except Exception:
+        merged_text = None
+
+    if merged_text is None:
+        merged_lines, conflicts = _three_way_merge_lines(base, a, b)
+        merged_text = '\n'.join(merged_lines)
+
+    # Save the merged content as a new version
+    saved = _save_version(dirp, merged_text, message=f'three-way-merge {v1} {v2}')
+
+    return jsonify({'merged': {'id': saved['id'], 'conflicts': conflicts, 'content': merged_text}})
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ROUTES
@@ -824,6 +1304,87 @@ show("apply_twice(squared, 2):" apply_twice(squared, 2))'''
     return jsonify(examples)
 
 
+# ========== Projects API ===========
+@app.route('/api/projects', methods=['GET'])
+def list_projects():
+    ensure_user_dirs()
+    proot = current_user_root() / 'projects'
+    projects = []
+    for p in proot.iterdir():
+        if p.is_dir():
+            m = p / 'manifest.json'
+            manifest = {}
+            if m.exists():
+                try:
+                    manifest = json.loads(m.read_text())
+                except Exception:
+                    manifest = {}
+            projects.append({'name': p.name, 'manifest': manifest})
+    return jsonify(projects)
+
+
+@app.route('/api/projects', methods=['POST'])
+def create_project():
+    data = request.get_json() or {}
+    name = data.get('name')
+    if not name:
+        return jsonify({'error': 'name required'}), 400
+    pname = re.sub(r'[^A-Za-z0-9_\-]', '-', Path(name).name)[:64]
+    ensure_user_dirs()
+    pdir = current_user_root() / 'projects' / pname
+    pdir.mkdir(parents=True, exist_ok=True)
+    manifest = {'name': pname, 'created': _now_ts(), 'files': []}
+    (pdir / 'manifest.json').write_text(json.dumps(manifest, indent=2))
+    return jsonify({'created': pname})
+
+
+@app.route('/api/projects/<proj>', methods=['GET'])
+def get_project(proj):
+    pdir = current_user_root() / 'projects' / proj
+    m = pdir / 'manifest.json'
+    if not m.exists():
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(json.loads(m.read_text()))
+
+
+@app.route('/api/projects/<proj>/add', methods=['POST'])
+def project_add(proj):
+    data = request.get_json() or {}
+    script = data.get('script')
+    if not script:
+        return jsonify({'error': 'script required'}), 400
+    pdir = current_user_root() / 'projects' / proj
+    mpath = pdir / 'manifest.json'
+    if not mpath.exists():
+        return jsonify({'error': 'project not found'}), 404
+    manifest = json.loads(mpath.read_text())
+    if script not in manifest.get('files', []):
+        manifest.setdefault('files', []).append(script)
+        mpath.write_text(json.dumps(manifest, indent=2))
+    return jsonify({'added': script})
+
+
+@app.route('/api/projects/<proj>', methods=['DELETE'])
+def delete_project(proj):
+    pdir = current_user_root() / 'projects' / proj
+    if not pdir.exists():
+        return jsonify({'error': 'not found'}), 404
+    for p in pdir.rglob('*'):
+        if p.is_file():
+            p.unlink()
+    for p in sorted(pdir.rglob('*'), reverse=True):
+        try:
+            if p.is_dir():
+                p.rmdir()
+        except Exception:
+            pass
+    try:
+        pdir.rmdir()
+    except Exception:
+        pass
+    return jsonify({'deleted': proj})
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -837,4 +1398,19 @@ if __name__ == '__main__':
     print("Starting server at http://localhost:5555")
     print("Press Ctrl+C to stop\n")
     
-    app.run(host='0.0.0.0', port=5555, debug=False, use_reloader=False, threaded=True)
+    # Prevent starting multiple server instances on the same port.
+    import socket
+
+    def _port_in_use(host: str, port: int) -> bool:
+        try:
+            with socket.create_connection((host, port), timeout=0.5):
+                return True
+        except Exception:
+            return False
+
+    HOST = '127.0.0.1'
+    PORT = 5555
+    if _port_in_use(HOST, PORT):
+        print(f"Server appears to be already running on {HOST}:{PORT}. Not starting a new instance.")
+    else:
+        app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False, threaded=True)

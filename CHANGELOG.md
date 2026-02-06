@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.2] - 2026-02-05
+
+### Added
+
+- RealTinyTalk: interactive three-way merge UI with Base/Local/Remote panes, per-hunk chooser, and inline conflict accept buttons (Accept Base / Accept Local / Accept Remote).
+- Server-side 3-way merge now uses `git merge-file` when available for a robust merge fallback, with a local algorithm fallback.
+
+### Changed
+
+- Polished merge visuals: hunk highlighting, gutter accents, and inline widgets for fast conflict resolution.
+
+---
+
 ## [1.3.1] - 2026-02-01
 
 ### Changed

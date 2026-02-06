@@ -1020,6 +1020,28 @@
         .theme-dot.monokai { background: #272822; }
         .theme-dot.nord { background: #2e3440; }
     </style>
+        <style>
+            /* Merge modal styles */
+            .modal { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.45); z-index: 99999; }
+            .modal-window.merge-window { width: 96%; max-width: 1200px; background: var(--bg-secondary); border:1px solid var(--border); padding:12px; border-radius:8px; color:var(--text-primary); }
+            .merge-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
+            .merge-body { display:flex; gap:12px; height: 360px; }
+            .merge-side { flex:1; display:flex; flex-direction:column; }
+            .merge-center { width: 320px; display:flex; flex-direction:column; gap:8px; }
+            .merge-editor { flex:1; border:1px solid var(--border); }
+            .merge-merged { height: 180px; border:1px solid var(--border); margin-top:8px; }
+            .merge-title { font-weight:600; margin-bottom:6px }
+            .hunks-list { overflow:auto; max-height:280px; background:var(--bg-tertiary); padding:6px; border-radius:4px; }
+            .hunk-item { border:1px dashed var(--border); padding:6px; margin-bottom:8px; background: linear-gradient(90deg, rgba(0,0,0,0.02), transparent); }
+            .hunk-header { display:flex; justify-content:space-between; align-items:center; }
+            .hunk-preview { white-space:pre-wrap; font-family: monospace; font-size:12px; color:var(--text-secondary); margin-top:6px; }
+            .hunk-actions button { margin-left:6px }
+            .hunk-empty { color:var(--text-muted); padding:8px }
+            .merge-line-highlight { background: linear-gradient(90deg, rgba(88,166,255,0.06), rgba(88,166,255,0.03)); }
+            .merge-gutter { background: var(--accent); width:6px; }
+            .conflict-widget { position: absolute; z-index: 1000000; display:flex; gap:6px; }
+            .conflict-widget button { padding:6px 8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); }
+        </style>
 </head>
 <body data-theme="dark">
     <!-- Retro Splash Screen -->
@@ -1100,6 +1122,17 @@
                     </div>
                 </div>
             </div>
+            <button class="btn" id="saveBtn" onclick="saveCurrent()" title="Save (Ctrl+S)">💾 Save</button>
+            <button class="btn" id="saveAsBtn" onclick="saveAs()" title="Save As">💾 Save As</button>
+            <button class="btn btn-ghost" id="exportBtn" onclick="exportCurrent()" title="Export current script">⬇️ Export</button>
+            <button class="btn btn-ghost" id="importBtn" onclick="document.getElementById('fileInput').click()" title="Import script">⬆️ Import</button>
+            <button class="btn btn-ghost" id="saveServerBtn" onclick="saveToServer()" title="Save to server">☁️ Save</button>
+            <button class="btn btn-ghost" id="serverSyncBtn" onclick="openServerList()" title="Sync from server">☁️ Sync</button>
+            <button class="btn btn-ghost" id="loginBtn" onclick="openAuth()" title="Login/Register">🔐 Login</button>
+            <label style="margin-left:8px;display:inline-flex;align-items:center;gap:6px;" title="Autosave">
+                <input type="checkbox" id="autosaveToggle"> Auto
+            </label>
+            <input type="file" id="fileInput" style="display:none" accept=".tt,.txt" onchange="importFile(event)">
             <button class="btn btn-primary" id="runBtn" onclick="runCode()">
                 ▶ Run
                 <kbd>Ctrl+↵</kbd>
@@ -1179,6 +1212,8 @@
 
     <!-- Monaco Editor -->
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    <!-- jsdiff for visual diffs and hunk operations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff/5.1.0/diff.min.js"></script>
     <script>
         let editor;
         let examples = [];
@@ -2009,6 +2044,797 @@ for i in range(10) {
             }
             return pyEditor;
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // LOCAL SAVE / LOAD / AUTOSAVE / EXPORT / IMPORT
+        // ═══════════════════════════════════════════════════════════════
+
+        const STORAGE_KEY = 'tinytalk-scripts';
+        let scripts = {};
+        let activeScript = 'untitled.tt';
+        let autosaveInterval = null;
+        const AUTOSAVE_MS = 5000;
+
+        function loadScriptsFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                scripts = raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                console.warn('Failed to parse stored scripts', e);
+                scripts = {};
+            }
+            if (!scripts[activeScript]) {
+                scripts[activeScript] = editor ? editor.getValue() : '';
+            }
+            refreshTabs();
+        }
+
+        function saveAllToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(scripts));
+        }
+
+        function showStatus(msg) {
+            const el = document.getElementById('statusBadge');
+            if (!el) return;
+            el.textContent = msg;
+            clearTimeout(el._t);
+            el._t = setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 2002);
+        }
+
+        function getActiveTabName() {
+            const el = document.querySelector('.editor-tab.active');
+            return el ? el.textContent.trim() : activeScript;
+        }
+
+        function setActiveTab(name) {
+            activeScript = name;
+            const tabs = document.querySelector('.editor-tabs');
+            let existing = Array.from(tabs.querySelectorAll('.editor-tab')).find(t => t.textContent.trim() === name);
+            if (!existing) {
+                const div = document.createElement('div');
+                div.className = 'editor-tab';
+                div.innerHTML = `<span class="tab-icon">📄</span>${name}`;
+                div.addEventListener('click', () => setActiveTab(name));
+                tabs.appendChild(div);
+                existing = div;
+            }
+            document.querySelectorAll('.editor-tab').forEach(t => t.classList.toggle('active', t === existing));
+            if (editor) editor.setValue(scripts[name] || '');
+        }
+
+        function refreshTabs() {
+            const tabs = document.querySelector('.editor-tabs');
+            tabs.innerHTML = '';
+            const keys = Object.keys(scripts);
+            if (keys.length === 0) {
+                scripts['untitled.tt'] = editor ? editor.getValue() : '';
+            }
+            keys.forEach((k) => {
+                const div = document.createElement('div');
+                div.className = 'editor-tab' + (k === activeScript ? ' active' : '');
+                div.innerHTML = `<span class="tab-icon">📄</span>${k}`;
+                div.addEventListener('click', () => setActiveTab(k));
+                tabs.appendChild(div);
+            });
+        }
+
+        function saveCurrent() {
+            const name = getActiveTabName() || activeScript;
+            scripts[name] = editor.getValue();
+            saveAllToStorage();
+            showStatus('Saved ' + name);
+            refreshTabs();
+        }
+
+        function saveAs() {
+            const defaultName = getActiveTabName() || activeScript || 'untitled.tt';
+            const name = prompt('Save as filename', defaultName);
+            if (!name) return;
+            scripts[name] = editor.getValue();
+            setActiveTab(name);
+            saveAllToStorage();
+            showStatus('Saved as ' + name);
+        }
+
+        function exportCurrent() {
+            const name = getActiveTabName() || activeScript || 'script.tt';
+            const blob = new Blob([editor.getValue()], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showStatus('Exported ' + name);
+        }
+
+        function importFile(evt) {
+            const file = evt.target.files && evt.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                const name = file.name || 'imported.tt';
+                scripts[name] = content;
+                setActiveTab(name);
+                saveAllToStorage();
+                showStatus('Imported ' + name);
+            };
+            reader.readAsText(file);
+            evt.target.value = '';
+        }
+
+        function startAutosave() {
+            if (autosaveInterval) clearInterval(autosaveInterval);
+            autosaveInterval = setInterval(() => {
+                if (document.getElementById('autosaveToggle') && document.getElementById('autosaveToggle').checked) {
+                    scripts[getActiveTabName()] = editor.getValue();
+                    saveAllToStorage();
+                    showStatus('Autosaved ' + getActiveTabName());
+                }
+            }, AUTOSAVE_MS);
+        }
+
+        // Keyboard shortcut for Save (Ctrl+S)
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                saveCurrent();
+            }
+        });
+
+        // Initialize storage after editor created
+        setTimeout(() => {
+            if (typeof editor !== 'undefined' && editor) {
+                // Ensure starting content is saved under activeScript
+                scripts[activeScript] = editor.getValue();
+                loadScriptsFromStorage();
+                startAutosave();
+            }
+        }, 200);
+
+        // ═══════════════════════════════════════════════════════════════
+        // SERVER SYNC / HISTORY / RENAME / CLOSE / REORDER
+        // ═══════════════════════════════════════════════════════════════
+
+        async function saveToServer() {
+            const name = getActiveTabName() || activeScript;
+            const code = editor.getValue();
+
+            // Check remote for conflict
+            const resp = await fetch(`/api/scripts/${encodeURIComponent(name)}`);
+            if (resp.ok) {
+                const remote = await resp.json();
+                if (remote.content && remote.content !== code) {
+                    // Open merge UI to let user resolve conflict
+                    openMergePanel(name, remote.content, code);
+                    return;
+                }
+            }
+
+            const r = await fetch('/api/scripts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, code, message: 'saved from web UI' })
+            });
+            if (r.ok) {
+                const data = await r.json();
+                showStatus('Saved to server ' + data.name);
+            } else {
+                showStatus('Server save failed');
+            }
+        }
+
+        async function openServerList() {
+            try {
+                const r = await fetch('/api/scripts');
+                const list = await r.json();
+                const pick = prompt('Server scripts:\n' + list.map(s => s.name).join('\n') + '\n\nEnter name to load:');
+                if (!pick) return;
+                const rr = await fetch(`/api/scripts/${encodeURIComponent(pick)}`);
+                if (!rr.ok) { showStatus('Failed to load ' + pick); return; }
+                const payload = await rr.json();
+                scripts[pick] = payload.content;
+                setActiveTab(pick);
+                saveAllToStorage();
+                showStatus('Loaded ' + pick);
+            } catch (e) {
+                console.error(e);
+                showStatus('Server sync failed');
+            }
+        }
+
+        // History modal (simple)
+        function showHistory() {
+            const name = getActiveTabName();
+            if (!name) return alert('No active script');
+            fetch(`/api/scripts/${encodeURIComponent(name)}`).then(r => r.json()).then(payload => {
+                const versions = payload.versions || [];
+                const list = versions.map(v => `${v.ts} - ${v.message || ''} [${v.id.slice(0,7)}]`).join('\n');
+                const pick = prompt('Versions for ' + name + ':\n' + list + '\n\nEnter version id (prefix ok) to restore:');
+                if (!pick) return;
+                const found = versions.find(v => v.id.startsWith(pick));
+                if (!found) return alert('Version not found');
+                // restore
+                fetch(`/api/scripts/${encodeURIComponent(name)}/restore`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ version_id: found.id })
+                }).then(r => r.json()).then(res => {
+                    showStatus('Restored ' + name);
+                });
+            });
+        }
+
+        // Tab utilities: rename, close, reorder via drag
+        function makeTabElement(name) {
+            const div = document.createElement('div');
+            div.className = 'editor-tab';
+            div.draggable = true;
+            div.innerHTML = `<span class="tab-icon">📄</span><span class="tab-text">${name}</span><span class="tab-close">✖</span>`;
+            div.querySelector('.tab-text').addEventListener('dblclick', () => {
+                const newName = prompt('Rename file', name);
+                if (!newName) return;
+                // move in scripts
+                scripts[newName] = scripts[name];
+                delete scripts[name];
+                setActiveTab(newName);
+                saveAllToStorage();
+                showStatus('Renamed to ' + newName);
+            });
+            div.querySelector('.tab-close').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!confirm('Close tab ' + name + '?')) return;
+                delete scripts[name];
+                saveAllToStorage();
+                refreshTabs();
+                const remaining = Object.keys(scripts)[0];
+                if (remaining) setActiveTab(remaining);
+                else {
+                    editor.setValue('');
+                }
+            });
+            div.addEventListener('click', () => setActiveTab(name));
+            div.addEventListener('dragstart', (ev) => { ev.dataTransfer.setData('text/tab', name); });
+            div.addEventListener('dragover', (ev) => ev.preventDefault());
+            div.addEventListener('drop', (ev) => {
+                ev.preventDefault();
+                const src = ev.dataTransfer.getData('text/tab');
+                const dst = name;
+                if (src === dst) return;
+                // reorder keys: create new object with order
+                const keys = Object.keys(scripts);
+                const newKeys = [];
+                for (const k of keys) {
+                    if (k === src) continue;
+                    if (k === dst) {
+                        newKeys.push(src);
+                    }
+                    newKeys.push(k);
+                }
+                // rebuild scripts object
+                const newScripts = {};
+                for (const k of newKeys) { newScripts[k] = scripts[k]; }
+                scripts = newScripts;
+                refreshTabs();
+                showStatus('Reordered');
+            });
+            return div;
+        }
+
+        // small helper to refreshTabs using makeTabElement so close/rename exist
+        function refreshTabs() {
+            const tabs = document.querySelector('.editor-tabs');
+            tabs.innerHTML = '';
+            const keys = Object.keys(scripts);
+            if (keys.length === 0) {
+                scripts['untitled.tt'] = editor ? editor.getValue() : '';
+            }
+            keys.forEach((k) => {
+                const el = makeTabElement(k);
+                if (k === activeScript) el.classList.add('active');
+                tabs.appendChild(el);
+            });
+        }
+
+                // ═══════════════════════════════════════════════════════════════
+                // AUTH MODAL
+                // ═══════════════════════════════════════════════════════════════
+
+                function openAuth() {
+                        const html = `
+                        <div class="modal" id="authModal">
+                            <div class="modal-window">
+                                <h3>Login / Register</h3>
+                                <div style="display:flex;gap:8px;margin-top:8px">
+                                    <input id="authUser" placeholder="username" />
+                                    <input id="authPass" placeholder="password" type="password" />
+                                </div>
+                                <div style="margin-top:12px;display:flex;gap:8px">
+                                    <button onclick="doLogin()" class="btn">Login</button>
+                                    <button onclick="doRegister()" class="btn btn-ghost">Register</button>
+                                    <button onclick="closeAuth()" class="btn btn-ghost">Close</button>
+                                </div>
+                                <div id="authMsg" style="margin-top:8px;color:var(--text-muted)"></div>
+                            </div>
+                        </div>`;
+                        const tmp = document.createElement('div'); tmp.innerHTML = html; document.body.appendChild(tmp.firstElementChild);
+                }
+
+                function closeAuth() { const m = document.getElementById('authModal'); if (m) m.remove(); }
+
+                async function doRegister() {
+                        const u = document.getElementById('authUser').value;
+                        const p = document.getElementById('authPass').value;
+                        const r = await fetch('/api/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username: u, password: p}) });
+                        const j = await r.json();
+                        document.getElementById('authMsg').textContent = j.error || (j.created ? 'Created ' + j.created : JSON.stringify(j));
+                }
+
+                async function doLogin() {
+                        const u = document.getElementById('authUser').value;
+                        const p = document.getElementById('authPass').value;
+                        const r = await fetch('/api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username: u, password: p}) });
+                        const j = await r.json();
+                        if (r.ok) {
+                                document.getElementById('authMsg').textContent = 'Logged in ' + j.logged_in;
+                                setTimeout(closeAuth, 800);
+                        } else {
+                                document.getElementById('authMsg').textContent = j.error || 'Login failed';
+                        }
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // MERGE / HISTORY PANEL
+                // ═══════════════════════════════════════════════════════════════
+
+                let mergeModal = null;
+                let mergeEditors = { local: null, remote: null, merged: null };
+
+                function openMergePanel(name, remoteContent, localContent) {
+                        // create modal with a hunk chooser and three editors
+                        if (mergeModal) mergeModal.remove();
+                        const html = `
+                        <div class="modal" id="mergeModal">
+                            <div class="modal-window merge-window">
+                                <div class="merge-header">
+                                    <h3>Merge: ${name}</h3>
+                                    <div class="merge-actions">
+                                        <button class="btn" onclick="saveMergedToServer('${name}')">Save Merged</button>
+                                        <button class="btn" onclick="doAutoThreeWayMerge('${name}')">Auto 3-way Merge</button>
+                                        <button class="btn btn-ghost" onclick="closeMerge()">Cancel</button>
+                                    </div>
+                                </div>
+                                <div class="merge-body">
+                                    <div class="merge-side">
+                                        <div class="merge-title">Base</div>
+                                        <div id="mergeBase" class="merge-editor"></div>
+                                    </div>
+                                    <div class="merge-side">
+                                        <div class="merge-title">Local</div>
+                                        <div id="mergeLocal" class="merge-editor"></div>
+                                    </div>
+                                    <div class="merge-side">
+                                        <div class="merge-title">Remote</div>
+                                        <div id="mergeRemote" class="merge-editor"></div>
+                                    </div>
+                                </div>
+                                <div class="merge-center">
+                                    <div class="merge-title">Hunks</div>
+                                    <div id="hunksList" class="hunks-list"></div>
+                                    <div style="margin-top:8px">Choose Base / Local / Remote for each hunk to build the merged result.</div>
+                                </div>
+                                <div class="merge-footer">
+                                    <div class="merge-title">Merged</div>
+                                    <div id="mergeMerged" class="merge-merged"></div>
+                                </div>
+                            </div>
+                        </div>`;
+                        const tmp = document.createElement('div'); tmp.innerHTML = html; document.body.appendChild(tmp.firstElementChild);
+                        mergeModal = document.getElementById('mergeModal');
+
+                        // create editors once require is ready
+                        require(['vs/editor/editor.main'], function () {
+                                mergeEditors.base = monaco.editor.create(document.getElementById('mergeBase'), { value: 'Loading base...', language: 'tinytalk', automaticLayout: true, minimap:{enabled:false}, readOnly: true });
+                                mergeEditors.local = monaco.editor.create(document.getElementById('mergeLocal'), { value: localContent, language: 'tinytalk', automaticLayout: true, minimap:{enabled:false}, readOnly: true });
+                                mergeEditors.remote = monaco.editor.create(document.getElementById('mergeRemote'), { value: remoteContent, language: 'tinytalk', automaticLayout: true, minimap:{enabled:false}, readOnly: true });
+                                mergeEditors.merged = monaco.editor.create(document.getElementById('mergeMerged'), { value: localContent, language: 'tinytalk', automaticLayout: true, minimap:{enabled:false} });
+
+                                // fetch base/ancestor version and build 3-way hunks
+                                (async function(){
+                                    try {
+                                        // fetch versions
+                                        const mv = await fetch(`/api/scripts/${encodeURIComponent(name)}`);
+                                        if (!mv.ok) {
+                                            buildHunksUI(localContent, remoteContent);
+                                            return;
+                                        }
+                                        const mvj = await mv.json();
+                                        const versions = mvj.versions || [];
+                                        if (versions.length < 2) {
+                                            // no history: use local as base
+                                            mergeEditors.base.setValue(localContent);
+                                            buildHunksUI(localContent, remoteContent);
+                                            return;
+                                        }
+                                        const v2 = versions[versions.length-1].id;
+                                        const v1 = versions[versions.length-2].id;
+                                        // ask server for base
+                                        const bres = await fetch(`/api/scripts/${encodeURIComponent(name)}/ancestor?v1=${v1}&v2=${v2}`);
+                                        let baseId = null;
+                                        if (bres.ok) {
+                                            const bj = await bres.json(); baseId = bj.base_id;
+                                        }
+                                        let baseContent = localContent;
+                                        if (baseId) {
+                                            const baseR = await fetch(`/api/scripts/${encodeURIComponent(name)}/version/${baseId}`);
+                                            if (baseR.ok) {
+                                                const baseJ = await baseR.json(); baseContent = baseJ.content || localContent;
+                                            }
+                                        }
+                                        mergeEditors.base.setValue(baseContent);
+                                        buildHunks3UI(baseContent, localContent, remoteContent);
+                                    } catch (e) {
+                                        mergeEditors.base.setValue(localContent);
+                                        buildHunksUI(localContent, remoteContent);
+                                    }
+                                })();
+                        });
+                }
+
+                function buildHunksUI(localText, remoteText) {
+                    // Fallback simple two-way hunks UI (kept for compatibility)
+                    const hunks = Diff.diffLines(localText, remoteText);
+                    const list = document.getElementById('hunksList');
+                    list.innerHTML = '';
+                    let idx = 0;
+                    for (let i = 0; i < hunks.length; i++) {
+                        const h = hunks[i];
+                        if (h.added || h.removed) {
+                            const id = 'hunk-' + (idx++);
+                            const el = document.createElement('div');
+                            el.className = 'hunk-item';
+                            el.innerHTML = `<div class="hunk-header"><span class="hunk-id">${id}</span>
+                                <div class="hunk-actions">
+                                    <button class="btn btn-sm" data-hunkid="${i}" data-action="local">Apply Local</button>
+                                    <button class="btn btn-sm" data-hunkid="${i}" data-action="remote">Apply Remote</button>
+                                </div>
+                                </div>
+                                <pre class="hunk-preview">${escapeHtml(h.value)}</pre>`;
+                            el.querySelector('[data-action="local"]').addEventListener('click', () => applyHunk(i, 'local'));
+                            el.querySelector('[data-action="remote"]').addEventListener('click', () => applyHunk(i, 'remote'));
+                            list.appendChild(el);
+                        }
+                    }
+                    if (list.children.length === 0) list.innerHTML = '<div class="hunk-empty">No differences detected</div>';
+                }
+
+                // Decorations state for merge highlighting
+                let mergeDecorations = { base: [], local: [], remote: [] };
+
+                function clearMergeDecorations() {
+                    if (mergeEditors.base) mergeDecorations.base = mergeEditors.base.deltaDecorations(mergeDecorations.base, []);
+                    if (mergeEditors.local) mergeDecorations.local = mergeEditors.local.deltaDecorations(mergeDecorations.local, []);
+                    if (mergeEditors.remote) mergeDecorations.remote = mergeEditors.remote.deltaDecorations(mergeDecorations.remote, []);
+                }
+
+                function highlightRangeInEditors(start, end) {
+                    clearMergeDecorations();
+                    const range = new monaco.Range(start+1, 1, Math.max(end, start+1), 1);
+                    const opts = [{ range, options: { isWholeLine: true, className: 'merge-line-highlight', glyphMarginClassName: 'merge-gutter' } }];
+                    if (mergeEditors.base) mergeDecorations.base = mergeEditors.base.deltaDecorations(mergeDecorations.base, opts);
+                    if (mergeEditors.local) mergeDecorations.local = mergeEditors.local.deltaDecorations(mergeDecorations.local, opts);
+                    if (mergeEditors.remote) mergeDecorations.remote = mergeEditors.remote.deltaDecorations(mergeDecorations.remote, opts);
+                }
+
+                // Build 3-way hunks using base/local/remote
+                function buildHunks3UI(baseText, localText, remoteText) {
+                    const baseLines = baseText.split('\n');
+                    const localLines = localText.split('\n');
+                    const remoteLines = remoteText.split('\n');
+
+                    // Map base indexes to local indexes and collect insertions
+                    function mapBaseToTarget(baseText, targetText) {
+                        const chunks = Diff.diffLines(baseText, targetText);
+                        const baseToTarget = new Array(baseLines.length).fill(null);
+                        const insertsAt = Array.from({length: baseLines.length+1}, () => []);
+                        let bIdx = 0, tIdx = 0;
+                        for (const ch of chunks) {
+                            if (ch.added) {
+                                const addedLines = ch.value.split('\n');
+                                if (addedLines.length && addedLines[addedLines.length-1] === '') addedLines.pop();
+                                insertsAt[bIdx] = insertsAt[bIdx].concat(addedLines);
+                                tIdx += addedLines.length;
+                            } else if (ch.removed) {
+                                const rem = ch.value.split('\n');
+                                if (rem.length && rem[rem.length-1] === '') rem.pop();
+                                for (let i=0;i<rem.length;i++) { baseToTarget[bIdx++] = null; }
+                            } else {
+                                const eq = ch.value.split('\n');
+                                if (eq.length && eq[eq.length-1] === '') eq.pop();
+                                for (let i=0;i<eq.length;i++) { baseToTarget[bIdx] = tIdx; bIdx++; tIdx++; }
+                            }
+                        }
+                        return { baseToTarget, insertsAt };
+                    }
+
+                    const localMap = mapBaseToTarget(baseText, localText);
+                    const remoteMap = mapBaseToTarget(baseText, remoteText);
+
+                    // mark changed base indices where local or remote differ
+                    const changed = new Array(baseLines.length+1).fill(false);
+                    for (let i=0;i<baseLines.length;i++) {
+                        const baseLine = baseLines[i];
+                        const lidx = localMap.baseToTarget[i];
+                        const ridx = remoteMap.baseToTarget[i];
+                        const localLine = lidx === null || lidx === undefined ? null : localLines[lidx];
+                        const remoteLine = ridx === null || ridx === undefined ? null : remoteLines[ridx];
+                        if (localLine !== baseLine) changed[i] = true;
+                        if (remoteLine !== baseLine) changed[i] = true;
+                    }
+                    // also mark insertions as changes
+                    for (let i=0;i<localMap.insertsAt.length;i++) if (localMap.insertsAt[i].length) changed[i] = true;
+                    for (let i=0;i<remoteMap.insertsAt.length;i++) if (remoteMap.insertsAt[i].length) changed[i] = true;
+
+                    // group contiguous changed ranges
+                    const hunks = [];
+                    let i = 0;
+                    while (i <= baseLines.length) {
+                        if (!changed[i]) { i++; continue; }
+                        const start = i;
+                        while (i <= baseLines.length && changed[i]) i++;
+                        const end = i; // exclusive in terms of base index
+
+                        // build base segment
+                        const baseSeg = baseLines.slice(start, end).join('\n');
+
+                        // build local segment using inserts and mapped lines
+                        const localSegParts = [];
+                        for (let bi = start; bi < end; bi++) {
+                            if (localMap.insertsAt[bi] && localMap.insertsAt[bi].length) localSegParts.push(...localMap.insertsAt[bi]);
+                            const li = localMap.baseToTarget[bi];
+                            if (li !== null && li !== undefined) localSegParts.push(localLines[li]);
+                        }
+                        if (localMap.insertsAt[end] && localMap.insertsAt[end].length) localSegParts.push(...localMap.insertsAt[end]);
+                        const localSeg = localSegParts.join('\n');
+
+                        // build remote segment similarly
+                        const remoteSegParts = [];
+                        for (let bi = start; bi < end; bi++) {
+                            if (remoteMap.insertsAt[bi] && remoteMap.insertsAt[bi].length) remoteSegParts.push(...remoteMap.insertsAt[bi]);
+                            const ri = remoteMap.baseToTarget[bi];
+                            if (ri !== null && ri !== undefined) remoteSegParts.push(remoteLines[ri]);
+                        }
+                        if (remoteMap.insertsAt[end] && remoteMap.insertsAt[end].length) remoteSegParts.push(...remoteMap.insertsAt[end]);
+                        const remoteSeg = remoteSegParts.join('\n');
+
+                        hunks.push({ start, end, baseSeg, localSeg, remoteSeg });
+                    }
+
+                    const list = document.getElementById('hunksList');
+                    list.innerHTML = '';
+                    if (hunks.length === 0) { list.innerHTML = '<div class="hunk-empty">No differences detected</div>'; return; }
+                        hunks.forEach((h, idx) => {
+                        const isConflict = (h.localSeg !== h.baseSeg && h.remoteSeg !== h.baseSeg && h.localSeg !== h.remoteSeg);
+                        const el = document.createElement('div');
+                        el.className = 'hunk-item' + (isConflict ? ' hunk-conflict' : '');
+                        el.innerHTML = `<div class="hunk-header"><span class="hunk-id">hunk-${idx}</span>
+                            <div class="hunk-actions">
+                                <button class="btn btn-sm" data-idx="${idx}" data-choice="base">Use Base</button>
+                                <button class="btn btn-sm" data-idx="${idx}" data-choice="local">Use Local</button>
+                                <button class="btn btn-sm" data-idx="${idx}" data-choice="remote">Use Remote</button>
+                            </div>
+                            </div>
+                            <div class="hunk-grid">
+                            <div class="hunk-col"><div class="hunk-subtitle">Base</div><pre class="hunk-preview">${escapeHtml(h.baseSeg)}</pre></div>
+                            <div class="hunk-col"><div class="hunk-subtitle">Local</div><pre class="hunk-preview">${escapeHtml(h.localSeg)}</pre></div>
+                            <div class="hunk-col"><div class="hunk-subtitle">Remote</div><pre class="hunk-preview">${escapeHtml(h.remoteSeg)}</pre></div>
+                            </div>`;
+                        el.querySelectorAll('button[data-choice]').forEach(btn => {
+                            btn.addEventListener('click', () => { applyHunk3(idx, btn.dataset.choice); highlightRangeInEditors(h.start, h.end); });
+                            btn.addEventListener('mouseenter', () => highlightRangeInEditors(h.start, h.end));
+                            btn.addEventListener('mouseleave', () => clearMergeDecorations());
+                        });
+                        list.appendChild(el);
+                    });
+                    // expose hunks for inline widget matching
+                    window.latestHunks = hunks;
+                }
+
+                function applyHunk3(hunkIndex, choice) {
+                    const merged = mergeEditors.merged.getValue().split('\n');
+                    const base = mergeEditors.base.getValue().split('\n');
+                    const local = mergeEditors.local.getValue().split('\n');
+                    const remote = mergeEditors.remote.getValue().split('\n');
+                    // rebuild hunks to get ranges
+                    const maxn = Math.max(base.length, local.length, remote.length);
+                    const ranges = [];
+                    let i = 0;
+                    while (i < maxn) {
+                        const be = base[i] || '';
+                        const le = local[i] || '';
+                        const re = remote[i] || '';
+                        if (le === be && re === be) { i++; continue; }
+                        const start = i;
+                        while (i < maxn) {
+                            const be2 = base[i] || '';
+                            const le2 = local[i] || '';
+                            const re2 = remote[i] || '';
+                            if (le2 === be2 && re2 === be2) break;
+                            i++;
+                        }
+                        const end = i;
+                        ranges.push({ start, end });
+                    }
+                    if (hunkIndex < 0 || hunkIndex >= ranges.length) return;
+                    const r = ranges[hunkIndex];
+                    const chosenLines = (choice === 'base' ? base.slice(r.start, r.end) : (choice === 'local' ? local.slice(r.start, r.end) : remote.slice(r.start, r.end)));
+                    // Replace in merged (ensure merged has at least as many lines)
+                    while (merged.length < r.start) merged.push('');
+                    merged.splice(r.start, r.end - r.start, ...chosenLines);
+                    mergeEditors.merged.setValue(merged.join('\n'));
+                    showStatus('Applied ' + choice + ' for hunk ' + hunkIndex);
+                    renderConflictWidgets();
+                }
+
+                function applyHunk(hunkIndex, choice) {
+                        // Recompute hunks and rebuild merged value by choosing chunks
+                        const local = mergeEditors.local.getValue();
+                        const remote = mergeEditors.remote.getValue();
+                        const hunks = Diff.diffLines(local, remote);
+                        let merged = '';
+                        for (let i = 0; i < hunks.length; i++) {
+                                const h = hunks[i];
+                                if (h.added || h.removed) {
+                                        if (i === hunkIndex) {
+                                                merged += (choice === 'local' ? (h.removed ? h.value : '') : (h.added ? h.value : ''));
+                                        } else {
+                                                // prefer local for removed chunks, remote for added
+                                                if (h.removed) merged += h.value; else if (h.added) merged += h.value; else merged += h.value;
+                                        }
+                                } else {
+                                        merged += h.value;
+                                }
+                        }
+                        if (mergeEditors.merged) mergeEditors.merged.setValue(merged);
+                        showStatus('Applied ' + choice + ' hunk');
+                }
+
+                function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+                function closeMerge() { if (mergeModal) { mergeModal.remove(); mergeModal = null; mergeEditors = { local: null, remote: null, merged: null }; } }
+
+                function copyLocalToMerged() { if (mergeEditors.local && mergeEditors.merged) mergeEditors.merged.setValue(mergeEditors.local.getValue()); }
+                function copyRemoteToMerged() { if (mergeEditors.remote && mergeEditors.merged) mergeEditors.merged.setValue(mergeEditors.remote.getValue()); }
+
+                async function saveMergedToServer(name) {
+                        if (!mergeEditors.merged) return;
+                        const merged = mergeEditors.merged.getValue();
+                        const r = await fetch(`/api/scripts/${encodeURIComponent(name)}/merge`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ merged, message: 'merged via UI' }) });
+                        const j = await r.json();
+                        if (r.ok) {
+                                showStatus('Merged saved');
+                                // update local script and close
+                                scripts[name] = merged;
+                                saveAllToStorage();
+                                closeMerge();
+                        } else {
+                                showStatus('Merge failed: ' + (j.error || ''));
+                        }
+                }
+
+                // Inline conflict widgets in merged editor
+                let conflictWidgets = [];
+                function clearConflictWidgets() {
+                    conflictWidgets.forEach(w => w.el.remove());
+                    conflictWidgets = [];
+                }
+
+                function renderConflictWidgets() {
+                    if (!mergeEditors.merged) return;
+                    clearConflictWidgets();
+                    const content = mergeEditors.merged.getValue();
+                    const lines = content.split('\n');
+                    let i = 0;
+                    while (i < lines.length) {
+                        if (lines[i] === '<<<<<<< A') {
+                            const start = i;
+                            i++;
+                            const aLines = [];
+                            while (i < lines.length && lines[i] !== '=======') { aLines.push(lines[i]); i++; }
+                            if (i >= lines.length) break;
+                            i++; // skip =======
+                            const bLines = [];
+                            while (i < lines.length && lines[i] !== '>>>>>>> B') { bLines.push(lines[i]); i++; }
+                            if (i >= lines.length) break;
+                            const end = i; // index of >>>>>> B
+
+                            // create widget
+                            const top = mergeEditors.merged.getTopForLineNumber(start+1);
+                            const container = mergeEditors.merged.getDomNode().parentElement; // editor container
+                            const widget = document.createElement('div');
+                            widget.className = 'conflict-widget';
+                            widget.style.left = (container.getBoundingClientRect().left + 12) + 'px';
+                            widget.style.top = (container.getBoundingClientRect().top + top) + 'px';
+                            const btnBase = document.createElement('button'); btnBase.textContent = 'Accept Base';
+                            const btnLocal = document.createElement('button'); btnLocal.textContent = 'Accept Local';
+                            const btnRemote = document.createElement('button'); btnRemote.textContent = 'Accept Remote';
+                            widget.appendChild(btnBase); widget.appendChild(btnLocal); widget.appendChild(btnRemote);
+                            document.body.appendChild(widget);
+                            const idxStart = start; const idxEnd = end;
+                            btnLocal.addEventListener('click', () => {
+                                // replace with local lines
+                                const editRange = { startLineNumber: idxStart+1, endLineNumber: idxEnd+1 };
+                                const newText = aLines.join('\n');
+                                mergeEditors.merged.executeEdits('conflict', [{ range: new monaco.Range(editRange.startLineNumber,1, editRange.endLineNumber,1), text: newText }]);
+                                renderConflictWidgets();
+                            });
+                            btnBase.addEventListener('click', () => {
+                                // try to find matching hunk to use base slice
+                                let baseText = '';
+                                if (window.latestHunks) {
+                                    const needleA = aLines.join('\n');
+                                    const needleB = bLines.join('\n');
+                                    for (const h of window.latestHunks) {
+                                        if (h.localSeg === needleA && h.remoteSeg === needleB) {
+                                            const baseAll = mergeEditors.base ? mergeEditors.base.getValue().split('\n') : [];
+                                            baseText = (baseAll.slice(h.start, h.end) || []).join('\n');
+                                            break;
+                                        }
+                                    }
+                                }
+                                const editRange = { startLineNumber: idxStart+1, endLineNumber: idxEnd+1 };
+                                mergeEditors.merged.executeEdits('conflict', [{ range: new monaco.Range(editRange.startLineNumber,1, editRange.endLineNumber,1), text: baseText }]);
+                                renderConflictWidgets();
+                            });
+                            btnRemote.addEventListener('click', () => {
+                                const editRange = { startLineNumber: idxStart+1, endLineNumber: idxEnd+1 };
+                                const newText = bLines.join('\n');
+                                mergeEditors.merged.executeEdits('conflict', [{ range: new monaco.Range(editRange.startLineNumber,1, editRange.endLineNumber,1), text: newText }]);
+                                renderConflictWidgets();
+                            });
+                            conflictWidgets.push({ el: widget, start, end });
+                        }
+                        i++;
+                    }
+                }
+
+                async function doAutoThreeWayMerge(name) {
+                    try {
+                        const r = await fetch(`/api/scripts/${encodeURIComponent(name)}`);
+                        if (!r.ok) {
+                            showStatus('Could not fetch remote versions');
+                            return;
+                        }
+                        const j = await r.json();
+                        const versions = j.versions || [];
+                        if (versions.length < 2) {
+                            showStatus('Need at least two remote versions to perform 3-way merge');
+                            return;
+                        }
+                        const v2 = versions[versions.length - 1].id;
+                        const v1 = versions[versions.length - 2].id;
+
+                        const r2 = await fetch(`/api/scripts/${encodeURIComponent(name)}/merge3`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ v1, v2 })
+                        });
+                        const j2 = await r2.json();
+                        if (!r2.ok) {
+                            showStatus('Merge failed: ' + (j2.error || ''));
+                            return;
+                        }
+                        if (mergeEditors.merged) mergeEditors.merged.setValue(j2.merged.content || '');
+                        if (j2.merged.conflicts) alert('Merge produced conflicts — conflict markers included in merged buffer.');
+                        showStatus('Auto 3-way merge complete');
+                    } catch (err) {
+                        showStatus('Auto merge failed: ' + err.message);
+                    }
+                }
+
+
         
         // Tab switching
         function switchOutputTab(tab) {
@@ -2057,6 +2883,11 @@ for i in range(10) {
                 setTimeout(() => btn.textContent = originalText, 1500);
             });
         }
+
+        // Expose auth/merge helpers globally
+        window.openAuth = openAuth;
+        window.openMergePanel = openMergePanel;
+        window.showHistory = showHistory;
         
         window.copyCode = copyCode;
         
