@@ -40,6 +40,9 @@ Examples:
     serve_parser.add_argument("--host", default="0.0.0.0", help="Host to bind")
     serve_parser.add_argument("--port", type=int, default=8000, help="Port")
     serve_parser.add_argument("--reload", action="store_true", help="Auto-reload")
+    serve_parser.add_argument("--app", default="main", 
+                             choices=["main", "teachers-aide", "interface-builder", "jester", "demo"],
+                             help="App to serve (default: main)")
 
     # calc command
     calc_parser = subparsers.add_parser("calc", help="Calculate expression")
@@ -65,7 +68,7 @@ Examples:
 
     if args.command == "serve":
         from .server import serve
-        serve(host=args.host, port=args.port, reload=args.reload)
+        serve(host=args.host, port=args.port, reload=args.reload, app=args.app)
 
     elif args.command == "calc":
         from .client import Newton, NewtonError

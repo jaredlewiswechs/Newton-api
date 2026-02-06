@@ -1,7 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * NEWTON MISSION CONTROL - API ENDPOINT CONFIGURATION
- * Single source of truth for all Newton API endpoints
+ * 
+ * NOTE: Endpoints are now loaded dynamically from /api/endpoints
+ * This static configuration is kept as fallback only.
  * 
  * © 2026 Jared Lewis · Ada Computing Company
  * Updated: February 2026

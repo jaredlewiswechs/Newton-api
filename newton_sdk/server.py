@@ -8,16 +8,22 @@ import os
 import sys
 
 
-def serve(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):
+def serve(host: str = "0.0.0.0", port: int = 8000, reload: bool = False, app: str = "main"):
     """
     Start the Newton Supercomputer server.
 
+    Args:
+        host: Host to bind to
+        port: Port to listen on
+        reload: Enable auto-reload for development
+        app: Which app to serve ('main', 'teachers-aide', 'interface-builder', 'jester', 'demo')
+
     Usage:
         from newton_sdk import serve
-        serve(port=8000)
+        serve(port=8000, app='teachers-aide')
 
     Or from command line:
-        newton serve --port 8000
+        newton serve --app teachers-aide --port 8000
     """
     # Add root directory to path
     sdk_dir = os.path.dirname(os.path.abspath(__file__))
@@ -28,22 +34,38 @@ def serve(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):
 
     try:
         import uvicorn
-        from newton_supercomputer import app
+
+        # Select which app to serve
+        if app == "main":
+            from newton_supercomputer import app
+            app_module = "newton_supercomputer"
+        elif app == "teachers-aide":
+            from demo.teachers_aide_service import app
+            app_module = "demo.teachers_aide_service"
+        elif app == "interface-builder":
+            # For now, fall back to main app - could be extended
+            from newton_supercomputer import app
+            app_module = "newton_supercomputer"
+        elif app == "jester":
+            # For now, fall back to main app - could be extended
+            from newton_supercomputer import app
+            app_module = "newton_supercomputer"
+        elif app == "demo":
+            from demo.teachers_aide_service import app
+            app_module = "demo.teachers_aide_service"
+        else:
+            print(f"Unknown app: {app}")
+            sys.exit(1)
 
         print(f"""
 ═══════════════════════════════════════════════════════════════════════════════
- NEWTON SUPERCOMPUTER v1.0.0
+ NEWTON SUPERCOMPUTER v1.0.0 - {app.title()} App
  Verified Computation Engine
 ═══════════════════════════════════════════════════════════════════════════════
 
+ App: {app}
+ Module: {app_module}
  Server starting at http://{host}:{port}
-
- Endpoints:
-   POST /calculate  - Verified computation
-   POST /verify     - Content safety
-   POST /constraint - CDL evaluation
-   POST /ask        - Full pipeline
-   GET  /health     - System status
 
  Press Ctrl+C to stop
 ═══════════════════════════════════════════════════════════════════════════════

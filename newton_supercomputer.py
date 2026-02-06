@@ -4249,6 +4249,168 @@ async def voice_demo():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT DISCOVERY - Live API Catalog for Mission Control
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/endpoints")
+async def get_api_endpoints():
+    """
+    Discover all API endpoints dynamically.
+
+    This endpoint scans the FastAPI application routes and returns
+    a structured catalog of all available endpoints for Mission Control.
+
+    Returns endpoints grouped by category with sample data and descriptions.
+    """
+    import re
+    import json
+    import inspect
+    from fastapi.routing import APIRoute
+
+    endpoints = {
+        "core": {
+            "name": "Core Verification",
+            "description": "Fundamental verification and computation",
+            "endpoints": []
+        },
+        "education": {
+            "name": "Education",
+            "description": "TEKS-aligned lesson planning and assessment",
+            "endpoints": []
+        },
+        "teachers": {
+            "name": "Teacher's Aide",
+            "description": "Classroom management and differentiation",
+            "endpoints": []
+        },
+        "interface": {
+            "name": "Interface Builder",
+            "description": "Verified UI generation",
+            "endpoints": []
+        },
+        "jester": {
+            "name": "Jester",
+            "description": "Code constraint analysis",
+            "endpoints": []
+        },
+        "voice": {
+            "name": "Voice Interface",
+            "description": "MOAD voice commands and streaming",
+            "endpoints": []
+        },
+        "chatbot": {
+            "name": "Chatbot Compiler",
+            "description": "Governed chatbot requests",
+            "endpoints": []
+        },
+        "cartridge": {
+            "name": "Cartridges",
+            "description": "Media specification generation",
+            "endpoints": []
+        },
+        "glass_box": {
+            "name": "Glass Box",
+            "description": "Policy engine, negotiator, and Merkle anchoring",
+            "endpoints": []
+        },
+        "ledger": {
+            "name": "Ledger",
+            "description": "Immutable audit trail",
+            "endpoints": []
+        },
+        "vault": {
+            "name": "Vault",
+            "description": "Encrypted storage",
+            "endpoints": []
+        },
+        "gumroad": {
+            "name": "Gumroad",
+            "description": "Payments, licensing, and feedback",
+            "endpoints": []
+        },
+        "system": {
+            "name": "System",
+            "description": "Health, metrics, and configuration",
+            "endpoints": []
+        }
+    }
+
+    # Route categorization patterns
+    route_patterns = {
+        "core": ["^/$", "^/ask$", "^/verify", "^/constraint$", "^/ground$", "^/calculate", "^/extract", "^/clip$"],
+        "education": ["^/education/", "^/teachers/teks"],
+        "teachers": ["^/teachers/"],
+        "interface": ["^/interface/"],
+        "jester": ["^/jester/"],
+        "voice": ["^/voice/"],
+        "chatbot": ["^/chatbot/"],
+        "cartridge": ["^/cartridge/"],
+        "glass_box": ["^/policy$", "^/negotiator/", "^/merkle/"],
+        "ledger": ["^/ledger/"],
+        "vault": ["^/vault/"],
+        "gumroad": ["^/license/", "^/feedback", "^/gumroad/", "^/webhooks/gumroad$"],
+        "system": ["^/health$", "^/metrics$", "^/api/endpoints$", "^/config.js$", "^/shared-config.js$"]
+    }
+
+    def categorize_route(path: str) -> str:
+        """Categorize a route path into a category."""
+        for category, patterns in route_patterns.items():
+            for pattern in patterns:
+                if re.match(pattern, path):
+                    return category
+        return "system"  # Default category
+
+    def extract_sample_data(func) -> dict:
+        """Extract sample data from function docstring or signature."""
+        try:
+            # Get function source
+            source = inspect.getsource(func)
+            # Look for example JSON in docstring or comments
+            examples = re.findall(r'{\s*"[^"]+"\s*:\s*[^}]+}', source)
+            if examples:
+                try:
+                    return json.loads(examples[0])
+                except:
+                    pass
+        except:
+            pass
+        return {}
+
+    # Scan all routes
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            path = route.path
+            methods = list(route.methods)
+            category = categorize_route(path)
+
+            # Skip internal routes
+            if path.startswith("/docs") or path.startswith("/redoc") or path.startswith("/openapi"):
+                continue
+
+            # Get endpoint info
+            endpoint_info = {
+                "path": path,
+                "method": methods[0] if methods else "GET",
+                "name": route.name or path.replace("/", " ").strip().title(),
+                "description": route.summary or "",
+                "sampleData": extract_sample_data(route.endpoint) if hasattr(route, 'endpoint') else {}
+            }
+
+            endpoints[category]["endpoints"].append(endpoint_info)
+
+    # Remove empty categories
+    endpoints = {k: v for k, v in endpoints.items() if v["endpoints"]}
+
+    return {
+        "endpoints": endpoints,
+        "total_endpoints": sum(len(cat["endpoints"]) for cat in endpoints.values()),
+        "categories": list(endpoints.keys()),
+        "last_updated": int(time.time() * 1000),
+        "engine": ENGINE
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # STATICFILES MOUNTS - Must be defined after all API routes to avoid shadowing
 # ═══════════════════════════════════════════════════════════════════════════════
 

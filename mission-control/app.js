@@ -7,7 +7,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-import { ENDPOINTS, API_ENVIRONMENTS, DEFAULT_CONFIG } from './config.js';
+import { API_ENVIRONMENTS, DEFAULT_CONFIG } from './config.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // State Management
@@ -16,21 +16,24 @@ import { ENDPOINTS, API_ENVIRONMENTS, DEFAULT_CONFIG } from './config.js';
 const state = {
     config: { ...DEFAULT_CONFIG },
     services: [],
+    endpoints: {}, // Will be loaded dynamically
     testResults: new Map(),
     logs: [],
     currentCategory: 'all',
     currentFilter: '',
     autoRefreshTimer: null,
-    testingInProgress: false
+    testingInProgress: false,
+    endpointsLoaded: false
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Initialization
 // ═══════════════════════════════════════════════════════════════════════════
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     loadConfiguration();
     initializeUI();
+    await loadEndpoints();
     buildServicesList();
     renderServices();
     setupEventListeners();
@@ -52,6 +55,28 @@ function loadConfiguration() {
         } catch (e) {
             addLog('error', 'Failed to load configuration: ' + e.message);
         }
+    }
+}
+
+async function loadEndpoints() {
+    try {
+        const baseUrl = getApiBaseUrl();
+        const response = await fetch(`${baseUrl}/api/endpoints`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        state.endpoints = data.endpoints;
+        state.endpointsLoaded = true;
+        
+        addLog('success', `Loaded ${data.total_endpoints} endpoints from ${data.categories.length} categories`);
+    } catch (error) {
+        addLog('error', 'Failed to load endpoints: ' + error.message);
+        // Fallback to empty endpoints
+        state.endpoints = {};
+        state.endpointsLoaded = false;
     }
 }
 
@@ -108,7 +133,7 @@ function updateThemeIcon() {
 function buildServicesList() {
     state.services = [];
     
-    Object.entries(ENDPOINTS).forEach(([category, categoryData]) => {
+    Object.entries(state.endpoints).forEach(([category, categoryData]) => {
         categoryData.endpoints.forEach(endpoint => {
             state.services.push({
                 id: `${category}-${endpoint.path}`,
@@ -130,7 +155,7 @@ function updateCategoryCounts() {
     const counts = {};
     counts.all = state.services.length;
     
-    Object.keys(ENDPOINTS).forEach(category => {
+    Object.keys(state.endpoints).forEach(category => {
         counts[category] = state.services.filter(s => s.category === category).length;
     });
     
