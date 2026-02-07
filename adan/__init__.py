@@ -13,6 +13,9 @@ The ledger IS the memory.
 © 2026 Jared Lewis · Ada Computing Company · Houston, Texas
 """
 
+from core import CDL, LogicEngine, VerificationEngine, EncryptedStorage, ImmutableLedger, DistributedProtocol, AdversarialStatistics
+
+# Retain specific imports unique to adan
 from .agent import NewtonAgent, AgentConfig, AgentResponse
 from .grounding_enhanced import EnhancedGroundingEngine, OfficialSource
 from .memory import AgentMemory, ConversationTurn
