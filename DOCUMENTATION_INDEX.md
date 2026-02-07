@@ -15,6 +15,28 @@
 
 ---
 
+## 📱 I Want To Find & Use Apps
+
+| Need | Resource | Description |
+|------|----------|-------------|
+| **Browse All Apps** | [APP_INVENTORY.md](APP_INVENTORY.md) | Complete catalog of all Newton apps with URLs |
+| **Visual App Launcher** | [Newton Phone](https://newton-api-1.onrender.com/) | iOS-style home screen with all apps |
+| **Try the Demo** | [Newton Demo](https://newton-api-1.onrender.com/newton-demo) | Interactive demo of Newton capabilities |
+
+### Quick App Directory
+
+| App | URL | What It Does |
+|-----|-----|--------------|
+| **Newton** | [/app](https://newton-api-1.onrender.com/app) | Main verification engine |
+| **Teacher's Aide** | [/teachers](https://newton-api-1.onrender.com/teachers) | Educational tools |
+| **Interface Builder** | [/builder](https://newton-api-1.onrender.com/builder) | Visual interface construction |
+| **TinyTalk IDE** | [/tinytalk-ide](https://newton-api-1.onrender.com/tinytalk-ide) | Code editor for TinyTalk |
+| **Jester Analyzer** | [/jester-analyzer](https://newton-api-1.onrender.com/jester-analyzer) | Code constraint analyzer |
+| **Construct Studio** | [/construct-studio](https://newton-api-1.onrender.com/construct-studio) | CAD and design tools |
+| **Games** | [/games](https://newton-api-1.onrender.com/games) | Games built with Newton |
+
+---
+
 ## 📖 I Want To Learn
 
 | Topic | Document | Description |
@@ -178,6 +200,9 @@
 ---
 
 ## 🔍 Search By Topic
+
+### "What apps are available?" / "How do I find the apps?"
+→ [APP_INVENTORY.md](APP_INVENTORY.md) or visit [Newton Phone](https://newton-api-1.onrender.com/)
 
 ### "How do I install?"
 → [QUICKSTART.md](QUICKSTART.md)

@@ -123,6 +123,10 @@ python test_full_system.py  # 10/10 tests should pass
 - 🪟 **Windows Users** → [WINDOWS_SETUP.md](WINDOWS_SETUP.md) (Step-by-step Windows guide)
 - 🧪 **Testing Newton** → [TESTING.md](TESTING.md) (Complete testing guide)
 
+**Browse Newton Apps:**
+- 📱 **[Newton Phone](https://newton-api-1.onrender.com/)** - Visual app launcher (iOS-style home screen)
+- 📋 **[APP_INVENTORY.md](APP_INVENTORY.md)** - Complete catalog of all apps with URLs and descriptions
+
 **New to Newton?** → [📖 BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) (Complete guide with all examples) or [🚀 QUICKSTART.md](QUICKSTART.md) (5 minutes) or [📚 GETTING_STARTED.md](GETTING_STARTED.md) (30 minutes)
 
 ---
