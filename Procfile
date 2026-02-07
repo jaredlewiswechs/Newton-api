@@ -1,0 +1,1 @@
+web: gunicorn realTinyTalk.web.server:app
