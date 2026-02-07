@@ -1300,6 +1300,39 @@ end
 show("apply_twice(doubled, 3):" apply_twice(doubled, 3))
 show("apply_twice(squared, 2):" apply_twice(squared, 2))'''
         },
+        {
+            'name': '🎮 Turn-Based Strategy Game',
+            'code': '''// ═══════════════════════════════════════
+// TURN-BASED STRATEGY GAME EXAMPLE
+// ═══════════════════════════════════════
+
+// Define units
+law Unit(name, health, attack)
+    field name
+    field health
+    field attack
+end
+
+// Create units
+let knight = Unit("Knight", 100, 15)
+let archer = Unit("Archer", 75, 10)
+
+// Battle logic
+law battle(attacker, defender)
+    defender.health -= attacker.attack
+    if defender.health <= 0 {
+        show(defender.name + " is defeated!")
+    } else {
+        show(defender.name + " has " + defender.health.str + " health left.")
+    }
+end
+
+// Simulate battle
+show("Battle Start!")
+battle(knight, archer)
+battle(archer, knight)
+battle(knight, archer)'''
+        }
     ]
     return jsonify(examples)
 

@@ -1,0 +1,52 @@
+/*
+Example: Turn-Based Strategy Game in realTinyTalk
+
+This game demonstrates realTinyTalk's capabilities by implementing a simple turn-based strategy game.
+*/
+
+// Define a Player blueprint
+blueprint Player
+    field name
+    field health
+    field attack
+    field defense
+end
+
+// Define a function to calculate damage
+fn calculate_damage(attacker, defender)
+    let damage = attacker.attack - defender.defense
+    reply damage > 0 ? damage : 0
+end
+
+// Define the main game loop
+fn game_loop(player1, player2)
+    while player1.health > 0 and player2.health > 0
+        show(player1.name "HP:" player1.health "|" player2.name "HP:" player2.health)
+        
+        // Player 1 attacks Player 2
+        let damage = calculate_damage(player1, player2)
+        player2.health = player2.health - damage
+        show(player1.name "deals" damage "damage to" player2.name)
+        if player2.health <= 0
+            show(player2.name "has been defeated!")
+            break
+        end
+
+        // Player 2 attacks Player 1
+        damage = calculate_damage(player2, player1)
+        player1.health = player1.health - damage
+        show(player2.name "deals" damage "damage to" player1.name)
+        if player1.health <= 0
+            show(player1.name "has been defeated!")
+            break
+        end
+    end
+end
+
+// Initialize players
+let player1 = Player("Knight", 100, 20, 10)
+let player2 = Player("Orc", 120, 15, 5)
+
+// Start the game
+show("The battle begins!")
+game_loop(player1, player2)
