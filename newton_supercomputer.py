@@ -625,9 +625,25 @@ except Exception:
 from collections import defaultdict
 from threading import Lock
 
+RATE_LIMIT_RPM = int(os.environ.get("RATE_LIMIT_RPM", "300"))
+
+# Paths exempt from rate limiting (health checks, static assets, config files)
+RATE_LIMIT_EXEMPT_PATHS = {
+    "/health",
+    "/config.js",
+    "/shared-config.js",
+    "/styles.css",
+    "/app.js",
+    "/favicon.ico",
+    "/docs",
+    "/redoc",
+    "/openapi.json",
+}
+RATE_LIMIT_EXEMPT_PREFIXES = ("/static/", "/stefan/")
+
 class RateLimiter:
-    """Simple in-memory rate limiter. 100 requests/minute per IP."""
-    def __init__(self, requests_per_minute: int = 100):
+    """Simple in-memory rate limiter."""
+    def __init__(self, requests_per_minute: int = 300):
         self.requests_per_minute = requests_per_minute
         self.requests: Dict[str, List[float]] = defaultdict(list)
         self.lock = Lock()
@@ -655,12 +671,14 @@ class RateLimiter:
             recent = [t for t in self.requests.get(client_ip, []) if t > window_start]
             return max(0, self.requests_per_minute - len(recent))
 
-rate_limiter = RateLimiter(requests_per_minute=100)
+rate_limiter = RateLimiter(requests_per_minute=RATE_LIMIT_RPM)
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    # Skip rate limiting for health checks
-    if request.url.path == "/health":
+    path = request.url.path
+
+    # Skip rate limiting for exempt paths (health checks, static assets, config)
+    if path in RATE_LIMIT_EXEMPT_PATHS or path.startswith(RATE_LIMIT_EXEMPT_PREFIXES):
         return await call_next(request)
 
     client_ip = request.client.host if request.client else "unknown"
@@ -671,14 +689,14 @@ async def rate_limit_middleware(request: Request, call_next):
             content={
                 "error": "Rate limit exceeded",
                 "message": "Too many requests. Please wait a minute.",
-                "limit": "100 requests per minute"
+                "limit": f"{RATE_LIMIT_RPM} requests per minute"
             },
             headers={"Retry-After": "60"}
         )
 
     response = await call_next(request)
     response.headers["X-RateLimit-Remaining"] = str(rate_limiter.get_remaining(client_ip))
-    response.headers["X-RateLimit-Limit"] = "100"
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_RPM)
     return response
 
 # ═══════════════════════════════════════════════════════════════════════════════
