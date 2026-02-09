@@ -1,13 +1,13 @@
 """Core package init for local imports in the workspace."""
 
 # Centralized imports for shared logic
-from .cdl import CDL
+from .cdl import CDLEvaluator as CDL
 from .logic import LogicEngine
-from .forge import VerificationEngine
-from .vault import EncryptedStorage
-from .ledger import ImmutableLedger
-from .bridge import DistributedProtocol
-from .robust import AdversarialStatistics
+from .forge import Forge as VerificationEngine
+from .vault import Vault as EncryptedStorage
+from .ledger import Ledger as ImmutableLedger
+from .bridge import Bridge as DistributedProtocol
+from .robust import RobustVerifier as AdversarialStatistics
 
 __all__ = [
     # CDL

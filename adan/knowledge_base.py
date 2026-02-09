@@ -1150,12 +1150,9 @@ STATISTICS_CONCEPTS: Dict[str, tuple[str, str]] = {
     # Time Series
     "moving average": ("Smoothed average over window", "Average of last n observations for trend detection"),
     "exponential smoothing": ("Weighted average favoring recent", "Gives more weight to recent observations"),
-<<<<<<< HEAD
-=======
     "ar": ("AutoRegressive", "Model using past values to predict future"),
     "ma": ("Moving Average", "Model using past errors to predict future"),
     "arima": ("AutoRegressive Integrated Moving Average", "Model with differencing and ARMA components"),
->>>>>>> main
 }
 
 

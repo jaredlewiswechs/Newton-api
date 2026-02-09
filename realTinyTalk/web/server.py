@@ -204,6 +204,74 @@ def logout():
     return jsonify({'logged_out': True})
 
 
+# ═══════════════════════════════════════════════════════════════
+# Script storage helpers
+# ═══════════════════════════════════════════════════════════════
+
+def _script_dir(name: str) -> Path:
+    """Return the directory for a named script under the current user."""
+    safe = re.sub(r'[^A-Za-z0-9_\-.]', '-', name)
+    return current_user_root() / 'scripts' / safe
+
+
+def _read_meta(dirp: Path) -> dict:
+    """Read meta.json from a script directory."""
+    mp = dirp / 'meta.json'
+    if mp.exists():
+        return json.loads(mp.read_text())
+    return {'versions': []}
+
+
+def _write_meta(dirp: Path, meta: dict):
+    """Write meta.json to a script directory."""
+    mp = dirp / 'meta.json'
+    mp.write_text(json.dumps(meta, indent=2))
+
+
+def _latest_version(dirp: Path) -> dict | None:
+    """Return the latest version entry from meta.json, or None."""
+    meta = _read_meta(dirp)
+    versions = meta.get('versions', [])
+    return versions[-1] if versions else None
+
+
+def _save_version(dirp: Path, code: str, message: str = '') -> dict:
+    """Save a new version of a script and return the version record."""
+    dirp.mkdir(parents=True, exist_ok=True)
+    (dirp / 'versions').mkdir(parents=True, exist_ok=True)
+    meta = _read_meta(dirp)
+    vid = f"v{len(meta['versions']) + 1}"
+    entry = {
+        'id': vid,
+        'message': message,
+        'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+    }
+    meta['versions'].append(entry)
+    _write_meta(dirp, meta)
+    (dirp / 'versions' / f"{vid}.tt").write_text(code)
+    return entry
+
+
+def require_auth():
+    """Return current user name or None if not authenticated."""
+    user = get_user()
+    return user if user != 'anonymous' else None
+
+
+# API: list all scripts for the current user
+@app.route('/api/scripts', methods=['GET'])
+def list_scripts():
+    ensure_user_dirs()
+    scripts_dir = current_user_root() / 'scripts'
+    result = []
+    if scripts_dir.exists():
+        for d in sorted(scripts_dir.iterdir()):
+            if d.is_dir():
+                meta = _read_meta(d)
+                result.append({'name': d.name, 'versions': len(meta.get('versions', []))})
+    return jsonify(result)
+
+
 # API: get script metadata and latest content
 @app.route('/api/scripts/<name>', methods=['GET'])
 def get_script(name):

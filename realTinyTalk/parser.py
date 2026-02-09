@@ -501,9 +501,31 @@ class Parser:
 
         if self._match(TokenType.LET):
             return self._parse_let()
+        if self._match(TokenType.CONST):
+            return self._parse_const()
+        if self._match(TokenType.FN):
+            return self._parse_fn()
+        if self._match(TokenType.IF):
+            return self._parse_if()
+        if self._match(TokenType.FOR):
+            return self._parse_for()
+        if self._match(TokenType.WHILE):
+            return self._parse_while()
+        if self._match(TokenType.RETURN):
+            return self._parse_return()
+        if self._match(TokenType.BREAK):
+            return BreakStmt(line=tok.line, column=tok.column)
+        if self._match(TokenType.CONTINUE):
+            return ContinueStmt(line=tok.line, column=tok.column)
+        if self._match(TokenType.IMPORT):
+            return self._parse_import()
+        if self._match(TokenType.MATCH):
+            return self._parse_match()
+        if self._match(TokenType.TRY):
+            return self._parse_try()
         if self._match(TokenType.THROW):
             return self._parse_throw()
-        
+
         # ═══════════════════════════════════════════════════════════════
         # TINYTALK SACRED KEYWORDS (from the Bible)
         # ═══════════════════════════════════════════════════════════════
@@ -1324,18 +1346,14 @@ class Parser:
                 if self._check(TokenType.IDENTIFIER):
                     field_tok = self._advance()
                     field_name = field_tok.value
-<<<<<<< HEAD
-                    expr = Member(obj=expr, field=field_name, 
+                    expr = Member(obj=expr, field=field_name,
                                   line=tok.line, column=tok.column)
-=======
->>>>>>> main
-                elif self._check(TokenType.STR, TokenType.INT, TokenType.FLOAT, 
-                                  TokenType.BOOL, TokenType.TYPE, TokenType.LIST, 
+                elif self._check(TokenType.STR, TokenType.INT, TokenType.FLOAT,
+                                  TokenType.BOOL, TokenType.TYPE, TokenType.LIST,
                                   TokenType.MAP, TokenType.ANY):
                     field_tok = self._advance()
                     field_name = field_tok.value
-<<<<<<< HEAD
-                    expr = Member(obj=expr, field=field_name, 
+                    expr = Member(obj=expr, field=field_name,
                                   line=tok.line, column=tok.column)
                 else:
                     # Allow step tokens directly after a dot, e.g. obj._sort._take
@@ -1354,13 +1372,6 @@ class Parser:
                                          line=tok.line, column=tok.column)
                     else:
                         raise SyntaxError(f"Line {tok.line}: Expected field name after '.'")
-=======
-                else:
-                    raise SyntaxError(f"Line {tok.line}: Expected field name after '.'")
-                
-                expr = Member(obj=expr, field=field_name, 
-                              line=tok.line, column=tok.column)
->>>>>>> main
             
             elif self._is_step_token():
                 # Step chain: data _filter _sort _take
