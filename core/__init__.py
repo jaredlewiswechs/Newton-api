@@ -1,109 +1,99 @@
-"""Core package init for local imports in the workspace."""
+"""
+Newton Core - Verified Computation Engine
+==========================================
+Central package that re-exports all symbols needed by newton_supercomputer.py
+and other consumers. Each submodule can also be imported directly.
+"""
 
-# Centralized imports for shared logic
-from .cdl import CDLEvaluator as CDL
-from .logic import LogicEngine
-from .forge import Forge as VerificationEngine
-from .vault import Vault as EncryptedStorage
-from .ledger import Ledger as ImmutableLedger
-from .bridge import Bridge as DistributedProtocol
-from .robust import RobustVerifier as AdversarialStatistics
+# ─── CDL (Constraint Definition Language) ─────────────────────────────────────
+from .cdl import (
+    CDLEvaluator, CDLParser,
+    verify, verify_and, verify_or, newton,
+)
+
+# Convenience alias used by some workspace scripts
+CDL = CDLEvaluator
+
+# ─── Forge (Parallel Verification Engine) ─────────────────────────────────────
+from .forge import Forge, ForgeConfig, get_forge
+
+# Alias for legacy callers
+VerificationEngine = Forge
+
+# ─── Vault (AES-256-GCM Encrypted Storage) ────────────────────────────────────
+from .vault import Vault, VaultConfig, get_vault
+
+EncryptedStorage = Vault
+
+# ─── Ledger (Hash-Chained Immutable Record) ───────────────────────────────────
+from .ledger import Ledger, LedgerConfig, get_ledger
+
+ImmutableLedger = Ledger
+
+# ─── Bridge (Distributed Protocol & Consensus) ────────────────────────────────
+from .bridge import LocalBridge, NodeIdentity
+
+DistributedProtocol = LocalBridge
+
+# ─── Robust (Adversarial Statistics) ──────────────────────────────────────────
+from .robust import RobustVerifier, RobustConfig, mad, modified_zscore
+
+AdversarialStatistics = RobustVerifier
+
+# ─── Grounding (Evidence-Based Claim Verification) ────────────────────────────
+from .grounding import GroundingEngine
+
+# ─── Logic (Verified Turing-Complete Computation) ─────────────────────────────
+from .logic import LogicEngine, ExecutionBounds, calculate
+
+# ─── Glass Box Components ─────────────────────────────────────────────────────
+from .vault_client import get_vault_client
+from .policy_engine import PolicyEngine, Policy, PolicyType, PolicyAction, get_policy_engine
+from .negotiator import Negotiator, ApprovalStatus, RequestPriority, get_negotiator
+from .merkle_anchor import MerkleAnchorScheduler
+
+# ─── Cartridges (Media Specification Generation) ──────────────────────────────
+from .cartridges import CartridgeType, get_cartridge_manager
+
+# ─── Gumroad (Payment & License Management) ───────────────────────────────────
+from .gumroad import GumroadConfig, get_gumroad_service
+
+# ─── Voice Interface (MOAD - Mother Of All Demos) ─────────────────────────────
+# Imported via core.voice_interface directly by newton_supercomputer.py
+
+# ─── Constraint Extraction ────────────────────────────────────────────────────
+# Imported via core.constraint_extractor directly by newton_supercomputer.py
+
+# ─── Chatbot Compiler ────────────────────────────────────────────────────────
+# Imported via core.chatbot_compiler directly by newton_supercomputer.py
+
 
 __all__ = [
     # CDL
-    'CDLEvaluator', 'CDLParser', 'HaltChecker',
-    'AtomicConstraint', 'CompositeConstraint', 'ConditionalConstraint', 'Constraint',
-    'Domain', 'Operator', 'EvaluationResult', 'AggregationState',
-    'verify', 'verify_all', 'verify_and', 'verify_or', 'newton',
-
+    "CDL", "CDLEvaluator", "CDLParser",
+    "verify", "verify_and", "verify_or", "newton",
     # Forge
-    'Forge', 'ForgeConfig', 'ForgeMetrics', 'VerificationResult',
-    'get_forge', 'verify_content', 'verify_signal', 'verify_full',
-    'SAFETY_PATTERNS',
-    # Cohen-Sutherland Constraint Clipping
-    'ClipState', 'ClipResult', 'ConstraintClipper', 'CLIP_PATTERNS',
-
+    "Forge", "ForgeConfig", "get_forge", "VerificationEngine",
     # Vault
-    'Vault', 'VaultConfig', 'VaultEntry',
-    'KeyDerivation', 'EncryptionEngine', 'get_vault',
-
+    "Vault", "VaultConfig", "get_vault", "EncryptedStorage",
     # Ledger
-    'Ledger', 'LedgerConfig', 'LedgerEntry', 'MerkleTree', 'get_ledger',
-
+    "Ledger", "LedgerConfig", "get_ledger", "ImmutableLedger",
     # Bridge
-    'Bridge', 'LocalBridge', 'NodeIdentity', 'NodeRegistry',
-    'VerificationRequest', 'VerificationResponse',
-    'ConsensusState', 'ConsensusRound',
-
+    "LocalBridge", "NodeIdentity", "DistributedProtocol",
     # Robust
-    'RobustVerifier', 'RobustConfig', 'LockedBaseline',
-    'SourceTracker', 'TemporalDecay',
-    'mad', 'modified_zscore', 'is_anomaly',
-
+    "RobustVerifier", "RobustConfig", "mad", "modified_zscore", "AdversarialStatistics",
     # Grounding
-    'GroundingEngine', 'Evidence',
-
-    # Logic (Verified Computation)
-    'LogicEngine', 'ExecutionBounds', 'ExecutionContext', 'ExecutionResult',
-    'Value', 'ValueType', 'Expr', 'ExprType',
-    'calculate', 'calc',
-    
-    # Glass Box Components
-    'VaultClient', 'ProvenanceRecord', 'get_vault_client',
-    'PolicyEngine', 'Policy', 'PolicyType', 'PolicyAction', 'PolicyEvaluationResult', 'get_policy_engine',
-    'Negotiator', 'ApprovalRequest', 'ApprovalStatus', 'RequestPriority', 'get_negotiator',
-    'MerkleAnchorScheduler', 'MerkleAnchor', 'MerkleProof', 'verify_merkle_proof',
-
+    "GroundingEngine",
+    # Logic
+    "LogicEngine", "ExecutionBounds", "calculate",
+    # Glass Box
+    "get_vault_client", "PolicyEngine", "Policy", "PolicyType", "PolicyAction", "get_policy_engine",
+    "Negotiator", "ApprovalStatus", "RequestPriority", "get_negotiator",
+    "MerkleAnchorScheduler",
     # Cartridges
-    'CartridgeType', 'OutputFormat',
-    'ConstraintResult', 'CartridgeResult',
-    'ConstraintChecker',
-    'VisualCartridge', 'SoundCartridge', 'SequenceCartridge', 'DataCartridge', 'RosettaCompiler',
-    'CartridgeManager', 'get_cartridge_manager',
-    'VISUAL_CONSTRAINTS', 'SOUND_CONSTRAINTS', 'SEQUENCE_CONSTRAINTS', 'DATA_CONSTRAINTS', 'ROSETTA_CONSTRAINTS',
-
-    # Gumroad Integration
-    'GumroadService', 'GumroadConfig', 'Customer', 'Feedback', 'LicenseVerification', 'get_gumroad_service',
-
-    # Voice Interface (MOAD - Mother Of All Demos)
-    'NewtonVoiceInterface', 'StreamingVoiceInterface', 'VoiceResponse',
-    'get_voice_interface', 'get_streaming_interface', 'ask_newton',
-    'IntentParser', 'ParsedIntent', 'IntentType', 'DomainCategory',
-    'PatternLibrary', 'AppPattern', 'find_pattern',
-    'CDLGenerator',
-    'ConversationMemory', 'MemoryObject', 'MemoryType',
-    'SessionManager', 'Session', 'ConversationTurn',
-    'parse_intent',
-
-    # Constraint Extraction - From Fuzzy to Formal
-    'ConstraintExtractor', 'extract_constraints', 'get_extractor',
-    'PlanVerifier', 'verify_plan', 'VerifiedPlan', 'VerificationCertificate',
-    'ExtractionResult', 'ExtractedConstraint',
-    'ConstraintCategory', 'ConstraintStrength', 'ConstraintPolarity',
-    'ExtractionPatterns',
-
-    # Chatbot Compiler - The Better ChatGPT
-    'ChatbotCompiler', 'get_chatbot_compiler', 'compile_request', 'classify_only',
-    'ChatbotGovernor', 'get_chatbot_governor',
-    'RequestType', 'RiskLevel', 'CompilerDecision',
-    'RequestClassification', 'ResponseConstraint', 'CompiledResponse',
-    'RESPONSE_CONSTRAINTS', 'CLASSIFICATION_PATTERNS',
-
-    # Text Generation - Constraint-Preserving Text Projection
-    'TextStyle', 'TextConstraint', 'ProjectionResult', 'TextDocument', 'NewtonTextProjector',
-    'project', 'project_cdl', 'explain_constraints', 'generate_document',
-    'text_fingerprint', 'reduce_text', 'register_reduction',
-    'project_jester_constraints', 'create_text_ledger_entry', 'TEMPLATES',
-]
-
-__all__ = [
-    "CDL",
-    "LogicEngine",
-    "VerificationEngine",
-    "EncryptedStorage",
-    "ImmutableLedger",
-    "DistributedProtocol",
-    "AdversarialStatistics",
+    "CartridgeType", "get_cartridge_manager",
+    # Gumroad
+    "GumroadConfig", "get_gumroad_service",
 ]
 
 __version__ = "1.0.0"

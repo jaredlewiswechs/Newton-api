@@ -1,29 +1,28 @@
 # Newton Supercomputer - Python Dependencies
+# Used by Vercel (@vercel/python) and Render for deployment
 
 # Web Framework
-fastapi==0.109.0
-uvicorn==0.27.0
-gunicorn==21.2.0
+fastapi>=0.109.0
+uvicorn>=0.27.0
+starlette>=0.36.0
 
-# Pydantic - using v1.x to avoid Rust/pydantic-core build issues on Render
-pydantic==1.10.13
+# Data Validation
+pydantic>=2.5.0
 
-# Cryptography (for Vault encryption)
-cryptography==41.0.7
+# Cryptography (for Vault AES-256-GCM encryption)
+cryptography>=41.0.0
 
 # HTTP Client (for external integrations)
-requests==2.31.0
+requests>=2.31.0
 
 # External Search (for grounding)
-googlesearch-python==1.2.5
+googlesearch-python>=1.2.0
 
-# Graph operations (for TLM)
-networkx==3.1
+# Graph operations (for TLM / bridge)
+networkx>=3.1
 
-# Testing
-pytest==7.4.4
-hypothesis==6.92.1
+# Deployment (Render/traditional)
+gunicorn>=21.2.0
 
-# Deployment on Render
-flask
-gunicorn
+# Flask (for ProjectADA and legacy endpoints)
+flask>=3.0.0

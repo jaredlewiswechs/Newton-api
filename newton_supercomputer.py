@@ -1984,7 +1984,7 @@ async def calculate_expression(request: CalculateRequest):
     }
 
 
-@app.post("/calculate/examples")
+@app.get("/calculate/examples")
 async def calculate_examples():
     """Return example expressions for the Newton Logic Engine."""
     return {
@@ -4328,6 +4328,16 @@ async def get_api_endpoints():
             "description": "Payments, licensing, and feedback",
             "endpoints": []
         },
+        "parccloud": {
+            "name": "parcCloud",
+            "description": "Authentication gateway - signup, signin, admin",
+            "endpoints": []
+        },
+        "stefan": {
+            "name": "Stefan",
+            "description": "Assignment intake, frame generation, and live verification",
+            "endpoints": []
+        },
         "system": {
             "name": "System",
             "description": "Health, metrics, and configuration",
@@ -4336,8 +4346,9 @@ async def get_api_endpoints():
     }
 
     # Route categorization patterns
+    # Order matters: more specific patterns should come first
     route_patterns = {
-        "core": ["^/$", "^/ask$", "^/verify", "^/constraint$", "^/ground$", "^/calculate", "^/extract", "^/clip$"],
+        "core": ["^/$", "^/ask$", "^/verify$", "^/verify/batch$", "^/constraint$", "^/ground$", "^/calculate", "^/extract", "^/clip$", "^/statistics$"],
         "education": ["^/education/", "^/teachers/teks"],
         "teachers": ["^/teachers/"],
         "interface": ["^/interface/"],
@@ -4345,11 +4356,13 @@ async def get_api_endpoints():
         "voice": ["^/voice/"],
         "chatbot": ["^/chatbot/"],
         "cartridge": ["^/cartridge/"],
-        "glass_box": ["^/policy$", "^/negotiator/", "^/merkle/"],
-        "ledger": ["^/ledger/"],
+        "glass_box": ["^/policy", "^/negotiator/", "^/merkle/"],
+        "ledger": ["^/ledger"],
         "vault": ["^/vault/"],
+        "parccloud": ["^/parccloud/", "^/login$"],
+        "stefan": ["^/api/intake$", "^/api/frames$", "^/api/verify/live$", "^/api/witnesses$"],
         "gumroad": ["^/license/", "^/feedback", "^/gumroad/", "^/webhooks/gumroad$"],
-        "system": ["^/health$", "^/metrics$", "^/api/endpoints$", "^/config.js$", "^/shared-config.js$"]
+        "system": ["^/health$", "^/metrics$", "^/api/endpoints$", "^/config.js$", "^/shared-config.js$", "^/styles.css$", "^/app.js$"]
     }
 
     def categorize_route(path: str) -> str:
