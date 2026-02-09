@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Newton Supercomputer API — FastAPI on AWS Lambda via container image.
+  Free tier eligible: Lambda (1M requests/mo), API Gateway (1M calls/mo).
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 1024
+
+Parameters:
+  StageName:
+    Type: String
+    Default: prod
+    AllowedValues: [prod, staging, dev]
+  GumroadProductId:
+    Type: String
+    Default: ""
+  GumroadAccessToken:
+    Type: String
+    Default: ""
+    NoEcho: true
+  GumroadWebhookSecret:
+    Type: String
+    Default: ""
+    NoEcho: true
+  NewtonAuthEnabled:
+    Type: String
+    Default: "false"
+  RateLimitRpm:
+    Type: String
+    Default: "300"
+
+Resources:
+  # ── API Gateway (HTTP API — free tier: 1M requests/mo for 12 months) ──
+  NewtonHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StageName
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-API-Key
+
+  # ── Lambda Function (free tier: 1M requests + 400K GB-sec/mo) ────────
+  NewtonFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        CatchAll:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NewtonHttpApi
+            Path: /{proxy+}
+            Method: ANY
+        Root:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NewtonHttpApi
+            Path: /
+            Method: ANY
+      Environment:
+        Variables:
+          GUMROAD_PRODUCT_ID: !Ref GumroadProductId
+          GUMROAD_ACCESS_TOKEN: !Ref GumroadAccessToken
+          GUMROAD_WEBHOOK_SECRET: !Ref GumroadWebhookSecret
+          NEWTON_AUTH_ENABLED: !Ref NewtonAuthEnabled
+          NEWTON_STORAGE: /tmp/newton
+          RATE_LIMIT_RPM: !Ref RateLimitRpm
+      Policies:
+        # Minimal permissions — add more as needed
+        - AWSLambdaBasicExecutionRole
+    Metadata:
+      Dockerfile: Dockerfile.lambda
+      DockerContext: .
+      DockerTag: latest
+
+Outputs:
+  ApiUrl:
+    Description: Newton API endpoint URL
+    Value: !Sub "https://${NewtonHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/"
+  FunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt NewtonFunction.Arn
