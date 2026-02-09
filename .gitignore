@@ -73,3 +73,6 @@ gumroad/shortcuts/*.shortcut
 tinytalk-lang/tinytalk
 tinytalk-lang/src/*.o
 tinytalk-lang/test_lexer
+
+# Runtime logs
+logs/
