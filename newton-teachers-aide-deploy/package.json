@@ -1,0 +1,16 @@
+{
+  "name": "newton-teachers-aide",
+  "version": "2.0.0",
+  "description": "Newton Teacher's Aide - The Ultimate Teaching Assistant for HISD NES. Fully offline, no server required.",
+  "author": "Jared Lewis <jared@adacomputing.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "deploy": "npx wrangler pages deploy . --project-name=newton-teachers-aide",
+    "dev": "npx wrangler pages dev . --port 8788",
+    "preview": "npx serve . -p 3000"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
