@@ -320,7 +320,11 @@ class Executor:
         start_time = time.time()
 
         try:
-            runtime = Runtime(self.bounds, env)
+            runtime = Runtime(self.bounds)
+            # Seed global scope with env bindings
+            if env:
+                for k, v in env.items():
+                    runtime.global_scope.set(k, v)
             result = runtime.execute(ast)
             
             elapsed = time.time() - start_time

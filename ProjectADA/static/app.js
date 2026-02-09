@@ -130,12 +130,16 @@ function renderMessage(m) {
         const icon = meta.verified ? '&#10003;' : '&#9888;';
         const label = meta.verified ? 'Verified' : 'Unverified';
         verificationHtml = `<div class="message-verification ${cls}">${icon} ${label}`;
+        if (meta.response_source) verificationHtml += ` &middot; via ${meta.response_source}`;
         if (meta.processing_time_ms) verificationHtml += ` &middot; ${meta.processing_time_ms}ms`;
         if (meta.meta_verification && meta.meta_verification.verified !== undefined) {
             verificationHtml += ` &middot; Meta: ${meta.meta_verification.verified ? 'OK' : 'FAIL'}`;
         }
         if (meta.ada_whisper) {
             verificationHtml += ` &middot; Ada: ${meta.ada_whisper.level || 'quiet'}`;
+        }
+        if (meta.pipeline_trace && meta.pipeline_trace.length) {
+            verificationHtml += `<br><small style="opacity:0.7">Pipeline: ${meta.pipeline_trace.join(' → ')}</small>`;
         }
         verificationHtml += '</div>';
     }
@@ -330,28 +334,40 @@ async function loadKnowledge() {
 // ── Settings / Health ──
 
 async function loadHealth() {
+    const SYSTEM_DESCRIPTIONS = {
+        agent: 'Full 10-step verification pipeline: Identity, Math, KB, Mesh, LLM with safety constraints.',
+        logic_engine: 'Verified Turing-complete computation. Every calculation checked, every loop bounded.',
+        ti_calculator: 'TI-84 style expression parser. Chained ops, parentheses, functions, constants, factorials.',
+        knowledge_base: 'CIA World Factbook, periodic table, ISO standards. Pre-verified ground truth (no LLM needed).',
+        knowledge_mesh: 'Multi-source cross-referenced data: NASA, USGS, WHO, World Bank, NIST CODATA.',
+        semantic_resolver: 'Datamuse API semantic field resolution. Maps paraphrased questions to KB shapes.',
+        grounding_engine: 'External claim verification against authoritative web sources.',
+        ada_sentinel: 'Drift detection and anomaly sensing. Monitors inputs and outputs for off-rails behavior.',
+        meta_newton: 'Self-verifying verifier. Recursively checks that the pipeline itself is within bounds.',
+        identity: "Newton's self-knowledge. Who Newton is, what he trusts, and what he refuses.",
+        kinematic_linguistics: 'Language as Bezier curves. Every character has weight, curvature, and commit strength.',
+        trajectory_verifier: 'Grammar + Meaning envelope checking. Detects semantic incoherence before sending.',
+        trajectory_composer: 'Real-time writing feedback. Envelope depth, coherence, and termination awareness.',
+        tinytalk: 'realTinyTalk verified programming language. Bounded loops, traced execution, proven output.',
+        adanpedia: 'Witness example retrieval from the Adan knowledge store.',
+    };
     try {
         const data = await api('/api/health');
         const el = document.getElementById('settingsContent');
-        const systems = [
-            { key: 'ada_sentinel', name: 'Ada Sentinel', desc: 'Drift detection and anomaly sensing. Monitors all inputs and outputs for off-rails behavior.' },
-            { key: 'meta_newton', name: 'Meta Newton', desc: 'Self-verifying verifier. Recursively checks that the verification pipeline itself is within bounds.' },
-            { key: 'analyzer', name: 'Kinematic Linguistics', desc: 'Language as Bezier curves. Every character has weight, curvature, and commit strength.' },
-            { key: 'composer', name: 'Trajectory Composer', desc: 'Real-time writing feedback. Envelope depth, semantic coherence, and termination awareness.' },
-            { key: 'verifier', name: 'Trajectory Verifier', desc: 'Grammar + Meaning envelope checking. Detects semantic incoherence before sending.' },
-            { key: 'agent', name: 'Newton Agent', desc: 'Full 10-step verification pipeline: Identity, Math, KB, Mesh, LLM with safety constraints.' },
-        ];
-        el.innerHTML = systems.map(s => {
-            const status = data.components[s.key] || 'unknown';
+        const keys = Object.keys(data.components);
+        el.innerHTML = keys.map(key => {
+            const status = data.components[key];
             const cls = status === 'ok' ? 'ok' : 'error';
+            const desc = SYSTEM_DESCRIPTIONS[key] || '';
+            const name = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             return `<div class="system-card">
-                <h3>${s.name} <span class="system-status ${cls}">${status}</span></h3>
-                <p>${s.desc}</p>
+                <h3>${name} <span class="system-status ${cls}">${status}</span></h3>
+                <p>${desc}</p>
             </div>`;
         }).join('') + `
             <div class="system-card">
                 <h3>Overall</h3>
-                <p>Status: <strong>${data.status}</strong> | Active chats: ${data.chats}</p>
+                <p>Status: <strong>${data.status}</strong> | Systems: ${data.systems_online}/${data.systems_total} online | Active chats: ${data.chats}</p>
             </div>`;
     } catch (e) {
         document.getElementById('settingsContent').innerHTML = `
