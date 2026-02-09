@@ -150,12 +150,20 @@ realTinyTalk is a **Turing-complete verified programming language** with:
 - Magic properties: `.upcase`, `.len`, `.reversed`, `.str`
 - Python and JavaScript transpilation backends
 - Monaco web IDE with script persistence and versioning
+- **Static hosted playground** (single HTML file, no server required)
 - 288/288 conformance tests passing (100%)
 
 ```bash
-# Launch the realTinyTalk IDE
+# Option 1: Launch the full realTinyTalk IDE (with server)
 python realTinyTalk/web/server.py
 # Visit http://localhost:5555
+
+# Option 2: Open the static playground (no server needed)
+open realTinyTalk/hosted/index.html
+
+# Option 3: Build a distributable zip for hosting online
+bash realTinyTalk/hosted/package.sh
+# Upload the zip contents to GitHub Pages, Netlify, Vercel, etc.
 ```
 
 ---
@@ -178,6 +186,7 @@ Newton includes a complete suite of web applications for verified computation, c
 | Application | URL | Description |
 |------------|-----|-------------|
 | **TinyTalk IDE** | `/tinytalk-ide` | Full Turing-complete IDE with Monaco editor, real-time verification |
+| **TinyTalk Playground** | `realTinyTalk/hosted/index.html` | Static hosted playground - no server needed, runs entirely in browser |
 | **Jester Analyzer** | `/jester-analyzer` | Constraint extraction compiler - extract guards from source code |
 | **Construct Studio** | `/construct-studio/ui` | Logic CAD tool for business physics simulation |
 | **TinyTalk Guide** | [TINYTALK_PROGRAMMING_GUIDE.md](TINYTALK_PROGRAMMING_GUIDE.md) | Complete programming guide |
@@ -1326,6 +1335,9 @@ Newton-api/
 │   ├── stdlib.py           # Standard library
 │   ├── backends/           # Python and JavaScript transpilation
 │   ├── web/                # Monaco IDE with script persistence API
+│   ├── hosted/             # Static playground (single HTML, no server needed)
+│   │   ├── index.html      # Self-contained Monaco IDE with client-side execution
+│   │   └── package.sh      # Build zip for distribution
 │   └── tests/              # 288 conformance + 57 transpiler tests
 │
 ├── adan/                    # Self-verifying autonomous agent (Ada + Newton)

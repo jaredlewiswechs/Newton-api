@@ -1,0 +1,2231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>realTinyTalk — The Friendly Programming Language</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════════════
+           RETRO SPLASH SCREEN (NeXTSTEP / Classic Mac style)
+           ═══════════════════════════════════════════════════════════════ */
+
+        #splash {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg, #c0c0c0 0%, #a0a0a0 100%);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease;
+            font-family: 'Chicago', 'Geneva', 'Helvetica Neue', Arial, sans-serif;
+        }
+        #splash.hidden { opacity: 0; visibility: hidden; }
+        .splash-window {
+            background: #ffffff;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0 #000, inset -1px -1px 0 #808080, inset 1px 1px 0 #dfdfdf;
+            padding: 0; width: 420px;
+        }
+        .splash-titlebar {
+            background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+            padding: 4px 8px; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .splash-titlebar-text { color: #fff; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+        .splash-content {
+            padding: 24px 32px; display: flex; flex-direction: column;
+            align-items: center; background: linear-gradient(180deg, #efefef 0%, #d4d4d4 100%);
+        }
+        .splash-logo {
+            width: 96px; height: 96px; background: #000;
+            border: 3px solid #000;
+            box-shadow: inset -2px -2px 0 #404040, inset 2px 2px 0 #606060, 4px 4px 0 rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-weight: bold; font-size: 28px; color: #00ff00;
+            text-shadow: 0 0 10px #00ff00; letter-spacing: -2px;
+        }
+        .splash-title { margin-top: 20px; font-size: 24px; font-weight: bold; color: #000; text-shadow: 1px 1px 0 #fff; }
+        .splash-version { margin-top: 4px; font-size: 11px; color: #444; }
+        .splash-divider { width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #808080, transparent); margin: 20px 0; }
+        .splash-loading { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .splash-bar-container {
+            width: 280px; height: 20px; background: #fff;
+            border: 2px solid #000; box-shadow: inset -1px -1px 0 #dfdfdf, inset 1px 1px 0 #808080; padding: 2px;
+        }
+        .splash-bar-fill {
+            height: 100%; width: 0%;
+            background: repeating-linear-gradient(90deg, #000080 0px, #000080 8px, #0000b0 8px, #0000b0 16px);
+            transition: width 0.4s ease;
+        }
+        .splash-status { font-family: 'Monaco', 'Courier New', monospace; font-size: 11px; color: #000; height: 14px; }
+        .splash-extensions { margin-top: 16px; font-size: 10px; color: #666; text-align: center; font-family: 'Monaco', 'Courier New', monospace; }
+        .splash-ext-item { opacity: 0; animation: fadeInExt 0.3s ease forwards; }
+        @keyframes fadeInExt { to { opacity: 1; } }
+        .splash-copyright { margin-top: 20px; font-size: 9px; color: #666; text-align: center; }
+        .splash-icon-row { display: flex; gap: 16px; margin-top: 16px; }
+        .splash-icon {
+            width: 32px; height: 32px; background: #fff;
+            border: 2px solid #000; box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #dfdfdf;
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           THEME SYSTEM
+           ═══════════════════════════════════════════════════════════════ */
+        :root {
+            --bg-primary: #0d1117; --bg-secondary: #161b22; --bg-tertiary: #21262d;
+            --bg-hover: #30363d; --border: #30363d; --border-subtle: #21262d;
+            --text-primary: #e6edf3; --text-secondary: #8b949e; --text-muted: #6e7681;
+            --accent: #58a6ff; --accent-hover: #79c0ff; --accent-subtle: rgba(56, 139, 253, 0.15);
+            --success: #3fb950; --success-subtle: rgba(46, 160, 67, 0.15);
+            --error: #f85149; --error-subtle: rgba(248, 81, 73, 0.15);
+            --warning: #d29922; --warning-subtle: rgba(187, 128, 9, 0.15);
+            --syn-keyword: #ff7b72; --syn-function: #d2a8ff; --syn-string: #a5d6ff;
+            --syn-number: #79c0ff; --syn-comment: #8b949e; --syn-operator: #ff7b72;
+            --syn-variable: #ffa657; --syn-type: #7ee787; --syn-constant: #79c0ff;
+            --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-xl: 12px;
+        }
+        [data-theme="light"] {
+            --bg-primary: #ffffff; --bg-secondary: #f6f8fa; --bg-tertiary: #eaeef2;
+            --bg-hover: #d0d7de; --border: #d0d7de; --border-subtle: #eaeef2;
+            --text-primary: #1f2328; --text-secondary: #57606a; --text-muted: #8b949e;
+            --accent: #0969da; --accent-hover: #0550ae; --accent-subtle: rgba(9, 105, 218, 0.1);
+            --success: #1a7f37; --success-subtle: rgba(26, 127, 55, 0.1);
+            --error: #cf222e; --error-subtle: rgba(207, 34, 46, 0.1);
+            --syn-keyword: #cf222e; --syn-function: #8250df; --syn-string: #0a3069;
+            --syn-number: #0550ae; --syn-comment: #6e7781; --syn-operator: #cf222e;
+            --syn-variable: #953800; --syn-type: #116329; --syn-constant: #0550ae;
+        }
+        [data-theme="monokai"] {
+            --bg-primary: #272822; --bg-secondary: #1e1f1c; --bg-tertiary: #3e3d32;
+            --bg-hover: #49483e; --border: #3e3d32; --border-subtle: #3e3d32;
+            --text-primary: #f8f8f2; --text-secondary: #a6a28c; --text-muted: #75715e;
+            --accent: #66d9ef; --accent-hover: #9de0f2; --accent-subtle: rgba(102, 217, 239, 0.15);
+            --success: #a6e22e; --success-subtle: rgba(166, 226, 46, 0.15);
+            --error: #f92672; --error-subtle: rgba(249, 38, 114, 0.15);
+            --syn-keyword: #f92672; --syn-function: #a6e22e; --syn-string: #e6db74;
+            --syn-number: #ae81ff; --syn-comment: #75715e; --syn-operator: #f92672;
+            --syn-variable: #fd971f; --syn-type: #66d9ef; --syn-constant: #ae81ff;
+        }
+        [data-theme="nord"] {
+            --bg-primary: #2e3440; --bg-secondary: #3b4252; --bg-tertiary: #434c5e;
+            --bg-hover: #4c566a; --border: #4c566a; --border-subtle: #434c5e;
+            --text-primary: #eceff4; --text-secondary: #d8dee9; --text-muted: #81a1c1;
+            --accent: #88c0d0; --accent-hover: #8fbcbb; --accent-subtle: rgba(136, 192, 208, 0.15);
+            --success: #a3be8c; --success-subtle: rgba(163, 190, 140, 0.15);
+            --error: #bf616a; --error-subtle: rgba(191, 97, 106, 0.15);
+            --syn-keyword: #81a1c1; --syn-function: #88c0d0; --syn-string: #a3be8c;
+            --syn-number: #b48ead; --syn-comment: #616e88; --syn-operator: #81a1c1;
+            --syn-variable: #d08770; --syn-type: #8fbcbb; --syn-constant: #b48ead;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           BASE STYLES
+           ═══════════════════════════════════════════════════════════════ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary); color: var(--text-primary);
+            height: 100vh; overflow: hidden;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           HEADER
+           ═══════════════════════════════════════════════════════════════ */
+        .header {
+            background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+            padding: 0 20px; display: flex; align-items: center;
+            justify-content: space-between; height: 56px;
+        }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--syn-function));
+            border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px; color: #fff;
+        }
+        .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+        .logo-badge {
+            font-size: 10px; font-weight: 600; padding: 2px 6px;
+            border-radius: var(--radius-sm); background: var(--accent-subtle);
+            color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .header-center { display: flex; align-items: center; gap: 8px; }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           BUTTONS
+           ═══════════════════════════════════════════════════════════════ */
+        .btn {
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            padding: 6px 12px; border-radius: var(--radius-md);
+            border: 1px solid transparent; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: all 0.15s ease; white-space: nowrap;
+        }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border); }
+        .btn-secondary:hover:not(:disabled) { background: var(--bg-hover); }
+        .btn-ghost { background: transparent; color: var(--text-secondary); border-color: transparent; }
+        .btn-ghost:hover:not(:disabled) { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn-icon-only { padding: 6px; min-width: 32px; justify-content: center; }
+        kbd {
+            font-family: 'JetBrains Mono', monospace; font-size: 10px;
+            padding: 2px 5px; border-radius: var(--radius-sm);
+            background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-secondary);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           SELECT / DROPDOWN
+           ═══════════════════════════════════════════════════════════════ */
+        .select-wrapper { position: relative; }
+        .custom-select {
+            font-family: inherit; font-size: 13px; padding: 6px 28px 6px 10px;
+            border-radius: var(--radius-md); border: 1px solid var(--border);
+            background: var(--bg-tertiary); color: var(--text-primary);
+            cursor: pointer; appearance: none; min-width: 160px;
+        }
+        .custom-select:hover { border-color: var(--accent); }
+
+        /* ═══════════════════════════════════════════════════════════════
+           THEME TOGGLE
+           ═══════════════════════════════════════════════════════════════ */
+        .theme-toggle { position: relative; }
+        .theme-menu {
+            position: absolute; top: 100%; right: 0; margin-top: 4px;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: var(--radius-md); padding: 4px; min-width: 140px;
+            display: none; z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .theme-menu.open { display: block; }
+        .theme-option {
+            padding: 6px 10px; border-radius: var(--radius-sm);
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--text-secondary);
+        }
+        .theme-option:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .theme-option.active { color: var(--accent); }
+        .theme-dot {
+            width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--border);
+        }
+        .theme-dot.dark { background: #0d1117; }
+        .theme-dot.light { background: #ffffff; }
+        .theme-dot.monokai { background: #272822; }
+        .theme-dot.nord { background: #2e3440; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LAYOUT
+           ═══════════════════════════════════════════════════════════════ */
+        .main {
+            display: flex; height: calc(100vh - 56px); overflow: hidden;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           SIDEBAR
+           ═══════════════════════════════════════════════════════════════ */
+        .sidebar {
+            width: 240px; min-width: 200px;
+            background: var(--bg-secondary); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 12px 16px; font-size: 13px; font-weight: 600;
+            color: var(--text-secondary); border-bottom: 1px solid var(--border);
+        }
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 4px; }
+        .example-item {
+            padding: 8px 12px; border-radius: var(--radius-sm);
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--text-secondary);
+            transition: all 0.15s ease;
+        }
+        .example-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .example-item.active { background: var(--accent-subtle); color: var(--accent); }
+        .example-icon { font-size: 14px; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           EDITOR
+           ═══════════════════════════════════════════════════════════════ */
+        .editor-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .editor-tabs {
+            display: flex; background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border); padding: 0 8px;
+            overflow-x: auto; min-height: 36px;
+        }
+        .editor-tab {
+            padding: 8px 16px; font-size: 13px; color: var(--text-secondary);
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease; white-space: nowrap;
+        }
+        .editor-tab:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .editor-tab.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+        .tab-icon { font-size: 12px; }
+        .editor-wrapper { flex: 1; overflow: hidden; }
+        #editor { width: 100%; height: 100%; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           OUTPUT PANEL
+           ═══════════════════════════════════════════════════════════════ */
+        .output-panel {
+            width: 360px; min-width: 280px;
+            background: var(--bg-secondary); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .output-tabs {
+            display: flex; align-items: center;
+            border-bottom: 1px solid var(--border); padding: 0 8px;
+            min-height: 36px;
+        }
+        .output-tab {
+            padding: 8px 12px; font-size: 12px; color: var(--text-muted);
+            cursor: pointer; display: flex; align-items: center; gap: 4px;
+            border-bottom: 2px solid transparent;
+        }
+        .output-tab:hover { color: var(--text-secondary); }
+        .output-tab.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+        .output-content {
+            flex: 1; overflow-y: auto; padding: 16px;
+            font-family: 'JetBrains Mono', monospace; font-size: 13px;
+        }
+        .output-section { margin-bottom: 12px; }
+        .output-label {
+            font-size: 10px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px;
+        }
+        .output-text {
+            padding: 8px 12px; border-radius: var(--radius-md);
+            background: var(--bg-tertiary); color: var(--text-primary);
+            white-space: pre-wrap; word-break: break-all; line-height: 1.5;
+        }
+        .output-text.success { border-left: 3px solid var(--success); }
+        .output-text.error { border-left: 3px solid var(--error); color: var(--error); }
+        .output-meta {
+            display: flex; gap: 16px; padding-top: 8px;
+            font-size: 11px; color: var(--text-muted);
+        }
+        .meta-value { color: var(--text-secondary); }
+
+        /* Status badges */
+        .status-badge {
+            font-size: 11px; font-weight: 500; padding: 2px 8px;
+            border-radius: var(--radius-sm); margin-left: auto;
+        }
+        .status-running { background: var(--warning-subtle); color: var(--warning); }
+        .status-success { background: var(--success-subtle); color: var(--success); }
+        .status-error { background: var(--error-subtle); color: var(--error); }
+
+        /* Welcome */
+        .welcome {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100%; gap: 12px;
+            color: var(--text-muted);
+        }
+        .welcome-icon { font-size: 32px; }
+        .welcome-text { font-size: 13px; }
+
+        /* Spinner */
+        .spinner {
+            width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff; border-radius: 50%;
+            animation: spin 0.6s linear infinite; display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Transpiler editors */
+        .transpiler-content { padding: 0 !important; display: flex; flex-direction: column; }
+        .transpiler-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; border-bottom: 1px solid var(--border);
+        }
+        .transpiler-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+        .transpiler-editor { flex: 1; min-height: 200px; }
+        .btn-sm { font-size: 11px; padding: 2px 8px; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .output-panel { width: 280px; }
+        }
+        @media (max-width: 600px) {
+            .output-panel { display: none; }
+            .header-center { display: none; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <!-- RETRO SPLASH -->
+    <div id="splash">
+        <div class="splash-window">
+            <div class="splash-titlebar">
+                <span class="splash-titlebar-text">realTinyTalk IDE</span>
+            </div>
+            <div class="splash-content">
+                <div class="splash-logo">rTT</div>
+                <div class="splash-title">realTinyTalk</div>
+                <div class="splash-version">Version 1.0 &mdash; The Friendly Programming Language</div>
+                <div class="splash-divider"></div>
+                <div class="splash-icon-row">
+                    <div class="splash-icon">&#9998;</div>
+                    <div class="splash-icon">&#9654;</div>
+                    <div class="splash-icon">&#10004;</div>
+                    <div class="splash-icon">&#128640;</div>
+                </div>
+                <div class="splash-loading">
+                    <div class="splash-bar-container">
+                        <div class="splash-bar-fill" id="splashProgress"></div>
+                    </div>
+                    <div class="splash-status" id="splashStatus">Starting...</div>
+                </div>
+                <div class="splash-extensions" id="splashExtensions"></div>
+                <div class="splash-copyright">&copy; 2026 Jared Lewis &middot; Ada Computing Company</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">rTT</div>
+            <span class="logo-text">realTinyTalk</span>
+            <span class="logo-badge">Playground</span>
+        </div>
+
+        <div class="header-center">
+            <div class="select-wrapper">
+                <select class="custom-select" id="exampleSelect">
+                    <option value="">Load Example...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <div class="theme-toggle">
+                <button class="btn btn-ghost btn-icon-only" id="themeBtn" title="Change Theme">
+                    &#127912;
+                </button>
+                <div class="theme-menu" id="themeMenu">
+                    <div class="theme-option active" data-theme="dark">
+                        <span class="theme-dot dark"></span> Dark
+                    </div>
+                    <div class="theme-option" data-theme="light">
+                        <span class="theme-dot light"></span> Light
+                    </div>
+                    <div class="theme-option" data-theme="monokai">
+                        <span class="theme-dot monokai"></span> Monokai
+                    </div>
+                    <div class="theme-option" data-theme="nord">
+                        <span class="theme-dot nord"></span> Nord
+                    </div>
+                </div>
+            </div>
+            <button class="btn" id="saveBtn" onclick="saveCurrent()" title="Save (Ctrl+S)">Save</button>
+            <button class="btn btn-ghost" id="exportBtn" onclick="exportCurrent()" title="Export .tt file">Export</button>
+            <button class="btn btn-ghost" id="importBtn" onclick="document.getElementById('fileInput').click()" title="Import .tt file">Import</button>
+            <input type="file" id="fileInput" style="display:none" accept=".tt,.txt" onchange="importFile(event)">
+            <button class="btn btn-primary" id="runBtn" onclick="runCode()">
+                &#9654; Run <kbd>Ctrl+Enter</kbd>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">Examples</div>
+            <div class="sidebar-content" id="examplesList"></div>
+        </aside>
+
+        <!-- Editor -->
+        <div class="editor-container">
+            <div class="editor-tabs">
+                <div class="editor-tab active">
+                    <span class="tab-icon">&#128196;</span> untitled.tt
+                </div>
+            </div>
+            <div class="editor-wrapper">
+                <div id="editor"></div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <aside class="output-panel">
+            <div class="output-tabs">
+                <div class="output-tab active" data-tab="output" onclick="switchOutputTab('output')">
+                    <span class="tab-icon">&#128228;</span> Output
+                </div>
+                <div class="output-tab" data-tab="javascript" onclick="switchOutputTab('javascript')">
+                    <span class="tab-icon">&#127900;</span> JavaScript
+                </div>
+                <span class="status-badge" id="statusBadge"></span>
+            </div>
+
+            <!-- Output Content -->
+            <div class="output-content" id="outputContent">
+                <div class="welcome">
+                    <div class="welcome-icon">&#10024;</div>
+                    <div class="welcome-text">
+                        Write code and press <kbd>Ctrl+Enter</kbd> to run
+                    </div>
+                </div>
+            </div>
+
+            <!-- JavaScript Transpiled Code -->
+            <div class="output-content transpiler-content" id="jsContent" style="display: none;">
+                <div class="transpiler-header">
+                    <span class="transpiler-title">Transpiled JavaScript</span>
+                    <button class="btn btn-ghost btn-sm" onclick="copyCode('js')">Copy</button>
+                </div>
+                <div id="jsEditor" class="transpiler-editor"></div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- MONACO EDITOR -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // TINYTALK RUNTIME (tt namespace)
+        // Client-side execution engine
+        // ═══════════════════════════════════════════════════════════════
+
+        const tt = {
+            // Output capture
+            _output: [],
+            _capture: true,
+
+            show: function(...args) {
+                const line = args.map(a => tt.str(a)).join(' ');
+                if (tt._capture) {
+                    tt._output.push(line);
+                }
+                console.log(line);
+            },
+
+            // Type conversion
+            str: (x) => {
+                if (x === null || x === undefined) return 'null';
+                if (Array.isArray(x)) return '[' + x.map(tt.str).join(', ') + ']';
+                if (typeof x === 'object') {
+                    const entries = Object.entries(x).map(([k,v]) => `"${k}": ${tt.str(v)}`);
+                    return '{' + entries.join(', ') + '}';
+                }
+                return String(x);
+            },
+            int: (x) => parseInt(x, 10) || 0,
+            float: (x) => parseFloat(x) || 0.0,
+            bool: (x) => !!x,
+
+            // Type checking
+            typeof: (x) => {
+                if (x === null || x === undefined) return 'null';
+                if (Array.isArray(x)) return 'list';
+                if (typeof x === 'object') return 'map';
+                return typeof x;
+            },
+
+            // Natural comparisons
+            is: (a, b) => {
+                if (Array.isArray(a) && Array.isArray(b)) {
+                    return a.length === b.length && a.every((v, i) => tt.is(v, b[i]));
+                }
+                return a === b;
+            },
+            isnt: (a, b) => !tt.is(a, b),
+            has: (obj, item) => {
+                if (obj == null) return false;
+                if (Array.isArray(obj)) return obj.includes(item);
+                if (typeof obj === 'string') return obj.includes(item);
+                if (typeof obj === 'object') return item in obj;
+                return false;
+            },
+            hasnt: (obj, field) => !tt.has(obj, field),
+            isin: (item, collection) => {
+                if (Array.isArray(collection)) return collection.includes(item);
+                if (typeof collection === 'string') return collection.includes(item);
+                if (typeof collection === 'object') return item in collection;
+                return false;
+            },
+            islike: (str, pattern) => {
+                const regex = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+                                     .replace(/\*/g, '.*')
+                                     .replace(/\?/g, '.');
+                return new RegExp('^' + regex + '$').test(String(str));
+            },
+
+            // Collection helpers
+            len: (x) => {
+                if (x == null) return 0;
+                if (Array.isArray(x) || typeof x === 'string') return x.length;
+                if (typeof x === 'object') return Object.keys(x).length;
+                return 0;
+            },
+            keys: (x) => x == null ? [] : Object.keys(x),
+            values: (x) => x == null ? [] : Object.values(x),
+
+            // Range generator
+            range: (start, end, step) => {
+                if (end === undefined) { end = start; start = 0; }
+                if (step === undefined) step = start <= end ? 1 : -1;
+                const result = [];
+                for (let i = start; step > 0 ? i < end : i > end; i += step) {
+                    result.push(i);
+                    if (result.length > 100000) break; // safety
+                }
+                return result;
+            },
+
+            // Math
+            abs: Math.abs,
+            floor: Math.floor,
+            ceil: Math.ceil,
+            round: (x, n) => {
+                if (n === undefined) n = 0;
+                const f = Math.pow(10, n);
+                return Math.round(x * f) / f;
+            },
+            min: (...args) => args.length === 1 && Array.isArray(args[0]) ? Math.min(...args[0]) : Math.min(...args),
+            max: (...args) => args.length === 1 && Array.isArray(args[0]) ? Math.max(...args[0]) : Math.max(...args),
+            sum: (arr) => arr.reduce((a, b) => a + b, 0),
+            avg: (arr) => arr.length ? tt.sum(arr) / arr.length : 0,
+            sqrt: Math.sqrt,
+            pow: Math.pow,
+            sin: Math.sin,
+            cos: Math.cos,
+            tan: Math.tan,
+            log: Math.log,
+            exp: Math.exp,
+
+            // List operations
+            push: (arr, item) => { arr.push(item); return arr; },
+            pop: (arr) => arr.pop(),
+            append: (arr, item) => [...arr, item],
+            concat: (a, b) => [...a, ...b],
+            slice: (arr, start, end) => arr.slice(start, end),
+            join: (arr, sep) => { if (sep === undefined) sep = ''; return arr.join(sep); },
+            split: (str, sep) => str.split(sep),
+
+            // String properties
+            upcase: (s) => String(s).toUpperCase(),
+            lowcase: (s) => String(s).toLowerCase(),
+            trim: (s) => String(s).trim(),
+            chars: (s) => String(s).split(''),
+            words: (s) => String(s).split(/\s+/).filter(w => w),
+            reversed_str: (s) => String(s).split('').reverse().join(''),
+
+            // Property magic dispatcher
+            prop: (obj, name) => {
+                if (typeof obj === 'string') {
+                    switch (name) {
+                        case 'len': case 'length': return obj.length;
+                        case 'upcase': return obj.toUpperCase();
+                        case 'lowcase': return obj.toLowerCase();
+                        case 'trim': return obj.trim();
+                        case 'chars': return obj.split('');
+                        case 'words': return obj.split(/\s+/).filter(w => w);
+                        case 'first': return obj[0] || '';
+                        case 'last': return obj[obj.length - 1] || '';
+                        case 'reversed': return obj.split('').reverse().join('');
+                        case 'int': return parseInt(obj, 10) || 0;
+                        case 'float': return parseFloat(obj) || 0;
+                        case 'str': return obj;
+                    }
+                }
+                if (Array.isArray(obj)) {
+                    switch (name) {
+                        case 'len': case 'length': return obj.length;
+                        case 'first': return obj[0];
+                        case 'last': return obj[obj.length - 1];
+                        case 'rest': return obj.slice(1);
+                        case 'sum': return obj.reduce((a, b) => a + b, 0);
+                        case 'avg': return obj.length ? obj.reduce((a, b) => a + b, 0) / obj.length : 0;
+                        case 'min': return Math.min(...obj);
+                        case 'max': return Math.max(...obj);
+                        case 'sorted': case 'sort': return [...obj].sort((a, b) => a - b);
+                        case 'reversed': return [...obj].reverse();
+                        case 'uniq': return [...new Set(obj)];
+                        case 'empty': return obj.length === 0;
+                        case 'any': return obj.length > 0;
+                        case 'str': return JSON.stringify(obj);
+                    }
+                }
+                if (typeof obj === 'number') {
+                    switch (name) {
+                        case 'str': return String(obj);
+                        case 'int': return Math.floor(obj);
+                        case 'float': return obj;
+                        case 'abs': return Math.abs(obj);
+                        case 'type': return 'number';
+                    }
+                }
+                if (obj && typeof obj === 'object') {
+                    switch (name) {
+                        case 'keys': return Object.keys(obj);
+                        case 'vals': case 'values': return Object.values(obj);
+                        case 'len': case 'length': return Object.keys(obj).length;
+                        case 'empty': return Object.keys(obj).length === 0;
+                        case 'str': return JSON.stringify(obj);
+                    }
+                    if (name in obj) return obj[name];
+                }
+                switch (name) {
+                    case 'type': return tt.typeof(obj);
+                    case 'str': return tt.str(obj);
+                    case 'int': return tt.int(obj);
+                    case 'float': return tt.float(obj);
+                    case 'bool': return tt.bool(obj);
+                }
+                return undefined;
+            },
+
+            // Step chain builder
+            chain: (data) => ({
+                _data: Array.isArray(data) ? [...data] : [data],
+                sort(fn)    { this._data = [...this._data].sort(fn || ((a, b) => a - b)); return this; },
+                sortdown(fn){ this._data = [...this._data].sort(fn || ((a, b) => b - a)); return this; },
+                filter(fn)  { this._data = this._data.filter(fn); return this; },
+                reject(fn)  { this._data = this._data.filter(x => !fn(x)); return this; },
+                map(fn)     { this._data = this._data.map(fn); return this; },
+                each(fn)    { this._data.forEach(fn); return this; },
+                take(n)     { this._data = this._data.slice(0, n); return this; },
+                drop(n)     { this._data = this._data.slice(n); return this; },
+                skip(n)     { this._data = this._data.slice(n); return this; },
+                first()     { return this._data[0]; },
+                last()      { return this._data[this._data.length - 1]; },
+                sum()       { return this._data.reduce((a, b) => a + b, 0); },
+                avg()       { return this._data.length ? this.sum() / this._data.length : 0; },
+                min()       { return Math.min(...this._data); },
+                max()       { return Math.max(...this._data); },
+                count()     { return this._data.length; },
+                uniq()      { this._data = [...new Set(this._data)]; return this; },
+                unique()    { this._data = [...new Set(this._data)]; return this; },
+                flat()      { this._data = this._data.flat(); return this; },
+                flatten()   { this._data = this._data.flat(); return this; },
+                reverse()   { this._data = [...this._data].reverse(); return this; },
+                find(fn)    { return this._data.find(fn); },
+                any(fn)     { return fn ? this._data.some(fn) : this._data.length > 0; },
+                all(fn)     { return fn ? this._data.every(fn) : this._data.every(x => !!x); },
+                none(fn)    { return fn ? !this._data.some(fn) : this._data.length === 0; },
+                value()     { return this._data; },
+            }),
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // TINYTALK-TO-JAVASCRIPT TRANSPILER (client-side)
+        // ═══════════════════════════════════════════════════════════════
+
+        function transpileTinyTalk(source) {
+            const lines = source.split('\n');
+            const jsLines = [];
+            let i = 0;
+
+            // Track nested block depth for brace insertion
+            function currentIndent(line) {
+                const m = line.match(/^(\s*)/);
+                return m ? m[1].length : 0;
+            }
+
+            // Pre-process: convert TinyTalk to JS line by line, handling blocks
+            const processed = [];
+            let inMultiLineComment = false;
+
+            for (let li = 0; li < lines.length; li++) {
+                let line = lines[li];
+
+                // Handle multi-line comments
+                if (inMultiLineComment) {
+                    if (line.includes('*/')) { inMultiLineComment = false; }
+                    processed.push(line);
+                    continue;
+                }
+                if (line.includes('/*') && !line.includes('*/')) {
+                    inMultiLineComment = true;
+                    processed.push(line);
+                    continue;
+                }
+
+                // Skip pure comment lines (pass through)
+                const trimmed = line.trim();
+                if (trimmed.startsWith('//') || trimmed.startsWith('#') || trimmed === '') {
+                    processed.push(line);
+                    continue;
+                }
+
+                // Transform the line
+                let transformed = transformLine(trimmed);
+                // Preserve indentation
+                const indent = line.match(/^(\s*)/)[0];
+                processed.push(indent + transformed);
+            }
+
+            // Second pass: handle law/forge/when...end blocks and blueprint...end
+            return secondPass(processed.join('\n'));
+        }
+
+        function transformLine(line) {
+            // Skip empty/comment lines
+            if (!line || line.startsWith('//') || line.startsWith('#')) return line;
+
+            // Handle 'end' keyword (close of law/forge/blueprint/when)
+            if (line === 'end') return '}';
+
+            // Handle 'finfr' as end of when...do block
+            if (line === 'finfr') return '}';
+
+            // Handle reply -> return
+            if (line.startsWith('reply ')) {
+                return 'return ' + transformExpr(line.slice(6).trim()) + ';';
+            }
+            if (line === 'reply') return 'return;';
+
+            // Handle 'do' inside when blocks -> return
+            if (line.startsWith('do ')) {
+                return 'return ' + transformExpr(line.slice(3).trim()) + ';';
+            }
+
+            // Handle show() - the most common function
+            const showMatch = line.match(/^show\((.+)\)$/);
+            if (showMatch) {
+                return 'tt.show(' + transformShowArgs(showMatch[1]) + ');';
+            }
+
+            // Handle let declarations
+            if (line.startsWith('let ')) {
+                const rest = line.slice(4);
+                const eqIdx = rest.indexOf('=');
+                if (eqIdx !== -1) {
+                    const name = rest.slice(0, eqIdx).trim();
+                    const val = transformExpr(rest.slice(eqIdx + 1).trim());
+                    return `let ${name} = ${val};`;
+                }
+                return line + ';';
+            }
+
+            // Handle when as constant: when NAME = value
+            const whenConst = line.match(/^when\s+([A-Za-z_]\w*)\s*=\s*(.+)$/);
+            if (whenConst) {
+                return `const ${whenConst[1]} = ${transformExpr(whenConst[2])};`;
+            }
+
+            // Handle law/when/forge function declarations
+            // law name(args) -> function name(args) {
+            const fnMatch = line.match(/^(law|forge|fn)\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*$/);
+            if (fnMatch) {
+                return `function ${fnMatch[2]}(${fnMatch[3]}) {`;
+            }
+
+            // when name(args) -> function name(args) {
+            const whenFn = line.match(/^when\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*$/);
+            if (whenFn) {
+                return `function ${whenFn[1]}(${whenFn[2]}) {`;
+            }
+
+            // Blueprint declaration
+            const bpMatch = line.match(/^blueprint\s+([A-Za-z_]\w*)\s*$/);
+            if (bpMatch) {
+                return `class ${bpMatch[1]} {`;
+            }
+
+            // field declaration inside blueprint
+            const fieldMatch = line.match(/^field\s+(@?)([A-Za-z_]\w*)(.*)$/);
+            if (fieldMatch) {
+                // We'll handle field in the second pass
+                return `// field ${fieldMatch[2]}${fieldMatch[3]}`;
+            }
+
+            // for...in loop
+            const forMatch = line.match(/^for\s+(\w+)\s+in\s+(.+?)\s*\{?\s*$/);
+            if (forMatch) {
+                const varName = forMatch[1];
+                const iterExpr = forMatch[2].trim();
+                const hasBrace = line.trim().endsWith('{');
+
+                // Check for range()
+                const rangeMatch = iterExpr.match(/^range\((.+)\)$/);
+                if (rangeMatch) {
+                    const args = splitArgs(rangeMatch[1]);
+                    if (args.length === 1) {
+                        return `for (let ${varName} = 0; ${varName} < ${transformExpr(args[0])}; ${varName}++) {`;
+                    } else if (args.length === 2) {
+                        return `for (let ${varName} = ${transformExpr(args[0])}; ${varName} < ${transformExpr(args[1])}; ${varName}++) {`;
+                    } else if (args.length >= 3) {
+                        const step = transformExpr(args[2]);
+                        const start = transformExpr(args[0]);
+                        const end = transformExpr(args[1]);
+                        // Handle negative step
+                        if (step.trim().startsWith('-')) {
+                            return `for (let ${varName} = ${start}; ${varName} > ${end}; ${varName} += ${step}) {`;
+                        }
+                        return `for (let ${varName} = ${start}; ${varName} < ${end}; ${varName} += ${step}) {`;
+                    }
+                }
+                return `for (const ${varName} of ${transformExpr(iterExpr)}) {`;
+            }
+
+            // while loop
+            const whileMatch = line.match(/^while\s+(.+?)\s*\{?\s*$/);
+            if (whileMatch) {
+                return `while (${transformExpr(whileMatch[1])}) {`;
+            }
+
+            // if/elif/else
+            const ifMatch = line.match(/^if\s+(.+?)\s*\{\s*$/);
+            if (ifMatch) {
+                return `if (${transformExpr(ifMatch[1])}) {`;
+            }
+            const elifMatch = line.match(/^\}\s*elif\s+(.+?)\s*\{\s*$/);
+            if (elifMatch) {
+                return `} else if (${transformExpr(elifMatch[1])}) {`;
+            }
+            if (line === '} else {' || line === 'else {') return '} else {';
+
+            // Inline if: if condition { statement }
+            const inlineIf = line.match(/^if\s+(.+?)\s*\{\s*(.+?)\s*\}\s*$/);
+            if (inlineIf) {
+                return `if (${transformExpr(inlineIf[1])}) { ${transformLine(inlineIf[2].trim())} }`;
+            }
+
+            // Handle assignment: x = expr or x.field = expr  or x += expr etc
+            const assignMatch = line.match(/^([A-Za-z_]\w*(?:\.\w+)*(?:\[\w+\])?)\s*([\+\-\*\/]?=)\s*(.+)$/);
+            if (assignMatch && !line.startsWith('let ') && !line.startsWith('const ')) {
+                return `${assignMatch[1]} ${assignMatch[2]} ${transformExpr(assignMatch[3])};`;
+            }
+
+            // Expression statement (function call etc.)
+            return transformExpr(line) + ';';
+        }
+
+        function transformExpr(expr) {
+            if (!expr) return expr;
+            expr = expr.trim();
+
+            // Handle string literals - don't transform inside them
+            // Simple approach: transform outside of strings
+            let result = '';
+            let inStr = false;
+            let strChar = '';
+            let i = 0;
+            let segments = [];
+            let current = '';
+
+            // Split into string and non-string segments
+            while (i < expr.length) {
+                if (!inStr && (expr[i] === '"' || expr[i] === "'")) {
+                    if (current) segments.push({ type: 'code', val: current });
+                    current = expr[i];
+                    strChar = expr[i];
+                    inStr = true;
+                    i++;
+                } else if (inStr && expr[i] === strChar && expr[i-1] !== '\\') {
+                    current += expr[i];
+                    segments.push({ type: 'string', val: current });
+                    current = '';
+                    inStr = false;
+                    i++;
+                } else {
+                    current += expr[i];
+                    i++;
+                }
+            }
+            if (current) segments.push({ type: inStr ? 'string' : 'code', val: current });
+
+            // Transform code segments
+            return segments.map(seg => {
+                if (seg.type === 'string') return seg.val;
+                return transformCodeExpr(seg.val);
+            }).join('');
+        }
+
+        function transformCodeExpr(code) {
+            if (!code) return code;
+
+            // Replace natural comparison operators
+            // Must be done carefully to avoid replacing inside identifiers
+            code = code.replace(/\b(\w+)\s+is\s+/g, 'tt.is($1, ');
+            code = code.replace(/\)\s+is\s+/g, '), ');
+
+            // Handle step chains: expr _sort, expr _filter(fn), etc.
+            // Pattern: value _step or value _step(args)
+            code = code.replace(/\s+_sort\b(?!\()/g, '._sort()');
+            code = code.replace(/\s+_reverse\b(?!\()/g, '._reverse()');
+            code = code.replace(/\s+_unique\b(?!\()/g, '._unique()');
+
+            // Terminal step chains (return value, not chain)
+            code = code.replace(/\s+_sum\b/g, '._sum()');
+            code = code.replace(/\s+_avg\b/g, '._avg()');
+            code = code.replace(/\s+_min\b/g, '._min()');
+            code = code.replace(/\s+_max\b/g, '._max()');
+            code = code.replace(/\s+_count\b/g, '._count()');
+            code = code.replace(/\s+_first\b/g, '._first()');
+            code = code.replace(/\s+_last\b/g, '._last()');
+
+            // Step chains with args: _filter(fn), _map(fn), _take(n), _drop(n)
+            code = code.replace(/\s+_filter\(/g, '._filter(');
+            code = code.replace(/\s+_map\(/g, '._map(');
+            code = code.replace(/\s+_take\(/g, '._take(');
+            code = code.replace(/\s+_drop\(/g, '._drop(');
+            code = code.replace(/\s+_chunk\(/g, '._chunk(');
+            code = code.replace(/\s+_zip\(/g, '._zip(');
+            code = code.replace(/\s+_flatten\b/g, '._flatten()');
+            code = code.replace(/\s+_group\(/g, '._group(');
+
+            // Property magic: .upcase .len .reversed etc. -> tt.prop(obj, "prop")
+            // This needs careful handling - convert x.prop to tt.prop(x, "prop") for magic props
+            const magicProps = ['upcase', 'lowcase', 'trim', 'chars', 'words', 'lines',
+                               'reversed', 'first', 'last', 'rest', 'empty', 'any',
+                               'sorted', 'uniq', 'len', 'length', 'type',
+                               'str', 'int', 'float', 'bool', 'abs'];
+            for (const prop of magicProps) {
+                // Match identifier.prop but not inside strings
+                const re = new RegExp('(\\b\\w+(?:\\]|\\))?)\\.' + prop + '\\b', 'g');
+                code = code.replace(re, (m, obj) => `tt.prop(${obj}, "${prop}")`);
+            }
+
+            // Handle 'is' / 'isnt' / 'has' / 'hasnt' / 'isin' / 'islike' as binary ops
+            // These need to be handled more carefully with parenthesized expressions
+            code = code.replace(/\bisnt\b/g, '!==');
+            code = code.replace(/\bisin\b/g, '/*isin*/');
+            code = code.replace(/\bislike\b/g, '/*islike*/');
+            code = code.replace(/\bhas\b/g, '/*has*/');
+            code = code.replace(/\bhasnt\b/g, '/*hasnt*/');
+
+            // Replace show with tt.show
+            code = code.replace(/\bshow\(/g, 'tt.show(');
+            code = code.replace(/\bprint\(/g, 'tt.show(');
+            code = code.replace(/\bprintln\(/g, 'tt.show(');
+
+            // Replace len() with tt.len()
+            code = code.replace(/\blen\(/g, 'tt.len(');
+            code = code.replace(/\btypeof\(/g, 'tt.typeof(');
+            code = code.replace(/\brange\(/g, 'tt.range(');
+            code = code.replace(/\babs\(/g, 'tt.abs(');
+            code = code.replace(/\bfloor\(/g, 'tt.floor(');
+            code = code.replace(/\bceil\(/g, 'tt.ceil(');
+            code = code.replace(/\bsqrt\(/g, 'tt.sqrt(');
+            code = code.replace(/\bpow\(/g, 'tt.pow(');
+            code = code.replace(/\bsin\(/g, 'tt.sin(');
+            code = code.replace(/\bcos\(/g, 'tt.cos(');
+            code = code.replace(/\btan\(/g, 'tt.tan(');
+            code = code.replace(/\blog\(/g, 'tt.log(');
+            code = code.replace(/\bexp\(/g, 'tt.exp(');
+            code = code.replace(/\bappend\(/g, 'tt.append(');
+            code = code.replace(/\bslice\(/g, 'tt.slice(');
+            code = code.replace(/\bjoin\(/g, 'tt.join(');
+            code = code.replace(/\bsplit\(/g, 'tt.split(');
+            code = code.replace(/\bsum\(/g, 'tt.sum(');
+            code = code.replace(/\bmin\(/g, 'tt.min(');
+            code = code.replace(/\bmax\(/g, 'tt.max(');
+            code = code.replace(/\bround\(/g, 'tt.round(');
+            code = code.replace(/\bkeys\(/g, 'tt.keys(');
+            code = code.replace(/\bvalues\(/g, 'tt.values(');
+
+            // Exponentiation
+            code = code.replace(/\*\*/g, '**');
+
+            // 'and' / 'or' / 'not' -> && / || / !
+            code = code.replace(/\band\b/g, '&&');
+            code = code.replace(/\bor\b/g, '||');
+            code = code.replace(/\bnot\b/g, '!');
+
+            return code;
+        }
+
+        function transformShowArgs(args) {
+            // show() in TinyTalk allows space-separated arguments: show("hello" name "!")
+            // We need to convert this to comma-separated: tt.show("hello", name, "!")
+            // Simple approach: split on spaces outside of strings and parentheses
+            const tokens = [];
+            let current = '';
+            let inStr = false;
+            let strChar = '';
+            let parenDepth = 0;
+            let bracketDepth = 0;
+
+            for (let i = 0; i < args.length; i++) {
+                const ch = args[i];
+                if (!inStr && (ch === '"' || ch === "'")) {
+                    inStr = true; strChar = ch; current += ch;
+                } else if (inStr && ch === strChar && args[i-1] !== '\\') {
+                    inStr = false; current += ch;
+                } else if (!inStr && ch === '(') {
+                    parenDepth++; current += ch;
+                } else if (!inStr && ch === ')') {
+                    parenDepth--; current += ch;
+                } else if (!inStr && ch === '[') {
+                    bracketDepth++; current += ch;
+                } else if (!inStr && ch === ']') {
+                    bracketDepth--; current += ch;
+                } else if (!inStr && ch === ' ' && parenDepth === 0 && bracketDepth === 0 && current.trim()) {
+                    tokens.push(current.trim());
+                    current = '';
+                } else if (!inStr && ch === ',' && parenDepth === 0 && bracketDepth === 0) {
+                    tokens.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            if (current.trim()) tokens.push(current.trim());
+
+            return tokens.map(t => transformExpr(t)).join(', ');
+        }
+
+        function splitArgs(argsStr) {
+            const args = [];
+            let current = '';
+            let depth = 0;
+            let inStr = false;
+            let strChar = '';
+            for (let i = 0; i < argsStr.length; i++) {
+                const ch = argsStr[i];
+                if (!inStr && (ch === '"' || ch === "'")) { inStr = true; strChar = ch; }
+                else if (inStr && ch === strChar) { inStr = false; }
+                if (!inStr) {
+                    if (ch === '(' || ch === '[') depth++;
+                    if (ch === ')' || ch === ']') depth--;
+                    if (ch === ',' && depth === 0) {
+                        args.push(current.trim());
+                        current = '';
+                        continue;
+                    }
+                }
+                current += ch;
+            }
+            if (current.trim()) args.push(current.trim());
+            return args;
+        }
+
+        function secondPass(code) {
+            // Handle step chains more robustly:
+            // Convert arr._sort()._reverse()._take(3) to tt.chain(arr).sort().reverse().take(3).value()
+            // This is a post-processing step
+
+            // Convert ._step() calls to chain calls
+            const chainStepTerminals = new Set(['_sum', '_avg', '_min', '_max', '_count', '_first', '_last']);
+            const chainStepMethods = new Set(['_sort', '_reverse', '_unique', '_flatten', '_filter', '_map', '_take', '_drop', '_chunk', '_zip', '_group', '_uniq']);
+
+            // Find lines with step chain patterns and wrap in tt.chain()
+            const lines = code.split('\n');
+            const result = [];
+
+            for (const line of lines) {
+                let processed = line;
+
+                // Find step chain patterns: identifier._step() or identifier._step(args)
+                // We look for sequences of ._methodName() calls
+                const chainPattern = /(\b[A-Za-z_]\w*(?:\([^)]*\))?)\._(\w+)\(/g;
+                if (chainPattern.test(processed)) {
+                    // Reset lastIndex
+                    chainPattern.lastIndex = 0;
+
+                    // More sophisticated: find the base expression and wrap it
+                    processed = wrapStepChains(processed);
+                }
+
+                result.push(processed);
+            }
+
+            return result.join('\n');
+        }
+
+        function wrapStepChains(line) {
+            // Find patterns like: expr._method()._method2() and convert to
+            // tt.chain(expr).method().method2().value()
+
+            // This regex finds the start of a chain: word._
+            const hasChain = /\b(\w+)\._(\w+)\b/.test(line);
+            if (!hasChain) return line;
+
+            // Replace ._method with .method for the chain
+            // First, find and wrap the base expression with tt.chain()
+            const terminalSteps = new Set(['sum', 'avg', 'min', 'max', 'count', 'first', 'last']);
+
+            let result = line;
+
+            // Find chain starts: identifier._ pattern
+            const chainStartRe = /(\b[A-Za-z_]\w*)\._/;
+            const match = chainStartRe.exec(result);
+
+            if (match) {
+                const baseVar = match[1];
+                const startIdx = match.index;
+
+                // Find the full chain from this point
+                let chainStr = result.slice(startIdx);
+                // Extract the chain portion
+                let chainEndIdx = chainStr.length;
+
+                // Replace ._ with . throughout
+                let chainPart = chainStr.replace(/\._/g, '.');
+
+                // Determine if last step is terminal
+                const stepCalls = chainPart.match(/\.(\w+)\(\)/g) || [];
+                const lastStep = stepCalls.length > 0 ? stepCalls[stepCalls.length - 1].match(/\.(\w+)/)[1] : '';
+                const needsValue = lastStep && !terminalSteps.has(lastStep);
+
+                // Wrap with tt.chain() and optionally .value()
+                const wrapped = `tt.chain(${baseVar})${chainPart.slice(baseVar.length)}${needsValue ? '.value()' : ''}`;
+                result = result.slice(0, startIdx) + wrapped + result.slice(startIdx + chainStr.length);
+            }
+
+            return result;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // CLIENT-SIDE CODE EXECUTION
+        // ═══════════════════════════════════════════════════════════════
+
+        function executeCode(tinyTalkSource) {
+            tt._output = [];
+            tt._capture = true;
+
+            const startTime = performance.now();
+            let jsCode = '';
+
+            try {
+                jsCode = transpileTinyTalk(tinyTalkSource);
+
+                // Execute the transpiled JS in a sandboxed scope
+                const fn = new Function('tt', jsCode);
+                fn(tt);
+
+                const elapsed = (performance.now() - startTime).toFixed(2);
+
+                return {
+                    success: true,
+                    output: tt._output.join('\n'),
+                    result: '',
+                    elapsed_ms: elapsed,
+                    jsCode: jsCode
+                };
+            } catch (err) {
+                const elapsed = (performance.now() - startTime).toFixed(2);
+                return {
+                    success: false,
+                    output: tt._output.join('\n'),
+                    error: err.message,
+                    elapsed_ms: elapsed,
+                    jsCode: jsCode
+                };
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // EMBEDDED EXAMPLES
+        // ═══════════════════════════════════════════════════════════════
+
+        const EXAMPLES = [
+            {
+                name: 'Hello World',
+                code: `// Welcome to realTinyTalk!
+// The friendliest programming language
+
+show("Hello World!")
+
+// Space-separated args - no commas needed!
+let name = "Newton"
+show("Welcome" name "to realTinyTalk!")
+
+// Property magic - no parentheses needed!
+show("Uppercase:" name.upcase)
+show("Length:" name.len)
+show("Reversed:" name.reversed)`
+            },
+            {
+                name: 'Tutorial: Basics',
+                code: `// TUTORIAL 1: The Basics
+
+// Variables with 'let'
+let greeting = "Hello"
+let number = 42
+let pi = 3.14159
+
+// show() prints anything - space-separated args
+show("greeting:" greeting)
+show("number:" number)
+show("pi:" pi)
+
+// Math just works
+show("")
+show("=== Math ===")
+let sum = 2 + 3
+let product = 10 * 4
+let power = 2 ** 8
+show("2 + 3 =" sum)
+show("10 * 4 =" product)
+show("2 ** 8 =" power)
+
+// Strings
+show("")
+show("=== Strings ===")
+let name = "Alice"
+show("Hello" name "!")
+show("Length:" name.len)
+show("Uppercase:" name.upcase)
+show("Reversed:" name.reversed)`
+            },
+            {
+                name: 'Tutorial: Functions',
+                code: `// TUTORIAL 2: Functions
+
+// LAW = pure function (no side effects)
+law square(x)
+    reply x * x
+end
+
+law greet(name)
+    reply "Hello " + name + "!"
+end
+
+show("square(5) =" square(5))
+show(greet("World"))
+
+// Functions can call functions
+law sum_of_squares(a, b)
+    reply square(a) + square(b)
+end
+
+show("sum_of_squares(3, 4) =" sum_of_squares(3, 4))
+
+// Recursion works too
+law factorial(n)
+    if n <= 1 { reply 1 }
+    reply n * factorial(n - 1)
+end
+
+show("")
+show("=== Factorials ===")
+for i in range(1, 8) {
+    show(i.str + "! =" factorial(i))
+}`
+            },
+            {
+                name: 'Tutorial: Collections',
+                code: `// TUTORIAL 3: Lists & Maps
+
+// Lists
+let fruits = ["apple", "banana", "cherry"]
+show("Fruits:" fruits)
+show("First:" fruits[0])
+show("Length:" fruits.len)
+
+// Loop through lists
+show("")
+show("=== Each fruit ===")
+for fruit in fruits {
+    show("-" fruit)
+}
+
+// Maps (like dictionaries)
+let person = {
+    "name": "Alice",
+    "age": 30,
+    "city": "NYC"
+}
+
+show("")
+show("=== Person ===")
+show("Name:" person.name)
+show("Age:" person.age)
+show("City:" person.city)`
+            },
+            {
+                name: 'Tutorial: Control Flow',
+                code: `// TUTORIAL 4: Control Flow
+
+// If statements
+let age = 25
+
+if age >= 18 {
+    show("You are an adult")
+} else {
+    show("You are a minor")
+}
+
+// For loops
+show("")
+show("=== Countdown ===")
+for i in range(5, 0, -1) {
+    show(i)
+}
+show("Liftoff!")
+
+// While loops
+show("")
+show("=== Doubling ===")
+let x = 1
+while x < 100 {
+    show(x)
+    x = x * 2
+}`
+            },
+            {
+                name: 'Fibonacci',
+                code: `// Fibonacci - clean and simple
+
+law fib(n)
+    if n <= 1 { reply n }
+    reply fib(n - 1) + fib(n - 2)
+end
+
+show("=== Fibonacci Sequence ===")
+for i in range(12) {
+    show("fib(" i.str ") =" fib(i))
+}`
+            },
+            {
+                name: 'FizzBuzz',
+                code: `// The classic interview question
+
+law fizzbuzz(n)
+    if n % 15 == 0 { reply "FizzBuzz" }
+    if n % 3 == 0 { reply "Fizz" }
+    if n % 5 == 0 { reply "Buzz" }
+    reply n
+end
+
+show("=== FizzBuzz 1-20 ===")
+for i in range(1, 21) {
+    show(fizzbuzz(i))
+}`
+            },
+            {
+                name: 'Prime Numbers',
+                code: `// Find prime numbers
+
+law is_prime(n)
+    if n < 2 { reply false }
+    for i in range(2, n) {
+        if n % i == 0 { reply false }
+    }
+    reply true
+end
+
+show("=== Primes up to 50 ===")
+let primes = []
+for n in range(2, 51) {
+    if is_prime(n) {
+        primes = primes + [n]
+    }
+}
+show(primes)
+show("")
+show("Found" primes.len "primes")`
+            },
+            {
+                name: 'Quicksort',
+                code: `// Quicksort algorithm
+
+law quicksort(arr)
+    if arr.len <= 1 { reply arr }
+
+    let pivot = arr[0]
+    let less = []
+    let greater = []
+
+    for i in range(1, arr.len) {
+        if arr[i] < pivot {
+            less = less + [arr[i]]
+        } else {
+            greater = greater + [arr[i]]
+        }
+    }
+
+    reply quicksort(less) + [pivot] + quicksort(greater)
+end
+
+let unsorted = [64, 34, 25, 12, 22, 11, 90]
+show("Unsorted:" unsorted)
+show("Sorted:" quicksort(unsorted))`
+            },
+            {
+                name: 'Step Chains',
+                code: `// dplyr-style data manipulation
+// Chain operations with _underscore steps!
+
+let numbers = [5, 2, 8, 1, 9, 3, 7, 4, 6]
+show("Numbers:" numbers)
+
+// Sort and take top 3
+show("Sorted:" numbers _sort)
+show("Top 3:" numbers _sort _reverse _take(3))
+
+// Filter and count
+law is_even(x)
+    reply x % 2 == 0
+end
+
+show("Evens:" numbers _filter(is_even))
+
+// Sum and average
+show("Sum:" numbers _sum)
+show("Min:" numbers _min)
+show("Max:" numbers _max)
+
+// Transform with _map
+law doubled(x)
+    reply x * 2
+end
+
+show("Doubled:" numbers _map(doubled))`
+            },
+            {
+                name: 'Higher-Order Functions',
+                code: `// Pass functions to other functions!
+
+let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+// Define transforms
+law doubled(x)
+    reply x * 2
+end
+
+law squared(x)
+    reply x * x
+end
+
+// Define predicates
+law is_even(x)
+    reply x % 2 == 0
+end
+
+law is_odd(x)
+    reply x % 2 == 1
+end
+
+show("=== Transform with _map ===")
+show("Numbers:" numbers)
+show("Doubled:" numbers _map(doubled))
+show("Squared:" numbers _map(squared))
+
+show("")
+show("=== Filter with predicates ===")
+show("Evens:" numbers _filter(is_even))
+show("Odds:" numbers _filter(is_odd))
+
+show("")
+show("=== Functions are values ===")
+law apply_twice(func, x)
+    reply func(func(x))
+end
+
+show("apply_twice(doubled, 3):" apply_twice(doubled, 3))
+show("apply_twice(squared, 2):" apply_twice(squared, 2))`
+            },
+            {
+                name: 'Calculator',
+                code: `// Simple calculator
+
+law add(a, b)
+    reply a + b
+end
+
+law subtract(a, b)
+    reply a - b
+end
+
+law multiply(a, b)
+    reply a * b
+end
+
+law divide(a, b)
+    if b == 0 {
+        reply "Error: division by zero"
+    }
+    reply a / b
+end
+
+show("=== Calculator ===")
+show("10 + 5 =" add(10, 5))
+show("10 - 5 =" subtract(10, 5))
+show("10 * 5 =" multiply(10, 5))
+show("10 / 5 =" divide(10, 5))
+show("10 / 0 =" divide(10, 0))`
+            },
+            {
+                name: 'Property Magic',
+                code: `// Property conversions - no parentheses needed!
+// .str   -> convert to string
+// .int   -> convert to integer
+// .float -> convert to float
+// .len   -> get length
+// .type  -> get type name
+
+let num = 42
+let text = "3.14"
+
+show("=== Type Conversions ===")
+show("num.str:" num.str)
+show("text.float:" text.float)
+show("text.int:" text.int)
+
+show("")
+show("=== String Properties ===")
+let msg = "hello world"
+show("original:" msg)
+show("upcase:" msg.upcase)
+show("lowcase:" msg.lowcase)
+show("len:" msg.len)
+show("reversed:" msg.reversed)
+
+show("")
+show("=== List Properties ===")
+let items = [1, 2, 3, 4, 5]
+show("items:" items)
+show("first:" items.first)
+show("last:" items.last)
+show("len:" items.len)`
+            }
+        ];
+
+        // ═══════════════════════════════════════════════════════════════
+        // APP STATE
+        // ═══════════════════════════════════════════════════════════════
+
+        let editor = null;
+        let examples = EXAMPLES;
+        let currentTheme = localStorage.getItem('tinytalk-theme') || 'dark';
+
+        // ═══════════════════════════════════════════════════════════════
+        // SPLASH SCREEN
+        // ═══════════════════════════════════════════════════════════════
+
+        const splashStartTime = Date.now();
+        const MINIMUM_SPLASH_TIME = 3000;
+        const loadingExtensions = [
+            'Monaco Editor', 'Syntax Highlighter', 'TinyTalk Language',
+            'Step Chains', 'Property Magic', 'Verified Runtime', 'Examples Library'
+        ];
+        let currentExtIndex = 0;
+
+        function updateSplash(progress, status) {
+            const bar = document.getElementById('splashProgress');
+            const text = document.getElementById('splashStatus');
+            if (bar) bar.style.width = progress + '%';
+            if (text) text.textContent = status;
+        }
+
+        function showExtension(name) {
+            const container = document.getElementById('splashExtensions');
+            if (container) container.innerHTML = `<span class="splash-ext-item">Loading: ${name}</span>`;
+        }
+
+        function cycleExtensions() {
+            if (currentExtIndex < loadingExtensions.length) {
+                showExtension(loadingExtensions[currentExtIndex]);
+                updateSplash(10 + (currentExtIndex / loadingExtensions.length) * 80, 'Initializing...');
+                currentExtIndex++;
+                setTimeout(cycleExtensions, 400);
+            }
+        }
+
+        function hideSplash() {
+            const elapsed = Date.now() - splashStartTime;
+            const remaining = Math.max(0, MINIMUM_SPLASH_TIME - elapsed);
+            setTimeout(() => {
+                updateSplash(100, 'Ready!');
+                showExtension('Complete');
+                setTimeout(() => {
+                    const splash = document.getElementById('splash');
+                    if (splash) {
+                        splash.classList.add('hidden');
+                        setTimeout(() => splash.remove(), 800);
+                    }
+                }, 600);
+            }, remaining);
+        }
+
+        updateSplash(5, 'Starting...');
+        setTimeout(cycleExtensions, 300);
+
+        // ═══════════════════════════════════════════════════════════════
+        // THEME
+        // ═══════════════════════════════════════════════════════════════
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('tinytalk-theme', theme);
+            if (editor) monaco.editor.setTheme('tinytalk-' + theme);
+            document.querySelectorAll('.theme-option').forEach(el => {
+                el.classList.toggle('active', el.dataset.theme === theme);
+            });
+        }
+        document.body.setAttribute('data-theme', currentTheme);
+
+        document.getElementById('themeBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('themeMenu').classList.toggle('open');
+        });
+        document.querySelectorAll('.theme-option').forEach(el => {
+            el.addEventListener('click', () => {
+                setTheme(el.dataset.theme);
+                document.getElementById('themeMenu').classList.remove('open');
+            });
+        });
+        document.addEventListener('click', () => {
+            document.getElementById('themeMenu').classList.remove('open');
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // MONACO EDITOR SETUP
+        // ═══════════════════════════════════════════════════════════════
+
+        require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
+
+        updateSplash(20, 'Configuring editor...');
+
+        require(['vs/editor/editor.main'], function () {
+            updateSplash(40, 'Registering TinyTalk language...');
+
+            monaco.languages.register({ id: 'tinytalk' });
+
+            // TinyTalk language definition
+            monaco.languages.setMonarchTokensProvider('tinytalk', {
+                keywords: [
+                    'when', 'and', 'fin', 'finfr', 'ratio',
+                    'blueprint', 'law', 'field', 'forge', 'reply', 'do', 'end',
+                    'let', 'const', 'fn', 'return', 'if', 'else', 'elif',
+                    'for', 'while', 'in', 'break', 'continue', 'match', 'case',
+                    'import', 'from', 'as', 'or', 'not'
+                ],
+                comparisons: ['is', 'isnt', 'has', 'hasnt', 'isin', 'islike'],
+                constants: ['true', 'false', 'null', 'nil', 'PI', 'E', 'TAU', 'INF'],
+                builtins: [
+                    'show', 'print', 'println', 'input', 'len', 'type', 'typeof',
+                    'range', 'append', 'push', 'pop', 'keys', 'values',
+                    'contains', 'slice', 'reverse', 'sort', 'filter', 'zip', 'enumerate',
+                    'split', 'join', 'sum', 'min', 'max', 'abs', 'round', 'floor', 'ceil',
+                    'sqrt', 'pow', 'sin', 'cos', 'tan', 'log', 'exp', 'hash'
+                ],
+                steps: [
+                    '_filter', '_sort', '_map', '_take', '_drop',
+                    '_first', '_last', '_reverse', '_unique', '_count',
+                    '_sum', '_avg', '_min', '_max', '_group', '_flatten', '_zip', '_chunk'
+                ],
+                properties: [
+                    'len', 'str', 'int', 'float', 'bool', 'type',
+                    'upper', 'upcase', 'lower', 'lowcase', 'trim',
+                    'chars', 'words', 'lines', 'reversed', 'length',
+                    'first', 'last', 'empty'
+                ],
+                operators: [
+                    '=', '==', '!=', '<', '>', '<=', '>=',
+                    '+', '-', '*', '/', '//', '%', '**',
+                    '|>', ':=', '->', '=>', '..', '&', '|', '^', '~'
+                ],
+                symbols: /[=><!~?:&|+\-*\/\^%]+/,
+
+                tokenizer: {
+                    root: [
+                        [/\/\/.*$/, 'comment'],
+                        [/#.*$/, 'comment'],
+                        [/\/\*/, 'comment', '@comment'],
+                        [/"([^"\\]|\\.)*$/, 'string.invalid'],
+                        [/"/, 'string', '@string_double'],
+                        [/'([^'\\]|\\.)*$/, 'string.invalid'],
+                        [/'/, 'string', '@string_single'],
+                        [/\d+\.\d+([eE][\-+]?\d+)?/, 'number.float'],
+                        [/0[xX][0-9a-fA-F]+/, 'number.hex'],
+                        [/0[bB][01]+/, 'number.binary'],
+                        [/\d+/, 'number'],
+                        [/_[a-zA-Z]\w*/, { cases: { '@steps': 'keyword.step', '@default': 'identifier' } }],
+                        [/\.([a-zA-Z]\w*)/, { cases: { '$1@properties': 'variable.property.magic', '@default': 'variable.property' } }],
+                        [/[a-zA-Z_]\w*/, { cases: { '@keywords': 'keyword', '@comparisons': 'keyword.comparison', '@constants': 'constant', '@builtins': 'predefined', '@default': 'identifier' } }],
+                        [/@symbols/, { cases: { '@operators': 'operator', '@default': '' } }],
+                        [/[{}()\[\]]/, '@brackets'],
+                        [/[,;]/, 'delimiter'],
+                    ],
+                    comment: [
+                        [/[^/*]+/, 'comment'],
+                        [/\*\//, 'comment', '@pop'],
+                        [/[/*]/, 'comment']
+                    ],
+                    string_double: [
+                        [/[^\\"]+/, 'string'],
+                        [/\\./, 'string.escape'],
+                        [/"/, 'string', '@pop']
+                    ],
+                    string_single: [
+                        [/[^\\']+/, 'string'],
+                        [/\\./, 'string.escape'],
+                        [/'/, 'string', '@pop']
+                    ]
+                }
+            });
+
+            // Themes
+            monaco.editor.defineTheme('tinytalk-dark', {
+                base: 'vs-dark', inherit: true,
+                rules: [
+                    { token: 'keyword', foreground: 'ff7b72', fontStyle: 'bold' },
+                    { token: 'keyword.comparison', foreground: 'ff7b72', fontStyle: 'bold italic' },
+                    { token: 'keyword.step', foreground: 'd2a8ff', fontStyle: 'italic' },
+                    { token: 'constant', foreground: '79c0ff', fontStyle: 'bold' },
+                    { token: 'predefined', foreground: 'd2a8ff' },
+                    { token: 'string', foreground: 'a5d6ff' },
+                    { token: 'string.escape', foreground: '79c0ff' },
+                    { token: 'number', foreground: '79c0ff' },
+                    { token: 'number.float', foreground: '79c0ff' },
+                    { token: 'comment', foreground: '8b949e', fontStyle: 'italic' },
+                    { token: 'operator', foreground: 'ff7b72' },
+                    { token: 'identifier', foreground: 'e6edf3' },
+                    { token: 'variable.property', foreground: '7ee787' },
+                    { token: 'variable.property.magic', foreground: 'ffa657', fontStyle: 'italic' },
+                ],
+                colors: {
+                    'editor.background': '#0d1117',
+                    'editor.foreground': '#e6edf3',
+                    'editor.lineHighlightBackground': '#161b22',
+                    'editor.selectionBackground': '#264f78',
+                    'editorCursor.foreground': '#58a6ff',
+                    'editorLineNumber.foreground': '#6e7681',
+                    'editorLineNumber.activeForeground': '#e6edf3',
+                }
+            });
+            monaco.editor.defineTheme('tinytalk-light', {
+                base: 'vs', inherit: true,
+                rules: [
+                    { token: 'keyword', foreground: 'cf222e', fontStyle: 'bold' },
+                    { token: 'keyword.comparison', foreground: 'cf222e', fontStyle: 'bold italic' },
+                    { token: 'keyword.step', foreground: '8250df', fontStyle: 'italic' },
+                    { token: 'constant', foreground: '0550ae', fontStyle: 'bold' },
+                    { token: 'predefined', foreground: '8250df' },
+                    { token: 'string', foreground: '0a3069' },
+                    { token: 'number', foreground: '0550ae' },
+                    { token: 'comment', foreground: '6e7781', fontStyle: 'italic' },
+                    { token: 'operator', foreground: 'cf222e' },
+                    { token: 'identifier', foreground: '1f2328' },
+                    { token: 'variable.property', foreground: '116329' },
+                    { token: 'variable.property.magic', foreground: '953800', fontStyle: 'italic' },
+                ],
+                colors: {
+                    'editor.background': '#ffffff',
+                    'editor.foreground': '#1f2328',
+                    'editor.lineHighlightBackground': '#f6f8fa',
+                    'editor.selectionBackground': '#add6ff',
+                    'editorCursor.foreground': '#0969da',
+                }
+            });
+            monaco.editor.defineTheme('tinytalk-monokai', {
+                base: 'vs-dark', inherit: true,
+                rules: [
+                    { token: 'keyword', foreground: 'f92672', fontStyle: 'bold' },
+                    { token: 'keyword.comparison', foreground: 'f92672', fontStyle: 'bold italic' },
+                    { token: 'keyword.step', foreground: '66d9ef', fontStyle: 'italic' },
+                    { token: 'constant', foreground: 'ae81ff', fontStyle: 'bold' },
+                    { token: 'predefined', foreground: 'a6e22e' },
+                    { token: 'string', foreground: 'e6db74' },
+                    { token: 'number', foreground: 'ae81ff' },
+                    { token: 'comment', foreground: '75715e', fontStyle: 'italic' },
+                    { token: 'operator', foreground: 'f92672' },
+                    { token: 'identifier', foreground: 'f8f8f2' },
+                    { token: 'variable.property', foreground: 'a6e22e' },
+                    { token: 'variable.property.magic', foreground: 'fd971f', fontStyle: 'italic' },
+                ],
+                colors: {
+                    'editor.background': '#272822',
+                    'editor.foreground': '#f8f8f2',
+                    'editor.lineHighlightBackground': '#3e3d32',
+                    'editor.selectionBackground': '#49483e',
+                    'editorCursor.foreground': '#f8f8f0',
+                }
+            });
+            monaco.editor.defineTheme('tinytalk-nord', {
+                base: 'vs-dark', inherit: true,
+                rules: [
+                    { token: 'keyword', foreground: '81a1c1', fontStyle: 'bold' },
+                    { token: 'keyword.comparison', foreground: '81a1c1', fontStyle: 'bold italic' },
+                    { token: 'keyword.step', foreground: '88c0d0', fontStyle: 'italic' },
+                    { token: 'constant', foreground: 'b48ead', fontStyle: 'bold' },
+                    { token: 'predefined', foreground: '88c0d0' },
+                    { token: 'string', foreground: 'a3be8c' },
+                    { token: 'number', foreground: 'b48ead' },
+                    { token: 'comment', foreground: '616e88', fontStyle: 'italic' },
+                    { token: 'operator', foreground: '81a1c1' },
+                    { token: 'identifier', foreground: 'eceff4' },
+                    { token: 'variable.property', foreground: '8fbcbb' },
+                    { token: 'variable.property.magic', foreground: 'd08770', fontStyle: 'italic' },
+                ],
+                colors: {
+                    'editor.background': '#2e3440',
+                    'editor.foreground': '#eceff4',
+                    'editor.lineHighlightBackground': '#3b4252',
+                    'editor.selectionBackground': '#434c5e',
+                    'editorCursor.foreground': '#88c0d0',
+                }
+            });
+
+            updateSplash(60, 'Creating editor instance...');
+
+            // Create editor
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                value: EXAMPLES[0].code,
+                language: 'tinytalk',
+                theme: 'tinytalk-' + currentTheme,
+                fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+                fontSize: 14,
+                lineHeight: 22,
+                padding: { top: 12, bottom: 12 },
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                renderLineHighlight: 'all',
+                cursorBlinking: 'smooth',
+                smoothScrolling: true,
+                tabSize: 4,
+                insertSpaces: true,
+                automaticLayout: true,
+                bracketPairColorization: { enabled: true },
+                guides: { bracketPairs: true, indentation: true },
+            });
+
+            // Ctrl+Enter to run
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runCode);
+
+            // Auto-completion
+            monaco.languages.registerCompletionItemProvider('tinytalk', {
+                provideCompletionItems: () => {
+                    const suggestions = [
+                        ...['when', 'and', 'fin', 'finfr', 'ratio', 'do'].map(k => ({
+                            label: k, kind: monaco.languages.CompletionItemKind.Keyword,
+                            insertText: k, documentation: 'Sacred keyword'
+                        })),
+                        ...['blueprint', 'law', 'field', 'forge', 'reply', 'end'].map(k => ({
+                            label: k, kind: monaco.languages.CompletionItemKind.Keyword,
+                            insertText: k, documentation: 'Governance keyword'
+                        })),
+                        ...['let', 'const', 'if', 'else', 'elif', 'for', 'while', 'in',
+                            'return', 'break', 'continue', 'fn', 'match', 'case'].map(k => ({
+                            label: k, kind: monaco.languages.CompletionItemKind.Keyword, insertText: k,
+                        })),
+                        ...['is', 'isnt', 'has', 'hasnt', 'isin', 'islike'].map(k => ({
+                            label: k, kind: monaco.languages.CompletionItemKind.Operator,
+                            insertText: k, documentation: 'Natural comparison operator'
+                        })),
+                        ...['true', 'false', 'null'].map(c => ({
+                            label: c, kind: monaco.languages.CompletionItemKind.Constant, insertText: c,
+                        })),
+                        ...['show', 'len', 'type', 'range', 'abs', 'floor', 'ceil',
+                            'sqrt', 'pow', 'sum', 'min', 'max', 'round',
+                            'append', 'slice', 'join', 'split', 'keys', 'values'].map(b => ({
+                            label: b, kind: monaco.languages.CompletionItemKind.Function, insertText: b,
+                        })),
+                        ...['_filter', '_sort', '_map', '_take', '_drop', '_first', '_last',
+                            '_reverse', '_unique', '_count', '_sum', '_avg', '_min', '_max'].map(s => ({
+                            label: s, kind: monaco.languages.CompletionItemKind.Method,
+                            insertText: s, documentation: 'Step chain operation',
+                        })),
+                        {
+                            label: 'law', kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: 'law ${1:name}(${2:args})\n\t$0\n\treply ${3:result}\nend',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            documentation: 'Define a pure function'
+                        },
+                        {
+                            label: 'blueprint', kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: 'blueprint ${1:Name}\n\tfield ${2:x}\n\t\n\tforge ${3:method}()\n\t\t$0\n\tend\nend',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            documentation: 'Define a class'
+                        },
+                        {
+                            label: 'for', kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: 'for ${1:i} in ${2:range(10)} {\n\t$0\n}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                    ];
+                    return { suggestions };
+                }
+            });
+
+            updateSplash(80, 'Loading examples...');
+            loadExamples();
+
+            updateSplash(95, 'Almost ready...');
+            hideSplash();
+
+            // Init local storage after editor created
+            setTimeout(() => {
+                scripts[activeScript] = editor.getValue();
+                loadScriptsFromStorage();
+                startAutosave();
+            }, 200);
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // EXAMPLES
+        // ═══════════════════════════════════════════════════════════════
+
+        function loadExamples() {
+            const list = document.getElementById('examplesList');
+            list.innerHTML = examples.map((ex, i) => `
+                <div class="example-item" onclick="loadExample(${i})">
+                    <span class="example-icon">${i === 0 ? '&#128075;' : i < 5 ? '&#128214;' : '&#127919;'}</span>
+                    <span>${ex.name}</span>
+                </div>
+            `).join('');
+
+            const select = document.getElementById('exampleSelect');
+            select.innerHTML = '<option value="">Load Example...</option>' +
+                examples.map((ex, i) => `<option value="${i}">${ex.name}</option>`).join('');
+        }
+
+        function loadExample(index) {
+            const example = examples[index];
+            if (example && editor) {
+                editor.setValue(example.code);
+                document.querySelectorAll('.example-item').forEach((el, i) => {
+                    el.classList.toggle('active', i === index);
+                });
+                document.getElementById('exampleSelect').value = index;
+            }
+        }
+
+        document.getElementById('exampleSelect').addEventListener('change', (e) => {
+            if (e.target.value !== '') loadExample(parseInt(e.target.value));
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // OUTPUT TAB MANAGEMENT
+        // ═══════════════════════════════════════════════════════════════
+
+        let jsEditorInstance = null;
+        let currentOutputTab = 'output';
+
+        function switchOutputTab(tab) {
+            currentOutputTab = tab;
+            document.querySelectorAll('.output-tab').forEach(el => {
+                el.classList.toggle('active', el.dataset.tab === tab);
+            });
+            document.getElementById('outputContent').style.display = tab === 'output' ? 'block' : 'none';
+            document.getElementById('jsContent').style.display = tab === 'javascript' ? 'flex' : 'none';
+
+            if (tab === 'javascript' && !jsEditorInstance) {
+                jsEditorInstance = monaco.editor.create(document.getElementById('jsEditor'), {
+                    value: '// Run code to see transpiled JavaScript here',
+                    language: 'javascript',
+                    theme: 'tinytalk-' + currentTheme,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 12,
+                    readOnly: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                });
+            }
+        }
+        window.switchOutputTab = switchOutputTab;
+
+        function copyCode(lang) {
+            let code = '';
+            if (lang === 'js' && jsEditorInstance) code = jsEditorInstance.getValue();
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+        window.copyCode = copyCode;
+
+        // ═══════════════════════════════════════════════════════════════
+        // LOCAL STORAGE / TABS
+        // ═══════════════════════════════════════════════════════════════
+
+        const STORAGE_KEY = 'tinytalk-scripts';
+        let scripts = {};
+        let activeScript = 'untitled.tt';
+        let autosaveInterval = null;
+
+        function loadScriptsFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                scripts = raw ? JSON.parse(raw) : {};
+            } catch (e) { scripts = {}; }
+            if (!scripts[activeScript]) scripts[activeScript] = editor ? editor.getValue() : '';
+            refreshTabs();
+        }
+
+        function saveAllToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(scripts));
+        }
+
+        function showStatus(msg) {
+            const el = document.getElementById('statusBadge');
+            if (!el) return;
+            el.textContent = msg;
+            clearTimeout(el._t);
+            el._t = setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 2000);
+        }
+
+        function getActiveTabName() {
+            const el = document.querySelector('.editor-tab.active');
+            return el ? el.textContent.trim() : activeScript;
+        }
+
+        function setActiveTab(name) {
+            activeScript = name;
+            const tabs = document.querySelector('.editor-tabs');
+            let existing = Array.from(tabs.querySelectorAll('.editor-tab')).find(t => t.textContent.trim() === name);
+            if (!existing) {
+                const div = document.createElement('div');
+                div.className = 'editor-tab';
+                div.innerHTML = `<span class="tab-icon">&#128196;</span>${name}`;
+                div.addEventListener('click', () => setActiveTab(name));
+                tabs.appendChild(div);
+                existing = div;
+            }
+            document.querySelectorAll('.editor-tab').forEach(t => t.classList.toggle('active', t === existing));
+            if (editor) editor.setValue(scripts[name] || '');
+        }
+
+        function refreshTabs() {
+            const tabs = document.querySelector('.editor-tabs');
+            tabs.innerHTML = '';
+            const keys = Object.keys(scripts);
+            if (keys.length === 0) scripts['untitled.tt'] = editor ? editor.getValue() : '';
+            keys.forEach((k) => {
+                const div = document.createElement('div');
+                div.className = 'editor-tab' + (k === activeScript ? ' active' : '');
+                div.innerHTML = `<span class="tab-icon">&#128196;</span>${k}`;
+                div.addEventListener('click', () => setActiveTab(k));
+                tabs.appendChild(div);
+            });
+        }
+
+        function saveCurrent() {
+            const name = getActiveTabName() || activeScript;
+            scripts[name] = editor.getValue();
+            saveAllToStorage();
+            showStatus('Saved');
+        }
+
+        function exportCurrent() {
+            const name = getActiveTabName() || activeScript || 'script.tt';
+            const blob = new Blob([editor.getValue()], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+            showStatus('Exported');
+        }
+
+        function importFile(evt) {
+            const file = evt.target.files && evt.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const name = file.name || 'imported.tt';
+                scripts[name] = e.target.result;
+                setActiveTab(name);
+                saveAllToStorage();
+                showStatus('Imported');
+            };
+            reader.readAsText(file);
+            evt.target.value = '';
+        }
+
+        function startAutosave() {
+            if (autosaveInterval) clearInterval(autosaveInterval);
+            autosaveInterval = setInterval(() => {
+                if (editor) {
+                    scripts[getActiveTabName()] = editor.getValue();
+                    saveAllToStorage();
+                }
+            }, 10000);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                saveCurrent();
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // RUN CODE (client-side)
+        // ═══════════════════════════════════════════════════════════════
+
+        function runCode() {
+            const code = editor.getValue();
+            const runBtn = document.getElementById('runBtn');
+            const statusBadge = document.getElementById('statusBadge');
+            const outputContent = document.getElementById('outputContent');
+
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<div class="spinner"></div> Running...';
+            statusBadge.className = 'status-badge status-running';
+            statusBadge.textContent = 'Running...';
+
+            // Switch to output tab
+            switchOutputTab('output');
+
+            // Run asynchronously to allow UI update
+            setTimeout(() => {
+                const result = executeCode(code);
+
+                if (result.success) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = 'Success';
+                } else {
+                    statusBadge.className = 'status-badge status-error';
+                    statusBadge.textContent = 'Error';
+                }
+
+                let html = '';
+                if (result.output) {
+                    html += `<div class="output-section">
+                        <div class="output-label">Output</div>
+                        <div class="output-text">${escapeHtml(result.output)}</div>
+                    </div>`;
+                }
+                if (result.error) {
+                    html += `<div class="output-section">
+                        <div class="output-label">Error</div>
+                        <div class="output-text error">${escapeHtml(result.error)}</div>
+                    </div>`;
+                }
+                if (!result.output && !result.error) {
+                    html += '<div class="output-text" style="color: var(--text-muted);">No output</div>';
+                }
+                html += `<div class="output-meta">
+                    <div class="meta-item">Time: <span class="meta-value">${result.elapsed_ms}ms</span></div>
+                    <div class="meta-item">Mode: <span class="meta-value">Client-side JS</span></div>
+                </div>`;
+
+                outputContent.innerHTML = html;
+
+                // Update JS transpiler view
+                if (jsEditorInstance && result.jsCode) {
+                    jsEditorInstance.setValue(result.jsCode);
+                }
+
+                runBtn.disabled = false;
+                runBtn.innerHTML = '&#9654; Run <kbd>Ctrl+Enter</kbd>';
+            }, 50);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Set initial theme option as active
+        document.querySelectorAll('.theme-option').forEach(el => {
+            el.classList.toggle('active', el.dataset.theme === currentTheme);
+        });
+    </script>
+</body>
+</html>
