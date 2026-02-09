@@ -32,11 +32,13 @@ from typing import List, Optional, Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-<<<<<<< HEAD
-from realTinyTalk.parser import Program, ASTNode, NodeType, Member
-=======
-from realTinyTalk.parser import Program, ASTNode, NodeType
->>>>>>> main
+from realTinyTalk.parser import (
+    Program, ASTNode, NodeType, Member,
+    Literal, BinaryOp, UnaryOp, Call, Index, Array, MapLiteral,
+    Lambda, Conditional, Range, Pipe, StepChain,
+    LetStmt, ConstStmt, AssignStmt, Block, IfStmt, ForStmt, WhileStmt,
+    ReturnStmt, FnDecl, StructDecl, ImportStmt, Identifier,
+)
 
 
 class PythonEmitter:
@@ -437,7 +439,6 @@ class PythonEmitter:
         return f'{obj}[{idx}]'
     
     def _emit_member(self, node: Member) -> str:
-<<<<<<< HEAD
         # Collect chain of member fields
         fields = []
         cur = node
@@ -468,17 +469,6 @@ class PythonEmitter:
             else:
                 result = f'tt.prop({result}, "{field}")'
         return result
-=======
-        obj = self._emit_node(node.obj)
-        field = node.field
-        
-        # Special case: .str is Python's str() function
-        if field == 'str':
-            return f'str({obj})'
-        
-        # Use tt.prop for magic properties
-        return f'tt.prop({obj}, "{field}")'
->>>>>>> main
     
     def _emit_array(self, node: Array) -> str:
         elements = ', '.join(self._emit_node(e) for e in node.elements)
@@ -524,7 +514,6 @@ class PythonEmitter:
     
     def _emit_step_chain(self, node: StepChain) -> str:
         obj = self._emit_node(node.source)
-<<<<<<< HEAD
         steps = node.steps
         terminal_ops = ['sum', 'avg', 'first', 'last', 'find', 'any', 'all', 'none', 'count', 'join']
         # If dotted chain (written with dots), emit nested function-style calls: sum(take(reverse(sort(obj)), 2))
@@ -547,22 +536,6 @@ class PythonEmitter:
         last_step = steps[-1][0].lstrip('_') if steps else ''
         if last_step not in terminal_ops:
             result += '.value()'
-=======
-        result = f'tt.chain({obj})'
-        
-        for step_name, step_args in node.steps:
-            # Strip underscore prefix from step names (TinyTalk uses _sort, Python uses sort)
-            py_method = step_name.lstrip('_')
-            args = ', '.join(self._emit_node(a) for a in step_args) if step_args else ''
-            result += f'.{py_method}({args})'
-        
-        # Add .value() if chain returns chain
-        terminal_ops = ['sum', 'avg', 'first', 'last', 'find', 'any', 'all', 'none', 'count', 'join']
-        last_step = node.steps[-1][0].lstrip('_') if node.steps else ''
-        if last_step not in terminal_ops:
-            result += '.value()'
-        
->>>>>>> main
         return result
     
     def _emit_let(self, node: LetStmt) -> str:

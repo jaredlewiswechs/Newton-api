@@ -756,7 +756,6 @@ async def get_session(session_id: str):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/teks")
-<<<<<<< HEAD
 async def get_teks(grade: Optional[int] = None, subject: Optional[str] = None):
     """Return the full TEKS standards library. Optional filters: grade, subject."""
     if not TEKS_AVAILABLE:
@@ -796,18 +795,7 @@ async def teks_search(payload: Dict[str, Any]):
 
     return {"results": [s.to_dict() for s in results], "count": len(results)}
 
-=======
-async def get_teks():
-    """Return the full TEKS standards library."""
-    if not TEKS_AVAILABLE:
-        raise HTTPException(status_code=503, detail="TEKS database not available")
-    lib = get_extended_teks_library()
-    # Return as list of dicts for JS
-    return {
-        "teks": [s.to_dict() for s in lib.all_standards()]
-    }
 
->>>>>>> origin/main
 @app.post("/cartridge/wikipedia")
 async def wikipedia_search(request: WikipediaRequest):
     """Search Wikipedia for educational content."""

@@ -1,55 +1,3 @@
-<<<<<<< HEAD
-# Newton Suite
-
-A curated collection of Newton Supercomputer components for development and deployment.
-
-## Components Included
-
-This suite includes the following Newton projects:
-
-- **realTinyTalk** - The verified general-purpose programming language with Monaco editor
-- **adan** - Advanced agent framework
-- **adan_portable** - Portable version of the agent framework
-- **newton_agent** - Core Newton agent implementation
-- **statsy** - Statistical analysis and visualization tools
-
-## Getting Started
-
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Start the realTinyTalk Monaco editor:
-   ```bash
-   python realTinyTalk/web/server.py
-   ```
-   Then visit http://localhost:5555
-
-3. Run Newton demos:
-   ```bash
-   python -m newton_sdk.cli demo
-   ```
-
-## Architecture
-
-The Newton Supercomputer implements verified computation where:
-- The constraint IS the instruction
-- The verification IS the computation
-- The network IS the processor
-
-All computations are bounded, deterministic, and cryptographically verifiable.
-
-## Documentation
-
-See the main [Newton README](../README.md) for comprehensive documentation, API reference, and guides.
-
-- **iOS Blueprint (2026)** - `IOS_APP_BLUEPRINT_2026.md` for building a SwiftUI-first Apple app from this codebase
-
-## License
-
-See [LICENSE](../LICENSE) and [USAGE_AGREEMENT.md](../USAGE_AGREEMENT.md) for licensing terms.
-=======
 # Newton Supercomputer
 
 ```
@@ -77,7 +25,7 @@ See [LICENSE](../LICENSE) and [USAGE_AGREEMENT.md](../USAGE_AGREEMENT.md) for li
 [![Smalltalk](https://img.shields.io/badge/inspired%20by-Smalltalk-blue.svg)](#tinytalk-bible)
 [![Vercel](https://img.shields.io/badge/deployed%20on-Vercel-black.svg)](#deployment)
 
-**February 1, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
+**February 9, 2026** · **Jared Nashon Lewis** · **Jared Lewis Conglomerate** · **parcRI** · **Newton** · **tinyTalk** · **Ada Computing Company**
 
 ---
 
@@ -175,6 +123,40 @@ python examples/pda_level4.py  # Level 4: Task Management
 python examples/pda_level5.py  # Level 5: Full PDA App
 ```
 See [docs/INTRO_COURSE.md](docs/INTRO_COURSE.md) for the complete tutorial.
+
+---
+
+## Newton Suite (February 2026)
+
+This repository now consolidates all Newton components into a single monorepo:
+
+| Module | Description | Status |
+|--------|-------------|--------|
+| **realTinyTalk** | Verified general-purpose language with Monaco web IDE, Python/JS transpilation, script persistence API | 288/288 conformance, 57/57 transpiler tests |
+| **adan** | Self-verifying autonomous agent (Ada + Newton) with grounding, kinematic linguistics, trajectory verification | Integrated |
+| **adan_portable** | Portable version of the agent framework for standalone deployment | Integrated |
+| **newton_agent** | Core Newton agent implementation | Integrated |
+| **statsy** | Statistical analysis and visualization tools | Integrated |
+| **foghorn** | Extended standard library for realTinyTalk | Integrated |
+| **parcstation** | Wild Garden - full-featured API server with TEKS search, Wikipedia cartridges | Integrated |
+
+### realTinyTalk Highlights
+
+realTinyTalk is a **Turing-complete verified programming language** with:
+
+- Full control flow: `if/elif/else`, `for`, `while`, `fn`, `law`, `blueprint`, `forge`
+- Data types: strings, numbers, booleans, arrays, maps, lambdas
+- Step chains (dplyr-style): `data _filter(x > 5) _sort _take(3)`
+- Magic properties: `.upcase`, `.len`, `.reversed`, `.str`
+- Python and JavaScript transpilation backends
+- Monaco web IDE with script persistence and versioning
+- 288/288 conformance tests passing (100%)
+
+```bash
+# Launch the realTinyTalk IDE
+python realTinyTalk/web/server.py
+# Visit http://localhost:5555
+```
 
 ---
 
@@ -1336,6 +1318,32 @@ Newton-api/
 │   ├── styles.css          # Newton-themed design
 │   └── README.md           # Jester documentation
 │
+├── realTinyTalk/            # Verified general-purpose language + IDE (Feb 2026)
+│   ├── lexer.py            # Tokenizer (~100 token types)
+│   ├── parser.py           # Recursive descent parser (if/for/while/fn/law/blueprint)
+│   ├── runtime.py          # Interpreter with bounded execution
+│   ├── kernel.py           # Newton verification kernel
+│   ├── stdlib.py           # Standard library
+│   ├── backends/           # Python and JavaScript transpilation
+│   ├── web/                # Monaco IDE with script persistence API
+│   └── tests/              # 288 conformance + 57 transpiler tests
+│
+├── adan/                    # Self-verifying autonomous agent (Ada + Newton)
+│   ├── agent.py            # Core agent with grounding and memory
+│   ├── knowledge_base.py   # Verified fact storage
+│   ├── kinematic_linguistics.py  # Trajectory-based language analysis
+│   └── trajectory_verifier.py    # Composition verification
+│
+├── adan_portable/           # Portable agent for standalone deployment
+│
+├── newton_agent/            # Core Newton agent implementation
+│
+├── statsy/                  # Statistical analysis and visualization
+│
+├── foghorn/                 # Extended standard library for realTinyTalk
+│
+├── parcstation/             # Wild Garden API server (TEKS search, Wikipedia)
+│
 ├── games/                   # Newton-verified games
 │   └── gravity_wars/       # Physics roguelike arena brawler
 │       ├── index.html      # Web version (playable)
@@ -1419,6 +1427,15 @@ pytest tests/ -v
 # Run with coverage report
 pytest tests/ --cov=core --cov-report=html
 
+# realTinyTalk conformance tests (288 tests)
+python realTinyTalk/tests/runner.py
+
+# realTinyTalk Python transpiler (57 tests)
+python realTinyTalk/tests/test_python_transpiler.py
+
+# realTinyTalk web server tests
+pytest realTinyTalk/web/tests/ -v
+
 # Newton TLM tests (ACID compliance)
 pytest newton_tlm/tests/ -v
 
@@ -1432,13 +1449,16 @@ pytest newton_geometry/tests/ -v
 
 **All Platforms** → See **[TESTING.md](TESTING.md)** for comprehensive testing documentation
 
-**Test Results (January 31, 2026):**
+**Test Results (February 9, 2026):**
 
 | Suite | Tests | Status | What It Proves |
 |-------|-------|--------|----------------|
 | Quick System Test | 10/10 | ✓ 100% | All core components connected |
 | Comprehensive Test | 34/48 | ✓ 71% | All major features working |
 | Unit Test Suite | 993/993 | ✓ 100% | All unit tests passing |
+| realTinyTalk Conformance | 288/288 | ✓ 100% | Full language coverage (core + stdlib) |
+| realTinyTalk Transpiler | 57/57 | ✓ 100% | Python code generation |
+| realTinyTalk Web Server | 1/1 | ✓ 100% | Script persistence API |
 | Newton TLM | 23/23 | ✓ 100% | ACID compliance |
 | Newton Core (Rust) | 122/122 | ✓ 100% | Aid-a projection engine |
 
@@ -1744,5 +1764,4 @@ curl http://localhost:8000/teachers/classrooms/CLASS001/groups
 
 ---
 
-**Last Updated:** January 9, 2026 | **Version:** 1.3.0 | **Tests:** 700+ passing
->>>>>>> main
+**Last Updated:** February 9, 2026 | **Version:** 1.3.0 | **Tests:** 700+ passing (288/288 realTinyTalk conformance)
