@@ -25,8 +25,6 @@ wheels/
 .venv/
 venv/
 ENV/
-env.bak/
-venv.bak/
 
 # IDE
 .idea/
@@ -40,6 +38,7 @@ venv.bak/
 htmlcov/
 .tox/
 .nox/
+.hypothesis/
 
 # OS
 .DS_Store
@@ -54,25 +53,14 @@ newton_storage/
 .newton_anchors
 .newton_ledger/
 .newton_vault/
-.hypothesis/
+.newton_cache/
+.newton_ledger.json
+.ada_memory.json
 
-# Node (for frontend)
+# Node
 node_modules/
 .wrangler/
 
-# Gumroad generated files
-gumroad/newton_ios.zip
-gumroad/newton_ios.zip.sha256
-gumroad/shortcuts/*.shortcut
-.ada_memory.json
-
-# C/C++ build artifacts (tinytalk-lang)
-*.o
-*.a
-*.out
-tinytalk-lang/tinytalk
-tinytalk-lang/src/*.o
-tinytalk-lang/test_lexer
-
 # Runtime logs
 logs/
+server.log
