@@ -1,9 +1,5 @@
-# Newton Teacher's Aide - Cloudflare Pages Configuration
-# Deploy: npx wrangler pages deploy teachers-aide
+# Newton Teacher's Aide - Cloudflare Pages
+# No build step needed — pure static site
 
 name = "newton-teachers-aide"
 compatibility_date = "2024-01-01"
-
-# Static site configuration
-[site]
-bucket = "./"
