@@ -1,0 +1,26 @@
+name: Kernel120
+version: 0.1.0
+implemented:
+  Drawing:
+    - NSBezierPath (append_rect, append_oval, append_arc)
+    - NSBezierPath (rounded rects, relative methods, element access, winding rules)
+    - NSColor (partial)
+    - NSColorSpace (deviceRGB, sRGB)
+    - NSGradient (linear & radial SVG defs)
+    - NSShadow (SVG drop-shadow filter)
+  Runtime:
+    - NSResponder (stub)
+  Demo:
+    - svg_server
+  Raster:
+    - cairosvg raster adapter (optional dependency)
+stubbed:
+  Windows:
+    - NSWindow
+  Views:
+    - NSView
+not_started:
+  Text:
+    - NSTextView
+  Controls:
+    - NSButton
