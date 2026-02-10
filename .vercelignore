@@ -1,5 +1,5 @@
 # === Vercel Deployment Ignore ===
-# Only api/, core/, and newton_supercomputer.py are needed for the API
+# Needed for API: api/, core/, tinytalk_py/, parccloud/, newton_supercomputer.py
 
 # Archive (everything archived)
 _archive/
@@ -70,6 +70,7 @@ conftest.py
 # Projects not needed for API
 adan/
 adan_portable/
+foghorn/
 newton-teachers-aide-deploy/
 newton_agent/
 newton_core/
