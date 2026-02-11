@@ -237,6 +237,101 @@ This pipeline prioritizes **auditability over opacity**: every action path has a
 
 ---
 
+## 7.5 Ada as the Proposal/Search Layer Above Newton
+
+Ada can be defined as the proposal and translation layer that operates above Newton's accept/reject/prove/record substrate. Newton alone does not need to be "smart" to remain correct; Ada makes the full stack practical by handling search, ranking, and uncertainty before Newton performs final admissibility checks.
+
+### 7.5.1 Search distribution over candidate programs
+
+Let:
+
+- \(x\): user intent plus context (prompt, documents, policy state),
+- \(p\): a candidate plan/program/constraint script executable by Newton.
+
+Ada constructs a proposal distribution:
+
+\[
+\pi(p \mid x)
+\]
+
+and surfaces the top-\(k\) candidates \(p_1,\dots,p_k\). This shifts the system from one deterministic run to a guided search across many admissible possibilities.
+
+### 7.5.2 Utility scoring with risk penalties
+
+Before full Newton verification, Ada optimizes a pre-execution objective:
+
+\[
+J(p; x) = U(p; x) - \lambda\,R(p; x)
+\]
+
+where \(U\) captures usefulness and \(R\) captures risk (policy violations, ambiguity, weak evidence, privacy exposure, and operational cost). \(\lambda\) sets strictness. Newton then verifies admissibility; Ada optimizes under uncertainty.
+
+### 7.5.3 Evidence-weighted inference
+
+Ada runs in incomplete-information regimes and tracks confidence-weighted claims, e.g.:
+
+\[
+b(c) = \Pr(c \mid \text{evidence})
+\]
+
+or mismatch to allowed language/action manifolds:
+
+\[
+D(\text{text},\Omega),\quad D=0 \Rightarrow \text{admissible}
+\]
+
+Newton does not maintain beliefs; it deterministically accepts/rejects against constraints. Ada performs probabilistic triage and ranking.
+
+### 7.5.4 Meta-optimization of bounded resources
+
+Because Newton is bounded, Ada allocates finite verification resources across candidates and tools:
+
+\[
+\max \mathbb{E}[U]\quad \text{s.t.}\quad \text{time} \le T,\; \text{tokens} \le K,\; \text{ops} \le B
+\]
+
+This can be framed as knapsack/bandit-style allocation. Newton enforces bounds; Ada chooses how best to spend them.
+
+### 7.5.5 Propose-verify bundle interface
+
+Ada emits a candidate bundle:
+
+\[
+\mathcal{B}=\{(p_i, s_i, e_i)\}_{i=1}^k
+\]
+
+with candidate \(p_i\), score \(s_i = J(p_i;x)\), and evidence/assumption pointers \(e_i\).
+
+Newton then gates each candidate:
+
+\[
+\mathrm{Verify}(p_i) \to
+\begin{cases}
+\mathrm{ACCEPT} + \mathrm{Receipt} \\
+\mathrm{REJECT} + \mathrm{Witness}
+\end{cases}
+\]
+
+Operationally:
+
+- Ada = argmax under uncertainty,
+- Newton = proof/reject under envelope constraints.
+
+### 7.5.6 Learning from rejection witnesses
+
+When Newton rejects, witness \(w_i\) explains failure class (missing fields, violated rule, insufficient evidence, etc.). Ada updates proposal mass away from repeatedly failing regions:
+
+\[
+\pi_{\text{new}}(p\mid x) \propto \pi(p\mid x)\,\exp\left(-\beta\,\mathrm{cost}(w)\right)
+\]
+
+Over time, Ada converges toward candidates that survive Newton's gate.
+
+### 7.5.7 One-line stack summary
+
+Ada introduces optimization and uncertainty (search, scoring, beliefs). Newton introduces admissibility (constraints, proofs, receipts). Together they form a bounded propose-verify fixed-point loop.
+
+
 ## 8. Programming Language Implications
 
 A language like realTinyTalk can be generalized with envelope effects:
