@@ -26,6 +26,11 @@ from pathlib import Path
 import time
 import hashlib
 import os
+import re
+from html import unescape
+from urllib.parse import urlparse
+
+import requests
 
 # Newton Core
 from core import (
@@ -248,6 +253,12 @@ class ConstraintRequest(BaseModel):
 class GroundRequest(BaseModel):
     """Ground a claim in evidence."""
     claim: str
+
+
+class NeoAnalyzeRequest(BaseModel):
+    """Analyze a news piece from URL or direct text."""
+    url: Optional[str] = None
+    text: Optional[str] = None
 
 
 class StoreRequest(BaseModel):
@@ -1049,6 +1060,7 @@ TINYTALK_IDE_DIR = ROOT_DIR / "tinytalk-ide"
 CONSTRUCT_STUDIO_DIR = ROOT_DIR / "construct-studio"
 GAMES_DIR = ROOT_DIR / "games"
 MISSION_CONTROL_DIR = ROOT_DIR / "mission-control"
+NEO_DIR = ROOT_DIR / "neo"
 
 # Helper: Find file across multiple possible paths (handles Render's environment)
 def find_app_file(app_dir: Path, filename: str = "index.html") -> Optional[Path]:
@@ -4468,6 +4480,121 @@ async def get_api_endpoints():
     }
 
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEO - NEWS SCRAPER + SUMMARY AGENT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _strip_html(raw_html: str) -> str:
+    cleaned = re.sub(r"<script[\s\S]*?</script>", " ", raw_html, flags=re.IGNORECASE)
+    cleaned = re.sub(r"<style[\s\S]*?</style>", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"<[^>]+>", " ", cleaned)
+    cleaned = unescape(cleaned)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
+def _fetch_article(url: str) -> Dict[str, str]:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+
+    headers = {
+        "User-Agent": "Newton-Neo/1.0 (+https://newton.api)"
+    }
+
+    try:
+        response = requests.get(url, timeout=15, headers=headers)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch URL: {exc}")
+
+    html = response.text
+    title_match = re.search(r"<title[^>]*>(.*?)</title>", html, flags=re.IGNORECASE | re.DOTALL)
+    title = re.sub(r"\s+", " ", unescape(title_match.group(1))).strip() if title_match else "Untitled Article"
+
+    body = _strip_html(html)
+    if len(body) < 120:
+        raise HTTPException(status_code=422, detail="Fetched page did not contain enough readable article text")
+
+    return {"title": title, "text": body[:16000]}
+
+
+def _summarize_text(title: str, text: str) -> Dict[str, Any]:
+    sentence_candidates = re.split(r"(?<=[.!?])\s+", text)
+    sentences = [s.strip() for s in sentence_candidates if len(s.strip()) > 45]
+
+    if not sentences:
+        sentences = [text[:280]]
+
+    lead = sentences[: min(3, len(sentences))]
+
+    token_words = re.findall(r"[A-Za-z][A-Za-z'-]{2,}", text.lower())
+    stop = {"the","and","for","that","with","this","from","have","were","their","about","after","into","they","will","would","there","which","when","what","where","while","your","than","just","been","being","also","said","more","over","because","could","should","into","between"}
+    freq: Dict[str, int] = {}
+    for word in token_words:
+        if word in stop:
+            continue
+        freq[word] = freq.get(word, 0) + 1
+
+    key_terms = sorted(freq.items(), key=lambda x: x[1], reverse=True)[:8]
+
+    sentiment_words = {"gain": 1, "growth": 1, "record": 1, "improve": 1, "success": 1, "win": 1, "risk": -1, "decline": -1, "loss": -1, "fall": -1, "crisis": -1, "warn": -1}
+    sentiment_score = sum(sentiment_words.get(w, 0) for w in token_words)
+    tone = "mixed/neutral"
+    if sentiment_score > 2:
+        tone = "mostly positive"
+    elif sentiment_score < -2:
+        tone = "mostly negative"
+
+    return {
+        "title": title,
+        "summary": " ".join(lead),
+        "highlights": lead,
+        "key_terms": [t for t, _ in key_terms],
+        "word_count": len(token_words),
+        "tone": tone,
+        "agent_response": (
+            f"Neo briefing: {title}. Key theme: {', '.join([t for t, _ in key_terms[:3]]) or 'general update'}. "
+            f"Overall tone appears {tone}."
+        ),
+    }
+
+
+@app.get("/neo", response_class=HTMLResponse)
+async def serve_neo():
+    """Serve Neo frontend."""
+    index_file = find_app_file(NEO_DIR)
+    if index_file:
+        return HTMLResponse(content=index_file.read_text(), status_code=200)
+    return HTMLResponse(content="<h1>Neo</h1><p>UI not found</p>", status_code=404)
+
+
+@app.post("/neo/analyze")
+async def neo_analyze(request: NeoAnalyzeRequest) -> Dict[str, Any]:
+    """Scrape a news article and generate an agent summary."""
+    if not request.url and not request.text:
+        raise HTTPException(status_code=400, detail="Provide either url or text")
+
+    source_url = request.url
+    title = "Direct Input"
+    text = (request.text or "").strip()
+
+    if request.url:
+        article = _fetch_article(request.url)
+        title = article["title"]
+        text = article["text"]
+
+    if len(text) < 120:
+        raise HTTPException(status_code=422, detail="Need at least 120 characters of content to summarize")
+
+    analysis = _summarize_text(title, text)
+    return {
+        **analysis,
+        "source_url": source_url,
+        "engine": ENGINE,
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATICFILES MOUNTS - Must be defined after all API routes to avoid shadowing
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -4493,6 +4620,8 @@ if CONSTRUCT_STUDIO_DIR.exists():
     app.mount("/construct-studio", StaticFiles(directory=str(CONSTRUCT_STUDIO_DIR), html=True), name="construct-studio")
 if GAMES_DIR.exists():
     app.mount("/games", StaticFiles(directory=str(GAMES_DIR), html=True), name="games")
+if NEO_DIR.exists():
+    app.mount("/neo-app", StaticFiles(directory=str(NEO_DIR), html=True), name="neo-app")
 
 # Mission Control static files - served from both root and /mission-control/
 # Root paths support the homepage (/) route which serves mission-control/index.html
