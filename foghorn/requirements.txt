@@ -1,0 +1,6 @@
+# Foghorn API - Python Dependencies for Vercel
+fastapi>=0.109.0
+uvicorn>=0.27.0
+starlette>=0.36.0
+pydantic>=2.5.0
+requests>=2.31.0

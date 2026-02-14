@@ -4,9 +4,14 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/foghorn.py",
+      "use": "@vercel/python"
     }
   ],
   "rewrites": [
+    { "source": "/foghorn/(.*)", "destination": "/api/foghorn.py" },
     { "source": "/(.*)", "destination": "/api/index.py" }
   ],
   "headers": [
