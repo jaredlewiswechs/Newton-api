@@ -1,6 +1,0 @@
-body { font-family: Arial, sans-serif; margin: 16px; background:#f7f7f8 }
-.container { max-width:900px; margin:auto; background:white; padding:18px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08) }
-.prompt, .draft { width:100%; font-size:14px; padding:8px; border:1px solid #ddd; border-radius:6px }
-.controls { margin-top:8px; margin-bottom:12px }
-button { padding:8px 12px; border-radius:6px; border:none; background:#0b66ff; color:white; cursor:pointer }
-pre.omega, pre.verify { background:#0f1720; color:#e6eef8; padding:12px; border-radius:6px; overflow:auto }

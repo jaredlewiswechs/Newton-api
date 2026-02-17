@@ -1,57 +1,47 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "newton-sdk"
-version = "1.2.0"
-description = "Newton Supercomputer SDK - Verified computation and tinyTalk constraint language"
+name = "realTinyTalk"
+version = "1.0.0"
+description = "The Verified General-Purpose Programming Language — every loop bounded, every operation traced, every output proven."
 readme = "README.md"
-license = {text = "Commercial"}
-requires-python = ">=3.9"
+license = {text = "Dual License (Educational Free / Commercial)"}
+requires-python = ">=3.11"
 authors = [
-    {name = "Jared Lewis Conglomerate"}
+    {name = "Jared Nashon Lewis"}
 ]
-keywords = ["verification", "constraints", "computation", "tinytalk", "newton"]
+keywords = ["programming-language", "verified", "tinytalk", "constraint", "interpreter"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: Education",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Interpreters",
 ]
 
 dependencies = [
-    "requests>=2.28.0",
-    "fastapi>=0.109.0",
-    "uvicorn>=0.27.0",
-    "pydantic>=2.5.0",
-    "cryptography>=41.0.0",
-    "googlesearch-python>=1.2.0",
+    "flask>=3.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
-    "hypothesis>=6.92.0",
-]
-all = [
-    "newton-sdk[dev]",
+    "requests>=2.31.0",
 ]
 
 [project.scripts]
-newton = "newton_sdk.cli:main"
+tinytalk = "realTinyTalk.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/jaredlewiswechs/Newton-api"
-Documentation = "https://github.com/jaredlewiswechs/Newton-api/blob/main/README.md"
-Repository = "https://github.com/jaredlewiswechs/Newton-api"
+Homepage = "https://github.com/jaredlewiswechs/realTinyTalk"
+Repository = "https://github.com/jaredlewiswechs/realTinyTalk"
 
 [tool.setuptools.packages.find]
-where = [".", "src"]
-include = ["newton*", "newton_sdk*", "tinytalk_py*"]
+include = ["realTinyTalk*"]
 
 [tool.setuptools.package-data]
-"*" = ["*.md", "*.json"]
+"realTinyTalk" = ["*.md", "*.tt", "web/static/*", "web/storage/**/*"]

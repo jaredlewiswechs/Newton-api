@@ -1,4 +1,0 @@
-blueprint Simple
-  starts value at 42
-
-end

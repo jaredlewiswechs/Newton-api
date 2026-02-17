@@ -1,9 +1,0 @@
-# Landing page is the public entry point
-/       /landing.html   200
-
-# App routes fall back to main app
-/app    /index.html     200
-/app/*  /index.html     200
-
-# Direct access to other files
-/*      /:splat         200

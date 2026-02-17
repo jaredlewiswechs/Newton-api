@@ -28,6 +28,7 @@ ENV/
 
 # IDE
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
@@ -44,23 +45,15 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# Newton specific
-*.ledger
-*.vault
-newton_storage/
-/tmp/
-.newton_ledger_test_*
-.newton_anchors
-.newton_ledger/
-.newton_vault/
-.newton_cache/
-.newton_ledger.json
-.ada_memory.json
+# Vercel
+.vercel/
 
-# Node
+# Node (if any)
 node_modules/
-.wrangler/
 
 # Runtime logs
 logs/
 server.log
+
+# User storage (created at runtime)
+realTinyTalk/web/storage/users/

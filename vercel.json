@@ -4,14 +4,9 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "api/foghorn.py",
-      "use": "@vercel/python"
     }
   ],
   "rewrites": [
-    { "source": "/foghorn/(.*)", "destination": "/api/foghorn.py" },
     { "source": "/(.*)", "destination": "/api/index.py" }
   ],
   "headers": [
@@ -20,7 +15,7 @@
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, X-API-Key" }
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, X-User" }
       ]
     }
   ]

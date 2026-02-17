@@ -1,1 +1,0 @@
-{"id": "atom_000_GENESIS", "ts": 1767290000, "type": "crystallize", "auth": "sovereign_root", "payload": {"id": "CRYSTAL_GENESIS_FLASH", "origin": "AI Studio Flash 3", "meaning": "The Interface Singularity: Full frontend instantiation in 50s.", "metrics": {"duration": "50s", "files_generated": ["App.tsx", "Terminal.tsx", "GlassCard.tsx"], "model": "Gemini Flash 3 Preview"}}}
