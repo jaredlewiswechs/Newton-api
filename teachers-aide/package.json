@@ -1,9 +1,0 @@
-{
-  "name": "newton-teachers-aide",
-  "version": "2.0.0",
-  "description": "Newton Teacher's Aide - Offline teaching assistant",
-  "private": true,
-  "scripts": {
-    "deploy": "npx wrangler pages deploy . --project-name=newton-teachers-aide"
-  }
-}

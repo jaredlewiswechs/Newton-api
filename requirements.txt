@@ -1,31 +1,9 @@
-# Newton Supercomputer - Python Dependencies
-# Used by Vercel (@vercel/python) and Render for deployment
+# realTinyTalk - Dependencies for Vercel deployment
 
-# Web Framework
-fastapi>=0.109.0
-uvicorn>=0.27.0
-starlette>=0.36.0
-
-# Data Validation
-pydantic>=2.5.0
-
-# Cryptography (for Vault AES-256-GCM encryption)
-cryptography>=41.0.0
-
-# HTTP Client (for external integrations)
-requests>=2.31.0
-
-# External Search (for grounding)
-googlesearch-python>=1.2.0
-
-# Graph operations (for TLM / bridge)
-networkx>=3.1
-
-# Deployment (Render/traditional)
-gunicorn>=21.2.0
-
-# AWS Lambda adapter
-mangum>=0.17.0
-
-# Flask (for ProjectADA and legacy endpoints)
+# Web framework (Web IDE server)
 flask>=3.0.0
+
+# Used by web/server.py for diffing
+# (difflib is stdlib, no extra dep needed)
+
+# No other external dependencies — realTinyTalk is self-contained.
