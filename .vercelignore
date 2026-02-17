@@ -80,5 +80,13 @@ newton_sdk/
 newton_tlm/
 nina/
 ProjectADA/
-realTinyTalk/
 teachers-aide/
+
+# Exclude non-essential parts of realTinyTalk
+realTinyTalk/web/storage/
+realTinyTalk/web/tests/
+realTinyTalk/examples/
+realTinyTalk/tests/
+realTinyTalk/hosted/
+realTinyTalk/r/
+realTinyTalk/ruby/

@@ -26,7 +26,11 @@ app = Flask(__name__, static_folder='static')
 app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')
 
 # Storage root for server-side data
-STORAGE_ROOT = Path(__file__).parent / 'storage'
+# Vercel's filesystem is read-only except /tmp
+if os.environ.get('VERCEL') == '1':
+    STORAGE_ROOT = Path('/tmp/tinytalk_storage')
+else:
+    STORAGE_ROOT = Path(__file__).parent / 'storage'
 STORAGE_ROOT.mkdir(parents=True, exist_ok=True)
 
 # Limits
@@ -65,98 +69,25 @@ def ensure_user_dirs():
 
 def _safe_name(name: str) -> str:
     # Keep only safe chars for filenames, enforce .tt
-    examples = [
-        {
-            'name': '🔄 Higher-Order Functions',
-            'code': '''// Pass functions to other functions!
+    safe = re.sub(r'[^A-Za-z0-9_\-.]', '-', name)
+    safe = safe.strip('-')
+    if not safe:
+        safe = 'untitled'
+    if not safe.endswith('.tt'):
+        safe += '.tt'
+    return safe
 
-let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-// Define transforms
-law doubled(x)
-    reply x * 2
-end
+def _auth_path(username: str) -> Path:
+    """Return the path to a user's auth credentials file."""
+    return STORAGE_ROOT / 'users' / username / 'auth.json'
 
-law squared(x)
-    reply x * x
-end
 
-// Define predicates
-law is_even(x)
-    reply x % 2 == 0
-end
+def _now_ts() -> str:
+    """Return current UTC timestamp string."""
+    return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
 
-law is_odd(x)
-    reply x % 2 == 1
-end
 
-law greater_than_5(x)
-    reply x > 5
-end
-
-show("=== Transform with _map ===")
-show("Numbers:" numbers)
-show("Doubled:" numbers _map(doubled))
-show("Squared:" numbers _map(squared))
-
-show("")
-show("=== Filter with predicates ===")
-show("Evens:" numbers _filter(is_even))
-show("Odds:" numbers _filter(is_odd))
-
-show("")
-show("=== Chain them! ===")
-// Filter to odds, square each, sum
-let result = numbers _filter(is_odd) _map(squared) _sum
-show("Sum of squared odds:" result)
-
-// Filter >5, double, take 3
-show("Big doubled top 3:" numbers _filter(greater_than_5) _map(doubled) _take(3))
-
-show("")
-show("=== Functions are values ===")
-law apply_twice(func, x)
-    reply func(func(x))
-end
-
-show("apply_twice(doubled, 3):" apply_twice(doubled, 3))
-show("apply_twice(squared, 2):" apply_twice(squared, 2))'''
-        },
-        {
-            'name': '🎮 Turn-Based Strategy Game',
-            'code': '''// ═══════════════════════════════════════
-// TURN-BASED STRATEGY GAME EXAMPLE
-// ═══════════════════════════════════════
-
-// Define units
-law Unit(name, health, attack)
-    field name
-    field health
-    field attack
-end
-
-// Create units
-let knight = Unit("Knight", 100, 15)
-let archer = Unit("Archer", 75, 10)
-
-// Battle logic
-law battle(attacker, defender)
-    defender.health -= attacker.attack
-    if defender.health <= 0 {
-        show(defender.name + " is defeated!")
-    } else {
-        show(defender.name + " has " + defender.health.str + " health left.")
-    }
-end
-
-// Simulate battle
-show("Battle Start!")
-battle(knight, archer)
-battle(archer, knight)
-battle(knight, archer)'''
-        }
-    ]
-    return jsonify(examples)
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json() or {}
