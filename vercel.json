@@ -2,16 +2,11 @@
   "version": 2,
   "functions": {
     "api/index.py": {
+      "runtime": "@vercel/python",
       "maxDuration": 30,
       "memory": 1024
     }
   },
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    }
-  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index.py" }
   ],
