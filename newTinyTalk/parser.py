@@ -23,6 +23,7 @@ STEP_TOKEN_TYPES = frozenset({
     TokenType.STEP_COUNT, TokenType.STEP_SUM, TokenType.STEP_AVG,
     TokenType.STEP_MIN, TokenType.STEP_MAX, TokenType.STEP_GROUP,
     TokenType.STEP_FLATTEN, TokenType.STEP_ZIP, TokenType.STEP_CHUNK,
+    TokenType.STEP_REDUCE,
 })
 
 EXPR_START_TOKENS = frozenset({
@@ -187,7 +188,10 @@ class Parser:
             th = None
             if self._match(TokenType.COLON):
                 th = self._parse_type_hint()
-            params.append((name_tok.value, th))
+            default = None
+            if self._match(TokenType.ASSIGN):
+                default = self._parse_expression()
+            params.append((name_tok.value, th, default))
             if not self._match(TokenType.COMMA):
                 break
         return params
@@ -779,7 +783,7 @@ class Parser:
                         params = self._parse_lambda_params()
                     self._consume(TokenType.RPAREN, "")
                     if self._match(TokenType.FAT_ARROW):
-                        body = self._parse_expression()
+                        body = self._parse_lambda_body()
                         return Lambda(params=params, body=body,
                                       line=tok.line, column=tok.column)
                 except Exception:
@@ -826,11 +830,11 @@ class Parser:
         if self._match(TokenType.MATCH):
             return self._parse_match_expr()
 
-        # Lambda: |x, y| expr
+        # Lambda: |x, y| expr or |x, y| { block }
         if self._match(TokenType.BIT_OR):
             params = self._parse_lambda_params()
             self._consume(TokenType.BIT_OR, "Expected '|' after lambda params")
-            body = self._parse_expression()
+            body = self._parse_lambda_body()
             return Lambda(params=params, body=body, line=tok.line, column=tok.column)
 
         raise SyntaxError(f"Line {tok.line}: Unexpected token '{tok.value}' ({tok.type.name})")
@@ -871,6 +875,13 @@ class Parser:
         tokens_with_eof = tokens + [Token(TokenType.EOF, None, 0, 0)]
         sub = Parser(tokens_with_eof)
         return sub._parse_expression()
+
+    def _parse_lambda_body(self) -> ASTNode:
+        """Parse lambda body: either a single expression or a { block }."""
+        self._skip_newlines()
+        if self._match(TokenType.LBRACE):
+            return self._parse_block()
+        return self._parse_expression()
 
     def _parse_lambda_params(self) -> List[str]:
         params = []
