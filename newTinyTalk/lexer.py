@@ -80,6 +80,10 @@ class TokenType(Enum):
     STEP_ZIP = auto()
     STEP_CHUNK = auto()
     STEP_REDUCE = auto()
+    STEP_SORT_BY = auto()
+    STEP_JOIN = auto()
+    STEP_MAP_VALUES = auto()
+    STEP_EACH = auto()
 
     # --- Natural language comparisons ---
     IS = auto()
@@ -315,6 +319,10 @@ class Lexer:
         "_zip": TokenType.STEP_ZIP,
         "_chunk": TokenType.STEP_CHUNK,
         "_reduce": TokenType.STEP_REDUCE,
+        "_sortBy": TokenType.STEP_SORT_BY,
+        "_join": TokenType.STEP_JOIN,
+        "_mapValues": TokenType.STEP_MAP_VALUES,
+        "_each": TokenType.STEP_EACH,
     }
 
     def __init__(self, source: str):

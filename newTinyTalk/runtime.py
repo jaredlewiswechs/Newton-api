@@ -951,6 +951,18 @@ class Runtime:
         return data
 
     def _apply_step(self, data: Value, step: str, args: List[Value], scope: Scope, line: int) -> Value:
+        # _mapValues works on maps directly (before list conversion)
+        if step == "_mapValues":
+            if not args or args[0].type != ValueType.FUNCTION:
+                raise TinyTalkError("_mapValues requires a function", line)
+            fn = args[0].data
+            if data.type == ValueType.MAP:
+                return Value.map_val({
+                    k: self._call_function(fn, [v], scope, line)
+                    for k, v in data.data.items()
+                })
+            raise TinyTalkError("_mapValues requires a map", line)
+
         if data.type != ValueType.LIST:
             if data.type == ValueType.STRING:
                 data = Value.list_val([Value.string_val(c) for c in data.data])
@@ -1066,6 +1078,47 @@ class Runtime:
             for item in remaining:
                 acc = self._call_function(args[0].data, [acc, item], scope, line)
             return acc
+
+        if step == "_sortBy":
+            if not args or args[0].type != ValueType.FUNCTION:
+                raise TinyTalkError("_sortBy requires a key function", line)
+            key_fn = args[0].data
+            decorated = [(self._call_function(key_fn, [item], scope, line), item) for item in items]
+            decorated.sort(key=lambda pair: pair[0].data)
+            return Value.list_val([pair[1] for pair in decorated])
+
+        if step == "_join":
+            if not args or args[0].type != ValueType.LIST:
+                raise TinyTalkError("_join requires a right-hand list", line)
+            right = args[0].data
+            if len(args) < 2 or args[1].type != ValueType.FUNCTION:
+                raise TinyTalkError("_join requires (right_list, key_fn)", line)
+            key_fn = args[1].data
+            right_idx: dict = {}
+            for r in right:
+                k = self._call_function(key_fn, [r], scope, line).to_python()
+                right_idx.setdefault(k, []).append(r)
+            result = []
+            for l_item in items:
+                k = self._call_function(key_fn, [l_item], scope, line).to_python()
+                for r_item in right_idx.get(k, []):
+                    merged = {}
+                    if l_item.type == ValueType.MAP:
+                        merged.update(l_item.data)
+                    if r_item.type == ValueType.MAP:
+                        for rk, rv in r_item.data.items():
+                            if rk not in merged:
+                                merged[rk] = rv
+                    result.append(Value.map_val(merged))
+            return Value.list_val(result)
+
+        if step == "_each":
+            if not args or args[0].type != ValueType.FUNCTION:
+                raise TinyTalkError("_each requires a function", line)
+            fn = args[0].data
+            for item in items:
+                self._call_function(fn, [item], scope, line)
+            return Value.list_val(items)
 
         raise TinyTalkError(f"Unknown step: {step}", line)
 

@@ -24,6 +24,8 @@ STEP_TOKEN_TYPES = frozenset({
     TokenType.STEP_MIN, TokenType.STEP_MAX, TokenType.STEP_GROUP,
     TokenType.STEP_FLATTEN, TokenType.STEP_ZIP, TokenType.STEP_CHUNK,
     TokenType.STEP_REDUCE,
+    TokenType.STEP_SORT_BY, TokenType.STEP_JOIN,
+    TokenType.STEP_MAP_VALUES, TokenType.STEP_EACH,
 })
 
 EXPR_START_TOKENS = frozenset({

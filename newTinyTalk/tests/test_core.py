@@ -823,3 +823,246 @@ show([] _reduce((acc, x) => acc + x, 42))
 show([] _reduce((acc, x) => acc + x))
 """
         assert output(code) == "null"
+
+
+# ===== CSV I/O =====
+
+import tempfile
+import os
+
+class TestCSV:
+    def test_read_write_csv(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, newline="") as f:
+            f.write("name,age,score\nAlice,25,95.5\nBob,30,87\n")
+            path = f.name
+        try:
+            code = f'''
+let data = read_csv("{path}")
+show(len(data))
+show(data[0]["name"])
+show(data[1]["age"])
+'''
+            assert output(code) == "2\nAlice\n30"
+        finally:
+            os.unlink(path)
+
+    def test_write_csv_roundtrip(self):
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
+            path = f.name
+        try:
+            code = f'''
+let data = [{{"name": "Alice", "score": 90}}, {{"name": "Bob", "score": 85}}]
+write_csv(data, "{path}")
+let loaded = read_csv("{path}")
+show(len(loaded))
+show(loaded[0]["name"])
+show(loaded[1]["score"])
+'''
+            assert output(code) == "2\nAlice\n85"
+        finally:
+            os.unlink(path)
+
+    def test_csv_auto_type(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, newline="") as f:
+            f.write("val,flag\n42,true\n3.14,false\n")
+            path = f.name
+        try:
+            code = f'''
+let data = read_csv("{path}")
+show(type(data[0]["val"]))
+show(type(data[1]["val"]))
+show(data[0]["flag"])
+'''
+            assert output(code) == "int\nfloat\ntrue"
+        finally:
+            os.unlink(path)
+
+
+# ===== JSON I/O =====
+
+class TestJSON:
+    def test_read_write_json(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            f.write('[{"name": "Alice", "age": 25}, {"name": "Bob", "age": 30}]')
+            path = f.name
+        try:
+            code = f'''
+let data = read_json("{path}")
+show(len(data))
+show(data[0]["name"])
+show(data[1]["age"])
+'''
+            assert output(code) == "2\nAlice\n30"
+        finally:
+            os.unlink(path)
+
+    def test_write_json_roundtrip(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            path = f.name
+        try:
+            code = f'''
+let data = {{"name": "Alice", "scores": [90, 85, 95]}}
+write_json(data, "{path}")
+let loaded = read_json("{path}")
+show(loaded["name"])
+show(loaded["scores"])
+'''
+            assert output(code) == "Alice\n[90, 85, 95]"
+        finally:
+            os.unlink(path)
+
+    def test_parse_json(self):
+        code = '''
+let data = parse_json("[1, 2, 3]")
+show(data)
+show(type(data))
+'''
+        assert output(code) == "[1, 2, 3]\nlist"
+
+    def test_to_json(self):
+        code = '''
+let s = to_json({"a": 1, "b": [2, 3]})
+show(s)
+'''
+        r = run(code)
+        assert r.success
+        import json
+        parsed = json.loads(r.output.strip())
+        assert parsed == {"a": 1, "b": [2, 3]}
+
+
+# ===== Date/Time =====
+
+class TestDates:
+    def test_date_now(self):
+        code = '''
+let now = date_now()
+show(len(now) > 0)
+'''
+        assert output(code) == "true"
+
+    def test_date_parse(self):
+        code = '''
+show(date_parse("2024-03-15"))
+'''
+        assert output(code) == "2024-03-15 00:00:00"
+
+    def test_date_parse_iso(self):
+        code = '''
+show(date_parse("2024-03-15T10:30:00"))
+'''
+        assert output(code) == "2024-03-15 10:30:00"
+
+    def test_date_floor_week(self):
+        code = '''
+show(date_floor("2024-03-15", "week"))
+'''
+        # 2024-03-15 is Friday, Monday = 2024-03-11
+        assert output(code) == "2024-03-11 00:00:00"
+
+    def test_date_floor_month(self):
+        code = '''
+show(date_floor("2024-03-15 14:30:00", "month"))
+'''
+        assert output(code) == "2024-03-01 00:00:00"
+
+    def test_date_add_days(self):
+        code = '''
+show(date_add("2024-03-15", 10, "days"))
+'''
+        assert output(code) == "2024-03-25 00:00:00"
+
+    def test_date_add_negative(self):
+        code = '''
+show(date_add("2024-03-15", -5, "days"))
+'''
+        assert output(code) == "2024-03-10 00:00:00"
+
+    def test_date_diff(self):
+        code = '''
+let d = date_diff("2024-03-20", "2024-03-15", "days")
+show(d)
+'''
+        assert output(code) == "5.0"
+
+    def test_date_format(self):
+        code = '''
+show(date_format("2024-03-15", "%B %d, %Y"))
+'''
+        assert output(code) == "March 15, 2024"
+
+
+# ===== New Step Chains: _sortBy, _join, _mapValues, _each =====
+
+class TestNewStepChains:
+    def test_sort_by(self):
+        code = '''
+let people = [{"name": "Charlie", "age": 20}, {"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
+let sorted = people _sortBy((p) => p["age"])
+show(sorted[0]["name"])
+show(sorted[2]["name"])
+'''
+        assert output(code) == "Charlie\nAlice"
+
+    def test_sort_by_string(self):
+        code = '''
+let people = [{"name": "Charlie"}, {"name": "Alice"}, {"name": "Bob"}]
+let sorted = people _sortBy((p) => p["name"])
+show(sorted[0]["name"])
+'''
+        assert output(code) == "Alice"
+
+    def test_join(self):
+        code = '''
+let users = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+let scores = [{"id": 1, "score": 95}, {"id": 2, "score": 87}]
+let joined = users _join(scores, (r) => r["id"])
+show(joined[0]["name"])
+show(joined[0]["score"])
+show(joined[1]["name"])
+'''
+        assert output(code) == "Alice\n95\nBob"
+
+    def test_join_no_match(self):
+        code = '''
+let left = [{"id": 1, "name": "Alice"}, {"id": 3, "name": "Charlie"}]
+let right = [{"id": 1, "score": 95}]
+let joined = left _join(right, (r) => r["id"])
+show(len(joined))
+show(joined[0]["name"])
+'''
+        assert output(code) == "1\nAlice"
+
+    def test_map_values(self):
+        code = '''
+let grouped = {"math": [90, 85, 92], "science": [88, 76, 95]}
+let counts = grouped _mapValues((xs) => xs _count)
+show(counts["math"])
+show(counts["science"])
+'''
+        assert output(code) == "3\n3"
+
+    def test_map_values_with_avg(self):
+        code = '''
+let grouped = {"a": [10, 20, 30], "b": [5, 15]}
+let avgs = grouped _mapValues((xs) => xs _avg)
+show(avgs["a"])
+show(avgs["b"])
+'''
+        assert output(code) == "20.0\n10.0"
+
+    def test_each(self):
+        code = '''
+let results = []
+[1, 2, 3] _each((x) => { append(results, x * 10) })
+show(results)
+'''
+        assert output(code) == "[10, 20, 30]"
+
+    def test_each_returns_original(self):
+        code = '''
+let data = [1, 2, 3]
+let same = data _each((x) => x)
+show(same)
+'''
+        assert output(code) == "[1, 2, 3]"

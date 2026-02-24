@@ -32,9 +32,12 @@
 20. [Blueprints — Objects with Behavior](#20-blueprints--objects-with-behavior)
 21. [The Pipe Operator — Left-to-Right Flow](#21-the-pipe-operator--left-to-right-flow)
 22. [Classic Style — The Smalltalk Flavor](#22-classic-style--the-smalltalk-flavor)
-23. [Built-in Functions — The Standard Toolkit](#23-built-in-functions--the-standard-toolkit)
-24. [Running Your Code](#24-running-your-code)
-25. [Quick Reference Cheat Sheet](#25-quick-reference-cheat-sheet)
+23. [Data I/O — Reading & Writing Files](#23-data-io--reading--writing-files)
+24. [HTTP — Fetching Data from the Web](#24-http--fetching-data-from-the-web)
+25. [Dates & Time — Working with Dates](#25-dates--time--working-with-dates)
+26. [Built-in Functions — The Standard Toolkit](#26-built-in-functions--the-standard-toolkit)
+27. [Running Your Code](#27-running-your-code)
+28. [Quick Reference Cheat Sheet](#28-quick-reference-cheat-sheet)
 
 ---
 
@@ -651,6 +654,44 @@ show(names _zip(ages))
 // [[Alice, 25], [Bob, 30], [Charlie, 35]]
 ```
 
+#### Custom sorting
+
+```
+let people = [{"name": "Charlie", "age": 20}, {"name": "Alice", "age": 30}]
+let sorted = people _sortBy((p) => p["age"])
+show(sorted[0]["name"])   // "Charlie"  (youngest first)
+```
+
+#### Joining two datasets
+
+```
+let users = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+let scores = [{"id": 1, "score": 95}, {"id": 2, "score": 87}]
+
+// Join on a common key — like a SQL JOIN
+let joined = users _join(scores, (r) => r["id"])
+show(joined)
+// [{"id": 1, "name": "Alice", "score": 95}, {"id": 2, "name": "Bob", "score": 87}]
+```
+
+#### Transforming map values
+
+```
+// After _group, transform each group's values
+let grouped = {"math": [90, 85, 92], "science": [88, 76, 95]}
+let avgs = grouped _mapValues((scores) => scores _avg)
+show(avgs)   // {"math": 89.0, "science": 86.33...}
+```
+
+#### Side effects with _each
+
+```
+// _each runs a function on every item but returns the original list
+[1, 2, 3] _each((x) => show("Processing {x}"))
+// Prints: Processing 1, Processing 2, Processing 3
+// Returns: [1, 2, 3]
+```
+
 ### Chaining it all together
 
 The real magic is chaining multiple steps:
@@ -1010,7 +1051,140 @@ TinyTalk doesn't care — use whatever feels natural to you.
 
 ---
 
-## 23. Built-in Functions — The Standard Toolkit
+## 23. Data I/O — Reading & Writing Files
+
+TinyTalk can read and write CSV and JSON files, making it a real data tool.
+
+### CSV — Tabular Data
+
+```
+// Read a CSV file — each row becomes a map
+let people = read_csv("people.csv")
+// If the file has headers: name,age,score
+// people is: [{"name": "Alice", "age": 25, "score": 95.5}, ...]
+
+// Numbers and booleans are auto-detected!
+show(people[0]["name"])    // "Alice"
+show(people[0]["age"])     // 25   (int, not string)
+
+// Process it with step chains
+let top = people
+    _filter((p) => p["score"] > 90)
+    _sortBy((p) => p["score"])
+    _reverse
+show(top)
+
+// Write results back to CSV
+write_csv(top, "top_scorers.csv")
+```
+
+### JSON — Structured Data
+
+```
+// Read a JSON file
+let config = read_json("config.json")
+show(config["database"]["host"])
+
+// Write any value as JSON
+let data = {"users": 42, "active": true}
+write_json(data, "stats.json")
+
+// Parse a JSON string (no file needed)
+let obj = parse_json('{"x": 1, "y": 2}')
+show(obj["x"])   // 1
+
+// Convert a value to a JSON string
+let s = to_json([1, 2, 3])
+show(s)   // "[1, 2, 3]"
+```
+
+---
+
+## 24. HTTP — Fetching Data from the Web
+
+Pull JSON data from any API with one function call:
+
+```
+// Fetch JSON from an API
+let data = http_get("https://api.example.com/users")
+
+// data is already parsed — use it immediately
+for user in data {
+    show("{user["name"]}: {user["email"]}")
+}
+
+// Combine with step chains for instant analysis
+let active = http_get("https://api.example.com/users")
+    _filter((u) => u["active"] is true)
+    _sortBy((u) => u["name"])
+show(active)
+```
+
+---
+
+## 25. Dates & Time — Working with Dates
+
+TinyTalk has built-in date functions for parsing, formatting, arithmetic, and bucketing.
+
+### Getting the current time
+
+```
+show(date_now())   // "2024-03-15 14:30:00"
+```
+
+### Parsing dates
+
+TinyTalk auto-detects common formats:
+
+```
+show(date_parse("2024-03-15"))              // "2024-03-15 00:00:00"
+show(date_parse("2024-03-15T10:30:00"))     // "2024-03-15 10:30:00"
+show(date_parse("03/15/2024"))              // "2024-03-15 00:00:00"
+```
+
+### Date arithmetic
+
+```
+// Add or subtract time
+show(date_add("2024-03-15", 10, "days"))    // "2024-03-25 00:00:00"
+show(date_add("2024-03-15", -1, "weeks"))   // "2024-03-08 00:00:00"
+show(date_add("2024-03-15", 3, "hours"))    // "2024-03-15 03:00:00"
+
+// Difference between dates
+show(date_diff("2024-03-20", "2024-03-15", "days"))   // 5.0
+```
+
+### Truncating dates (for grouping by period)
+
+```
+show(date_floor("2024-03-15", "week"))    // "2024-03-11 00:00:00"  (Monday)
+show(date_floor("2024-03-15", "month"))   // "2024-03-01 00:00:00"
+show(date_floor("2024-03-15", "year"))    // "2024-01-01 00:00:00"
+```
+
+This is incredibly useful for time-series analysis:
+
+```
+// Group sales by week
+let weekly = sales
+    _map((s) => {
+        let week = date_floor(s["date"], "week")
+        return {"week": week, "amount": s["amount"]}
+    })
+    _group((s) => s["week"])
+    _mapValues((rows) => rows _map((r) => r["amount"]) _sum)
+```
+
+### Formatting dates
+
+```
+show(date_format("2024-03-15", "%B %d, %Y"))   // "March 15, 2024"
+show(date_format("2024-03-15", "%A"))           // "Friday"
+```
+
+---
+
+## 26. Built-in Functions — The Standard Toolkit
 
 ### Output
 
@@ -1095,6 +1269,34 @@ TinyTalk doesn't care — use whatever feels natural to you.
 | `assert_true(val, msg)`     | Fail if val is not truthy        |
 | `assert_false(val, msg)`    | Fail if val is not falsy         |
 
+### File I/O
+
+| Function                  | Description                           |
+|--------------------------|---------------------------------------|
+| `read_csv(path)`         | Read CSV → list of maps               |
+| `write_csv(data, path)`  | Write list of maps → CSV              |
+| `read_json(path)`        | Read JSON file → value                |
+| `write_json(data, path)` | Write value → JSON file               |
+| `parse_json(string)`     | Parse JSON string → value             |
+| `to_json(value)`         | Value → JSON string                   |
+
+### HTTP
+
+| Function         | Description                              |
+|-----------------|------------------------------------------|
+| `http_get(url)` | GET URL → parsed JSON (or string)        |
+
+### Dates
+
+| Function                          | Description                    |
+|----------------------------------|--------------------------------|
+| `date_now()`                     | Current date-time string       |
+| `date_parse(string)`            | Parse → normalized date string |
+| `date_format(date, fmt)`        | Format with strftime codes     |
+| `date_floor(date, unit)`        | Truncate to day/week/month/year|
+| `date_add(date, amount, unit)`  | Add/subtract days/hours/etc.   |
+| `date_diff(date1, date2, unit)` | Difference between two dates   |
+
 ### Built-in Constants
 
 | Name    | Value            |
@@ -1109,7 +1311,7 @@ TinyTalk doesn't care — use whatever feels natural to you.
 
 ---
 
-## 24. Running Your Code
+## 27. Running Your Code
 
 ### From the command line
 
@@ -1164,7 +1366,7 @@ print(result.success)   # True
 
 ---
 
-## 25. Quick Reference Cheat Sheet
+## 28. Quick Reference Cheat Sheet
 
 ### Variables
 ```
@@ -1197,6 +1399,29 @@ data _filter((x) => x > 10) _map((x) => x * 2) _sum
 data _unique _count
 data _group((x) => x.category)
 data _reduce((acc, x) => acc + x, 0)
+data _sortBy((r) => r["score"])
+left _join(right, (r) => r["id"])
+grouped _mapValues((xs) => xs _avg)
+data _each((x) => show(x))
+```
+
+### Data I/O
+```
+read_csv("data.csv")              // list of maps
+write_csv(data, "out.csv")        // maps to CSV
+read_json("data.json")            // any value
+write_json(data, "out.json")      // value to JSON
+http_get("https://api.example.com/data")
+```
+
+### Dates
+```
+date_now()
+date_parse("2024-03-15")
+date_add(date, 7, "days")
+date_diff(date1, date2, "days")
+date_floor(date, "week")
+date_format(date, "%B %d, %Y")
 ```
 
 ### Natural comparisons
@@ -1254,5 +1479,8 @@ enough to write real programs. The key things that make it unique:
 6. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
 7. **Default parameters** — `fn greet(name = "World")` — skip args you don't need
 8. **Multi-line lambdas** — `(x) => { ... }` for complex anonymous functions
+9. **Data I/O** — `read_csv`, `read_json`, `http_get` — ingest real data
+10. **Date handling** — Parse, format, diff, floor — time-series ready
+11. **Joins** — `_join`, `_sortBy`, `_mapValues` — real data wrangling
 
 Now go build something cool. Happy coding!

@@ -6,6 +6,12 @@ Built-in functions available in every program.
 from typing import List
 import math
 import hashlib
+import csv
+import json
+import io
+import urllib.request
+import urllib.error
+from datetime import datetime, timedelta
 
 from .types import Value, ValueType
 
@@ -584,6 +590,284 @@ def builtin_hash(args: List[Value]) -> Value:
 
 
 # ---------------------------------------------------------------------------
+# File I/O: CSV
+# ---------------------------------------------------------------------------
+
+def builtin_read_csv(args: List[Value]) -> Value:
+    """read_csv(path) -> list of maps.  Each row becomes a {header: value} map."""
+    if not args or args[0].type != ValueType.STRING:
+        raise ValueError("read_csv requires a file path string")
+    path = args[0].data
+    try:
+        with open(path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            rows = []
+            for row in reader:
+                m = {}
+                for k, v in row.items():
+                    m[k] = _auto_type(v)
+                rows.append(Value.map_val(m))
+            return Value.list_val(rows)
+    except FileNotFoundError:
+        raise ValueError(f"File not found: {path}")
+    except Exception as e:
+        raise ValueError(f"read_csv error: {e}")
+
+
+def builtin_write_csv(args: List[Value]) -> Value:
+    """write_csv(data, path) -> null.  data is a list of maps."""
+    if len(args) < 2:
+        raise ValueError("write_csv requires (data, path)")
+    data, path = args[0], args[1]
+    if data.type != ValueType.LIST or path.type != ValueType.STRING:
+        raise ValueError("write_csv requires (list_of_maps, path_string)")
+    rows = data.data
+    if not rows:
+        with open(path.data, "w", encoding="utf-8") as f:
+            pass
+        return Value.null_val()
+    first = rows[0]
+    if first.type != ValueType.MAP:
+        raise ValueError("write_csv: each row must be a map")
+    headers = list(first.data.keys())
+    with open(path.data, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({k: format_value(v) for k, v in row.data.items()})
+    return Value.null_val()
+
+
+def _auto_type(s: str) -> Value:
+    """Convert a CSV string cell to the best-fit TinyTalk value."""
+    if s is None or s == "":
+        return Value.null_val()
+    if s.lower() == "true":
+        return Value.bool_val(True)
+    if s.lower() == "false":
+        return Value.bool_val(False)
+    try:
+        if "." in s or "e" in s.lower():
+            return Value.float_val(float(s))
+        return Value.int_val(int(s))
+    except ValueError:
+        return Value.string_val(s)
+
+
+# ---------------------------------------------------------------------------
+# File I/O: JSON
+# ---------------------------------------------------------------------------
+
+def builtin_read_json(args: List[Value]) -> Value:
+    """read_json(path) -> value.  Parses a JSON file into TinyTalk values."""
+    if not args or args[0].type != ValueType.STRING:
+        raise ValueError("read_json requires a file path string")
+    path = args[0].data
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return _python_to_value(data)
+    except FileNotFoundError:
+        raise ValueError(f"File not found: {path}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
+
+
+def builtin_write_json(args: List[Value]) -> Value:
+    """write_json(data, path) -> null.  Writes TinyTalk value as JSON."""
+    if len(args) < 2:
+        raise ValueError("write_json requires (data, path)")
+    data, path = args[0], args[1]
+    if path.type != ValueType.STRING:
+        raise ValueError("write_json: second argument must be a path string")
+    py_data = data.to_python()
+    with open(path.data, "w", encoding="utf-8") as f:
+        json.dump(py_data, f, indent=2, default=str)
+    return Value.null_val()
+
+
+def builtin_parse_json(args: List[Value]) -> Value:
+    """parse_json(string) -> value.  Parses a JSON string into TinyTalk values."""
+    if not args or args[0].type != ValueType.STRING:
+        raise ValueError("parse_json requires a JSON string")
+    try:
+        data = json.loads(args[0].data)
+        return _python_to_value(data)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
+
+
+def builtin_to_json(args: List[Value]) -> Value:
+    """to_json(value) -> string.  Serializes a TinyTalk value to a JSON string."""
+    if not args:
+        return Value.string_val("null")
+    return Value.string_val(json.dumps(args[0].to_python(), default=str))
+
+
+def _python_to_value(obj) -> Value:
+    """Convert a Python object (from json.load) to a TinyTalk Value."""
+    if obj is None:
+        return Value.null_val()
+    if isinstance(obj, bool):
+        return Value.bool_val(obj)
+    if isinstance(obj, int):
+        return Value.int_val(obj)
+    if isinstance(obj, float):
+        return Value.float_val(obj)
+    if isinstance(obj, str):
+        return Value.string_val(obj)
+    if isinstance(obj, list):
+        return Value.list_val([_python_to_value(x) for x in obj])
+    if isinstance(obj, dict):
+        return Value.map_val({k: _python_to_value(v) for k, v in obj.items()})
+    return Value.string_val(str(obj))
+
+
+# ---------------------------------------------------------------------------
+# HTTP
+# ---------------------------------------------------------------------------
+
+def builtin_http_get(args: List[Value]) -> Value:
+    """http_get(url) -> value.  GET a URL and parse the response as JSON."""
+    if not args or args[0].type != ValueType.STRING:
+        raise ValueError("http_get requires a URL string")
+    url = args[0].data
+    try:
+        req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "TinyTalk/2.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            body = resp.read().decode("utf-8")
+        try:
+            return _python_to_value(json.loads(body))
+        except json.JSONDecodeError:
+            return Value.string_val(body)
+    except urllib.error.HTTPError as e:
+        raise ValueError(f"HTTP {e.code}: {e.reason}")
+    except urllib.error.URLError as e:
+        raise ValueError(f"HTTP error: {e.reason}")
+    except Exception as e:
+        raise ValueError(f"http_get failed: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Date / Time
+# ---------------------------------------------------------------------------
+
+_DATE_FORMATS = [
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%dT%H:%M:%S",
+    "%Y-%m-%dT%H:%M:%SZ",
+    "%Y-%m-%d",
+    "%m/%d/%Y",
+    "%d/%m/%Y",
+]
+
+
+def builtin_date_now(args: List[Value]) -> Value:
+    """date_now() -> string.  Current date-time as ISO string."""
+    return Value.string_val(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+
+def builtin_date_parse(args: List[Value]) -> Value:
+    """date_parse(string) -> string.  Parse a date string to normalized ISO format."""
+    if not args or args[0].type != ValueType.STRING:
+        raise ValueError("date_parse requires a date string")
+    s = args[0].data.strip()
+    for fmt in _DATE_FORMATS:
+        try:
+            dt = datetime.strptime(s, fmt)
+            return Value.string_val(dt.strftime("%Y-%m-%d %H:%M:%S"))
+        except ValueError:
+            continue
+    raise ValueError(f"Cannot parse date: '{s}'")
+
+
+def builtin_date_format(args: List[Value]) -> Value:
+    """date_format(date_str, fmt) -> string.  Format a date using strftime codes."""
+    if len(args) < 2:
+        raise ValueError("date_format requires (date_string, format_string)")
+    dt = _parse_date(args[0].data)
+    return Value.string_val(dt.strftime(args[1].data))
+
+
+def builtin_date_floor(args: List[Value]) -> Value:
+    """date_floor(date_str, unit) -> string.  Truncate to start of unit.
+    Units: "day", "week", "month", "year", "hour"."""
+    if len(args) < 2:
+        raise ValueError("date_floor requires (date_string, unit)")
+    dt = _parse_date(args[0].data)
+    unit = args[1].data if args[1].type == ValueType.STRING else "day"
+    if unit == "day":
+        dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif unit == "week":
+        dt = dt - timedelta(days=dt.weekday())
+        dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif unit == "month":
+        dt = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    elif unit == "year":
+        dt = dt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    elif unit == "hour":
+        dt = dt.replace(minute=0, second=0, microsecond=0)
+    else:
+        raise ValueError(f"Unknown date unit: '{unit}'")
+    return Value.string_val(dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+
+def builtin_date_add(args: List[Value]) -> Value:
+    """date_add(date_str, amount, unit) -> string.  Add time to a date.
+    Units: "days", "hours", "minutes", "seconds", "weeks"."""
+    if len(args) < 3:
+        raise ValueError("date_add requires (date_string, amount, unit)")
+    dt = _parse_date(args[0].data)
+    n = int(args[1].data)
+    unit = args[2].data if args[2].type == ValueType.STRING else "days"
+    if unit in ("day", "days"):
+        dt += timedelta(days=n)
+    elif unit in ("hour", "hours"):
+        dt += timedelta(hours=n)
+    elif unit in ("minute", "minutes"):
+        dt += timedelta(minutes=n)
+    elif unit in ("second", "seconds"):
+        dt += timedelta(seconds=n)
+    elif unit in ("week", "weeks"):
+        dt += timedelta(weeks=n)
+    else:
+        raise ValueError(f"Unknown date unit: '{unit}'")
+    return Value.string_val(dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+
+def builtin_date_diff(args: List[Value]) -> Value:
+    """date_diff(date1, date2, unit) -> number.  Difference between two dates.
+    Units: "days", "hours", "minutes", "seconds".  Returns date1 - date2."""
+    if len(args) < 2:
+        raise ValueError("date_diff requires (date1, date2[, unit])")
+    dt1 = _parse_date(args[0].data)
+    dt2 = _parse_date(args[1].data)
+    unit = args[2].data if len(args) > 2 and args[2].type == ValueType.STRING else "days"
+    delta = dt1 - dt2
+    total_seconds = delta.total_seconds()
+    if unit in ("day", "days"):
+        return Value.float_val(total_seconds / 86400)
+    if unit in ("hour", "hours"):
+        return Value.float_val(total_seconds / 3600)
+    if unit in ("minute", "minutes"):
+        return Value.float_val(total_seconds / 60)
+    if unit in ("second", "seconds"):
+        return Value.float_val(total_seconds)
+    raise ValueError(f"Unknown date unit: '{unit}'")
+
+
+def _parse_date(s: str) -> datetime:
+    """Parse a date string trying multiple formats."""
+    s = s.strip()
+    for fmt in _DATE_FORMATS:
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f"Cannot parse date: '{s}'")
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -651,6 +935,22 @@ BUILTIN_FUNCTIONS = {
     "assert_true": builtin_assert_true,
     "assert_false": builtin_assert_false,
     "hash": builtin_hash,
+    # File I/O
+    "read_csv": builtin_read_csv,
+    "write_csv": builtin_write_csv,
+    "read_json": builtin_read_json,
+    "write_json": builtin_write_json,
+    "parse_json": builtin_parse_json,
+    "to_json": builtin_to_json,
+    # HTTP
+    "http_get": builtin_http_get,
+    # Date/Time
+    "date_now": builtin_date_now,
+    "date_parse": builtin_date_parse,
+    "date_format": builtin_date_format,
+    "date_floor": builtin_date_floor,
+    "date_add": builtin_date_add,
+    "date_diff": builtin_date_diff,
 }
 
 STDLIB_CONSTANTS = {
