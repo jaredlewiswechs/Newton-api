@@ -96,6 +96,9 @@ class TokenType(Enum):
     STEP_PULL = auto()
     STEP_GROUP_BY = auto()
     STEP_LEFT_JOIN = auto()
+    STEP_PIVOT = auto()
+    STEP_UNPIVOT = auto()
+    STEP_WINDOW = auto()
 
     # --- Natural language comparisons ---
     IS = auto()
@@ -349,6 +352,9 @@ class Lexer:
         "_group_by": TokenType.STEP_GROUP_BY,
         "_leftJoin": TokenType.STEP_LEFT_JOIN,
         "_left_join": TokenType.STEP_LEFT_JOIN,
+        "_pivot": TokenType.STEP_PIVOT,
+        "_unpivot": TokenType.STEP_UNPIVOT,
+        "_window": TokenType.STEP_WINDOW,
     }
 
     def __init__(self, source: str):

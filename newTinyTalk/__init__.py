@@ -25,6 +25,7 @@ Quick usage:
 from .kernel import TinyTalkKernel, RunResult
 from .runtime import ExecutionBounds, TinyTalkError
 from .types import Value, ValueType
+from .transpiler import transpile, transpile_pandas
 
 __version__ = "2.0.0"
 __all__ = [
@@ -34,4 +35,6 @@ __all__ = [
     "TinyTalkError",
     "Value",
     "ValueType",
+    "transpile",
+    "transpile_pandas",
 ]

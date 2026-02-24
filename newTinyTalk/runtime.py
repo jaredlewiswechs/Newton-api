@@ -1311,6 +1311,75 @@ class Runtime:
                     result.append(l_item)
             return Value.list_val(result)
 
+        # ---- reshape operations -----------------------------------------------
+
+        if step == "_pivot":
+            # _pivot(index_fn, column_fn, value_fn)
+            # Converts long-form data to wide-form.
+            # Each unique (index, column) pair maps to a value.
+            if len(args) < 3:
+                raise TinyTalkError("_pivot requires (index_fn, column_fn, value_fn)", line)
+            idx_fn, col_fn, val_fn = args[0].data, args[1].data, args[2].data
+            # Build: {index_key: {col_key: value, ...}, ...}
+            pivot_data: dict = {}
+            all_cols: list = []
+            for item in items:
+                idx = self._call_function(idx_fn, [item], scope, line)
+                col = self._call_function(col_fn, [item], scope, line)
+                val = self._call_function(val_fn, [item], scope, line)
+                idx_key = format_value(idx)
+                col_key = format_value(col)
+                if idx_key not in pivot_data:
+                    pivot_data[idx_key] = {}
+                pivot_data[idx_key][col_key] = val
+                if col_key not in all_cols:
+                    all_cols.append(col_key)
+            # Convert to list of maps: [{_index: key, col1: v1, col2: v2}, ...]
+            result = []
+            for idx_key, cols in pivot_data.items():
+                row = {"_index": Value.string_val(idx_key)}
+                for c in all_cols:
+                    row[c] = cols.get(c, Value.null_val())
+                result.append(Value.map_val(row))
+            return Value.list_val(result)
+
+        if step == "_unpivot":
+            # _unpivot(id_columns) — id_columns is a list of column name strings
+            # Converts wide-form to long-form.
+            # Columns not in id_columns become (variable, value) pairs.
+            if not args or args[0].type != ValueType.LIST:
+                raise TinyTalkError("_unpivot requires a list of id column names", line)
+            id_cols = {v.data for v in args[0].data if v.type == ValueType.STRING}
+            result = []
+            for row in items:
+                if row.type != ValueType.MAP:
+                    continue
+                id_data = {k: v for k, v in row.data.items() if k in id_cols}
+                for k, v in row.data.items():
+                    if k not in id_cols:
+                        new_row = dict(id_data)
+                        new_row["variable"] = Value.string_val(k)
+                        new_row["value"] = v
+                        result.append(Value.map_val(new_row))
+            return Value.list_val(result)
+
+        # ---- window / rolling operations --------------------------------------
+
+        if step == "_window":
+            # _window(size, fn) — sliding window aggregate
+            # Returns a list of fn(window) for each position.
+            if len(args) < 2:
+                raise TinyTalkError("_window requires (window_size, function)", line)
+            window_size = int(args[0].data)
+            fn = args[1].data
+            result = []
+            for i in range(len(items)):
+                start = max(0, i - window_size + 1)
+                window = Value.list_val(items[start:i + 1])
+                val = self._call_function(fn, [window], scope, line)
+                result.append(val)
+            return Value.list_val(result)
+
         raise TinyTalkError(f"Unknown step: {step}", line)
 
     # -- helpers ------------------------------------------------------------
