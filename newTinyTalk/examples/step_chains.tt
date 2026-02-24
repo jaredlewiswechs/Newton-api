@@ -1,0 +1,40 @@
+// Step Chains - TinyTalk's signature feature
+// Inspired by dplyr's pipe-and-verb pattern.
+
+let data = [42, 17, 93, 5, 68, 31, 84, 12, 56, 29]
+
+// Sort and take top 5
+show("Top 5:" data _sort _reverse _take(5))
+
+// Filter and count
+show("Count > 30:" data _filter((x) => x > 30) _count)
+
+// Map and sum
+show("Doubled sum:" data _map((x) => x * 2) _sum)
+
+// Unique values
+let dupes = [1, 2, 2, 3, 3, 3, 4]
+show("Unique:" dupes _unique)
+
+// Chain multiple operations
+let result = data _filter((x) => x > 20) _sort _map((x) => x * 10) _take(3)
+show("Filtered > 20, sorted, x10, top 3:" result)
+
+// Group by even/odd
+let nums = [1, 2, 3, 4, 5, 6, 7, 8]
+let grouped = nums _group((x) => x % 2 == 0 ? "even" : "odd")
+show("Grouped:" grouped)
+
+// Flatten nested lists
+let nested = [[1, 2], [3, 4], [5, 6]]
+show("Flattened:" nested _flatten)
+
+// Chunk into pairs
+let seq = [1, 2, 3, 4, 5, 6]
+show("Chunked:" seq _chunk(2))
+
+// Statistics
+show("Min:" data _min)
+show("Max:" data _max)
+show("Sum:" data _sum)
+show("Avg:" data _avg)

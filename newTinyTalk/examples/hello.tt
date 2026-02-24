@@ -1,0 +1,57 @@
+// Hello World - TinyTalk
+// Two styles, one language.
+
+// === Modern Style ===
+let name = "World"
+show("Hello, {name}!")
+
+// Variables and arithmetic
+let x = 10
+let y = 20
+show("{x} + {y} = {x + y}")
+
+// Functions
+fn square(x) {
+    return x * x
+}
+show("5 squared is {square(5)}")
+
+// Step chains - the standout feature
+let numbers = [5, 3, 8, 1, 9, 2, 7, 4, 6]
+show("Sorted top 3:" numbers _sort _reverse _take(3))
+
+// Natural comparisons
+let items = [1, 2, 3]
+show(items has 2)               // true
+show("hello" islike "hel*")     // true
+
+// Property conversions
+show(42 .str)         // "42"
+show("3.14" .float)   // 3.14
+show(items .len)      // 3
+
+// === Classic Style (Smalltalk-inspired) ===
+when PI = 3.14159
+
+law circle_area(r)
+    reply PI * r * r
+end
+
+show("Area of circle with r=5:" circle_area(5))
+
+// Blueprints (classes)
+blueprint Counter
+    field value = 0
+    forge inc()
+        self.value = self.value + 1
+        reply self.value
+    end
+    forge reset()
+        self.value = 0
+        reply self.value
+    end
+end
+
+let c = Counter(0)
+show("Counter:" c.inc() c.inc() c.inc())
+show("Reset:" c.reset())
