@@ -31,6 +31,7 @@ STEP_TOKEN_TYPES = frozenset({
     TokenType.STEP_RENAME, TokenType.STEP_ARRANGE, TokenType.STEP_DISTINCT,
     TokenType.STEP_SLICE, TokenType.STEP_PULL, TokenType.STEP_GROUP_BY,
     TokenType.STEP_LEFT_JOIN,
+    TokenType.STEP_PIVOT, TokenType.STEP_UNPIVOT, TokenType.STEP_WINDOW,
 })
 
 EXPR_START_TOKENS = frozenset({
