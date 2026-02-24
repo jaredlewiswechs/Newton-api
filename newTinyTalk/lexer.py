@@ -256,6 +256,7 @@ class Lexer:
         ("-=", TokenType.MINUS_EQ),
         ("*=", TokenType.STAR_EQ),
         ("/=", TokenType.SLASH_EQ),
+        ("%>%", TokenType.PIPE),
         ("%=", TokenType.PERCENT_EQ),
         ("->", TokenType.ARROW),
         ("=>", TokenType.FAT_ARROW),

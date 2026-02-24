@@ -41,18 +41,37 @@
 ## 1. Your First Program
 
 ```
-show("Hello, World!")
+show(Hello, World!)
 ```
 
 That's it. One line. `show()` prints things to the screen with a newline at the end.
 
-You can print multiple things separated by spaces:
+> **No quotes needed!** In TinyTalk, bare words inside function calls are
+> automatically treated as strings. `show(Hello)` prints `Hello` — no `"` required.
+> If a variable with that name exists, TinyTalk uses its value instead.
+
+You can still use quotes when you want to — they work the same as in any other language:
+
+```
+show("Hello, World!")
+```
+
+You can print multiple things separated by commas or spaces:
 
 ```
 show("My name is" "TinyTalk" "and I am" 1 "years old")
 ```
 
 Output: `My name is TinyTalk and I am 1 years old`
+
+Mix bare words and variables freely:
+
+```
+let name = "Alice"
+show(Hello, name!)
+```
+
+Output: `Hello Alice!`
 
 > **Tip:** `show()` automatically puts spaces between each argument.
 > If you don't want a newline at the end, use `print()` instead.
@@ -815,19 +834,30 @@ Key concepts:
 
 ## 21. The Pipe Operator — Left-to-Right Flow
 
-The pipe operator `|>` passes a value as the first argument to the next function:
+The pipe operator passes a value as the first argument to the next function.
+TinyTalk supports two styles — pick whichever you prefer:
+
+| Style | Syntax | Inspired by |
+|-------|--------|-------------|
+| `|>`  | Elixir / F# style | `5 |> double |> add_one` |
+| `%>%` | R / tidyverse style | `5 %>% double %>% add_one` |
+
+Both do exactly the same thing. You can even mix them:
 
 ```
 fn double(x) { return x * 2 }
 fn add_one(x) { return x + 1 }
 
-show(5 |> double |> add_one)   // 11
+// All three are equivalent:
+show(5 |> double |> add_one)     // 11
+show(5 %>% double %>% add_one)   // 11
+show(5 |> double %>% add_one)    // 11  (mixing is fine!)
 ```
 
 This is equivalent to `add_one(double(5))` but reads left-to-right.
 
 **Pipe vs Step Chains — what's the difference?**
-- **Pipe `|>`** works with regular named functions
+- **Pipe `|>` / `%>%`** works with regular named functions
 - **Step chains `_sort`** are built-in list operations with the underscore prefix
 
 Use whichever feels right for the situation!
@@ -1116,6 +1146,19 @@ value .str   .int   .float   .bool   .type   .len
 "text".upcase   .downcase   .trim   .chars   .words   .reversed
 ```
 
+### Pipe operators
+```
+value |> fn1 |> fn2       // Elixir-style pipe
+value %>% fn1 %>% fn2     // R-style pipe (same thing)
+```
+
+### Bare-word strings
+```
+show(Hello, world!)        // No quotes needed — bare words become strings
+print(Hello, world!)       // Same for print
+show(Hello, name)          // If name is defined, its value is used
+```
+
 ### Comments
 ```
 // This is a comment
@@ -1135,5 +1178,7 @@ enough to write real programs. The key things that make it unique:
 2. **Natural comparisons** — `has`, `isin`, `islike` read like English
 3. **Two styles** — Use curly braces or `end` blocks, whatever feels right
 4. **String interpolation** — Just put `{expressions}` in your strings
+5. **Bare-word strings** — `print(Hello, world!)` just works, no quotes needed
+6. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
 
 Now go build something cool. Happy coding!
