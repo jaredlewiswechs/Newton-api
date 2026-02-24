@@ -1,0 +1,11 @@
+// Fibonacci in TinyTalk
+
+fn fib(n) {
+    if n <= 1 { return n }
+    return fib(n - 1) + fib(n - 2)
+}
+
+// First 15 fibonacci numbers
+for i in range(15) {
+    show("fib({i}) = {fib(i)}")
+}
