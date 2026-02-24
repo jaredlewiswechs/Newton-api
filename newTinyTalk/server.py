@@ -1,21 +1,23 @@
 """
-TinyTalk API Server
-Flask-based HTTP API for running TinyTalk code.
+TinyTalk API Server + IDE
+Flask-based HTTP API for running TinyTalk code, plus a web-based IDE.
 
 Endpoints:
-    POST /api/run          Execute TinyTalk code
-    GET  /api/health       Health check
-    GET  /api/examples     List example programs
+    GET  /               Web IDE
+    POST /api/run        Execute TinyTalk code
+    GET  /api/health     Health check
+    GET  /api/examples   List example programs
 """
 
 import os
-import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 
 from .kernel import TinyTalkKernel
 from .runtime import ExecutionBounds
 
-app = Flask(__name__)
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
+app = Flask(__name__, static_folder=STATIC_DIR)
 
 # Bounded execution for API requests (stricter than CLI)
 API_BOUNDS = ExecutionBounds(
@@ -24,6 +26,11 @@ API_BOUNDS = ExecutionBounds(
     max_recursion=500,
     timeout_seconds=10.0,
 )
+
+
+@app.route("/")
+def ide():
+    return send_from_directory(STATIC_DIR, "index.html")
 
 
 @app.route("/api/health", methods=["GET"])

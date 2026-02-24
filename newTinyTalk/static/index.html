@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyTalk IDE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+/* ═══════════════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES
+   ═══════════════════════════════════════════════════════════ */
+:root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-editor: #0d1117;
+    --bg-hover: #30363d;
+    --border: #30363d;
+    --border-subtle: #21262d;
+
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+
+    --accent: #58a6ff;
+    --accent-hover: #79c0ff;
+    --accent-subtle: rgba(56, 139, 253, 0.15);
+
+    --success: #3fb950;
+    --success-subtle: rgba(46, 160, 67, 0.15);
+    --error: #f85149;
+    --error-subtle: rgba(248, 81, 73, 0.15);
+    --warning: #d29922;
+
+    --syn-keyword: #ff7b72;
+    --syn-function: #d2a8ff;
+    --syn-string: #a5d6ff;
+    --syn-number: #79c0ff;
+    --syn-comment: #6e7681;
+    --syn-operator: #ff7b72;
+    --syn-variable: #ffa657;
+    --syn-type: #7ee787;
+    --syn-step: #f0883e;
+    --syn-property: #79c0ff;
+    --syn-bool: #79c0ff;
+
+    --radius: 8px;
+    --radius-sm: 4px;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --editor-line-height: 1.65;
+    --editor-font-size: 14px;
+    --tab-size: 4;
+    --gutter-width: 52px;
+}
+
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f6f8fa;
+    --bg-tertiary: #eaeef2;
+    --bg-editor: #ffffff;
+    --bg-hover: #d0d7de;
+    --border: #d0d7de;
+    --border-subtle: #eaeef2;
+    --text-primary: #1f2328;
+    --text-secondary: #57606a;
+    --text-muted: #8b949e;
+    --accent: #0969da;
+    --accent-hover: #0550ae;
+    --accent-subtle: rgba(9, 105, 218, 0.1);
+    --success: #1a7f37;
+    --success-subtle: rgba(26, 127, 55, 0.1);
+    --error: #cf222e;
+    --error-subtle: rgba(207, 34, 46, 0.1);
+    --syn-keyword: #cf222e;
+    --syn-function: #8250df;
+    --syn-string: #0a3069;
+    --syn-number: #0550ae;
+    --syn-comment: #6e7781;
+    --syn-operator: #cf222e;
+    --syn-variable: #953800;
+    --syn-type: #116329;
+    --syn-step: #953800;
+    --syn-property: #0550ae;
+    --syn-bool: #0550ae;
+}
+
+[data-theme="monokai"] {
+    --bg-primary: #272822;
+    --bg-secondary: #1e1f1c;
+    --bg-tertiary: #3e3d32;
+    --bg-editor: #272822;
+    --bg-hover: #49483e;
+    --border: #3e3d32;
+    --border-subtle: #3e3d32;
+    --text-primary: #f8f8f2;
+    --text-secondary: #a6a28c;
+    --text-muted: #75715e;
+    --accent: #66d9ef;
+    --accent-hover: #9de0f2;
+    --accent-subtle: rgba(102, 217, 239, 0.15);
+    --success: #a6e22e;
+    --success-subtle: rgba(166, 226, 46, 0.15);
+    --error: #f92672;
+    --error-subtle: rgba(249, 38, 114, 0.15);
+    --syn-keyword: #f92672;
+    --syn-function: #a6e22e;
+    --syn-string: #e6db74;
+    --syn-number: #ae81ff;
+    --syn-comment: #75715e;
+    --syn-operator: #f92672;
+    --syn-variable: #fd971f;
+    --syn-type: #66d9ef;
+    --syn-step: #fd971f;
+    --syn-property: #ae81ff;
+    --syn-bool: #ae81ff;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════════════════ */
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* ─── TOOLBAR ─── */
+#toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    min-height: 48px;
+}
+
+.toolbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 8px;
+    user-select: none;
+}
+
+.toolbar-logo {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--accent), var(--syn-function));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
+}
+
+.toolbar-title {
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+}
+
+.toolbar-version {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: -4px;
+}
+
+.toolbar-sep {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+    margin: 0 4px;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toolbar-spacer { flex: 1; }
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    user-select: none;
+}
+.btn:hover { background: var(--bg-hover); }
+.btn:active { transform: scale(0.97); }
+
+.btn-run {
+    background: var(--success);
+    border-color: var(--success);
+    color: #fff;
+    font-weight: 600;
+}
+.btn-run:hover { filter: brightness(1.1); background: var(--success); }
+.btn-run.running {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.btn-icon {
+    padding: 6px 8px;
+    min-width: 32px;
+    justify-content: center;
+}
+
+.btn kbd {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(0,0,0,.2);
+    color: inherit;
+    opacity: 0.8;
+}
+
+/* Select */
+.toolbar-select {
+    padding: 5px 28px 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b949e'%3E%3Cpath d='M6 8.5L1.5 4h9z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+.toolbar-select:hover { background-color: var(--bg-hover); }
+.toolbar-select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+/* ─── MAIN AREA ─── */
+#main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ─── SIDEBAR ─── */
+#sidebar {
+    width: 240px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: width 0.2s ease, opacity 0.2s ease;
+}
+
+#sidebar.collapsed {
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    border-right: none;
+}
+
+.sidebar-header {
+    padding: 12px 14px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+}
+
+.sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 6px 12px;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.12s ease;
+    user-select: none;
+}
+.sidebar-item:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+.sidebar-item.active {
+    background: var(--accent-subtle);
+    color: var(--accent);
+}
+
+.sidebar-item-icon {
+    font-size: 15px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.sidebar-item-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-item-badge {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 99px;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+}
+
+.sidebar-section {
+    margin-top: 12px;
+}
+
+.sidebar-section .sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ─── EDITOR PANE ─── */
+#editor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Tabs bar */
+#tabs-bar {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    min-height: 36px;
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-right: 1px solid var(--border-subtle);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: all 0.1s ease;
+    position: relative;
+}
+.tab:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+.tab.active {
+    color: var(--text-primary);
+    background: var(--bg-primary);
+}
+.tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+}
+.tab-close {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+.tab:hover .tab-close, .tab.active .tab-close { opacity: 0.6; }
+.tab-close:hover { opacity: 1 !important; background: var(--bg-hover); }
+
+.tab-modified {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: none;
+}
+.tab.modified .tab-modified { display: block; }
+.tab.modified .tab-close { display: none; }
+
+/* ─── CODE EDITOR ─── */
+#editor-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.editor-wrap {
+    flex: 1;
+    position: relative;
+    overflow: auto;
+    background: var(--bg-editor);
+}
+
+.editor-gutter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--gutter-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    pointer-events: none;
+    z-index: 2;
+    font-family: var(--font-mono);
+    font-size: var(--editor-font-size);
+    line-height: var(--editor-line-height);
+    color: var(--text-muted);
+    text-align: right;
+    padding: 12px 10px 12px 0;
+    user-select: none;
+    white-space: pre;
+}
+
+.editor-highlight {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    pointer-events: none;
+    z-index: 1;
+    padding: 12px 16px 12px var(--gutter-width);
+    margin-left: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--editor-font-size);
+    line-height: var(--editor-line-height);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    color: transparent;
+    tab-size: var(--tab-size);
+}
+
+#code-input {
+    position: relative;
+    z-index: 3;
+    display: block;
+    width: 100%;
+    min-height: 100%;
+    padding: 12px 16px 12px calc(var(--gutter-width) + 8px);
+    font-family: var(--font-mono);
+    font-size: var(--editor-font-size);
+    line-height: var(--editor-line-height);
+    color: transparent;
+    caret-color: var(--text-primary);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    tab-size: var(--tab-size);
+    -moz-tab-size: var(--tab-size);
+}
+
+#code-input::selection {
+    background: rgba(56, 139, 253, 0.3);
+    color: transparent;
+}
+
+/* ─── OUTPUT PANEL ─── */
+#output-panel {
+    height: 200px;
+    min-height: 80px;
+    max-height: 60vh;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+#output-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 12px;
+    color: var(--text-secondary);
+    user-select: none;
+    flex-shrink: 0;
+}
+
+#output-header-title {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 11px;
+}
+
+.output-badge {
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-weight: 500;
+}
+.output-badge.success { background: var(--success-subtle); color: var(--success); }
+.output-badge.error { background: var(--error-subtle); color: var(--error); }
+
+.output-stats {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+    font-family: var(--font-mono);
+}
+
+#output-content {
+    flex: 1;
+    overflow: auto;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.output-line { color: var(--text-primary); }
+.output-error { color: var(--error); }
+.output-welcome { color: var(--text-muted); font-style: italic; }
+
+/* ─── RESIZE HANDLE ─── */
+#resize-handle {
+    height: 4px;
+    background: transparent;
+    cursor: ns-resize;
+    border-top: 1px solid var(--border);
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+}
+#resize-handle:hover, #resize-handle.active {
+    background: var(--accent);
+}
+
+/* ─── STATUS BAR ─── */
+#statusbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 3px 14px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    user-select: none;
+    min-height: 24px;
+}
+
+.status-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+}
+.status-dot.error { background: var(--error); }
+.status-dot.idle { background: var(--text-muted); }
+
+/* ─── HELP MODAL ─── */
+#help-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+#help-overlay.visible { display: flex; }
+
+#help-modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 560px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 24px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.4);
+}
+
+.help-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.help-section {
+    margin-bottom: 16px;
+}
+
+.help-section h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.help-shortcut {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 13px;
+}
+
+.help-shortcut kbd {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.help-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ─── SYNTAX HIGHLIGHTING SPANS ─── */
+.syn-kw { color: var(--syn-keyword); font-weight: 500; }
+.syn-fn { color: var(--syn-function); }
+.syn-str { color: var(--syn-string); }
+.syn-num { color: var(--syn-number); }
+.syn-cmt { color: var(--syn-comment); font-style: italic; }
+.syn-op { color: var(--syn-operator); }
+.syn-var { color: var(--syn-variable); }
+.syn-type { color: var(--syn-type); }
+.syn-step { color: var(--syn-step); font-weight: 500; }
+.syn-prop { color: var(--syn-property); }
+.syn-bool { color: var(--syn-bool); }
+.syn-builtin { color: var(--syn-function); }
+.syn-nat { color: var(--syn-keyword); font-style: italic; }
+.syn-interp { color: var(--syn-variable); }
+.syn-brace { color: var(--text-muted); }
+
+/* ─── ANIMATIONS ─── */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+    #sidebar { display: none; }
+    #toolbar { padding: 6px 10px; gap: 4px; }
+    .btn kbd { display: none; }
+    .toolbar-title { display: none; }
+}
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- ═══ TOOLBAR ═══ -->
+    <div id="toolbar">
+        <div class="toolbar-brand">
+            <div class="toolbar-logo">Tt</div>
+            <span class="toolbar-title">TinyTalk</span>
+            <span class="toolbar-version">v2.0</span>
+        </div>
+
+        <div class="toolbar-sep"></div>
+
+        <div class="toolbar-group">
+            <button class="btn btn-run" id="btn-run" title="Run code">
+                <span id="run-icon">&#9654;</span> Run <kbd>Ctrl+Enter</kbd>
+            </button>
+            <button class="btn" id="btn-clear-output" title="Clear output">Clear</button>
+        </div>
+
+        <div class="toolbar-sep"></div>
+
+        <div class="toolbar-group">
+            <select class="toolbar-select" id="example-select" title="Load example">
+                <option value="">Load Example...</option>
+            </select>
+        </div>
+
+        <div class="toolbar-spacer"></div>
+
+        <div class="toolbar-group">
+            <select class="toolbar-select" id="theme-select" title="Theme">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+                <option value="monokai">Monokai</option>
+            </select>
+            <select class="toolbar-select" id="fontsize-select" title="Font size">
+                <option value="12">12px</option>
+                <option value="13">13px</option>
+                <option value="14" selected>14px</option>
+                <option value="15">15px</option>
+                <option value="16">16px</option>
+                <option value="18">18px</option>
+            </select>
+            <button class="btn btn-icon" id="btn-sidebar" title="Toggle sidebar">&#9776;</button>
+            <button class="btn btn-icon" id="btn-help" title="Keyboard shortcuts">?</button>
+        </div>
+    </div>
+
+    <!-- ═══ MAIN ═══ -->
+    <div id="main">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-header">Examples</div>
+                <div class="sidebar-list" id="sidebar-examples"></div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-header">Quick Reference</div>
+                <div class="sidebar-list" id="sidebar-ref">
+                    <div class="sidebar-item" data-snippet="show(&quot;Hello, World!&quot;)">
+                        <span class="sidebar-item-icon">&#128172;</span>
+                        <span class="sidebar-item-name">show()</span>
+                    </div>
+                    <div class="sidebar-item" data-snippet="let x = 10">
+                        <span class="sidebar-item-icon">&#128196;</span>
+                        <span class="sidebar-item-name">let (variable)</span>
+                    </div>
+                    <div class="sidebar-item" data-snippet="fn add(a, b) {\n    return a + b\n}\nshow(add(2, 3))">
+                        <span class="sidebar-item-icon">&#9881;</span>
+                        <span class="sidebar-item-name">fn (function)</span>
+                    </div>
+                    <div class="sidebar-item" data-snippet="for i in range(5) {\n    show(i)\n}">
+                        <span class="sidebar-item-icon">&#128260;</span>
+                        <span class="sidebar-item-name">for loop</span>
+                    </div>
+                    <div class="sidebar-item" data-snippet="let nums = [3, 1, 4, 1, 5]\nshow(nums _sort _reverse _take(3))">
+                        <span class="sidebar-item-icon">&#9741;</span>
+                        <span class="sidebar-item-name">_step chains</span>
+                    </div>
+                    <div class="sidebar-item" data-snippet="blueprint Dog\n    field name = &quot;&quot;\n    field age = 0\n    forge bark()\n        reply &quot;Woof! I'm {self.name}&quot;\n    end\nend\n\nlet d = Dog(&quot;Rex&quot;, 5)\nshow(d.bark())">
+                        <span class="sidebar-item-icon">&#128230;</span>
+                        <span class="sidebar-item-name">blueprint (class)</span>
+                    </div>
+                    <div class="sidebar-item" data-snippet="match 42 {\n    1 => show(&quot;one&quot;)\n    42 => show(&quot;the answer!&quot;)\n    _ => show(&quot;other&quot;)\n}">
+                        <span class="sidebar-item-icon">&#128268;</span>
+                        <span class="sidebar-item-name">match</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor pane -->
+        <div id="editor-pane">
+            <div id="tabs-bar">
+                <div class="tab active" data-tab="scratch">
+                    <span>scratch.tt</span>
+                    <span class="tab-modified"></span>
+                    <span class="tab-close">&times;</span>
+                </div>
+            </div>
+
+            <div id="editor-container">
+                <div class="editor-wrap" id="editor-wrap">
+                    <div class="editor-gutter" id="editor-gutter"></div>
+                    <div class="editor-highlight" id="editor-highlight"></div>
+                    <textarea id="code-input" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                </div>
+            </div>
+
+            <!-- Resize handle -->
+            <div id="resize-handle"></div>
+
+            <!-- Output panel -->
+            <div id="output-panel">
+                <div id="output-header">
+                    <span id="output-header-title">Output</span>
+                    <span class="output-badge" id="output-badge" style="display:none"></span>
+                    <span class="output-stats" id="output-stats"></span>
+                </div>
+                <div id="output-content">
+                    <span class="output-welcome">Press Ctrl+Enter to run your TinyTalk code...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STATUS BAR ═══ -->
+    <div id="statusbar">
+        <div class="status-group">
+            <span class="status-item"><span class="status-dot idle" id="status-dot"></span> <span id="status-text">Ready</span></span>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <div class="status-group">
+            <span class="status-item" id="status-cursor">Ln 1, Col 1</span>
+            <span class="status-item" id="status-chars">0 chars</span>
+            <span class="status-item">TinyTalk</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ HELP MODAL ═══ -->
+<div id="help-overlay">
+    <div id="help-modal">
+        <div class="help-title">Keyboard Shortcuts</div>
+        <div class="help-section">
+            <h3>Editor</h3>
+            <div class="help-shortcut"><span>Run code</span><kbd>Ctrl + Enter</kbd></div>
+            <div class="help-shortcut"><span>Clear output</span><kbd>Ctrl + L</kbd></div>
+            <div class="help-shortcut"><span>Toggle sidebar</span><kbd>Ctrl + B</kbd></div>
+            <div class="help-shortcut"><span>Show help</span><kbd>Ctrl + /</kbd></div>
+            <div class="help-shortcut"><span>Indent selection</span><kbd>Tab</kbd></div>
+            <div class="help-shortcut"><span>Outdent selection</span><kbd>Shift + Tab</kbd></div>
+        </div>
+        <div class="help-section">
+            <h3>Editing</h3>
+            <div class="help-shortcut"><span>Auto-close brackets</span><kbd>( [ { "</kbd></div>
+            <div class="help-shortcut"><span>Auto-indent on Enter</span><kbd>Enter</kbd></div>
+            <div class="help-shortcut"><span>Duplicate line</span><kbd>Ctrl + D</kbd></div>
+        </div>
+        <div class="help-section">
+            <h3>TinyTalk Quick Ref</h3>
+            <div class="help-shortcut"><span>Variables</span><kbd>let x = 10</kbd></div>
+            <div class="help-shortcut"><span>Functions</span><kbd>fn add(a, b) { ... }</kbd></div>
+            <div class="help-shortcut"><span>Step Chains</span><kbd>list _sort _take(3)</kbd></div>
+            <div class="help-shortcut"><span>Print</span><kbd>show("hello")</kbd></div>
+            <div class="help-shortcut"><span>String interp</span><kbd>show("{x + 1}")</kbd></div>
+            <div class="help-shortcut"><span>Blueprints</span><kbd>blueprint Foo ... end</kbd></div>
+        </div>
+        <div style="text-align:center;margin-top:16px;">
+            <button class="btn" id="help-close-btn">Close <kbd>Esc</kbd></button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   TINYTALK IDE - CLIENT
+   ═══════════════════════════════════════════════════════════════ */
+(function() {
+'use strict';
+
+// ── DOM refs ──
+const codeInput      = document.getElementById('code-input');
+const highlight      = document.getElementById('editor-highlight');
+const gutter         = document.getElementById('editor-gutter');
+const editorWrap     = document.getElementById('editor-wrap');
+const outputContent  = document.getElementById('output-content');
+const outputBadge    = document.getElementById('output-badge');
+const outputStats    = document.getElementById('output-stats');
+const outputPanel    = document.getElementById('output-panel');
+const resizeHandle   = document.getElementById('resize-handle');
+const statusDot      = document.getElementById('status-dot');
+const statusText     = document.getElementById('status-text');
+const statusCursor   = document.getElementById('status-cursor');
+const statusChars    = document.getElementById('status-chars');
+const btnRun         = document.getElementById('btn-run');
+const runIcon        = document.getElementById('run-icon');
+const exampleSelect  = document.getElementById('example-select');
+const themeSelect    = document.getElementById('theme-select');
+const fontsizeSelect = document.getElementById('fontsize-select');
+const sidebar        = document.getElementById('sidebar');
+const sidebarExamples= document.getElementById('sidebar-examples');
+const helpOverlay    = document.getElementById('help-overlay');
+
+// ── State ──
+let isRunning = false;
+let examples = [];
+
+// ── Default code ──
+const DEFAULT_CODE = `// Welcome to TinyTalk!
+// Press Ctrl+Enter to run.
+
+let name = "World"
+show("Hello, {name}!")
+
+// Step chains - TinyTalk's signature feature
+let nums = [5, 3, 8, 1, 9, 2, 7, 4, 6]
+show("Sorted top 3:" nums _sort _reverse _take(3))
+show("Sum:" nums _sum)
+
+// Functions
+fn factorial(n) {
+    if n <= 1 { return 1 }
+    return n * factorial(n - 1)
+}
+
+for i in range(1, 8) {
+    show("{i}! = {factorial(i)}")
+}
+`;
+
+codeInput.value = DEFAULT_CODE;
+
+// ═══════════════════════════════════════════════════════════════
+// SYNTAX HIGHLIGHTER
+// ═══════════════════════════════════════════════════════════════
+
+const KEYWORDS = new Set([
+    'let','const','fn','return','if','else','elif','for','while','in',
+    'break','continue','match','struct','enum','import','as','try',
+    'catch','throw','when','law','forge','blueprint','field','reply',
+    'do','fin','end','self'
+]);
+
+const BUILTINS = new Set([
+    'show','print','len','range','append','push','pop','sort','reverse',
+    'contains','keys','values','zip','enumerate','abs','round','floor',
+    'ceil','sqrt','pow','min','max','sum','sin','cos','tan','log','exp',
+    'str','int','float','bool','type','assert','assert_equal',
+    'assert_true','assert_false','read_csv','write_csv','read_json',
+    'write_json','parse_json','to_json','http_get','date_now',
+    'date_parse','date_format','date_floor','date_add','date_diff',
+    'upcase','downcase','trim','replace','split','join','startswith','endswith'
+]);
+
+const NATURAL = new Set(['has','hasnt','is','isnt','isin','islike','and','or','not']);
+const BOOLNULL = new Set(['true','false','null','nil']);
+const CONSTANTS = new Set(['PI','E','TAU','INF']);
+
+function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function highlightCode(code) {
+    // Tokenize with a regex that captures different token types
+    const tokenRe = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\/\/[^\n]*)|(\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_]\w*\b)|(_[a-zA-Z]\w*)|(\.[a-z]+\b)|(=>|->|\|>|%>%|:=|\.\.=?|[+\-*/%]=?|[<>!=~]=?|~~|[&|^~]|<<|>>)|(\{[^}]*\}(?=.*")|[(){}\[\],;:])|(\n)|(.)/g;
+
+    let result = '';
+    let match;
+
+    // We need a smarter approach for string interpolation.
+    // Let's do a line-by-line approach for simplicity with a state machine.
+    return highlightStateMachine(code);
+}
+
+function highlightStateMachine(code) {
+    let out = '';
+    let i = 0;
+    const len = code.length;
+
+    while (i < len) {
+        // Comment
+        if (code[i] === '/' && code[i+1] === '/') {
+            let end = code.indexOf('\n', i);
+            if (end === -1) end = len;
+            out += '<span class="syn-cmt">' + escapeHtml(code.slice(i, end)) + '</span>';
+            i = end;
+            continue;
+        }
+
+        // String with interpolation
+        if (code[i] === '"') {
+            out += highlightString(code, i);
+            // advance past the string
+            i = skipString(code, i);
+            continue;
+        }
+
+        // Single-quote string
+        if (code[i] === "'") {
+            let j = i + 1;
+            while (j < len && code[j] !== "'") {
+                if (code[j] === '\\') j++;
+                j++;
+            }
+            j = Math.min(j + 1, len);
+            out += '<span class="syn-str">' + escapeHtml(code.slice(i, j)) + '</span>';
+            i = j;
+            continue;
+        }
+
+        // Step chain method (_sort, _filter, etc.)
+        if (code[i] === '_' && i > 0 && /\s/.test(code[i-1]) === false || code[i] === '_') {
+            const m = code.slice(i).match(/^_[a-zA-Z]\w*/);
+            if (m) {
+                out += '<span class="syn-step">' + escapeHtml(m[0]) + '</span>';
+                i += m[0].length;
+                continue;
+            }
+        }
+
+        // Property conversion (.str, .int, etc.)
+        if (code[i] === '.' && i > 0) {
+            const m = code.slice(i).match(/^\.[a-z]+\b/);
+            if (m && ['str','int','float','bool','type','len','upcase','downcase','trim','reversed','chars','words'].includes(m[0].slice(1))) {
+                out += '<span class="syn-prop">' + escapeHtml(m[0]) + '</span>';
+                i += m[0].length;
+                continue;
+            }
+        }
+
+        // Numbers
+        if (/\d/.test(code[i]) && (i === 0 || !/[a-zA-Z_]/.test(code[i-1]))) {
+            const m = code.slice(i).match(/^\d+(\.\d+)?/);
+            if (m) {
+                out += '<span class="syn-num">' + escapeHtml(m[0]) + '</span>';
+                i += m[0].length;
+                continue;
+            }
+        }
+
+        // Words (keywords, builtins, identifiers)
+        if (/[a-zA-Z_]/.test(code[i])) {
+            const m = code.slice(i).match(/^[a-zA-Z_]\w*/);
+            if (m) {
+                const word = m[0];
+                if (KEYWORDS.has(word)) {
+                    out += '<span class="syn-kw">' + escapeHtml(word) + '</span>';
+                } else if (BOOLNULL.has(word)) {
+                    out += '<span class="syn-bool">' + escapeHtml(word) + '</span>';
+                } else if (CONSTANTS.has(word)) {
+                    out += '<span class="syn-bool">' + escapeHtml(word) + '</span>';
+                } else if (NATURAL.has(word)) {
+                    out += '<span class="syn-nat">' + escapeHtml(word) + '</span>';
+                } else if (BUILTINS.has(word)) {
+                    // check if followed by (
+                    let k = i + word.length;
+                    while (k < len && code[k] === ' ') k++;
+                    if (k < len && code[k] === '(') {
+                        out += '<span class="syn-builtin">' + escapeHtml(word) + '</span>';
+                    } else {
+                        out += escapeHtml(word);
+                    }
+                } else if (i + word.length < len) {
+                    // check if it's a function call
+                    let k = i + word.length;
+                    while (k < len && code[k] === ' ') k++;
+                    if (k < len && code[k] === '(') {
+                        out += '<span class="syn-fn">' + escapeHtml(word) + '</span>';
+                    } else {
+                        out += escapeHtml(word);
+                    }
+                } else {
+                    out += escapeHtml(word);
+                }
+                i += word.length;
+                continue;
+            }
+        }
+
+        // Multi-char operators
+        if (i + 1 < len) {
+            const two = code.slice(i, i+2);
+            if (['=>','->', '|>', ':=', '..', '==', '!=', '>=', '<=', '~~', '+=', '-=', '*=', '/=', '%=', '<<', '>>', '**', '//'].includes(two)) {
+                // Check for 3-char
+                if (i + 2 < len) {
+                    const three = code.slice(i, i+3);
+                    if (['..=', '%>%'].includes(three) || (three === '%>%')) {
+                        out += '<span class="syn-op">' + escapeHtml(three) + '</span>';
+                        i += 3;
+                        continue;
+                    }
+                }
+                out += '<span class="syn-op">' + escapeHtml(two) + '</span>';
+                i += 2;
+                continue;
+            }
+        }
+
+        // Single-char operators
+        if ('+-*/%=<>!&|^~?'.includes(code[i])) {
+            out += '<span class="syn-op">' + escapeHtml(code[i]) + '</span>';
+            i++;
+            continue;
+        }
+
+        // Braces / brackets
+        if ('()[]{}:;,'.includes(code[i])) {
+            out += '<span class="syn-brace">' + escapeHtml(code[i]) + '</span>';
+            i++;
+            continue;
+        }
+
+        // Everything else (whitespace, etc.)
+        out += escapeHtml(code[i]);
+        i++;
+    }
+
+    return out;
+}
+
+function highlightString(code, start) {
+    let out = '<span class="syn-str">"</span>';
+    let i = start + 1;
+    const len = code.length;
+    let buf = '';
+
+    while (i < len && code[i] !== '"') {
+        if (code[i] === '\\') {
+            buf += code[i] + (code[i+1] || '');
+            i += 2;
+            continue;
+        }
+        if (code[i] === '{') {
+            // Flush buffer
+            if (buf) {
+                out += '<span class="syn-str">' + escapeHtml(buf) + '</span>';
+                buf = '';
+            }
+            // Find matching close brace
+            let depth = 1;
+            let j = i + 1;
+            while (j < len && depth > 0) {
+                if (code[j] === '{') depth++;
+                else if (code[j] === '}') depth--;
+                j++;
+            }
+            const inner = code.slice(i + 1, j - 1);
+            out += '<span class="syn-brace">{</span>';
+            out += '<span class="syn-interp">' + highlightStateMachine(inner) + '</span>';
+            out += '<span class="syn-brace">}</span>';
+            i = j;
+            continue;
+        }
+        buf += code[i];
+        i++;
+    }
+
+    if (buf) {
+        out += '<span class="syn-str">' + escapeHtml(buf) + '</span>';
+    }
+    if (i < len && code[i] === '"') {
+        out += '<span class="syn-str">"</span>';
+        i++;
+    }
+    return out;
+}
+
+function skipString(code, start) {
+    let i = start + 1;
+    const len = code.length;
+    while (i < len && code[i] !== '"') {
+        if (code[i] === '\\') i++;
+        i++;
+    }
+    return Math.min(i + 1, len);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EDITOR SYNC
+// ═══════════════════════════════════════════════════════════════
+
+function updateEditor() {
+    const code = codeInput.value;
+
+    // Syntax highlight
+    highlight.innerHTML = highlightCode(code) + '\n ';
+
+    // Line numbers
+    const lines = code.split('\n');
+    let gutterHtml = '';
+    for (let i = 1; i <= lines.length; i++) {
+        gutterHtml += i + '\n';
+    }
+    gutter.textContent = gutterHtml;
+
+    // Status bar
+    const pos = codeInput.selectionStart;
+    const before = code.slice(0, pos);
+    const line = before.split('\n').length;
+    const col = pos - before.lastIndexOf('\n');
+    statusCursor.textContent = `Ln ${line}, Col ${col}`;
+    statusChars.textContent = `${code.length} chars`;
+
+    // Sync scroll
+    syncScroll();
+}
+
+function syncScroll() {
+    highlight.style.top = -editorWrap.scrollTop + 'px';
+    highlight.style.left = -editorWrap.scrollLeft + 'px';
+    gutter.style.top = -editorWrap.scrollTop + 'px';
+}
+
+codeInput.addEventListener('input', updateEditor);
+codeInput.addEventListener('scroll', syncScroll);
+editorWrap.addEventListener('scroll', syncScroll);
+codeInput.addEventListener('click', updateEditor);
+codeInput.addEventListener('keyup', updateEditor);
+codeInput.addEventListener('select', updateEditor);
+
+// ═══════════════════════════════════════════════════════════════
+// SMART EDITING
+// ═══════════════════════════════════════════════════════════════
+
+const PAIRS = { '(': ')', '[': ']', '{': '}', '"': '"' };
+const CLOSE_CHARS = new Set([')', ']', '}', '"']);
+
+codeInput.addEventListener('keydown', function(e) {
+    const ta = this;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const val = ta.value;
+
+    // ── Run: Ctrl+Enter ──
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        runCode();
+        return;
+    }
+
+    // ── Tab: indent ──
+    if (e.key === 'Tab' && !e.ctrlKey) {
+        e.preventDefault();
+        if (e.shiftKey) {
+            // Outdent
+            const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+            const line = val.slice(lineStart, end);
+            if (line.startsWith('    ')) {
+                ta.value = val.slice(0, lineStart) + line.slice(4) + val.slice(end);
+                ta.selectionStart = Math.max(lineStart, start - 4);
+                ta.selectionEnd = ta.selectionStart;
+            }
+        } else {
+            insertText(ta, '    ');
+        }
+        updateEditor();
+        return;
+    }
+
+    // ── Enter: auto-indent ──
+    if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+        e.preventDefault();
+        const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+        const currentLine = val.slice(lineStart, start);
+        const indent = currentLine.match(/^\s*/)[0];
+        const trimmed = currentLine.trimEnd();
+        const lastChar = trimmed.slice(-1);
+
+        let newIndent = indent;
+        if (lastChar === '{' || lastChar === ':') {
+            newIndent = indent + '    ';
+        }
+
+        insertText(ta, '\n' + newIndent);
+        updateEditor();
+        return;
+    }
+
+    // ── Auto-close brackets ──
+    if (PAIRS[e.key] && !e.ctrlKey) {
+        if (e.key === '"' && start > 0 && /\w/.test(val[start-1])) return;
+        e.preventDefault();
+        if (start !== end) {
+            // Wrap selection
+            const sel = val.slice(start, end);
+            ta.value = val.slice(0, start) + e.key + sel + PAIRS[e.key] + val.slice(end);
+            ta.selectionStart = start + 1;
+            ta.selectionEnd = end + 1;
+        } else {
+            insertText(ta, e.key + PAIRS[e.key]);
+            ta.selectionStart = start + 1;
+            ta.selectionEnd = start + 1;
+        }
+        updateEditor();
+        return;
+    }
+
+    // ── Skip over closing bracket ──
+    if (CLOSE_CHARS.has(e.key) && val[start] === e.key) {
+        e.preventDefault();
+        ta.selectionStart = start + 1;
+        ta.selectionEnd = start + 1;
+        updateEditor();
+        return;
+    }
+
+    // ── Backspace: delete matching pair ──
+    if (e.key === 'Backspace' && start === end && start > 0) {
+        const before = val[start - 1];
+        const after = val[start];
+        if (PAIRS[before] === after) {
+            e.preventDefault();
+            ta.value = val.slice(0, start - 1) + val.slice(start + 1);
+            ta.selectionStart = start - 1;
+            ta.selectionEnd = start - 1;
+            updateEditor();
+            return;
+        }
+    }
+
+    // ── Ctrl+D: duplicate line ──
+    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+        let lineEnd = val.indexOf('\n', start);
+        if (lineEnd === -1) lineEnd = val.length;
+        const line = val.slice(lineStart, lineEnd);
+        ta.value = val.slice(0, lineEnd) + '\n' + line + val.slice(lineEnd);
+        ta.selectionStart = start + line.length + 1;
+        ta.selectionEnd = ta.selectionStart;
+        updateEditor();
+        return;
+    }
+
+    // ── Ctrl+L: clear output ──
+    if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+        e.preventDefault();
+        clearOutput();
+        return;
+    }
+
+    // ── Ctrl+B: toggle sidebar ──
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        toggleSidebar();
+        return;
+    }
+
+    // ── Ctrl+/: help ──
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        toggleHelp();
+        return;
+    }
+});
+
+function insertText(ta, text) {
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
+    ta.selectionStart = start + text.length;
+    ta.selectionEnd = start + text.length;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RUN CODE
+// ═══════════════════════════════════════════════════════════════
+
+async function runCode() {
+    if (isRunning) return;
+    isRunning = true;
+
+    btnRun.classList.add('running');
+    runIcon.innerHTML = '<span class="spinner"></span>';
+    statusDot.className = 'status-dot';
+    statusDot.style.background = 'var(--warning)';
+    statusText.textContent = 'Running...';
+
+    const code = codeInput.value;
+
+    try {
+        const resp = await fetch('/api/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+
+        const data = await resp.json();
+
+        outputContent.innerHTML = '';
+
+        if (data.success) {
+            outputBadge.textContent = 'OK';
+            outputBadge.className = 'output-badge success';
+            outputBadge.style.display = '';
+            statusDot.className = 'status-dot';
+            statusDot.style.background = 'var(--success)';
+            statusText.textContent = 'Success';
+
+            if (data.output && data.output.trim()) {
+                data.output.split('\n').forEach(line => {
+                    const div = document.createElement('div');
+                    div.className = 'output-line';
+                    div.textContent = line;
+                    div.style.animation = 'fadeIn 0.15s ease';
+                    outputContent.appendChild(div);
+                });
+            } else {
+                const div = document.createElement('div');
+                div.className = 'output-welcome';
+                div.textContent = '(no output)';
+                outputContent.appendChild(div);
+            }
+        } else {
+            outputBadge.textContent = 'Error';
+            outputBadge.className = 'output-badge error';
+            outputBadge.style.display = '';
+            statusDot.className = 'status-dot error';
+            statusDot.style.background = '';
+            statusText.textContent = 'Error';
+
+            const div = document.createElement('div');
+            div.className = 'output-error';
+            div.textContent = data.error || 'Unknown error';
+            outputContent.appendChild(div);
+        }
+
+        if (data.elapsed_ms !== undefined) {
+            let statsStr = `${data.elapsed_ms.toFixed(1)}ms`;
+            if (data.op_count) statsStr += ` | ${data.op_count.toLocaleString()} ops`;
+            outputStats.textContent = statsStr;
+        }
+
+    } catch (err) {
+        outputContent.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'output-error';
+        div.textContent = 'Connection error: ' + err.message;
+        outputContent.appendChild(div);
+        outputBadge.textContent = 'Error';
+        outputBadge.className = 'output-badge error';
+        outputBadge.style.display = '';
+        statusDot.className = 'status-dot error';
+        statusDot.style.background = '';
+        statusText.textContent = 'Connection error';
+    }
+
+    isRunning = false;
+    btnRun.classList.remove('running');
+    runIcon.innerHTML = '&#9654;';
+}
+
+function clearOutput() {
+    outputContent.innerHTML = '<span class="output-welcome">Output cleared.</span>';
+    outputBadge.style.display = 'none';
+    outputStats.textContent = '';
+    statusDot.className = 'status-dot idle';
+    statusDot.style.background = '';
+    statusText.textContent = 'Ready';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXAMPLES
+// ═══════════════════════════════════════════════════════════════
+
+// Built-in examples (in case API isn't available)
+const BUILTIN_EXAMPLES = [
+    {
+        name: 'Hello World',
+        code: `// Hello World - TinyTalk
+let name = "World"
+show("Hello, {name}!")
+
+// Variables and arithmetic
+let x = 10
+let y = 20
+show("{x} + {y} = {x + y}")
+
+// Functions
+fn square(x) {
+    return x * x
+}
+show("5 squared is {square(5)}")
+`
+    },
+    {
+        name: 'Step Chains',
+        code: `// Step Chains - TinyTalk's signature feature
+let data = [42, 17, 93, 5, 68, 31, 84, 12, 56, 29]
+
+// Sort and take top 5
+show("Top 5:" data _sort _reverse _take(5))
+
+// Filter and count
+show("Count > 30:" data _filter((x) => x > 30) _count)
+
+// Map and sum
+show("Doubled sum:" data _map((x) => x * 2) _sum)
+
+// Unique values
+let dupes = [1, 2, 2, 3, 3, 3, 4]
+show("Unique:" dupes _unique)
+
+// Chain multiple operations
+let result = data _filter((x) => x > 20) _sort _map((x) => x * 10) _take(3)
+show("Filtered, sorted, x10, top 3:" result)
+
+// Statistics
+show("Min:" data _min)
+show("Max:" data _max)
+show("Avg:" data _avg)
+`
+    },
+    {
+        name: 'Fibonacci',
+        code: `// Fibonacci in TinyTalk
+fn fib(n) {
+    if n <= 1 { return n }
+    return fib(n - 1) + fib(n - 2)
+}
+
+// First 15 fibonacci numbers
+for i in range(15) {
+    show("fib({i}) = {fib(i)}")
+}
+`
+    },
+    {
+        name: 'Blueprints (Classes)',
+        code: `// Blueprints - TinyTalk's class system
+
+blueprint Animal
+    field name = ""
+    field sound = ""
+    forge speak()
+        reply "{self.name} says {self.sound}!"
+    end
+end
+
+blueprint Dog
+    field name = ""
+    field tricks = []
+    forge speak()
+        reply "{self.name} says Woof!"
+    end
+    forge learn(trick)
+        append(self.tricks, trick)
+        reply "{self.name} learned {trick}"
+    end
+    forge showTricks()
+        reply "{self.name} knows: {self.tricks}"
+    end
+end
+
+let cat = Animal("Whiskers", "Meow")
+show(cat.speak())
+
+let dog = Dog("Rex", [])
+show(dog.speak())
+show(dog.learn("sit"))
+show(dog.learn("shake"))
+show(dog.showTricks())
+`
+    },
+    {
+        name: 'Pattern Matching',
+        code: `// Pattern Matching in TinyTalk
+
+fn describe(x) {
+    match x {
+        0 => return "zero"
+        1 => return "one"
+        _ => return "number: {x}"
+    }
+}
+
+for i in range(5) {
+    show(describe(i))
+}
+
+// Natural comparisons
+let items = [1, 2, 3, 4, 5]
+show(items has 3)
+show(items hasnt 10)
+show("hello world" islike "hello*")
+show(42 is 42)
+show(42 isnt 99)
+`
+    },
+    {
+        name: 'Classic Style',
+        code: `// Classic (Smalltalk-inspired) Style
+when PI = 3.14159
+
+law circle_area(r)
+    reply PI * r * r
+end
+
+law circle_circumference(r)
+    reply 2 * PI * r
+end
+
+show("=== Circle Calculator ===")
+for r in range(1, 6) {
+    show("r={r}: area={round(circle_area(r), 2)}, circ={round(circle_circumference(r), 2)}")
+}
+
+// Counter with mutable state
+blueprint Counter
+    field value = 0
+    forge inc()
+        self.value = self.value + 1
+        reply self.value
+    end
+    forge add(n)
+        self.value = self.value + n
+        reply self.value
+    end
+    forge reset()
+        self.value = 0
+        reply self.value
+    end
+end
+
+let c = Counter(0)
+show("\\nCounter: {c.inc()}, {c.inc()}, {c.add(10)}, reset: {c.reset()}")
+`
+    },
+    {
+        name: 'Data Processing',
+        code: `// Data Processing with Step Chains
+// TinyTalk shines at data manipulation!
+
+let students = [
+    {name: "Alice", grade: 92, subject: "Math"},
+    {name: "Bob", grade: 85, subject: "Science"},
+    {name: "Charlie", grade: 78, subject: "Math"},
+    {name: "Diana", grade: 95, subject: "Science"},
+    {name: "Eve", grade: 88, subject: "Math"},
+    {name: "Frank", grade: 72, subject: "Science"}
+]
+
+// Top 3 students by grade
+show("=== Top 3 Students ===")
+let top3 = students _sortBy((s) => s.grade) _reverse _take(3)
+for s in top3 {
+    show("  {s.name}: {s.grade}")
+}
+
+// Average grade by subject
+show("\\n=== Group by Subject ===")
+let grouped = students _group((s) => s.subject)
+for key in keys(grouped) {
+    let avg = grouped[key] _map((s) => s.grade) _avg
+    show("  {key}: avg = {round(avg, 1)}")
+}
+
+// Students with A grades (>= 90)
+let honor = students _filter((s) => s.grade >= 90) _map((s) => s.name)
+show("\\nHonor roll: {honor}")
+`
+    },
+    {
+        name: 'FizzBuzz',
+        code: `// FizzBuzz in TinyTalk
+
+fn fizzbuzz(n) {
+    if n % 15 == 0 { return "FizzBuzz" }
+    if n % 3 == 0 { return "Fizz" }
+    if n % 5 == 0 { return "Buzz" }
+    return str(n)
+}
+
+for i in range(1, 31) {
+    show(fizzbuzz(i))
+}
+`
+    }
+];
+
+async function loadExamples() {
+    // Try API first, fall back to built-in
+    try {
+        const resp = await fetch('/api/examples');
+        if (resp.ok) {
+            const apiExamples = await resp.json();
+            if (apiExamples.length > 0) {
+                examples = apiExamples.map(e => ({ name: e.name, code: e.code }));
+            }
+        }
+    } catch (e) { /* ignore */ }
+
+    // Merge: built-in examples + any API-only ones
+    const nameSet = new Set(examples.map(e => e.name.toLowerCase()));
+    for (const ex of BUILTIN_EXAMPLES) {
+        if (!nameSet.has(ex.name.toLowerCase())) {
+            examples.push(ex);
+        }
+    }
+    if (examples.length === 0) examples = BUILTIN_EXAMPLES;
+
+    // Populate select
+    exampleSelect.innerHTML = '<option value="">Load Example...</option>';
+    examples.forEach((ex, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = ex.name;
+        exampleSelect.appendChild(opt);
+    });
+
+    // Populate sidebar
+    sidebarExamples.innerHTML = '';
+    examples.forEach((ex, i) => {
+        const div = document.createElement('div');
+        div.className = 'sidebar-item';
+        div.innerHTML = `<span class="sidebar-item-icon">&#128196;</span><span class="sidebar-item-name">${escapeHtml(ex.name)}</span>`;
+        div.addEventListener('click', () => loadExample(i));
+        sidebarExamples.appendChild(div);
+    });
+}
+
+function loadExample(index) {
+    const ex = examples[index];
+    if (!ex) return;
+    codeInput.value = ex.code;
+    updateEditor();
+    codeInput.focus();
+    exampleSelect.value = '';
+
+    // Update sidebar active state
+    const items = sidebarExamples.querySelectorAll('.sidebar-item');
+    items.forEach((el, i) => el.classList.toggle('active', i === index));
+}
+
+exampleSelect.addEventListener('change', function() {
+    if (this.value !== '') loadExample(parseInt(this.value));
+});
+
+// Sidebar quick-ref snippets
+document.querySelectorAll('#sidebar-ref .sidebar-item').forEach(el => {
+    el.addEventListener('click', () => {
+        const snippet = el.getAttribute('data-snippet');
+        if (snippet) {
+            const decoded = snippet.replace(/&quot;/g, '"');
+            const ta = codeInput;
+            const start = ta.selectionStart;
+            const val = ta.value;
+            const prefix = start > 0 && val[start-1] !== '\n' ? '\n' : '';
+            insertText(ta, prefix + decoded + '\n');
+            updateEditor();
+            codeInput.focus();
+        }
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// THEME & FONT SIZE
+// ═══════════════════════════════════════════════════════════════
+
+themeSelect.addEventListener('change', function() {
+    document.documentElement.setAttribute('data-theme', this.value === 'dark' ? '' : this.value);
+    if (this.value === 'dark') document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('tt-theme', this.value);
+});
+
+fontsizeSelect.addEventListener('change', function() {
+    document.documentElement.style.setProperty('--editor-font-size', this.value + 'px');
+    localStorage.setItem('tt-fontsize', this.value);
+    updateEditor();
+});
+
+// Restore preferences
+(function restorePrefs() {
+    const theme = localStorage.getItem('tt-theme');
+    if (theme) {
+        themeSelect.value = theme;
+        if (theme !== 'dark') document.documentElement.setAttribute('data-theme', theme);
+    }
+    const fs = localStorage.getItem('tt-fontsize');
+    if (fs) {
+        fontsizeSelect.value = fs;
+        document.documentElement.style.setProperty('--editor-font-size', fs + 'px');
+    }
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// UI INTERACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+// Run button
+btnRun.addEventListener('click', runCode);
+document.getElementById('btn-clear-output').addEventListener('click', clearOutput);
+
+// Sidebar toggle
+function toggleSidebar() {
+    sidebar.classList.toggle('collapsed');
+    localStorage.setItem('tt-sidebar', sidebar.classList.contains('collapsed') ? 'collapsed' : 'open');
+}
+document.getElementById('btn-sidebar').addEventListener('click', toggleSidebar);
+
+// Restore sidebar state
+if (localStorage.getItem('tt-sidebar') === 'collapsed') {
+    sidebar.classList.add('collapsed');
+}
+
+// Help modal
+function toggleHelp() {
+    helpOverlay.classList.toggle('visible');
+}
+document.getElementById('btn-help').addEventListener('click', toggleHelp);
+document.getElementById('help-close-btn').addEventListener('click', toggleHelp);
+helpOverlay.addEventListener('click', function(e) {
+    if (e.target === helpOverlay) toggleHelp();
+});
+
+// Escape to close help
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && helpOverlay.classList.contains('visible')) {
+        toggleHelp();
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// RESIZE OUTPUT PANEL
+// ═══════════════════════════════════════════════════════════════
+
+let isResizing = false;
+
+resizeHandle.addEventListener('mousedown', function(e) {
+    isResizing = true;
+    resizeHandle.classList.add('active');
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+});
+
+document.addEventListener('mousemove', function(e) {
+    if (!isResizing) return;
+    const editorPane = document.getElementById('editor-pane');
+    const rect = editorPane.getBoundingClientRect();
+    const newHeight = rect.bottom - e.clientY;
+    outputPanel.style.height = Math.max(80, Math.min(newHeight, rect.height * 0.6)) + 'px';
+});
+
+document.addEventListener('mouseup', function() {
+    if (isResizing) {
+        isResizing = false;
+        resizeHandle.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+updateEditor();
+loadExamples();
+codeInput.focus();
+
+})();
+</script>
+</body>
+</html>
