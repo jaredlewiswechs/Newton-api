@@ -21,20 +21,52 @@ vercel
 
 The project is pre-configured with `vercel.json` — just connect the repo and deploy.
 
-## Run Locally
+## Run Locally (beginner-friendly)
+
+Follow these steps to run realTinyTalk on your machine. Commands assume macOS with `zsh`.
+
+1) Create and activate a virtual environment (recommended):
 
 ```bash
-# Clone the repo
-git clone https://github.com/jaredlewiswechs/realTinyTalk.git
-cd realTinyTalk
-
-# Install dependencies
-pip install -e .
-
-# Start the Web IDE
-python -m realTinyTalk.web.server
-# Open http://localhost:5555
+python3 -m venv .venv
+source .venv/bin/activate
 ```
+
+2) Install the package in editable mode (so changes take effect immediately):
+
+```bash
+pip install -e .
+```
+
+3) Start the Web IDE (server serves on port 5555):
+
+```bash
+# using the venv Python (recommended)
+./.venv/bin/python -m realTinyTalk.web.server
+
+# or if your `python` already points to the venv
+python -m realTinyTalk.web.server
+```
+
+4) Open the IDE in your browser at:
+
+```
+http://localhost:5555
+```
+
+5) Run an example script from the repo (use the module entrypoint if `tinytalk` CLI isn't on your PATH):
+
+```bash
+./.venv/bin/python -m realTinyTalk.cli run realTinyTalk/examples/hello.tt
+
+# if you installed the console script, you can also run:
+tinytalk run realTinyTalk/examples/hello.tt
+```
+
+Troubleshooting
+- If you see an error like `TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'`, you're running Python 3.9 which doesn't support the `X | None` type hint syntax. The project includes (and I committed) a small compatibility fix in `realTinyTalk/web/server.py` that replaces `dict | None` with `Optional[dict]` so the server runs on 3.9. If you prefer, use Python 3.10+.
+
+That's it — once the server is running, the Web IDE should load and you can edit and run TinyTalk scripts locally.
 
 ## Use as a Library
 
