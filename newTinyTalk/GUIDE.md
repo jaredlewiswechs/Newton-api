@@ -440,6 +440,31 @@ fn add(a, b) {
 show(add(3, 4))   // 7
 ```
 
+### Default parameter values
+
+Parameters can have default values. If a caller doesn't provide an argument,
+the default kicks in:
+
+```
+fn greet(name = "World") {
+    show("Hello, {name}!")
+}
+
+greet()          // "Hello, World!"
+greet("Alice")   // "Hello, Alice!"
+```
+
+You can mix required and optional parameters:
+
+```
+fn repeat_str(s, n = 3) {
+    return s * n
+}
+
+show(repeat_str("ha"))      // "hahaha"
+show(repeat_str("ho", 2))   // "hoho"
+```
+
 ### Recursion (a function calling itself)
 
 ```
@@ -464,6 +489,31 @@ show(double(5))    // 10
 
 let add = (a, b) => a + b
 show(add(3, 4))    // 7
+```
+
+### Multi-line lambdas
+
+Need more than one line? Use curly braces:
+
+```
+let classify = (x) => {
+    if x > 0 { return "positive" }
+    if x < 0 { return "negative" }
+    return "zero"
+}
+
+show(classify(5))    // "positive"
+show(classify(-3))   // "negative"
+```
+
+The last expression in a block is returned automatically, so you can skip `return` for simple cases:
+
+```
+let calc = (x) => {
+    let y = x + 10
+    y * 2
+}
+show(calc(5))   // 30
 ```
 
 Lambdas really shine when combined with step chains and higher-order functions:
@@ -548,6 +598,25 @@ show(scores _min)     // 78
 show(scores _max)     // 95
 show(scores _count)   // 5
 ```
+
+#### Reducing (combining all items into one value)
+
+```
+// Sum with explicit initial value
+show([1, 2, 3, 4, 5] _reduce((acc, x) => acc + x, 0))   // 15
+
+// Product
+show([1, 2, 3, 4, 5] _reduce((acc, x) => acc * x, 1))   // 120
+
+// Without an initial value, uses the first item as the starting point
+show([1, 2, 3, 4] _reduce((acc, x) => acc + x))          // 10
+
+// String concatenation
+show(["a", "b", "c"] _reduce((acc, x) => acc + x, ""))   // "abc"
+```
+
+`_reduce` is the general-purpose aggregation — `_sum`, `_min`, `_max`, `_avg` are just
+shortcuts for common cases.
 
 #### Deduplication
 
@@ -1107,8 +1176,10 @@ when z = 30          // immutable (classic style)
 ### Functions
 ```
 fn add(a, b) { return a + b }           // modern
+fn greet(name = "World") { ... }        // default params
 law add(a, b) reply a + b end           // classic
-let add = (a, b) => a + b               // lambda
+let add = (a, b) => a + b               // lambda (single expr)
+let f = (x) => { let y = x + 1; y }    // lambda (multi-line)
 ```
 
 ### Control flow
@@ -1125,6 +1196,7 @@ data _sort _reverse _take(5)
 data _filter((x) => x > 10) _map((x) => x * 2) _sum
 data _unique _count
 data _group((x) => x.category)
+data _reduce((acc, x) => acc + x, 0)
 ```
 
 ### Natural comparisons
@@ -1180,5 +1252,7 @@ enough to write real programs. The key things that make it unique:
 4. **String interpolation** — Just put `{expressions}` in your strings
 5. **Bare-word strings** — `print(Hello, world!)` just works, no quotes needed
 6. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
+7. **Default parameters** — `fn greet(name = "World")` — skip args you don't need
+8. **Multi-line lambdas** — `(x) => { ... }` for complex anonymous functions
 
 Now go build something cool. Happy coding!

@@ -79,6 +79,7 @@ class TokenType(Enum):
     STEP_FLATTEN = auto()
     STEP_ZIP = auto()
     STEP_CHUNK = auto()
+    STEP_REDUCE = auto()
 
     # --- Natural language comparisons ---
     IS = auto()
@@ -313,6 +314,7 @@ class Lexer:
         "_flatten": TokenType.STEP_FLATTEN,
         "_zip": TokenType.STEP_ZIP,
         "_chunk": TokenType.STEP_CHUNK,
+        "_reduce": TokenType.STEP_REDUCE,
     }
 
     def __init__(self, source: str):

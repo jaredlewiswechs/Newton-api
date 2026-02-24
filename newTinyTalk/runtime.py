@@ -175,6 +175,50 @@ class Runtime:
         for name, val in STDLIB_CONSTANTS.items():
             self.global_scope.define(name, val, const=True)
 
+        # Override higher-order builtins with runtime-aware versions
+        # so they can call user-defined (non-native) functions.
+        self._register_hof("filter", self._builtin_filter)
+        self._register_hof("map_", self._builtin_map_fn)
+        self._register_hof("reduce", self._builtin_reduce)
+
+    def _register_hof(self, name: str, fn):
+        self.global_scope.variables[name] = Value.function_val(
+            TinyFunction(name, [], None, self.global_scope, True, fn)
+        )
+
+    def _builtin_filter(self, args: List[Value]) -> Value:
+        if len(args) < 2:
+            return Value.list_val([])
+        fn_val, items = args[0], args[1]
+        if fn_val.type != ValueType.FUNCTION or items.type != ValueType.LIST:
+            return Value.list_val([])
+        return Value.list_val([
+            item for item in items.data
+            if self._call_function(fn_val.data, [item], self.global_scope, 0).is_truthy()
+        ])
+
+    def _builtin_map_fn(self, args: List[Value]) -> Value:
+        if len(args) < 2:
+            return Value.list_val([])
+        fn_val, items = args[0], args[1]
+        if fn_val.type != ValueType.FUNCTION or items.type != ValueType.LIST:
+            return Value.list_val([])
+        return Value.list_val([
+            self._call_function(fn_val.data, [item], self.global_scope, 0)
+            for item in items.data
+        ])
+
+    def _builtin_reduce(self, args: List[Value]) -> Value:
+        if len(args) < 3:
+            return Value.null_val()
+        fn_val, items, initial = args[0], args[1], args[2]
+        if fn_val.type != ValueType.FUNCTION or items.type != ValueType.LIST:
+            return initial
+        acc = initial
+        for item in items.data:
+            acc = self._call_function(fn_val.data, [acc, item], self.global_scope, 0)
+        return acc
+
     # -- execute ------------------------------------------------------------
 
     def execute(self, ast) -> Value:
@@ -551,8 +595,15 @@ class Runtime:
             if fn.is_native:
                 return fn.native_fn(args)
             fn_scope = Scope(fn.closure)
-            for i, (pname, _) in enumerate(fn.params):
-                fn_scope.define(pname, args[i] if i < len(args) else Value.null_val())
+            for i, param in enumerate(fn.params):
+                pname = param[0]
+                default = param[2] if len(param) > 2 else None
+                if i < len(args):
+                    fn_scope.define(pname, args[i])
+                elif default is not None:
+                    fn_scope.define(pname, self._eval(default, fn.closure))
+                else:
+                    fn_scope.define(pname, Value.null_val())
             try:
                 return self._eval(fn.body, fn_scope)
             except ReturnException as e:
@@ -568,8 +619,15 @@ class Runtime:
             fn = bound.method
             fn_scope = Scope(fn.closure)
             fn_scope.define("self", Value(ValueType.STRUCT_INSTANCE, bound.instance))
-            for i, (pname, _) in enumerate(fn.params):
-                fn_scope.define(pname, args[i] if i < len(args) else Value.null_val())
+            for i, param in enumerate(fn.params):
+                pname = param[0]
+                default = param[2] if len(param) > 2 else None
+                if i < len(args):
+                    fn_scope.define(pname, args[i])
+                elif default is not None:
+                    fn_scope.define(pname, self._eval(default, fn.closure))
+                else:
+                    fn_scope.define(pname, Value.null_val())
             try:
                 return self._eval(fn.body, fn_scope)
             except ReturnException as e:
@@ -735,12 +793,18 @@ class Runtime:
         elif isinstance(node.target, Index):
             container = self._eval(node.target.obj, scope)
             idx = self._eval(node.target.index, scope)
+            if node.op != "=":
+                old = self._eval_index(node.target, scope)
+                val = self._apply_op(old, val, node.op[:-1], node.line)
             if container.type == ValueType.LIST:
                 container.data[int(idx.data)] = val
             elif container.type == ValueType.MAP:
                 container.data[idx.to_python()] = val
         elif isinstance(node.target, Member):
             obj = self._eval(node.target.obj, scope)
+            if node.op != "=":
+                old = self._eval_member(node.target, scope)
+                val = self._apply_op(old, val, node.op[:-1], node.line)
             if obj.type == ValueType.STRUCT_INSTANCE:
                 obj.data.fields[node.target.field_name] = val
             elif obj.type == ValueType.MAP:
@@ -987,6 +1051,21 @@ class Runtime:
         if step == "_chunk":
             n = int(args[0].data) if args else 2
             return Value.list_val([Value.list_val(items[i:i + n]) for i in range(0, len(items), n)])
+
+        if step == "_reduce":
+            if not args or args[0].type != ValueType.FUNCTION:
+                raise TinyTalkError("_reduce requires a function", line)
+            if len(args) < 2:
+                if not items:
+                    return Value.null_val()
+                acc = items[0]
+                remaining = items[1:]
+            else:
+                acc = args[1]
+                remaining = items
+            for item in remaining:
+                acc = self._call_function(args[0].data, [acc, item], scope, line)
+            return acc
 
         raise TinyTalkError(f"Unknown step: {step}", line)
 

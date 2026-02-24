@@ -590,3 +590,236 @@ class TestAssertions:
     def test_assert_equal_fails(self):
         r = run('assert_equal(1, 2)')
         assert not r.success
+
+
+# ===== Bug Fix: stdlib higher-order functions with user-defined fns =====
+
+class TestHigherOrderBuiltins:
+    def test_filter_with_lambda(self):
+        code = """
+let evens = filter((x) => x % 2 == 0, [1, 2, 3, 4, 5, 6])
+show(evens)
+"""
+        assert output(code) == "[2, 4, 6]"
+
+    def test_map_with_lambda(self):
+        code = """
+let doubled = map_((x) => x * 10, [1, 2, 3])
+show(doubled)
+"""
+        assert output(code) == "[10, 20, 30]"
+
+    def test_reduce_with_lambda(self):
+        code = """
+let total = reduce((acc, x) => acc + x, [1, 2, 3, 4, 5], 0)
+show(total)
+"""
+        assert output(code) == "15"
+
+    def test_reduce_with_named_fn(self):
+        code = """
+fn add(a, b) { return a + b }
+let total = reduce(add, [1, 2, 3, 4], 0)
+show(total)
+"""
+        assert output(code) == "10"
+
+    def test_filter_with_named_fn(self):
+        code = """
+fn is_positive(x) { return x > 0 }
+let result = filter(is_positive, [-2, -1, 0, 1, 2, 3])
+show(result)
+"""
+        assert output(code) == "[1, 2, 3]"
+
+
+# ===== Bug Fix: compound assignment on Index/Member targets =====
+
+class TestCompoundAssignTargets:
+    def test_list_index_plus_eq(self):
+        code = """
+let a = [10, 20, 30]
+a[1] += 5
+show(a)
+"""
+        assert output(code) == "[10, 25, 30]"
+
+    def test_list_index_minus_eq(self):
+        code = """
+let a = [10, 20, 30]
+a[0] -= 3
+show(a)
+"""
+        assert output(code) == "[7, 20, 30]"
+
+    def test_map_index_plus_eq(self):
+        code = """
+let m = {"score": 10}
+m["score"] += 5
+show(m["score"])
+"""
+        assert output(code) == "15"
+
+    def test_member_plus_eq(self):
+        code = """
+let m = {"x": 10, "y": 20}
+m.x += 100
+show(m.x)
+"""
+        assert output(code) == "110"
+
+    def test_struct_field_compound_assign(self):
+        code = """
+struct Point { x: int, y: int }
+let p = Point(3, 4)
+p.x += 10
+show(p.x)
+"""
+        assert output(code) == "13"
+
+
+# ===== Multi-line Lambdas =====
+
+class TestMultiLineLambdas:
+    def test_block_lambda(self):
+        code = """
+let process = (x) => {
+    let doubled = x * 2
+    return doubled + 1
+}
+show(process(5))
+"""
+        assert output(code) == "11"
+
+    def test_block_lambda_implicit_return(self):
+        code = """
+let calc = (x) => {
+    let y = x + 10
+    y * 2
+}
+show(calc(5))
+"""
+        assert output(code) == "30"
+
+    def test_block_lambda_in_step_chain(self):
+        code = """
+let result = [1, 2, 3, 4, 5] _map((x) => {
+    let squared = x * x
+    return squared + 1
+})
+show(result)
+"""
+        assert output(code) == "[2, 5, 10, 17, 26]"
+
+    def test_block_lambda_with_conditional(self):
+        code = """
+let classify = (x) => {
+    if x > 0 { return "positive" }
+    if x < 0 { return "negative" }
+    return "zero"
+}
+show(classify(5))
+show(classify(-3))
+show(classify(0))
+"""
+        assert output(code) == "positive\nnegative\nzero"
+
+    def test_pipe_lambda_still_works(self):
+        """Ensure |x| expr lambdas still work."""
+        code = """
+let double = |x| x * 2
+show(double(7))
+"""
+        assert output(code) == "14"
+
+
+# ===== Default Parameters =====
+
+class TestDefaultParams:
+    def test_basic_default(self):
+        code = """
+fn greet(name = "World") {
+    return "Hello, " + name
+}
+show(greet())
+show(greet("Alice"))
+"""
+        assert output(code) == "Hello, World\nHello, Alice"
+
+    def test_multiple_defaults(self):
+        code = """
+fn make_point(x = 0, y = 0) {
+    return [x, y]
+}
+show(make_point())
+show(make_point(5))
+show(make_point(3, 4))
+"""
+        assert output(code) == "[0, 0]\n[5, 0]\n[3, 4]"
+
+    def test_mixed_required_and_default(self):
+        code = """
+fn repeat_str(s, n = 3) {
+    return s * n
+}
+show(repeat_str("ha"))
+show(repeat_str("ho", 2))
+"""
+        assert output(code) == "hahaha\nhoho"
+
+    def test_default_with_expression(self):
+        code = """
+const BASE = 10
+fn add_base(x, base = BASE) {
+    return x + base
+}
+show(add_base(5))
+show(add_base(5, 20))
+"""
+        assert output(code) == "15\n25"
+
+
+# ===== _reduce Step Chain =====
+
+class TestReduceStep:
+    def test_reduce_sum(self):
+        code = """
+show([1, 2, 3, 4, 5] _reduce((acc, x) => acc + x, 0))
+"""
+        assert output(code) == "15"
+
+    def test_reduce_product(self):
+        code = """
+show([1, 2, 3, 4, 5] _reduce((acc, x) => acc * x, 1))
+"""
+        assert output(code) == "120"
+
+    def test_reduce_without_initial(self):
+        code = """
+show([1, 2, 3, 4] _reduce((acc, x) => acc + x))
+"""
+        assert output(code) == "10"
+
+    def test_reduce_string_concat(self):
+        code = """
+show(["a", "b", "c"] _reduce((acc, x) => acc + x, ""))
+"""
+        assert output(code) == "abc"
+
+    def test_reduce_in_chain(self):
+        code = """
+show([1, 2, 3, 4, 5] _filter((x) => x > 2) _reduce((acc, x) => acc + x, 0))
+"""
+        assert output(code) == "12"
+
+    def test_reduce_empty_with_initial(self):
+        code = """
+show([] _reduce((acc, x) => acc + x, 42))
+"""
+        assert output(code) == "42"
+
+    def test_reduce_empty_without_initial(self):
+        code = """
+show([] _reduce((acc, x) => acc + x))
+"""
+        assert output(code) == "null"
