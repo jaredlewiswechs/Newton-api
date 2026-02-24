@@ -113,6 +113,8 @@ class Parser:
             return BreakStmt(line=tok.line, column=tok.column)
         if self._match(TokenType.CONTINUE):
             return ContinueStmt(line=tok.line, column=tok.column)
+        if self._match(TokenType.FROM):
+            return self._parse_from_import()
         if self._match(TokenType.IMPORT):
             return self._parse_import()
         if self._match(TokenType.MATCH):
@@ -181,6 +183,9 @@ class Parser:
         ret_type = None
         if self._match(TokenType.ARROW):
             ret_type = self._parse_type_hint()
+        elif self._match(TokenType.COLON):
+            # fn name(params): ReturnType { body }
+            ret_type = self._parse_type_hint()
         self._skip_newlines()
         self._consume(TokenType.LBRACE, "Expected '{' before function body")
         body = self._parse_block()
@@ -205,6 +210,8 @@ class Parser:
         return params
 
     def _parse_type_hint(self) -> str:
+        # Handle leading ? for optional types: ?str, ?int, etc.
+        optional_prefix = self._match(TokenType.QUESTION)
         tok = self._advance()
         if tok.type == TokenType.IDENTIFIER:
             ts = tok.value
@@ -222,7 +229,7 @@ class Parser:
                 inner.append(self._parse_type_hint())
             self._consume(TokenType.RBRACKET, "Expected ']'")
             ts = f"{ts}[{', '.join(inner)}]"
-        if self._match(TokenType.QUESTION):
+        if optional_prefix or self._match(TokenType.QUESTION):
             ts = f"?{ts}"
         return ts
 
@@ -334,9 +341,34 @@ class Parser:
         tok = self.tokens[self.pos - 1]
         mod_tok = self._consume(TokenType.STRING, "Expected module path")
         alias = None
+        items = []
         if self._match(TokenType.AS):
             alias = self._consume(TokenType.IDENTIFIER, "Expected alias").value
-        return ImportStmt(module=mod_tok.value, alias=alias, line=tok.line, column=tok.column)
+        # from "module" use { name1, name2 } style is handled by _parse_from
+        return ImportStmt(module=mod_tok.value, items=items, alias=alias, line=tok.line, column=tok.column)
+
+    def _parse_from_import(self) -> ImportStmt:
+        """from "module" use { name1, name2 }"""
+        tok = self.tokens[self.pos - 1]
+        mod_tok = self._consume(TokenType.STRING, "Expected module path after 'from'")
+        self._consume(TokenType.USE, "Expected 'use' after module path")
+        items = []
+        if self._match(TokenType.LBRACE):
+            self._skip_newlines()
+            if not self._check(TokenType.RBRACE):
+                items.append(self._consume(TokenType.IDENTIFIER, "Expected name").value)
+                while self._match(TokenType.COMMA):
+                    self._skip_newlines()
+                    if self._check(TokenType.RBRACE):
+                        break
+                    items.append(self._consume(TokenType.IDENTIFIER, "Expected name").value)
+            self._skip_newlines()
+            self._consume(TokenType.RBRACE, "Expected '}'")
+        else:
+            items.append(self._consume(TokenType.IDENTIFIER, "Expected name after 'use'").value)
+            while self._match(TokenType.COMMA):
+                items.append(self._consume(TokenType.IDENTIFIER, "Expected name").value)
+        return ImportStmt(module=mod_tok.value, items=items, alias=None, line=tok.line, column=tok.column)
 
     def _parse_match(self) -> MatchStmt:
         return self._parse_match_expr()

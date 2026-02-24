@@ -39,9 +39,14 @@
 27. [Reshaping Data — Pivot & Unpivot](#27-reshaping-data--pivot--unpivot)
 28. [Rolling Aggregates — Window Functions](#28-rolling-aggregates--window-functions)
 29. [Python Transpiler — Export to Python/pandas](#29-python-transpiler--export-to-pythonpandas)
-30. [Built-in Functions — The Standard Toolkit](#30-built-in-functions--the-standard-toolkit)
-31. [Running Your Code](#31-running-your-code)
-32. [Quick Reference Cheat Sheet](#32-quick-reference-cheat-sheet)
+30. [SQL Transpiler — See the SQL Behind Your Pipelines](#30-sql-transpiler--see-the-sql-behind-your-pipelines)
+31. [Imports — Building Multi-File Programs](#31-imports--building-multi-file-programs)
+32. [Type Annotations — Optional Safety Nets](#32-type-annotations--optional-safety-nets)
+33. [Built-in Functions — The Standard Toolkit](#33-built-in-functions--the-standard-toolkit)
+34. [Running Your Code](#34-running-your-code)
+35. [The REPL — Interactive Data Exploration](#35-the-repl--interactive-data-exploration)
+36. [Error Messages — TinyTalk Teaches You](#36-error-messages--tinytalk-teaches-you)
+37. [Quick Reference Cheat Sheet](#37-quick-reference-cheat-sheet)
 
 ---
 
@@ -1649,7 +1654,282 @@ list(reversed(sorted([x for x in data if (lambda r: (r["score"] > 90))(x)],
 
 ---
 
-## 30. Built-in Functions — The Standard Toolkit
+## 30. SQL Transpiler — See the SQL Behind Your Pipelines
+
+TinyTalk's step chains map almost 1:1 to SQL. The SQL transpiler converts your
+data pipelines into equivalent SQL queries — a teaching tool that doesn't exist
+anywhere else. Students write a TinyTalk pipeline and see the SQL equivalent.
+
+### Usage from Python
+
+```python
+from newTinyTalk import transpile_sql
+
+tt_code = 'employees _filter((r) => r["salary"] > 50000) _select("name", "dept", "salary") _arrange((r) => r["salary"], "desc") _take(10)'
+
+print(transpile_sql(tt_code))
+```
+
+Output:
+
+```sql
+SELECT name, dept, salary
+FROM employees
+WHERE salary > 50000
+ORDER BY salary DESC
+LIMIT 10;
+```
+
+### From the command line
+
+```bash
+tinytalk transpile-sql analysis.tt
+```
+
+### Step chain → SQL mapping
+
+| TinyTalk | SQL |
+|----------|-----|
+| `_filter((r) => r["age"] > 30)` | `WHERE age > 30` |
+| `_select("name", "age")` | `SELECT name, age` |
+| `_group((r) => r["dept"])` | `GROUP BY dept` |
+| `_summarize({"total": ...})` | `SELECT SUM(col) AS total` |
+| `_arrange((r) => r["salary"])` | `ORDER BY salary` |
+| `_arrange((r) => r["salary"], "desc")` | `ORDER BY salary DESC` |
+| `_take(10)` | `LIMIT 10` |
+| `_drop(5)` | `OFFSET 5` |
+| `_join(right, key_fn)` | `INNER JOIN right ON key` |
+| `_leftJoin(right, key_fn)` | `LEFT JOIN right ON key` |
+| `_distinct` | `SELECT DISTINCT` |
+| `_rename({"old": "new"})` | `SELECT old AS new` |
+| `_count` | `SELECT COUNT(*)` |
+| `_sum` | `SELECT SUM(*)` |
+| `_avg` | `SELECT AVG(*)` |
+| `_first` | `LIMIT 1` |
+
+### Group + summarize → GROUP BY + aggregation
+
+```
+employees
+    _group((r) => r["dept"])
+    _summarize({
+        "avg_salary": (rows) => rows _map((r) => r["salary"]) _avg,
+        "headcount":  (rows) => rows _count
+    })
+```
+
+Becomes:
+
+```sql
+SELECT dept, AVG(salary) AS avg_salary, COUNT(*) AS headcount
+FROM employees
+GROUP BY dept;
+```
+
+### For educators
+
+This is the bridge between TinyTalk and industry SQL. A student writes a readable
+data pipeline and immediately sees the SQL equivalent. Combined with the Python
+transpiler, you now get **three industry languages from one syntax**.
+
+```
+// TinyTalk (what students write)
+data _filter((r) => r["age"] > 25) _select("name", "age") _arrange((r) => r["age"])
+
+// SQL (what they learn)
+SELECT name, age FROM data WHERE age > 25 ORDER BY age;
+
+// Python (what they'll use at work)
+sorted([{k: row[k] for k in ["name", "age"]} for row in [x for x in data if (lambda r: (r["age"] > 25))(x)]], key=lambda r: r["age"])
+```
+
+---
+
+## 31. Imports — Building Multi-File Programs
+
+Once your program outgrows a single file, you need a module system. TinyTalk
+supports three import styles, so programs can compose across files.
+
+### `import` — Import everything
+
+```
+// utils.tt
+fn double(x) { return x * 2 }
+fn triple(x) { return x * 3 }
+let VERSION = "1.0"
+```
+
+```
+// main.tt
+import "utils.tt"
+
+show(double(5))    // 10
+show(triple(3))    // 9
+show(VERSION)      // 1.0
+```
+
+All top-level names from the module are brought into your scope. Names starting
+with `_` are considered private and are **not** imported.
+
+### `import ... as` — Namespace alias
+
+If you want to keep things organized (or avoid name collisions):
+
+```
+import "math_utils.tt" as math
+
+show(math["square"](5))   // 25
+show(math["PI"])           // 3.14159
+```
+
+### `from ... use` — Selective imports
+
+Import only what you need:
+
+```
+from "stats.tt" use { mean, median }
+
+let data = [10, 20, 30, 40, 50]
+show(mean(data))     // 30.0
+show(median(data))   // 30
+```
+
+This is the cleanest style when you only need a few things from a big module.
+You can also write it without braces for a single name:
+
+```
+from "stats.tt" use mean
+```
+
+### How it works
+
+- Modules are **executed once** and cached. Importing the same file twice
+  doesn't re-run it.
+- The `.tt` extension is optional — `import "utils"` and `import "utils.tt"`
+  are the same.
+- Paths are relative to the importing file's directory.
+- **Nested imports work** — a module can import other modules.
+
+### Example: multi-file project
+
+```
+// helpers/math.tt
+fn square(x) { return x * x }
+fn cube(x) { return x * x * x }
+
+// helpers/format.tt
+fn dollars(n) { return "$" + str(round(n, 2)) }
+
+// main.tt
+from "helpers/math.tt" use { square, cube }
+from "helpers/format.tt" use { dollars }
+
+let price = 49.99
+show(dollars(price))           // $49.99
+show("Area: " + str(square(7)))  // Area: 49
+```
+
+---
+
+## 32. Type Annotations — Optional Safety Nets
+
+Type annotations help catch mistakes early and make code self-documenting.
+They are **completely optional** — code without annotations runs exactly
+the same. Add them when you want extra safety; leave them off when you want
+to move fast.
+
+### Variable annotations
+
+```
+let name: str = "Alice"
+let age: int = 25
+let score: float = 98.5
+let active: bool = true
+```
+
+If you assign the wrong type, you get a clear error:
+
+```
+let x: int = "hello"
+// Error: Type mismatch for variable 'x': expected int, got string
+```
+
+### Function parameter annotations
+
+```
+fn calculate_tax(income: float, rate: float = 0.08): float {
+    return income * rate
+}
+
+show(calculate_tax(1000.0))        // 80.0
+show(calculate_tax(1000.0, 0.1))   // 100.0
+```
+
+Both `:` and `->` work for return types:
+
+```
+fn greet(name: str): str {
+    return "Hello, " + name
+}
+
+// Same thing with arrow syntax
+fn greet2(name: str) -> str {
+    return "Hello, " + name
+}
+```
+
+### Available type names
+
+| Annotation | Matches |
+|-----------|---------|
+| `int` | Integer values |
+| `float` | Float values (also accepts int) |
+| `str` or `string` | String values |
+| `bool` or `boolean` | Boolean values |
+| `list` | List values |
+| `map` | Map values |
+| `num` or `number` | Int or float |
+| `any` | Anything (same as no annotation) |
+| `void` or `null` | Null only |
+
+### Optional types with `?`
+
+Prefix any type with `?` to also allow `null`:
+
+```
+fn find_user(id: int): ?map {
+    if id == 0 { return null }
+    return {"id": id, "name": "User " + str(id)}
+}
+
+show(find_user(1))     // {id: 1, name: User 1}
+show(find_user(0))     // null  (no error — ?map allows null)
+```
+
+### Parameterized types
+
+```
+let names: list[str] = ["Alice", "Bob"]
+let scores: map[str, int] = {"math": 95, "english": 88}
+```
+
+### Key principle: annotations are optional
+
+Beginners aren't burdened with types. Intermediate users add them for
+documentation and safety. The same function works with or without annotations:
+
+```
+// Both of these work identically:
+fn add(a, b) { return a + b }
+fn add(a: int, b: int): int { return a + b }
+```
+
+The only difference is that the annotated version will catch misuse at
+call time.
+
+---
+
+## 33. Built-in Functions — The Standard Toolkit
 
 ### Output
 
@@ -1776,7 +2056,7 @@ list(reversed(sorted([x for x in data if (lambda r: (r["score"] > 90))(x)],
 
 ---
 
-## 31. Running Your Code
+## 34. Running Your Code
 
 ### From the command line
 
@@ -1791,6 +2071,12 @@ tinytalk repl
 
 # Check syntax without running
 tinytalk check hello.tt
+
+# Transpile to Python
+tinytalk transpile analysis.tt
+
+# Transpile to SQL
+tinytalk transpile-sql analysis.tt
 ```
 
 ### Via the API
@@ -1831,22 +2117,187 @@ print(result.success)   # True
 
 ---
 
-## 32. Quick Reference Cheat Sheet
+## 35. The REPL — Interactive Data Exploration
+
+The TinyTalk REPL is more than a prompt — it's a data exploration environment.
+State persists across lines, so you can load a dataset, explore it with step
+chains, define functions, and export results.
+
+### Starting the REPL
+
+```bash
+tinytalk repl
+```
+
+```
+TinyTalk v2.0 - Two styles, one language.
+Type ':help' for commands, 'exit' to quit.
+
+>> let x = 42
+>> show(x * 2)
+84
+>> fn square(n) { return n * n }
+>> square(x)
+1764
+```
+
+Everything you define stays in memory. Variables, functions, structs — all
+persist until you exit or reset.
+
+### Loading data
+
+Load a CSV and start exploring immediately:
+
+```
+>> :load sales.csv
+Loaded sales.csv into variable 'data' (1500 rows)
+>> data _take(3)
+[{date: 2024-01-01, product: Widget, amount: 42}, ...]
+>> data _group((r) => r["product"]) _mapValues((rows) => rows _count)
+{Widget: 450, Gadget: 380, ...}
+```
+
+You can also load JSON files or TinyTalk source files:
+
+```
+>> :load helpers.tt
+Loaded helpers.tt
+>> :load config.json
+Loaded config.json into variable 'data'
+```
+
+### REPL commands
+
+| Command | Description |
+|---------|-------------|
+| `:help` | Show all commands |
+| `:vars` | List all defined variables (excludes builtins) |
+| `:load <file>` | Load a `.tt`, `.csv`, or `.json` file |
+| `:save <file.tt>` | Export your session history as a `.tt` file |
+| `:export <file>` | Export the last result as `.csv` or `.json` |
+| `:reset` | Clear all state and start fresh |
+| `exit` or `quit` | Leave the REPL |
+
+### Multi-line input
+
+The REPL auto-detects multi-line input. If you open a `{` without closing it,
+the REPL waits for you to finish:
+
+```
+>> fn fibonacci(n) {
+..     if n <= 1 { return n }
+..     return fibonacci(n - 1) + fibonacci(n - 2)
+.. }
+>> fibonacci(10)
+55
+```
+
+### Export workflow
+
+The REPL supports a full load → explore → export workflow:
+
+```
+>> :load employees.csv
+Loaded employees.csv into variable 'data' (500 rows)
+>> let top_earners = data _filter((r) => r["salary"] > 100000) _arrange((r) => r["salary"], "desc")
+>> top_earners _count
+42
+>> :export top_earners.csv
+Exported to top_earners.csv
+>> :save analysis.tt
+Session saved to analysis.tt
+```
+
+The saved `.tt` file contains your full session — you can re-run it later
+with `tinytalk run analysis.tt`.
+
+---
+
+## 36. Error Messages — TinyTalk Teaches You
+
+Most small languages die because their errors are cryptic. TinyTalk's error
+messages are designed to **teach**, not just complain.
+
+### Typo suggestions
+
+When you misspell a variable, TinyTalk suggests what you meant:
+
+```
+let score = 100
+let result = scroe + 1
+```
+
+```
+Error: Undefined variable 'scroe'. Did you mean 'score'?
+```
+
+This works for any visible variable in scope. The closer the typo, the better
+the suggestion.
+
+### Step chain guidance
+
+Use a step on the wrong type? TinyTalk tells you what to do instead:
+
+```
+let data = {"a": 1, "b": 2}
+data _sort
+```
+
+```
+Error: '_sort' works on lists. You have a map — try keys(data) _sort or values(data) _sort.
+```
+
+### Usage hints
+
+Can't remember the arguments for a step chain? The error tells you:
+
+```
+[1, 2, 3] _filter()
+```
+
+```
+Error: _filter requires a function: data _filter((x) => condition)
+```
+
+### Why this matters
+
+Good error messages are the difference between a language students love and
+one they abandon after 10 minutes. Every error in TinyTalk tries to answer
+three questions:
+
+1. **What went wrong?** — Clear description
+2. **Why?** — Context about types and expectations
+3. **How to fix it?** — Concrete suggestion
+
+---
+
+## 37. Quick Reference Cheat Sheet
 
 ### Variables
 ```
 let x = 10           // mutable
+let x: int = 10      // mutable, type-checked
 const y = 20         // immutable
 when z = 30          // immutable (classic style)
 ```
 
 ### Functions
 ```
-fn add(a, b) { return a + b }           // modern
-fn greet(name = "World") { ... }        // default params
-law add(a, b) reply a + b end           // classic
-let add = (a, b) => a + b               // lambda (single expr)
-let f = (x) => { let y = x + 1; y }    // lambda (multi-line)
+fn add(a, b) { return a + b }                      // modern
+fn add(a: int, b: int): int { return a + b }       // with types
+fn greet(name = "World") { ... }                   // default params
+fn tax(income: float, rate: float = 0.08): float { ... }  // types + defaults
+law add(a, b) reply a + b end                      // classic
+let add = (a, b) => a + b                          // lambda (single expr)
+let f = (x) => { let y = x + 1; y }               // lambda (multi-line)
+```
+
+### Imports
+```
+import "utils.tt"                           // import everything
+import "utils.tt" as utils                  // namespace alias
+from "stats.tt" use { mean, median }       // selective import
+from "stats.tt" use mean                   // single import
 ```
 
 ### Control flow
@@ -1893,12 +2344,36 @@ data _window(3, (w) => w _avg)              // rolling aggregate
 data _window(5, (w) => w _max)              // sliding max
 ```
 
-### Transpiler
+### Transpilers
 ```python
-from newTinyTalk import transpile, transpile_pandas
+from newTinyTalk import transpile, transpile_pandas, transpile_sql
 
 transpile('data _filter((x) => x > 5) _sum')       # → plain Python
 transpile_pandas('data _filter((x) => x > 5) _sum') # → pandas
+transpile_sql('data _filter((r) => r["age"] > 30) _select("name") _take(10)')  # → SQL
+```
+
+```bash
+tinytalk transpile analysis.tt       # Python output
+tinytalk transpile-sql analysis.tt   # SQL output
+```
+
+### REPL commands
+```
+:load data.csv           // load CSV into 'data' variable
+:load helpers.tt         // execute a .tt file
+:save session.tt         // export session history
+:export results.csv      // export last result
+:vars                    // list defined variables
+:reset                   // clear all state
+```
+
+### Type annotations
+```
+let x: int = 42                        // variable
+fn add(a: int, b: int): int { ... }   // function params + return
+fn find(id: int): ?map { ... }        // optional (nullable) return
+let n: num = 3.14                      // num = int | float
 ```
 
 ### Data I/O
@@ -1969,18 +2444,22 @@ enough to write real programs. The key things that make it unique:
 
 1. **Step chains** — Transform data like a pipeline, not a pile of nested calls
 2. **dplyr-style analysis** — `_select`, `_mutate`, `_summarize`, `_group` — feels like R
-3. **Reshape operations** — `_pivot` (long→wide), `_unpivot` (wide→long) — complete the data story
-4. **Window functions** — `_window(n, fn)` for rolling averages, running totals, sliding max
-5. **Python transpiler** — Export TinyTalk to plain Python or pandas with `transpile()` / `transpile_pandas()`
-6. **Natural comparisons** — `has`, `isin`, `islike` read like English
-7. **Two styles** — Use curly braces or `end` blocks, whatever feels right
-8. **String interpolation** — Just put `{expressions}` in your strings
-9. **Bare-word strings** — `print(Hello, world!)` just works, no quotes needed
-10. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
-11. **Default parameters** — `fn greet(name = "World")` — skip args you don't need
-12. **Multi-line lambdas** — `(x) => { ... }` for complex anonymous functions
-13. **Data I/O** — `read_csv`, `read_json`, `http_get` — ingest real data
-14. **Date handling** — Parse, format, diff, floor — time-series ready
-15. **Joins** — `_join`, `_leftJoin`, `_sortBy`, `_mapValues` — real data wrangling
+3. **Three transpiler targets** — See your pipeline as Python, pandas, or SQL
+4. **Import system** — `import`, `from...use`, namespace aliases — build real projects across files
+5. **Persistent REPL** — Load data, explore, define functions, export results — a data workbench
+6. **Type annotations** — Optional `fn add(a: int, b: int): int` — catch mistakes, self-document
+7. **Teaching error messages** — "Did you mean 'score'?" not "undefined identifier"
+8. **Reshape operations** — `_pivot` (long→wide), `_unpivot` (wide→long) — complete the data story
+9. **Window functions** — `_window(n, fn)` for rolling averages, running totals, sliding max
+10. **Natural comparisons** — `has`, `isin`, `islike` read like English
+11. **Two styles** — Use curly braces or `end` blocks, whatever feels right
+12. **String interpolation** — Just put `{expressions}` in your strings
+13. **Bare-word strings** — `print(Hello, world!)` just works, no quotes needed
+14. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
+15. **Default parameters** — `fn greet(name = "World")` — skip args you don't need
+16. **Multi-line lambdas** — `(x) => { ... }` for complex anonymous functions
+17. **Data I/O** — `read_csv`, `read_json`, `http_get` — ingest real data
+18. **Date handling** — Parse, format, diff, floor — time-series ready
+19. **Joins** — `_join`, `_leftJoin`, `_sortBy`, `_mapValues` — real data wrangling
 
 Now go build something cool. Happy coding!
