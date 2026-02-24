@@ -709,16 +709,41 @@ class Parser:
         return steps
 
     def _parse_args(self) -> List[ASTNode]:
-        """Parse call arguments. Supports comma-separated AND space-separated."""
+        """Parse call arguments. Supports comma-separated AND space-separated.
+
+        Trailing punctuation like ! or ? after an identifier is absorbed into
+        the identifier name so that ``print(Hello, world!)`` parses without
+        requiring quotes around bare words.
+        """
         args = [self._parse_expression()]
+        args[-1] = self._absorb_trailing_punct(args[-1])
         while True:
             if self._match(TokenType.COMMA):
                 args.append(self._parse_expression())
+                args[-1] = self._absorb_trailing_punct(args[-1])
             elif self._peek().type in EXPR_START_TOKENS and not self._check(TokenType.RPAREN):
                 args.append(self._parse_expression())
+                args[-1] = self._absorb_trailing_punct(args[-1])
             else:
                 break
         return args
+
+    def _absorb_trailing_punct(self, arg: ASTNode) -> ASTNode:
+        """If *arg* is an Identifier followed by ``!`` or ``?`` before a
+        separator (``,``, ``)``, newline, EOF), consume the punctuation token
+        and fold it into the identifier name.  This lets bare words like
+        ``world!`` survive the parse."""
+        if not isinstance(arg, Identifier):
+            return arg
+        while self._check(TokenType.NOT, TokenType.QUESTION):
+            nxt = self._peek(1).type
+            if nxt in (TokenType.COMMA, TokenType.RPAREN, TokenType.NEWLINE, TokenType.EOF):
+                punct_tok = self._advance()
+                punct = "!" if punct_tok.type == TokenType.NOT else "?"
+                arg = Identifier(name=arg.name + punct, line=arg.line, column=arg.column)
+            else:
+                break
+        return arg
 
     # -- primary expressions ------------------------------------------------
 

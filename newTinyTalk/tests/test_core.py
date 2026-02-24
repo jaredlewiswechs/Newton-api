@@ -450,6 +450,22 @@ show(5 |> double |> add_one)
 """
         assert output(code) == "11"
 
+    def test_r_style_pipe(self):
+        code = """
+fn double(x) { return x * 2 }
+fn add_one(x) { return x + 1 }
+show(5 %>% double %>% add_one)
+"""
+        assert output(code) == "11"
+
+    def test_mixed_pipes(self):
+        code = """
+fn double(x) { return x * 2 }
+fn add_one(x) { return x + 1 }
+show(5 |> double %>% add_one)
+"""
+        assert output(code) == "11"
+
 
 # ===== Space-Separated Args =====
 
@@ -466,6 +482,33 @@ show("Hello" name)
 show("x is" 42 "and y is" 100)
 """
         assert output(code) == "x is 42 and y is 100"
+
+
+# ===== Bare-Word Strings =====
+
+class TestBareWords:
+    def test_print_bare_word(self):
+        assert output('show(Hello)') == "Hello"
+
+    def test_print_bare_words_comma(self):
+        assert output('show(Hello, World)') == "Hello World"
+
+    def test_print_bare_word_with_bang(self):
+        assert output('show(Hello, world!)') == "Hello world!"
+
+    def test_bare_word_does_not_shadow_variable(self):
+        code = """
+let x = 42
+show(x)
+"""
+        assert output(code) == "42"
+
+    def test_bare_word_mixed_with_variable(self):
+        code = """
+let name = "Alice"
+show(Hello, name)
+"""
+        assert output(code) == "Hello Alice"
 
 
 # ===== Builtins =====

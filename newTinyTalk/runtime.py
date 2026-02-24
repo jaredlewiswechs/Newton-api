@@ -523,13 +523,25 @@ class Runtime:
 
     def _eval_call(self, node: Call, scope: Scope) -> Value:
         callee = self._eval(node.callee, scope)
-        args = [self._eval(a, scope) for a in node.args]
+        args = [self._eval_call_arg(a, scope) for a in node.args]
         if callee.type != ValueType.FUNCTION:
             raise TinyTalkError(f"Cannot call {callee.type.value}", node.line)
         fn = callee.data
         if isinstance(fn, BoundMethod):
             return self._call_bound_method(fn, args, scope, node.line)
         return self._call_function(fn, args, scope, node.line)
+
+    def _eval_call_arg(self, node, scope: Scope) -> Value:
+        """Evaluate a call argument.  Undefined identifiers are treated as
+        bare-word strings so that ``print(Hello, world!)`` works without
+        quotes."""
+        if isinstance(node, Identifier):
+            val = scope.get(node.name)
+            if val is not None:
+                return val
+            # Bare word: treat undefined identifier as a string literal.
+            return Value.string_val(node.name)
+        return self._eval(node, scope)
 
     def _call_function(self, fn: TinyFunction, args: List[Value], scope: Scope, line: int) -> Value:
         self.recursion_depth += 1
