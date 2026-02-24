@@ -21,6 +21,7 @@ from datetime import datetime
 from difflib import SequenceMatcher
 import hashlib
 import re
+from typing import Optional
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')
@@ -159,7 +160,7 @@ def _write_meta(dirp: Path, meta: dict):
     mp.write_text(json.dumps(meta, indent=2))
 
 
-def _latest_version(dirp: Path) -> dict | None:
+def _latest_version(dirp: Path) -> Optional[dict]:
     """Return the latest version entry from meta.json, or None."""
     meta = _read_meta(dirp)
     versions = meta.get('versions', [])
