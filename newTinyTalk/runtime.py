@@ -11,10 +11,16 @@ Fixes from original:
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Callable, Tuple
 import time
+import os
 import re as _re
 
 from .types import Value, ValueType
 from .stdlib import format_value, BUILTIN_FUNCTIONS, STDLIB_CONSTANTS
+from .errors import (
+    undefined_variable_hint, unknown_step_hint, step_type_mismatch_hint,
+    step_args_hint, find_closest,
+)
+from .typechecker import check_type, check_return_type, check_param_type
 from .ast_nodes import (
     ASTNode, Program, Literal, Identifier, BinaryOp, UnaryOp, Call, Index,
     Member, Array, MapLiteral, Lambda, Conditional, Range, Pipe, StepChain,
@@ -149,11 +155,13 @@ class ExecutionBounds:
 # ---------------------------------------------------------------------------
 
 class Runtime:
-    def __init__(self, bounds: Optional[ExecutionBounds] = None):
+    def __init__(self, bounds: Optional[ExecutionBounds] = None, source_dir: str = ""):
         self.bounds = bounds or ExecutionBounds()
         self.global_scope = Scope()
         self.structs: Dict[str, TinyStruct] = {}
         self.enums: Dict[str, TinyEnum] = {}
+        self._source_dir = source_dir or os.getcwd()
+        self._imported_modules: Dict[str, Scope] = {}
 
         # metrics
         self.op_count = 0
@@ -257,7 +265,10 @@ class Runtime:
         if isinstance(node, Identifier):
             val = scope.get(node.name)
             if val is None:
-                raise TinyTalkError(f"Undefined variable '{node.name}'", node.line)
+                available = self._collect_names(scope)
+                raise TinyTalkError(
+                    undefined_variable_hint(node.name, available), node.line
+                )
             return val
 
         if isinstance(node, BinaryOp):
@@ -309,6 +320,10 @@ class Runtime:
 
         if isinstance(node, LetStmt):
             val = self._eval(node.value, scope) if node.value else Value.null_val()
+            if node.type_hint:
+                err = check_type(val, node.type_hint, context=f"variable '{node.name}'")
+                if err:
+                    raise TinyTalkError(err, node.line)
             scope.define(node.name, val, const=False)
             return val
 
@@ -348,6 +363,7 @@ class Runtime:
 
         if isinstance(node, FnDecl):
             fn = TinyFunction(node.name, node.params, node.body, scope)
+            fn._return_type = getattr(node, 'return_type', None)
             scope.define(node.name, Value.function_val(fn), const=True)
             return Value.null_val()
 
@@ -359,7 +375,7 @@ class Runtime:
             return Value.null_val()
 
         if isinstance(node, ImportStmt):
-            return Value.null_val()  # imports not implemented in this build
+            return self._eval_import(node, scope)
 
         if isinstance(node, MatchStmt):
             return self._eval_match(node, scope)
@@ -597,17 +613,30 @@ class Runtime:
             fn_scope = Scope(fn.closure)
             for i, param in enumerate(fn.params):
                 pname = param[0]
+                ptype = param[1] if len(param) > 1 else None
                 default = param[2] if len(param) > 2 else None
                 if i < len(args):
-                    fn_scope.define(pname, args[i])
+                    val = args[i]
+                    # Optional type check on parameter
+                    if ptype:
+                        err = check_param_type(val, ptype, pname, fn.name)
+                        if err:
+                            raise TinyTalkError(err, line)
+                    fn_scope.define(pname, val)
                 elif default is not None:
                     fn_scope.define(pname, self._eval(default, fn.closure))
                 else:
                     fn_scope.define(pname, Value.null_val())
             try:
-                return self._eval(fn.body, fn_scope)
+                result = self._eval(fn.body, fn_scope)
             except ReturnException as e:
-                return e.value
+                result = e.value
+            # Optional return type check
+            if hasattr(fn, '_return_type') and fn._return_type:
+                err = check_return_type(result, fn._return_type, fn.name)
+                if err:
+                    raise TinyTalkError(err, line)
+            return result
         finally:
             self.recursion_depth -= 1
 
@@ -786,7 +815,10 @@ class Runtime:
             else:
                 old = scope.get(node.target.name)
                 if old is None:
-                    raise TinyTalkError(f"Undefined variable '{node.target.name}'", node.line)
+                    raise TinyTalkError(
+                        undefined_variable_hint(node.target.name, self._collect_names(scope)),
+                        node.line,
+                    )
                 new = self._apply_op(old, val, node.op[:-1], node.line)
                 scope.set(node.target.name, new)
                 return new
@@ -941,6 +973,83 @@ class Runtime:
                 fields[name] = Value.null_val()
         return Value(ValueType.STRUCT_INSTANCE, StructInstance(struct, fields))
 
+    # -- imports ------------------------------------------------------------
+
+    def _eval_import(self, node: ImportStmt, scope: Scope) -> Value:
+        """Execute an import statement.
+
+        Supported forms:
+            import "utils.tt"                 -- run module, import all top-level names
+            import "utils.tt" as utils        -- run module, bind to namespace alias
+            from "stats.tt" use { mean, median }  -- selective imports
+        """
+        from .lexer import Lexer
+        from .parser import Parser
+
+        mod_path = node.module
+        # Resolve relative to source directory
+        if not os.path.isabs(mod_path):
+            mod_path = os.path.join(self._source_dir, mod_path)
+
+        # Normalize and check for .tt extension
+        if not mod_path.endswith(".tt"):
+            mod_path += ".tt"
+
+        abs_path = os.path.abspath(mod_path)
+
+        if not os.path.exists(abs_path):
+            raise TinyTalkError(f"Module not found: '{node.module}'. Looked in: {abs_path}", node.line)
+
+        # Check for already-imported module (avoid re-execution)
+        if abs_path in self._imported_modules:
+            mod_scope = self._imported_modules[abs_path]
+        else:
+            # Read and execute the module
+            try:
+                with open(abs_path, "r", encoding="utf-8") as f:
+                    source = f.read()
+            except OSError as e:
+                raise TinyTalkError(f"Cannot read module '{node.module}': {e}", node.line)
+
+            tokens = Lexer(source).tokenize()
+            ast = Parser(tokens).parse()
+
+            # Execute in a fresh scope (child of global for builtins)
+            mod_scope = Scope(self.global_scope)
+            old_dir = self._source_dir
+            self._source_dir = os.path.dirname(abs_path)
+            try:
+                self._eval(ast, mod_scope)
+            finally:
+                self._source_dir = old_dir
+
+            self._imported_modules[abs_path] = mod_scope
+
+        # Bind names into the current scope
+        if node.items:
+            # from "module" use { name1, name2 }
+            for name in node.items:
+                val = mod_scope.variables.get(name)
+                if val is None:
+                    raise TinyTalkError(
+                        f"Module '{node.module}' does not export '{name}'", node.line
+                    )
+                scope.define(name, val)
+        elif node.alias:
+            # import "module" as alias -> bind all as a namespace map
+            ns = {}
+            for name, val in mod_scope.variables.items():
+                if not name.startswith("_"):
+                    ns[name] = val
+            scope.define(node.alias, Value.map_val(ns))
+        else:
+            # import "module" -> import all top-level (non-underscore) names
+            for name, val in mod_scope.variables.items():
+                if not name.startswith("_"):
+                    scope.define(name, val)
+
+        return Value.null_val()
+
     # -- step chains --------------------------------------------------------
 
     def _eval_step_chain(self, node: StepChain, scope: Scope) -> Value:
@@ -986,12 +1095,12 @@ class Runtime:
             if data.type == ValueType.STRING:
                 data = Value.list_val([Value.string_val(c) for c in data.data])
             else:
-                raise TinyTalkError(f"Step operations require a list, got {data.type.value}", line)
+                raise TinyTalkError(step_type_mismatch_hint(step, data.type.value), line)
         items = data.data
 
         if step == "_filter":
             if not args or args[0].type != ValueType.FUNCTION:
-                raise TinyTalkError("_filter requires a function", line)
+                raise TinyTalkError(step_args_hint("_filter"), line)
             return Value.list_val([
                 item for item in items
                 if self._call_function(args[0].data, [item], scope, line).is_truthy()
@@ -1005,7 +1114,7 @@ class Runtime:
 
         if step == "_map":
             if not args or args[0].type != ValueType.FUNCTION:
-                raise TinyTalkError("_map requires a function", line)
+                raise TinyTalkError(step_args_hint("_map"), line)
             return Value.list_val([self._call_function(args[0].data, [item], scope, line) for item in items])
 
         if step == "_take":
@@ -1380,9 +1489,18 @@ class Runtime:
                 result.append(val)
             return Value.list_val(result)
 
-        raise TinyTalkError(f"Unknown step: {step}", line)
+        raise TinyTalkError(unknown_step_hint(step), line)
 
     # -- helpers ------------------------------------------------------------
+
+    def _collect_names(self, scope: Scope) -> list:
+        """Collect all variable names visible from the given scope."""
+        names = []
+        s = scope
+        while s:
+            names.extend(s.variables.keys())
+            s = s.parent
+        return list(set(names))
 
     def _to_string(self, val: Value) -> str:
         return format_value(val)

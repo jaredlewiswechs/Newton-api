@@ -26,8 +26,9 @@ from .kernel import TinyTalkKernel, RunResult
 from .runtime import ExecutionBounds, TinyTalkError
 from .types import Value, ValueType
 from .transpiler import transpile, transpile_pandas
+from .sql_transpiler import transpile_sql
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __all__ = [
     "TinyTalkKernel",
     "RunResult",
@@ -37,4 +38,5 @@ __all__ = [
     "ValueType",
     "transpile",
     "transpile_pandas",
+    "transpile_sql",
 ]

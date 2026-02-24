@@ -55,6 +55,8 @@ class TokenType(Enum):
     STRUCT = auto()
     ENUM = auto()
     IMPORT = auto()
+    FROM = auto()
+    USE = auto()
     AS = auto()
     TRY = auto()
     CATCH = auto()
@@ -228,6 +230,8 @@ class Lexer:
         "struct": TokenType.STRUCT,
         "enum": TokenType.ENUM,
         "import": TokenType.IMPORT,
+        "from": TokenType.FROM,
+        "use": TokenType.USE,
         "as": TokenType.AS,
         "try": TokenType.TRY,
         "catch": TokenType.CATCH,
