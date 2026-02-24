@@ -36,9 +36,12 @@
 24. [HTTP — Fetching Data from the Web](#24-http--fetching-data-from-the-web)
 25. [Dates & Time — Working with Dates](#25-dates--time--working-with-dates)
 26. [Data Analysis — dplyr-Style Pipelines](#26-data-analysis--dplyr-style-pipelines)
-27. [Built-in Functions — The Standard Toolkit](#27-built-in-functions--the-standard-toolkit)
-28. [Running Your Code](#28-running-your-code)
-29. [Quick Reference Cheat Sheet](#29-quick-reference-cheat-sheet)
+27. [Reshaping Data — Pivot & Unpivot](#27-reshaping-data--pivot--unpivot)
+28. [Rolling Aggregates — Window Functions](#28-rolling-aggregates--window-functions)
+29. [Python Transpiler — Export to Python/pandas](#29-python-transpiler--export-to-pythonpandas)
+30. [Built-in Functions — The Standard Toolkit](#30-built-in-functions--the-standard-toolkit)
+31. [Running Your Code](#31-running-your-code)
+32. [Quick Reference Cheat Sheet](#32-quick-reference-cheat-sheet)
 
 ---
 
@@ -1399,10 +1402,254 @@ show(report)
 | `slice(df, 1:5)`     | `data _slice(0, 5)`                   |
 | `left_join(x, y, by)` | `data _leftJoin(y, key_fn)`           |
 | `inner_join(x, y, by)` | `data _join(y, key_fn)`              |
+| `pivot_wider(df, ...)`  | `data _pivot(row_fn, col_fn, val_fn)` |
+| `pivot_longer(df, ...)`  | `data _unpivot(["id_cols"])`          |
+| `zoo::rollmean(x, k)`  | `data _window(k, (w) => w _avg)`     |
 
 ---
 
-## 27. Built-in Functions — The Standard Toolkit
+## 27. Reshaping Data — Pivot & Unpivot
+
+Real data analysis often requires reshaping data between "long" and "wide" formats.
+TinyTalk has two step chain operators for this — `_pivot` and `_unpivot` — inspired
+by pandas `pivot_table()` and `melt()`.
+
+### `_pivot` — Long to wide (spread)
+
+Convert rows into columns. Takes three functions: one for the row index, one for
+the column name, and one for the cell value.
+
+```
+let sales = [
+    {"region": "East",  "product": "A", "revenue": 100},
+    {"region": "East",  "product": "B", "revenue": 200},
+    {"region": "West",  "product": "A", "revenue": 150},
+    {"region": "West",  "product": "B", "revenue": 300}
+]
+
+let wide = sales _pivot(
+    (r) => r["region"],    // rows
+    (r) => r["product"],   // columns
+    (r) => r["revenue"]    // values
+)
+
+for row in wide { show(row) }
+// {_index: East, A: 100, B: 200}
+// {_index: West, A: 150, B: 300}
+```
+
+**Read it as:** "Pivot the data so each region is a row, each product is a column,
+and the cells contain revenue."
+
+This is equivalent to:
+- **pandas:** `df.pivot_table(index='region', columns='product', values='revenue')`
+- **R/tidyr:** `pivot_wider(data, names_from = product, values_from = revenue)`
+
+### `_unpivot` — Wide to long (melt)
+
+The reverse of pivot. Takes a list of "id" columns to keep — everything else gets
+melted into `variable` / `value` pairs.
+
+```
+let quarterly = [
+    {"region": "East", "Q1": 100, "Q2": 200, "Q3": 150},
+    {"region": "West", "Q1": 300, "Q2": 250, "Q3": 400}
+]
+
+let long = quarterly _unpivot(["region"])
+
+for row in long { show(row) }
+// {region: East, variable: Q1, value: 100}
+// {region: East, variable: Q2, value: 200}
+// {region: East, variable: Q3, value: 150}
+// {region: West, variable: Q1, value: 300}
+// {region: West, variable: Q2, value: 250}
+// {region: West, variable: Q3, value: 400}
+```
+
+This is equivalent to:
+- **pandas:** `df.melt(id_vars=['region'])`
+- **R/tidyr:** `pivot_longer(data, cols = -region)`
+
+### Round-trip example
+
+Pivot and unpivot are inverses — you can reshape and reshape back:
+
+```
+let grades = [
+    {"student": "Alice", "subject": "math",    "grade": 95},
+    {"student": "Alice", "subject": "english",  "grade": 88},
+    {"student": "Bob",   "subject": "math",    "grade": 72},
+    {"student": "Bob",   "subject": "english",  "grade": 91}
+]
+
+// Long → Wide
+let wide = grades _pivot(
+    (r) => r["student"],
+    (r) => r["subject"],
+    (r) => r["grade"]
+)
+show(wide)
+// [{_index: Alice, math: 95, english: 88}, {_index: Bob, math: 72, english: 91}]
+
+// Wide → Long (back again)
+let long = wide _unpivot(["_index"])
+show(long _count)   // 4
+```
+
+---
+
+## 28. Rolling Aggregates — Window Functions
+
+The `_window` operator applies a function over a sliding window of the data.
+This is essential for time-series analysis — moving averages, rolling maxima,
+running totals, etc.
+
+### `_window(size, function)` — Sliding window
+
+```
+let prices = [10, 12, 11, 15, 14, 16, 18, 17, 20, 19]
+
+// 3-period moving average
+let ma3 = prices _window(3, (w) => round(w _avg, 1))
+show(ma3)
+// [10.0, 11.0, 11.0, 12.7, 13.3, 15.0, 16.0, 17.0, 18.3, 18.7]
+```
+
+**How it works:** At each position `i`, the function receives a list of up to
+`size` items ending at `i`. At the start, the window grows:
+- Position 0: window is `[10]` → avg = 10.0
+- Position 1: window is `[10, 12]` → avg = 11.0
+- Position 2: window is `[10, 12, 11]` → avg = 11.0
+- Position 3: window is `[12, 11, 15]` → avg = 12.7
+- ...
+
+### More examples
+
+```
+let data = [1, 2, 3, 4, 5]
+
+// Rolling sum (window of 2)
+show(data _window(2, (w) => w _sum))
+// [1, 3, 5, 7, 9]
+
+// Rolling max (window of 3)
+let temps = [3, 1, 4, 1, 5, 9, 2, 6]
+show(temps _window(3, (w) => w _max))
+// [3, 3, 4, 4, 5, 9, 9, 9]
+
+// Running count (window of 3)
+show(data _window(3, (w) => w _count))
+// [1, 2, 3, 3, 3]
+```
+
+### Chaining with other steps
+
+`_window` returns a list, so you can chain more steps after it:
+
+```
+let prices = [100, 102, 98, 105, 110, 108, 115, 120]
+
+// Find how many periods had a moving average above 105
+let above_threshold = prices
+    _window(3, (w) => w _avg)
+    _filter((x) => x > 105)
+    _count
+show(above_threshold)
+```
+
+This is equivalent to:
+- **pandas:** `df.rolling(3).mean()`
+- **R:** `zoo::rollmean(x, k = 3)`
+
+---
+
+## 29. Python Transpiler — Export to Python/pandas
+
+TinyTalk includes a built-in transpiler that converts your code to equivalent Python.
+This is the **bridge between learning and industry tools** — write in TinyTalk's
+readable syntax, then see how the same logic looks in Python.
+
+### Two modes
+
+| Mode | Function | Output |
+|------|----------|--------|
+| Plain Python | `transpile(code)` | List comprehensions, `sorted()`, `sum()` |
+| pandas | `transpile_pandas(code)` | `pd.DataFrame`, `.apply()`, `.head()` |
+
+### Usage from Python
+
+```python
+from newTinyTalk import transpile, transpile_pandas
+
+tt_code = '''
+let data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+let result = data _filter((x) => x > 3) _sort _reverse _take(3)
+show(result)
+'''
+
+# Plain Python
+print(transpile(tt_code))
+# data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+# result = list(reversed(sorted([x for x in data if (lambda x: (x > 3))(x)])))[:3]
+# print(result)
+
+# pandas mode
+print(transpile_pandas(tt_code))
+# import pandas as pd
+# ...pd.DataFrame(data)[...].sort_values(...).iloc[::-1].head(3)
+```
+
+### What maps to what
+
+| TinyTalk | Python | pandas |
+|----------|--------|--------|
+| `_filter((x) => x > 5)` | `[x for x in data if ...]` | `df[df.apply(...)]` |
+| `_map((x) => x * 2)` | `[fn(x) for x in data]` | `df.apply(fn, axis=1)` |
+| `_sort` | `sorted(data)` | `df.sort_values(...)` |
+| `_sortBy(fn)` | `sorted(data, key=fn)` | `df.sort_values(key=...)` |
+| `_reverse` | `list(reversed(data))` | `df.iloc[::-1]` |
+| `_take(n)` | `data[:n]` | `df.head(n)` |
+| `_drop(n)` | `data[n:]` | `df.tail(-n)` |
+| `_first` | `data[0]` | `df.iloc[0]` |
+| `_last` | `data[-1]` | `df.iloc[-1]` |
+| `_unique` | `list(dict.fromkeys(data))` | `df.drop_duplicates()` |
+| `_sum` | `sum(data)` | `df.sum()` |
+| `_avg` | `sum(data) / len(data)` | `df.mean()` |
+| `_count` | `len(data)` | `len(df)` |
+| `_group(fn)` | `defaultdict(list)` | `df.groupby(...)` |
+| `_reduce(fn, init)` | `functools.reduce(fn, data, init)` | `reduce(fn, ...)` |
+| `_select(cols)` | `[{k: row[k] ...}]` | `df[cols]` |
+| `_rename(map)` | `[{map.get(k,k): v ...}]` | `df.rename(columns=...)` |
+| `_unpivot(ids)` | `[... for col in row ...]` | `df.melt(id_vars=...)` |
+| `_window(n, fn)` | `[fn(data[i-n:i]) ...]` | `df.rolling(n).apply(fn)` |
+| `show(x)` | `print(x)` | `print(x)` |
+| `upcase(s)` | `s.upper()` | `s.upper()` |
+| `sqrt(x)` | `math.sqrt(x)` | `math.sqrt(x)` |
+| `read_csv(path)` | `pd.read_csv(path).to_dict('records')` | `pd.read_csv(path)` |
+
+The transpiler automatically adds the right `import` statements (`import math`,
+`import pandas as pd`, `from functools import reduce`, etc.) based on what your
+code uses.
+
+### For educators
+
+The transpiler is designed for the classroom. Students write in TinyTalk's readable
+syntax, then hit "export to Python" and see the industry-standard equivalent.
+That's the bridge most CS education is missing:
+
+```
+// Student writes this:
+data _filter((r) => r["score"] > 90) _sortBy((r) => r["score"]) _reverse _take(5)
+
+// Transpiler shows them this:
+list(reversed(sorted([x for x in data if (lambda r: (r["score"] > 90))(x)],
+    key=lambda r: r["score"])))[:5]
+```
+
+---
+
+## 30. Built-in Functions — The Standard Toolkit
 
 ### Output
 
@@ -1529,7 +1776,7 @@ show(report)
 
 ---
 
-## 28. Running Your Code
+## 31. Running Your Code
 
 ### From the command line
 
@@ -1584,7 +1831,7 @@ print(result.success)   # True
 
 ---
 
-## 29. Quick Reference Cheat Sheet
+## 32. Quick Reference Cheat Sheet
 
 ### Variables
 ```
@@ -1636,6 +1883,22 @@ data _distinct((r) => r["key"])
 data _pull("column_name")
 data _slice(0, 10)
 data _leftJoin(other, (r) => r["id"])
+```
+
+### Reshape & window
+```
+data _pivot(row_fn, col_fn, val_fn)         // long → wide
+data _unpivot(["id_col1", "id_col2"])       // wide → long
+data _window(3, (w) => w _avg)              // rolling aggregate
+data _window(5, (w) => w _max)              // sliding max
+```
+
+### Transpiler
+```python
+from newTinyTalk import transpile, transpile_pandas
+
+transpile('data _filter((x) => x > 5) _sum')       # → plain Python
+transpile_pandas('data _filter((x) => x > 5) _sum') # → pandas
 ```
 
 ### Data I/O
@@ -1706,15 +1969,18 @@ enough to write real programs. The key things that make it unique:
 
 1. **Step chains** — Transform data like a pipeline, not a pile of nested calls
 2. **dplyr-style analysis** — `_select`, `_mutate`, `_summarize`, `_group` — feels like R
-3. **Natural comparisons** — `has`, `isin`, `islike` read like English
-4. **Two styles** — Use curly braces or `end` blocks, whatever feels right
-5. **String interpolation** — Just put `{expressions}` in your strings
-6. **Bare-word strings** — `print(Hello, world!)` just works, no quotes needed
-7. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
-8. **Default parameters** — `fn greet(name = "World")` — skip args you don't need
-9. **Multi-line lambdas** — `(x) => { ... }` for complex anonymous functions
-10. **Data I/O** — `read_csv`, `read_json`, `http_get` — ingest real data
-11. **Date handling** — Parse, format, diff, floor — time-series ready
-12. **Joins** — `_join`, `_leftJoin`, `_sortBy`, `_mapValues` — real data wrangling
+3. **Reshape operations** — `_pivot` (long→wide), `_unpivot` (wide→long) — complete the data story
+4. **Window functions** — `_window(n, fn)` for rolling averages, running totals, sliding max
+5. **Python transpiler** — Export TinyTalk to plain Python or pandas with `transpile()` / `transpile_pandas()`
+6. **Natural comparisons** — `has`, `isin`, `islike` read like English
+7. **Two styles** — Use curly braces or `end` blocks, whatever feels right
+8. **String interpolation** — Just put `{expressions}` in your strings
+9. **Bare-word strings** — `print(Hello, world!)` just works, no quotes needed
+10. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
+11. **Default parameters** — `fn greet(name = "World")` — skip args you don't need
+12. **Multi-line lambdas** — `(x) => { ... }` for complex anonymous functions
+13. **Data I/O** — `read_csv`, `read_json`, `http_get` — ingest real data
+14. **Date handling** — Parse, format, diff, floor — time-series ready
+15. **Joins** — `_join`, `_leftJoin`, `_sortBy`, `_mapValues` — real data wrangling
 
 Now go build something cool. Happy coding!
