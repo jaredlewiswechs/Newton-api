@@ -85,6 +85,18 @@ class TokenType(Enum):
     STEP_MAP_VALUES = auto()
     STEP_EACH = auto()
 
+    # --- dplyr-style verbs ---
+    STEP_SELECT = auto()
+    STEP_MUTATE = auto()
+    STEP_SUMMARIZE = auto()
+    STEP_RENAME = auto()
+    STEP_ARRANGE = auto()
+    STEP_DISTINCT = auto()
+    STEP_SLICE = auto()
+    STEP_PULL = auto()
+    STEP_GROUP_BY = auto()
+    STEP_LEFT_JOIN = auto()
+
     # --- Natural language comparisons ---
     IS = auto()
     ISNT = auto()
@@ -323,6 +335,20 @@ class Lexer:
         "_join": TokenType.STEP_JOIN,
         "_mapValues": TokenType.STEP_MAP_VALUES,
         "_each": TokenType.STEP_EACH,
+        # dplyr-style verbs
+        "_select": TokenType.STEP_SELECT,
+        "_mutate": TokenType.STEP_MUTATE,
+        "_summarize": TokenType.STEP_SUMMARIZE,
+        "_summarise": TokenType.STEP_SUMMARIZE,
+        "_rename": TokenType.STEP_RENAME,
+        "_arrange": TokenType.STEP_ARRANGE,
+        "_distinct": TokenType.STEP_DISTINCT,
+        "_slice": TokenType.STEP_SLICE,
+        "_pull": TokenType.STEP_PULL,
+        "_groupBy": TokenType.STEP_GROUP_BY,
+        "_group_by": TokenType.STEP_GROUP_BY,
+        "_leftJoin": TokenType.STEP_LEFT_JOIN,
+        "_left_join": TokenType.STEP_LEFT_JOIN,
     }
 
     def __init__(self, source: str):

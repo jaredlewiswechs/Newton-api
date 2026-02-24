@@ -26,6 +26,11 @@ STEP_TOKEN_TYPES = frozenset({
     TokenType.STEP_REDUCE,
     TokenType.STEP_SORT_BY, TokenType.STEP_JOIN,
     TokenType.STEP_MAP_VALUES, TokenType.STEP_EACH,
+    # dplyr-style verbs
+    TokenType.STEP_SELECT, TokenType.STEP_MUTATE, TokenType.STEP_SUMMARIZE,
+    TokenType.STEP_RENAME, TokenType.STEP_ARRANGE, TokenType.STEP_DISTINCT,
+    TokenType.STEP_SLICE, TokenType.STEP_PULL, TokenType.STEP_GROUP_BY,
+    TokenType.STEP_LEFT_JOIN,
 })
 
 EXPR_START_TOKENS = frozenset({
@@ -698,7 +703,20 @@ class Parser:
                 expr = StepChain(source=expr, steps=steps,
                                  line=tok.line, column=tok.column)
             else:
-                break
+                # Before giving up, look past newlines for step chain
+                # continuation.  Step tokens (_filter, _select, etc.) can
+                # ONLY appear as step chains, never as standalone statements,
+                # so this is safe.
+                saved = self.pos
+                self._skip_newlines()
+                if self._peek().type in STEP_TOKEN_TYPES:
+                    tok = self._peek()
+                    steps = self._collect_steps()
+                    expr = StepChain(source=expr, steps=steps,
+                                     line=tok.line, column=tok.column)
+                else:
+                    self.pos = saved
+                    break
 
         return expr
 
@@ -798,12 +816,15 @@ class Parser:
         # Array literal
         if self._match(TokenType.LBRACKET):
             elems = []
+            self._skip_newlines()
             if not self._check(TokenType.RBRACKET):
                 elems.append(self._parse_expression())
                 while self._match(TokenType.COMMA):
+                    self._skip_newlines()
                     if self._check(TokenType.RBRACKET):
                         break
                     elems.append(self._parse_expression())
+            self._skip_newlines()
             self._consume(TokenType.RBRACKET, "Expected ']'")
             return Array(elements=elems, line=tok.line, column=tok.column)
 
@@ -879,10 +900,27 @@ class Parser:
         return sub._parse_expression()
 
     def _parse_lambda_body(self) -> ASTNode:
-        """Parse lambda body: either a single expression or a { block }."""
+        """Parse lambda body: either a single expression or a { block }.
+
+        Disambiguates { block } from { map literal } by peeking: if the
+        first token after { is a STRING followed by :, it is a map and
+        we fall through to the expression parser instead.
+        """
         self._skip_newlines()
-        if self._match(TokenType.LBRACE):
-            return self._parse_block()
+        if self._check(TokenType.LBRACE):
+            # Peek ahead to determine if it's a map literal or a block.
+            # Map literal: { "key": expr, ... } or { identifier: expr }
+            nxt = self._peek(1)
+            nxt2 = self._peek(2)
+            is_map = (
+                (nxt.type == TokenType.STRING and nxt2.type == TokenType.COLON)
+                or (nxt.type == TokenType.IDENTIFIER and nxt2.type == TokenType.COLON)
+                or (nxt.type == TokenType.NUMBER and nxt2.type == TokenType.COLON)
+                or nxt.type == TokenType.RBRACE  # empty map {}
+            )
+            if not is_map:
+                self._advance()  # consume {
+                return self._parse_block()
         return self._parse_expression()
 
     def _parse_lambda_params(self) -> List[str]:

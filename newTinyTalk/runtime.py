@@ -951,7 +951,7 @@ class Runtime:
         return data
 
     def _apply_step(self, data: Value, step: str, args: List[Value], scope: Scope, line: int) -> Value:
-        # _mapValues works on maps directly (before list conversion)
+        # Steps that work on maps directly (before list conversion)
         if step == "_mapValues":
             if not args or args[0].type != ValueType.FUNCTION:
                 raise TinyTalkError("_mapValues requires a function", line)
@@ -962,6 +962,25 @@ class Runtime:
                     for k, v in data.data.items()
                 })
             raise TinyTalkError("_mapValues requires a map", line)
+
+        # _summarize on a grouped map: aggregate each group into a summary row
+        if step == "_summarize" and data.type == ValueType.MAP:
+            if not args or args[0].type != ValueType.MAP:
+                raise TinyTalkError("_summarize requires a map of aggregation functions", line)
+            agg_map = args[0].data
+            result = []
+            for group_key, group_val in data.data.items():
+                row = {}
+                group_items = group_val if group_val.type == ValueType.LIST else Value.list_val([group_val])
+                for col_name, fn_val in agg_map.items():
+                    if fn_val.type == ValueType.FUNCTION:
+                        row[col_name] = self._call_function(
+                            fn_val.data, [group_items], scope, line
+                        )
+                    else:
+                        row[col_name] = fn_val
+                result.append(Value.map_val(row))
+            return Value.list_val(result)
 
         if data.type != ValueType.LIST:
             if data.type == ValueType.STRING:
@@ -1119,6 +1138,178 @@ class Runtime:
             for item in items:
                 self._call_function(fn, [item], scope, line)
             return Value.list_val(items)
+
+        # ---- dplyr-style verbs ------------------------------------------------
+
+        if step == "_select":
+            if not args:
+                raise TinyTalkError("_select requires column names", line)
+            if args[0].type == ValueType.LIST:
+                cols = [v.data for v in args[0].data]
+                return Value.list_val([
+                    Value.map_val({c: row.data.get(c, Value.null_val()) for c in cols})
+                    for row in items if row.type == ValueType.MAP
+                ])
+            if args[0].type == ValueType.STRING:
+                cols = [a.data for a in args if a.type == ValueType.STRING]
+                return Value.list_val([
+                    Value.map_val({c: row.data.get(c, Value.null_val()) for c in cols})
+                    for row in items if row.type == ValueType.MAP
+                ])
+            raise TinyTalkError("_select requires a list of column names or string args", line)
+
+        if step == "_mutate":
+            if not args or args[0].type != ValueType.FUNCTION:
+                raise TinyTalkError("_mutate requires a function", line)
+            fn = args[0].data
+            result = []
+            for row in items:
+                new_fields = self._call_function(fn, [row], scope, line)
+                if row.type == ValueType.MAP and new_fields.type == ValueType.MAP:
+                    merged = dict(row.data)
+                    merged.update(new_fields.data)
+                    result.append(Value.map_val(merged))
+                else:
+                    result.append(row)
+            return Value.list_val(result)
+
+        if step == "_summarize":
+            if not args or args[0].type != ValueType.MAP:
+                raise TinyTalkError("_summarize requires a map of aggregation functions", line)
+            agg_map = args[0].data
+            result_row = {}
+            for col_name, fn_val in agg_map.items():
+                if fn_val.type == ValueType.FUNCTION:
+                    result_row[col_name] = self._call_function(
+                        fn_val.data, [Value.list_val(items)], scope, line
+                    )
+                else:
+                    result_row[col_name] = fn_val
+            return Value.map_val(result_row)
+
+        if step == "_rename":
+            if not args or args[0].type != ValueType.MAP:
+                raise TinyTalkError("_rename requires a map of {old: new}", line)
+            rename_map = {k: v.data for k, v in args[0].data.items()
+                          if v.type == ValueType.STRING}
+            result = []
+            for row in items:
+                if row.type == ValueType.MAP:
+                    new_row = {}
+                    for k, v in row.data.items():
+                        new_key = rename_map.get(k, k)
+                        new_row[new_key] = v
+                    result.append(Value.map_val(new_row))
+                else:
+                    result.append(row)
+            return Value.list_val(result)
+
+        if step == "_arrange":
+            # Alias for _sortBy with optional "desc" flag
+            if not args or args[0].type != ValueType.FUNCTION:
+                raise TinyTalkError("_arrange requires a key function", line)
+            key_fn = args[0].data
+            desc = (len(args) > 1 and args[1].type == ValueType.STRING
+                    and args[1].data == "desc")
+            decorated = [(self._call_function(key_fn, [item], scope, line), item)
+                         for item in items]
+            decorated.sort(key=lambda pair: pair[0].data, reverse=desc)
+            return Value.list_val([pair[1] for pair in decorated])
+
+        if step == "_distinct":
+            if args and args[0].type == ValueType.FUNCTION:
+                key_fn = args[0].data
+                seen = set()
+                result = []
+                for item in items:
+                    k = self._call_function(key_fn, [item], scope, line).to_python()
+                    if isinstance(k, list):
+                        k = tuple(k)
+                    if k not in seen:
+                        seen.add(k)
+                        result.append(item)
+                return Value.list_val(result)
+            if args and args[0].type == ValueType.LIST:
+                cols = [v.data for v in args[0].data]
+                seen = set()
+                result = []
+                for item in items:
+                    if item.type == ValueType.MAP:
+                        k = tuple(item.data.get(c, Value.null_val()).to_python()
+                                  for c in cols)
+                    else:
+                        k = item.to_python()
+                        if isinstance(k, list):
+                            k = tuple(k)
+                    if k not in seen:
+                        seen.add(k)
+                        result.append(item)
+                return Value.list_val(result)
+            # No args: unique on whole value (same as _unique)
+            seen = set()
+            result = []
+            for item in items:
+                k = item.to_python()
+                if isinstance(k, list):
+                    k = tuple(k)
+                if k not in seen:
+                    seen.add(k)
+                    result.append(item)
+            return Value.list_val(result)
+
+        if step == "_slice":
+            start = int(args[0].data) if args else 0
+            count = int(args[1].data) if len(args) > 1 else len(items) - start
+            return Value.list_val(items[start:start + count])
+
+        if step == "_pull":
+            if not args or args[0].type != ValueType.STRING:
+                raise TinyTalkError("_pull requires a column name string", line)
+            col = args[0].data
+            return Value.list_val([
+                row.data.get(col, Value.null_val()) if row.type == ValueType.MAP
+                else Value.null_val()
+                for row in items
+            ])
+
+        if step in ("_groupBy", "_group_by"):
+            if not args or args[0].type != ValueType.FUNCTION:
+                raise TinyTalkError("_groupBy requires a function", line)
+            groups: dict = {}
+            for item in items:
+                k = self._call_function(args[0].data, [item], scope, line).to_python()
+                groups.setdefault(k, []).append(item)
+            return Value.map_val({k: Value.list_val(v) for k, v in groups.items()})
+
+        if step in ("_leftJoin", "_left_join"):
+            if not args or args[0].type != ValueType.LIST:
+                raise TinyTalkError("_leftJoin requires a right-hand list", line)
+            right = args[0].data
+            if len(args) < 2 or args[1].type != ValueType.FUNCTION:
+                raise TinyTalkError("_leftJoin requires (right_list, key_fn)", line)
+            key_fn = args[1].data
+            right_idx: dict = {}
+            for r in right:
+                k = self._call_function(key_fn, [r], scope, line).to_python()
+                right_idx.setdefault(k, []).append(r)
+            result = []
+            for l_item in items:
+                k = self._call_function(key_fn, [l_item], scope, line).to_python()
+                matches = right_idx.get(k, [])
+                if matches:
+                    for r_item in matches:
+                        merged = {}
+                        if l_item.type == ValueType.MAP:
+                            merged.update(l_item.data)
+                        if r_item.type == ValueType.MAP:
+                            for rk, rv in r_item.data.items():
+                                if rk not in merged:
+                                    merged[rk] = rv
+                        result.append(Value.map_val(merged))
+                else:
+                    # Left join: keep unmatched left rows
+                    result.append(l_item)
+            return Value.list_val(result)
 
         raise TinyTalkError(f"Unknown step: {step}", line)
 

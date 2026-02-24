@@ -35,9 +35,10 @@
 23. [Data I/O — Reading & Writing Files](#23-data-io--reading--writing-files)
 24. [HTTP — Fetching Data from the Web](#24-http--fetching-data-from-the-web)
 25. [Dates & Time — Working with Dates](#25-dates--time--working-with-dates)
-26. [Built-in Functions — The Standard Toolkit](#26-built-in-functions--the-standard-toolkit)
-27. [Running Your Code](#27-running-your-code)
-28. [Quick Reference Cheat Sheet](#28-quick-reference-cheat-sheet)
+26. [Data Analysis — dplyr-Style Pipelines](#26-data-analysis--dplyr-style-pipelines)
+27. [Built-in Functions — The Standard Toolkit](#27-built-in-functions--the-standard-toolkit)
+28. [Running Your Code](#28-running-your-code)
+29. [Quick Reference Cheat Sheet](#29-quick-reference-cheat-sheet)
 
 ---
 
@@ -1184,7 +1185,224 @@ show(date_format("2024-03-15", "%A"))           // "Friday"
 
 ---
 
-## 26. Built-in Functions — The Standard Toolkit
+## 26. Data Analysis — dplyr-Style Pipelines
+
+TinyTalk's step chains are designed to feel like R's **dplyr** library. If you've
+ever used `filter()`, `select()`, `mutate()`, or `summarize()` in R, you already
+know how to write data analysis in TinyTalk.
+
+Step chains work across line breaks, so you can write clean multi-line pipelines:
+
+```
+let result = employees
+    _filter((r) => r["salary"] > 50000)
+    _select(["name", "dept", "salary"])
+    _mutate((r) => {"bonus": r["salary"] * 0.1})
+    _arrange((r) => r["salary"], "desc")
+```
+
+### `_select` — Pick columns
+
+Keep only the columns you need from each row:
+
+```
+let people = [
+    {"name": "Alice", "age": 30, "city": "NYC"},
+    {"name": "Bob", "age": 25, "city": "LA"}
+]
+
+// Pass a list of column names
+show(people _select(["name", "age"]))
+// [{name: Alice, age: 30}, {name: Bob, age: 25}]
+
+// Or pass column names as arguments
+show(people _select("name", "city"))
+// [{name: Alice, city: NYC}, {name: Bob, city: LA}]
+```
+
+### `_mutate` — Add or modify columns
+
+Create new columns or overwrite existing ones. The function receives each row and
+returns a map of new/updated fields, which gets merged into the original row:
+
+```
+let orders = [{"item": "Widget", "qty": 5, "price": 10}]
+
+let enriched = orders _mutate((r) => {
+    "total": r["qty"] * r["price"],
+    "taxed": r["qty"] * r["price"] * 1.08
+})
+show(enriched[0]["total"])    // 50
+show(enriched[0]["taxed"])    // 54.0
+show(enriched[0]["item"])     // "Widget"  (original fields preserved)
+```
+
+### `_summarize` — Aggregate a dataset
+
+Crunch a list of rows down to a single summary:
+
+```
+let data = [{"val": 10}, {"val": 20}, {"val": 30}]
+
+let summary = data _summarize({
+    "total": (rows) => rows _map((r) => r["val"]) _sum,
+    "mean": (rows) => rows _map((r) => r["val"]) _avg,
+    "n": (rows) => rows _count
+})
+show(summary)   // {total: 60, mean: 20.0, n: 3}
+```
+
+### `_group` + `_summarize` — The killer combo
+
+Group rows by a key, then summarize each group. This is TinyTalk's equivalent
+of `group_by() %>% summarize()` in dplyr:
+
+```
+let sales = [
+    {"product": "A", "qty": 10},
+    {"product": "B", "qty": 20},
+    {"product": "A", "qty": 15},
+    {"product": "B", "qty": 5}
+]
+
+let report = sales
+    _group((r) => r["product"])
+    _summarize({
+        "total": (rows) => rows _map((r) => r["qty"]) _sum,
+        "avg":   (rows) => rows _map((r) => r["qty"]) _avg
+    })
+show(report)
+// [{total: 25, avg: 12.5}, {total: 25, avg: 12.5}]
+```
+
+You can also use `_groupBy` as an alias for `_group`.
+
+### `_rename` — Rename columns
+
+```
+let data = [{"first_name": "Alice", "last_name": "Smith"}]
+
+let clean = data _rename({"first_name": "first", "last_name": "last"})
+show(clean[0]["first"])   // "Alice"
+```
+
+### `_arrange` — Sort rows
+
+Like `_sortBy` but with dplyr naming, plus optional descending:
+
+```
+let people = [{"name": "Charlie", "age": 20}, {"name": "Alice", "age": 30}]
+
+// Ascending (default)
+let asc = people _arrange((r) => r["age"])
+show(asc[0]["name"])   // "Charlie"
+
+// Descending
+let desc = people _arrange((r) => r["age"], "desc")
+show(desc[0]["name"])   // "Alice"
+```
+
+### `_distinct` — Remove duplicates
+
+```
+// No args: deduplicate by entire value (like _unique)
+show([1, 2, 2, 3, 3] _distinct)   // [1, 2, 3]
+
+// By key function
+let data = [{"dept": "eng", "n": 1}, {"dept": "eng", "n": 2}, {"dept": "sales", "n": 3}]
+show(data _distinct((r) => r["dept"]) _count)   // 2
+
+// By column list
+show(data _distinct(["dept"]) _count)   // 2
+```
+
+### `_pull` — Extract a single column
+
+Flatten a list of rows into a simple list of values:
+
+```
+let people = [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
+
+show(people _pull("name"))       // [Alice, Bob]
+show(people _pull("age") _avg)   // 27.5
+```
+
+### `_slice` — Pick rows by position
+
+```
+let data = [10, 20, 30, 40, 50]
+
+show(data _slice(1, 3))   // [20, 30, 40]  (start at index 1, take 3)
+show(data _slice(2))       // [30, 40, 50]  (from index 2 to end)
+```
+
+### `_leftJoin` — Left join two datasets
+
+Like `_join` but keeps unmatched left rows (SQL LEFT JOIN):
+
+```
+let users = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}, {"id": 3, "name": "Charlie"}]
+let scores = [{"id": 1, "score": 95}, {"id": 2, "score": 87}]
+
+let joined = users _leftJoin(scores, (r) => r["id"])
+show(joined[0])   // {id: 1, name: Alice, score: 95}
+show(joined[2])   // {id: 3, name: Charlie}  (no score — still included)
+```
+
+### Complete example: a mini data analysis
+
+```
+let employees = [
+    {"name": "Alice",   "dept": "eng",   "salary": 120},
+    {"name": "Bob",     "dept": "eng",   "salary": 100},
+    {"name": "Charlie", "dept": "sales", "salary": 90},
+    {"name": "Diana",   "dept": "sales", "salary": 110},
+    {"name": "Eve",     "dept": "eng",   "salary": 130}
+]
+
+// Top earners with bonus
+let top = employees
+    _filter((r) => r["salary"] > 95)
+    _mutate((r) => {"bonus": r["salary"] * 0.1})
+    _arrange((r) => r["salary"], "desc")
+    _select(["name", "salary", "bonus"])
+
+show(top)
+// [{name: Eve, salary: 130, bonus: 13.0}, ...]
+
+// Department report
+let report = employees
+    _group((r) => r["dept"])
+    _summarize({
+        "avg_salary": (rows) => rows _map((r) => r["salary"]) _avg,
+        "headcount":  (rows) => rows _count,
+        "top_earner": (rows) => rows _arrange((r) => r["salary"], "desc") _first
+    })
+
+show(report)
+```
+
+### dplyr ↔ TinyTalk cheat sheet
+
+| dplyr (R)             | TinyTalk                               |
+|----------------------|---------------------------------------|
+| `filter(df, ...)`    | `data _filter((r) => ...)`            |
+| `select(df, ...)`    | `data _select(["col1", "col2"])`      |
+| `mutate(df, ...)`    | `data _mutate((r) => {"new": ...})`   |
+| `summarize(df, ...)`  | `data _summarize({"col": fn})`        |
+| `group_by(df, ...)`  | `data _group((r) => r["col"])`        |
+| `arrange(df, col)`   | `data _arrange((r) => r["col"])`      |
+| `arrange(df, desc(col))` | `data _arrange((r) => r["col"], "desc")` |
+| `distinct(df, col)`  | `data _distinct((r) => r["col"])`     |
+| `pull(df, col)`      | `data _pull("col")`                   |
+| `rename(df, ...)`    | `data _rename({"old": "new"})`        |
+| `slice(df, 1:5)`     | `data _slice(0, 5)`                   |
+| `left_join(x, y, by)` | `data _leftJoin(y, key_fn)`           |
+| `inner_join(x, y, by)` | `data _join(y, key_fn)`              |
+
+---
+
+## 27. Built-in Functions — The Standard Toolkit
 
 ### Output
 
@@ -1311,7 +1529,7 @@ show(date_format("2024-03-15", "%A"))           // "Friday"
 
 ---
 
-## 27. Running Your Code
+## 28. Running Your Code
 
 ### From the command line
 
@@ -1366,7 +1584,7 @@ print(result.success)   # True
 
 ---
 
-## 28. Quick Reference Cheat Sheet
+## 29. Quick Reference Cheat Sheet
 
 ### Variables
 ```
@@ -1403,6 +1621,21 @@ data _sortBy((r) => r["score"])
 left _join(right, (r) => r["id"])
 grouped _mapValues((xs) => xs _avg)
 data _each((x) => show(x))
+```
+
+### dplyr-style verbs
+```
+data _select(["name", "age"])
+data _mutate((r) => {"bonus": r["salary"] * 0.1})
+data _summarize({"total": (rows) => rows _pull("val") _sum})
+data _group((r) => r["dept"]) _summarize({...})
+data _rename({"old_name": "new_name"})
+data _arrange((r) => r["score"])           // ascending
+data _arrange((r) => r["score"], "desc")   // descending
+data _distinct((r) => r["key"])
+data _pull("column_name")
+data _slice(0, 10)
+data _leftJoin(other, (r) => r["id"])
 ```
 
 ### Data I/O
@@ -1472,15 +1705,16 @@ That's TinyTalk. A language that's small enough to learn in an afternoon but exp
 enough to write real programs. The key things that make it unique:
 
 1. **Step chains** — Transform data like a pipeline, not a pile of nested calls
-2. **Natural comparisons** — `has`, `isin`, `islike` read like English
-3. **Two styles** — Use curly braces or `end` blocks, whatever feels right
-4. **String interpolation** — Just put `{expressions}` in your strings
-5. **Bare-word strings** — `print(Hello, world!)` just works, no quotes needed
-6. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
-7. **Default parameters** — `fn greet(name = "World")` — skip args you don't need
-8. **Multi-line lambdas** — `(x) => { ... }` for complex anonymous functions
-9. **Data I/O** — `read_csv`, `read_json`, `http_get` — ingest real data
-10. **Date handling** — Parse, format, diff, floor — time-series ready
-11. **Joins** — `_join`, `_sortBy`, `_mapValues` — real data wrangling
+2. **dplyr-style analysis** — `_select`, `_mutate`, `_summarize`, `_group` — feels like R
+3. **Natural comparisons** — `has`, `isin`, `islike` read like English
+4. **Two styles** — Use curly braces or `end` blocks, whatever feels right
+5. **String interpolation** — Just put `{expressions}` in your strings
+6. **Bare-word strings** — `print(Hello, world!)` just works, no quotes needed
+7. **R-style pipes** — Use `%>%` alongside `|>` for data pipelines
+8. **Default parameters** — `fn greet(name = "World")` — skip args you don't need
+9. **Multi-line lambdas** — `(x) => { ... }` for complex anonymous functions
+10. **Data I/O** — `read_csv`, `read_json`, `http_get` — ingest real data
+11. **Date handling** — Parse, format, diff, floor — time-series ready
+12. **Joins** — `_join`, `_leftJoin`, `_sortBy`, `_mapValues` — real data wrangling
 
 Now go build something cool. Happy coding!
