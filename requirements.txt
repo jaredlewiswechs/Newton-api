@@ -3,7 +3,4 @@
 # Web framework (Web IDE server)
 flask>=3.0.0
 
-# Used by web/server.py for diffing
-# (difflib is stdlib, no extra dep needed)
-
 # No other external dependencies — realTinyTalk is self-contained.

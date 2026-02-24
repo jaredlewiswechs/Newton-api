@@ -43,3 +43,4 @@ except Exception as exc:
 
 # Vercel looks for `app` at module level — already satisfied above.
 handler = app
+handler = app
