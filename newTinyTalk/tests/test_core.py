@@ -823,3 +823,533 @@ show([] _reduce((acc, x) => acc + x, 42))
 show([] _reduce((acc, x) => acc + x))
 """
         assert output(code) == "null"
+
+
+# ===== CSV I/O =====
+
+import tempfile
+import os
+
+class TestCSV:
+    def test_read_write_csv(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, newline="") as f:
+            f.write("name,age,score\nAlice,25,95.5\nBob,30,87\n")
+            path = f.name
+        try:
+            code = f'''
+let data = read_csv("{path}")
+show(len(data))
+show(data[0]["name"])
+show(data[1]["age"])
+'''
+            assert output(code) == "2\nAlice\n30"
+        finally:
+            os.unlink(path)
+
+    def test_write_csv_roundtrip(self):
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
+            path = f.name
+        try:
+            code = f'''
+let data = [{{"name": "Alice", "score": 90}}, {{"name": "Bob", "score": 85}}]
+write_csv(data, "{path}")
+let loaded = read_csv("{path}")
+show(len(loaded))
+show(loaded[0]["name"])
+show(loaded[1]["score"])
+'''
+            assert output(code) == "2\nAlice\n85"
+        finally:
+            os.unlink(path)
+
+    def test_csv_auto_type(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, newline="") as f:
+            f.write("val,flag\n42,true\n3.14,false\n")
+            path = f.name
+        try:
+            code = f'''
+let data = read_csv("{path}")
+show(type(data[0]["val"]))
+show(type(data[1]["val"]))
+show(data[0]["flag"])
+'''
+            assert output(code) == "int\nfloat\ntrue"
+        finally:
+            os.unlink(path)
+
+
+# ===== JSON I/O =====
+
+class TestJSON:
+    def test_read_write_json(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            f.write('[{"name": "Alice", "age": 25}, {"name": "Bob", "age": 30}]')
+            path = f.name
+        try:
+            code = f'''
+let data = read_json("{path}")
+show(len(data))
+show(data[0]["name"])
+show(data[1]["age"])
+'''
+            assert output(code) == "2\nAlice\n30"
+        finally:
+            os.unlink(path)
+
+    def test_write_json_roundtrip(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            path = f.name
+        try:
+            code = f'''
+let data = {{"name": "Alice", "scores": [90, 85, 95]}}
+write_json(data, "{path}")
+let loaded = read_json("{path}")
+show(loaded["name"])
+show(loaded["scores"])
+'''
+            assert output(code) == "Alice\n[90, 85, 95]"
+        finally:
+            os.unlink(path)
+
+    def test_parse_json(self):
+        code = '''
+let data = parse_json("[1, 2, 3]")
+show(data)
+show(type(data))
+'''
+        assert output(code) == "[1, 2, 3]\nlist"
+
+    def test_to_json(self):
+        code = '''
+let s = to_json({"a": 1, "b": [2, 3]})
+show(s)
+'''
+        r = run(code)
+        assert r.success
+        import json
+        parsed = json.loads(r.output.strip())
+        assert parsed == {"a": 1, "b": [2, 3]}
+
+
+# ===== Date/Time =====
+
+class TestDates:
+    def test_date_now(self):
+        code = '''
+let now = date_now()
+show(len(now) > 0)
+'''
+        assert output(code) == "true"
+
+    def test_date_parse(self):
+        code = '''
+show(date_parse("2024-03-15"))
+'''
+        assert output(code) == "2024-03-15 00:00:00"
+
+    def test_date_parse_iso(self):
+        code = '''
+show(date_parse("2024-03-15T10:30:00"))
+'''
+        assert output(code) == "2024-03-15 10:30:00"
+
+    def test_date_floor_week(self):
+        code = '''
+show(date_floor("2024-03-15", "week"))
+'''
+        # 2024-03-15 is Friday, Monday = 2024-03-11
+        assert output(code) == "2024-03-11 00:00:00"
+
+    def test_date_floor_month(self):
+        code = '''
+show(date_floor("2024-03-15 14:30:00", "month"))
+'''
+        assert output(code) == "2024-03-01 00:00:00"
+
+    def test_date_add_days(self):
+        code = '''
+show(date_add("2024-03-15", 10, "days"))
+'''
+        assert output(code) == "2024-03-25 00:00:00"
+
+    def test_date_add_negative(self):
+        code = '''
+show(date_add("2024-03-15", -5, "days"))
+'''
+        assert output(code) == "2024-03-10 00:00:00"
+
+    def test_date_diff(self):
+        code = '''
+let d = date_diff("2024-03-20", "2024-03-15", "days")
+show(d)
+'''
+        assert output(code) == "5.0"
+
+    def test_date_format(self):
+        code = '''
+show(date_format("2024-03-15", "%B %d, %Y"))
+'''
+        assert output(code) == "March 15, 2024"
+
+
+# ===== New Step Chains: _sortBy, _join, _mapValues, _each =====
+
+class TestNewStepChains:
+    def test_sort_by(self):
+        code = '''
+let people = [{"name": "Charlie", "age": 20}, {"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
+let sorted = people _sortBy((p) => p["age"])
+show(sorted[0]["name"])
+show(sorted[2]["name"])
+'''
+        assert output(code) == "Charlie\nAlice"
+
+    def test_sort_by_string(self):
+        code = '''
+let people = [{"name": "Charlie"}, {"name": "Alice"}, {"name": "Bob"}]
+let sorted = people _sortBy((p) => p["name"])
+show(sorted[0]["name"])
+'''
+        assert output(code) == "Alice"
+
+    def test_join(self):
+        code = '''
+let users = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+let scores = [{"id": 1, "score": 95}, {"id": 2, "score": 87}]
+let joined = users _join(scores, (r) => r["id"])
+show(joined[0]["name"])
+show(joined[0]["score"])
+show(joined[1]["name"])
+'''
+        assert output(code) == "Alice\n95\nBob"
+
+    def test_join_no_match(self):
+        code = '''
+let left = [{"id": 1, "name": "Alice"}, {"id": 3, "name": "Charlie"}]
+let right = [{"id": 1, "score": 95}]
+let joined = left _join(right, (r) => r["id"])
+show(len(joined))
+show(joined[0]["name"])
+'''
+        assert output(code) == "1\nAlice"
+
+    def test_map_values(self):
+        code = '''
+let grouped = {"math": [90, 85, 92], "science": [88, 76, 95]}
+let counts = grouped _mapValues((xs) => xs _count)
+show(counts["math"])
+show(counts["science"])
+'''
+        assert output(code) == "3\n3"
+
+    def test_map_values_with_avg(self):
+        code = '''
+let grouped = {"a": [10, 20, 30], "b": [5, 15]}
+let avgs = grouped _mapValues((xs) => xs _avg)
+show(avgs["a"])
+show(avgs["b"])
+'''
+        assert output(code) == "20.0\n10.0"
+
+    def test_each(self):
+        code = '''
+let results = []
+[1, 2, 3] _each((x) => { append(results, x * 10) })
+show(results)
+'''
+        assert output(code) == "[10, 20, 30]"
+
+    def test_each_returns_original(self):
+        code = '''
+let data = [1, 2, 3]
+let same = data _each((x) => x)
+show(same)
+'''
+        assert output(code) == "[1, 2, 3]"
+
+
+# ===== dplyr-Style Verbs =====
+
+class TestDplyrSelect:
+    def test_select_list_of_cols(self):
+        code = '''
+let people = [{"name": "Alice", "age": 30, "city": "NYC"}, {"name": "Bob", "age": 25, "city": "LA"}]
+let slim = people _select(["name", "age"])
+show(slim[0])
+show(slim[1])
+'''
+        assert output(code) == '{name: Alice, age: 30}\n{name: Bob, age: 25}'
+
+    def test_select_string_args(self):
+        code = '''
+let data = [{"a": 1, "b": 2, "c": 3}]
+let r = data _select("a", "c")
+show(r[0])
+'''
+        assert output(code) == '{a: 1, c: 3}'
+
+    def test_select_missing_col(self):
+        code = '''
+let data = [{"name": "Alice"}]
+let r = data _select(["name", "age"])
+show(r[0]["age"])
+'''
+        assert output(code) == "null"
+
+
+class TestDplyrMutate:
+    def test_mutate_add_column(self):
+        code = '''
+let people = [{"name": "Alice", "salary": 100}, {"name": "Bob", "salary": 80}]
+let enriched = people _mutate((r) => {"bonus": r["salary"] * 0.1})
+show(enriched[0]["bonus"])
+show(enriched[1]["bonus"])
+'''
+        assert output(code) == "10.0\n8.0"
+
+    def test_mutate_overwrite_column(self):
+        code = '''
+let data = [{"x": 10}]
+let r = data _mutate((row) => {"x": row["x"] * 2, "y": 99})
+show(r[0]["x"])
+show(r[0]["y"])
+'''
+        assert output(code) == "20\n99"
+
+    def test_mutate_preserves_existing(self):
+        code = '''
+let data = [{"a": 1, "b": 2}]
+let r = data _mutate((row) => {"c": 3})
+show(r[0]["a"])
+show(r[0]["b"])
+show(r[0]["c"])
+'''
+        assert output(code) == "1\n2\n3"
+
+
+class TestDplyrSummarize:
+    def test_summarize_on_list(self):
+        code = '''
+let data = [{"val": 10}, {"val": 20}, {"val": 30}]
+let summary = data _summarize({
+    "total": (rows) => rows _map((r) => r["val"]) _sum,
+    "n": (rows) => rows _count
+})
+show(summary["total"])
+show(summary["n"])
+'''
+        assert output(code) == "60\n3"
+
+    def test_summarize_on_grouped_map(self):
+        code = '''
+let data = [
+    {"dept": "eng", "salary": 100},
+    {"dept": "eng", "salary": 120},
+    {"dept": "sales", "salary": 80}
+]
+let result = data _group((r) => r["dept"]) _summarize({
+    "avg_salary": (rows) => rows _map((r) => r["salary"]) _avg,
+    "count": (rows) => rows _count
+})
+show(len(result))
+show(result[0]["count"] + result[1]["count"])
+'''
+        assert output(code) == "2\n3"
+
+    def test_summarize_avg(self):
+        code = '''
+let scores = [{"s": 90}, {"s": 80}, {"s": 70}]
+let r = scores _summarize({
+    "mean": (rows) => rows _map((r) => r["s"]) _avg
+})
+show(r["mean"])
+'''
+        assert output(code) == "80.0"
+
+
+class TestDplyrRename:
+    def test_rename_columns(self):
+        code = '''
+let data = [{"first_name": "Alice", "age": 30}]
+let r = data _rename({"first_name": "name"})
+show(r[0]["name"])
+show(r[0]["age"])
+'''
+        assert output(code) == "Alice\n30"
+
+    def test_rename_multiple(self):
+        code = '''
+let data = [{"a": 1, "b": 2, "c": 3}]
+let r = data _rename({"a": "x", "b": "y"})
+show(r[0]["x"])
+show(r[0]["y"])
+show(r[0]["c"])
+'''
+        assert output(code) == "1\n2\n3"
+
+
+class TestDplyrArrange:
+    def test_arrange_ascending(self):
+        code = '''
+let data = [{"name": "C", "val": 30}, {"name": "A", "val": 10}, {"name": "B", "val": 20}]
+let sorted = data _arrange((r) => r["val"])
+show(sorted[0]["name"])
+show(sorted[2]["name"])
+'''
+        assert output(code) == "A\nC"
+
+    def test_arrange_descending(self):
+        code = '''
+let data = [{"name": "C", "val": 30}, {"name": "A", "val": 10}, {"name": "B", "val": 20}]
+let sorted = data _arrange((r) => r["val"], "desc")
+show(sorted[0]["name"])
+show(sorted[2]["name"])
+'''
+        assert output(code) == "C\nA"
+
+
+class TestDplyrDistinct:
+    def test_distinct_no_args(self):
+        code = '''
+show([1, 2, 2, 3, 3, 3] _distinct _count)
+'''
+        assert output(code) == "3"
+
+    def test_distinct_by_function(self):
+        code = '''
+let data = [{"name": "Alice", "dept": "eng"}, {"name": "Bob", "dept": "eng"}, {"name": "Charlie", "dept": "sales"}]
+let r = data _distinct((r) => r["dept"])
+show(len(r))
+'''
+        assert output(code) == "2"
+
+    def test_distinct_by_columns(self):
+        code = '''
+let data = [{"a": 1, "b": "x"}, {"a": 1, "b": "x"}, {"a": 1, "b": "y"}]
+let r = data _distinct(["a", "b"])
+show(len(r))
+'''
+        assert output(code) == "2"
+
+
+class TestDplyrSlice:
+    def test_slice_start_count(self):
+        code = '''
+show([10, 20, 30, 40, 50] _slice(1, 3))
+'''
+        assert output(code) == "[20, 30, 40]"
+
+    def test_slice_start_only(self):
+        code = '''
+show([10, 20, 30, 40, 50] _slice(2))
+'''
+        assert output(code) == "[30, 40, 50]"
+
+
+class TestDplyrPull:
+    def test_pull_column(self):
+        code = '''
+let data = [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
+show(data _pull("name"))
+'''
+        assert output(code) == "[Alice, Bob]"
+
+    def test_pull_numeric(self):
+        code = '''
+let data = [{"val": 10}, {"val": 20}, {"val": 30}]
+show(data _pull("val") _sum)
+'''
+        assert output(code) == "60"
+
+
+class TestDplyrGroupBy:
+    def test_group_by_alias(self):
+        code = '''
+let data = [{"dept": "eng", "n": 1}, {"dept": "sales", "n": 2}, {"dept": "eng", "n": 3}]
+let g = data _groupBy((r) => r["dept"])
+show(len(g["eng"]))
+show(len(g["sales"]))
+'''
+        assert output(code) == "2\n1"
+
+
+class TestDplyrLeftJoin:
+    def test_left_join_all_match(self):
+        code = '''
+let users = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+let scores = [{"id": 1, "score": 95}, {"id": 2, "score": 87}]
+let joined = users _leftJoin(scores, (r) => r["id"])
+show(joined[0]["name"])
+show(joined[0]["score"])
+show(len(joined))
+'''
+        assert output(code) == "Alice\n95\n2"
+
+    def test_left_join_unmatched(self):
+        code = '''
+let left = [{"id": 1, "name": "Alice"}, {"id": 3, "name": "Charlie"}]
+let right = [{"id": 1, "score": 95}]
+let joined = left _leftJoin(right, (r) => r["id"])
+show(len(joined))
+show(joined[0]["name"])
+show(joined[0]["score"])
+show(joined[1]["name"])
+'''
+        assert output(code) == "2\nAlice\n95\nCharlie"
+
+
+class TestDplyrPipeline:
+    """End-to-end tests showing dplyr-like data analysis pipelines."""
+
+    def test_full_pipeline(self):
+        code = '''
+let employees = [
+    {"name": "Alice", "dept": "eng", "salary": 120},
+    {"name": "Bob", "dept": "eng", "salary": 100},
+    {"name": "Charlie", "dept": "sales", "salary": 90},
+    {"name": "Diana", "dept": "sales", "salary": 110},
+    {"name": "Eve", "dept": "eng", "salary": 130}
+]
+
+let result = employees
+    _filter((r) => r["salary"] > 95)
+    _select(["name", "dept", "salary"])
+    _mutate((r) => {"bonus": r["salary"] * 0.1})
+    _arrange((r) => r["salary"], "desc")
+
+show(result[0]["name"])
+show(result[0]["bonus"])
+show(len(result))
+'''
+        assert output(code) == "Eve\n13.0\n4"
+
+    def test_group_summarize_pipeline(self):
+        code = '''
+let sales = [
+    {"product": "A", "qty": 10},
+    {"product": "B", "qty": 20},
+    {"product": "A", "qty": 15},
+    {"product": "B", "qty": 5}
+]
+
+let summary = sales
+    _group((r) => r["product"])
+    _summarize({
+        "total_qty": (rows) => rows _map((r) => r["qty"]) _sum,
+        "avg_qty": (rows) => rows _map((r) => r["qty"]) _avg
+    })
+
+show(len(summary))
+'''
+        assert output(code) == "2"
+
+    def test_select_mutate_pull(self):
+        code = '''
+let data = [{"x": 1, "y": 10}, {"x": 2, "y": 20}, {"x": 3, "y": 30}]
+let totals = data
+    _mutate((r) => {"total": r["x"] + r["y"]})
+    _pull("total")
+show(totals)
+show(totals _sum)
+'''
+        assert output(code) == "[11, 22, 33]\n66"
