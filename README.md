@@ -67,6 +67,8 @@ Troubleshooting
 - If you see an error like `TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'`, you're running Python 3.9 which doesn't support the `X | None` type hint syntax. The project includes (and I committed) a small compatibility fix in `realTinyTalk/web/server.py` that replaces `dict | None` with `Optional[dict]` so the server runs on 3.9. If you prefer, use Python 3.10+.
 
 That's it — once the server is running, the Web IDE should load and you can edit and run TinyTalk scripts locally.
++
++The repository now also includes a lightweight `app.py` entrypoint at the project root; this ensures platforms such as Vercel automatically detect and serve the Flask application when you deploy with a click-to-deploy button.
 
 ## Use as a Library
 
