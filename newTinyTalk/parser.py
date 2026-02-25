@@ -763,6 +763,13 @@ class Parser:
                     args = self._parse_args()
                 self._consume(TokenType.RPAREN, f"Expected ')' after {st.value}")
             steps.append((st.value, args))
+            # Skip newlines between chained steps so multi-line
+            # pipelines are collected as a single StepChain.
+            if self._peek().type not in STEP_TOKEN_TYPES:
+                saved = self.pos
+                self._skip_newlines()
+                if self._peek().type not in STEP_TOKEN_TYPES:
+                    self.pos = saved
         return steps
 
     def _parse_args(self) -> List[ASTNode]:
